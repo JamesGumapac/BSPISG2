@@ -44,9 +44,7 @@
 
         return lbOrdersResultObj;
     }
-
-
-    
+   
     /**
      * Body of Login Request
      * @returns 
@@ -81,27 +79,21 @@
      * @returns 
     */
     function parseOrdersResponseXml(xmlStr){
-        let responseObj = {};
+        let ordersList = [];
 
         var xmlDocument = xml.Parser.fromString({
             text: xmlStr
         });
 
         let jsonObj = BSPLBUtils.xmlToJson(xmlDocument.documentElement);
-        let ordersList = BSPLBUtils.getOrdersAttributeFromJSON(jsonObj);
+        ordersList = BSPLBUtils.getOrdersAttributeFromJSON(jsonObj);
+        let ordersStr = JSON.stringify(ordersList).replaceAll("a:","");
+        ordersStr = ordersStr.replaceAll('"@attributes":{}',"");
+        ordersList = JSON.parse(ordersStr);
         log.debug("parseOrdersResponseXml", JSON.stringify(ordersList));
-        responseObj =  parseOrders(ordersList);
-        return responseObj;
+        return ordersList;
     }
 
-    /**
-     * Parse API response
-     * @param {*} ordersList 
-     */
-    function parseOrders(ordersList){
-        let orders = [];
-
-    }
 
     return {
         getOrders: getOrders
