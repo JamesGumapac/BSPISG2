@@ -2,13 +2,13 @@
  * @NApiVersion 2.1
  * @NScriptType MapReduceScript
  */
-define(['N/record', 'N/runtime', 'N/search', './lib/bsp_lb_utils.js',],
+define(['N/record', 'N/runtime', 'N/search', './lib/bsp_lb_utils.js', './lib/bsp_lb_entities.js'],
     /**
  * @param{record} record
  * @param{runtime} runtime
  * @param{search} search
  */
-    (record, runtime, search, BSPLBUtils) => {
+    (record, runtime, search, BSPLBUtils, BSPLBEntities) => {
         /**
          * Defines the function that is executed at the beginning of the map/reduce process and generates the input data.
          * @param {Object} inputContext
@@ -56,9 +56,14 @@ define(['N/record', 'N/runtime', 'N/search', './lib/bsp_lb_utils.js',],
                 recordType = BSPLBUtils.recTypes().item;
                 let itemObjMappingFields = BSPLBUtils.getMappingFields(recordType, false);
 
-                let vendors = fetchVendors(settings);
+                let vendors = BSPLBEntities.fetchVendors(settings);
 
-                
+                log.debug(functionName, 
+                    {
+                        vendors: vendors
+                    }
+                );
+
                 lbTransactions.forEach(element => {
                     lbTransactionsData.push({
                         key: element.queueId,
@@ -143,7 +148,22 @@ define(['N/record', 'N/runtime', 'N/search', './lib/bsp_lb_utils.js',],
          * @since 2015.2
          */
         const summarize = (summaryContext) => {
-
+            let functionName = 'Summarize';
+            try{
+                /*let objScriptParams = getParameters();
+                BSPLBUtils.updateLastRuntimeExecution(objScriptParams.integrationSettingsRecID);*/
+            }catch (error)
+            {
+                log.error(functionName, {error: error.toString()});
+                let errorSource = "BSP | LB | MR | Create NS Records - " + functionName;
+                BSPLBUtils.createErrorLog(
+                    errorSource,
+                    error.message,
+                    error
+                );
+            }
+            log.audit(functionName, {'UsageConsumed' : summaryContext.usage, 'NumberOfQueues' : summaryContext.concurrency, 'NumberOfYields' : summaryContext.yields});
+            log.debug(functionName, "************ EXECUTION COMPLETED ************");
         }
 
         /**

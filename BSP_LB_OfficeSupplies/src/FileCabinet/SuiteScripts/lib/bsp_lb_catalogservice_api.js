@@ -3,7 +3,7 @@
  * @NModuleScope Public
  */
 
- define(['N/record', 'N/search', './bsp_lb_utils.js'], function (record, search, BSPLBUtils) {
+ define(['./bsp_lb_utils.js', './bsp_lb_service_api.js', 'N/xml'], function (BSPLBUtils, BSPLBServiceAPI, xml) {
 
     function getVendors(settings){
         let lbVendorsResultObj = {};
@@ -78,9 +78,9 @@
         let vendorsList = [];
         vendorsList = BSPLBUtils.getVendorsAttributeFromJSON(jsonObj);
         let vendorsStr = JSON.stringify(vendorsList).replaceAll("a:","");
-        vendorsStr = vendorsStr.replaceAll('"@attributes":{}',"");
+        vendorsStr = vendorsStr.replaceAll('#text',"value");
         vendorsList = JSON.parse(vendorsStr);
-
+        log.debug("parseVendorsResponseXml", JSON.stringify(vendorsList));
         objVendorsResult = {
             vendorsList: vendorsList
         }

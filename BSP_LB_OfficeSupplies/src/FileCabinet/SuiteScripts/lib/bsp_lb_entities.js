@@ -34,6 +34,13 @@
             let fieldDataType = fieldMapping.lbFieldDataType;
             let lbValue = BSPLBUtils.getProp(objFields, lbField);
 
+            log.debug("createVendorRecord", 
+                {
+                    objFields: JSON.stringify(fieldMapping),
+                    lbValue: JSON.stringify(lbValue)
+                }
+            );
+
             if (isLineItem == "F" || (isLineItem == false && nsField)) {
                 if(fieldDataType == "String"){
                     vendorRec.setValue({ fieldId: nsField, value: lbValue });
@@ -78,7 +85,7 @@
             });
         }catch(error){
             log.error(functionName, {error: error.message});
-            let errorDetail = JSON.stringify({error: error.message, projectId:inboundQueueId})
+            let errorDetail = JSON.stringify({error: error.message})
             let errorSource = "BSP | LB | MR | Create NS Records - " + functionName;
             BSPLBUtils.createErrorLog(
                 errorSource,

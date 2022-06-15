@@ -142,6 +142,7 @@
         ordersList = BSPLBUtils.getOrdersAttributeFromJSON(jsonObj);
         let ordersStr = JSON.stringify(ordersList).replaceAll("a:","");
         ordersStr = ordersStr.replaceAll('"@attributes":{}',"");
+        ordersStr = ordersStr.replaceAll('#text',"value");
         ordersList = JSON.parse(ordersStr).Order;
 
         objOrdersResult = {

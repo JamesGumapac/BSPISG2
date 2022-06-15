@@ -81,7 +81,7 @@
      */
     function getRecordInternalID(logicblockID){
         let netSuiteRecId = null;
-        if(aqId){
+        if(logicblockID){
             const mappingKeysSearchObj = search.create({
                 type: "customrecord_bsp_lb_mapped_keys",
                 filters:
@@ -357,25 +357,18 @@
         let lineFields = [];
         let searchFilters = [];
 
-        searchFilters.push(
-            search.createFilter({
-                name: "isinactive",
-                operator: search.Operator.IS,
-                values: false,
-            })
-        );
-
-        searchFilters.push(
-            search.createFilter({
-                name: "name",
-                operator: search.Operator.IS,
-                values: recordType,
-            })
-        );
-
         if(hasAddressSubRecord){
-            searchFilters.push('OR', ['name', 'is', "Billing Address"]);
-            searchFilters.push('OR', ['name', 'is', "Shipping  Address"]);
+            searchFilters = [
+                ["isinactive","is","F"], 
+                "AND", 
+                [["name","is",recordType],"OR",["name","is","Billing Addres"],"OR",["name","is","Shipping Address"]]
+            ];
+        }else{
+            searchFilters = [
+                ["isinactive","is","F"], 
+                "AND", 
+                ["name","is",recordType]
+            ];
         }
 
         const objRecMapperSearch = search.create({
@@ -547,7 +540,7 @@
      * @returns 
      */
     function getVendorsAttributeFromJSON(jsonObj){
-        return jsonObj["s:Body"].FindAllVendorsResponse.FindAllVendorsResult;
+        return jsonObj["s:Body"].FindAllVendorsResponse.FindAllVendorsResult["a:Vendor"];
     }
 
     /**
