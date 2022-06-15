@@ -2,11 +2,13 @@
  * @NApiVersion 2.1
  * @NScriptType MapReduceScript
  */
-define(['N/runtime', './lib/bsp_lb_utils.js', './lib/bsp_lb_ordersservice_api.js'],
+define(['N/record', 'N/runtime', 'N/search', './lib/bsp_lb_utils.js',],
     /**
-     * @param{runtime} runtime
-     */
-    (runtime, BSPLBUtils, LBOrdersAPI) => {
+ * @param{record} record
+ * @param{runtime} runtime
+ * @param{search} search
+ */
+    (record, runtime, search, BSPLBUtils) => {
         /**
          * Defines the function that is executed at the beginning of the map/reduce process and generates the input data.
          * @param {Object} inputContext
@@ -22,37 +24,70 @@ define(['N/runtime', './lib/bsp_lb_utils.js', './lib/bsp_lb_ordersservice_api.js
 
         const getInputData = (inputContext) => {
             let functionName = "getInputData";
-            let lbOrders = [];
-            try
-            {
+            let lbTransactionsData = [];
+            try{
                 log.debug(functionName, "************ EXECUTION STARTED ************");
-
                 let objScriptParams = getParameters();
+                let settings = BSPLBUtils.getIntegrationSettings(objScriptParams.integrationSettingsRecID);
+                let lbTransactions = [];
+                let inboundQueues = BSPLBUtils.getInboundQueues();
+                inboundQueues.run().each(function (result) {
+                    let queueRecID = result.id;
 
-                let lbOrdersResult = LBOrdersAPI.getOrders(objScriptParams.integrationSettingsRecID);
+                    let queueId = result.getValue({
+                        name: "custrecord_bsp_lb_queue_id",
+                    });
+                    let jsonResponse = result.getValue({
+                        name: "custrecord_bsp_lb_json_resp",
+                    });
 
-                if(lbOrdersResult.lbOrders){
-                    lbOrders = lbOrdersResult.lbOrders;
-                }else{
-                    let errorSource = "BSP | LB | MR | Get Orders - " + functionName;
-                    BSPLBUtils.createErrorLog(
-                        errorSource,
-                        lbOrdersResult.errorMessage,
-                        lbOrdersResult.error
-                    );
-                }
+                    let data = {queueRecID : queueRecID, queueId: queueId, jsonResponse: JSON.parse(jsonResponse)};
+
+                    lbTransactions.push(data);                      
+                    return true;
+                });
+
+                let recordType = BSPLBUtils.recTypes().salesOrder;
+                let salesOrderObjMappingFields = BSPLBUtils.getMappingFields(recordType, true);
+
+                recordType = BSPLBUtils.recTypes().customer;
+                let customerObjMappingFields = BSPLBUtils.getMappingFields(recordType, true);
+
+                recordType = BSPLBUtils.recTypes().item;
+                let itemObjMappingFields = BSPLBUtils.getMappingFields(recordType, false);
+
+                let vendors = fetchVendors(settings);
+
                 
-            } catch (error)
-            {
-                log.error(functionName, {error: error.toString()});
-                let errorSource = "BSP | LB | MR | Get Orders - " + functionName;
+                lbTransactions.forEach(element => {
+                    lbTransactionsData.push({
+                        key: element.queueId,
+                        value: {
+                            lbTransaction: element,
+                            salesOrderObjMappingFields: salesOrderObjMappingFields,
+                            customerObjMappingFields: customerObjMappingFields,
+                            itemObjMappingFields: itemObjMappingFields,
+                            vendors: vendors
+                        }
+                    });
+                });
+
+                log.debug(functionName, 
+                    {
+                        lbTransactionsData: lbTransactionsData.length
+                    }
+                );
+
+            }catch (error){
+                log.error(functionName, {error: error.message});
+                let errorSource = "BSP | LB | MR | Create NS Records - " + functionName;
                 BSPLBUtils.createErrorLog(
                     errorSource,
                     error.message,
                     error
                 );
             }
-            return lbOrders;
+            return lbTransactionsData;
         }
 
         /**
@@ -72,41 +107,18 @@ define(['N/runtime', './lib/bsp_lb_utils.js', './lib/bsp_lb_ordersservice_api.js
          */
         const reduce = (reduceContext) => {
             let functionName = "reduce";
+            let logicBlockTransactionData = JSON.parse(reduceContext.values);
             try{
-                let objLogicblockOrder = reduceContext.values;
-                let lbOrder = JSON.parse(objLogicblockOrder);
-                let queueId = lbOrder.Id["#text"]; 
-
-                let inboundQueueResult = BSPLBUtils.createInboundQueue(
-                    queueId,
-                    lbOrder
-                );
-
-                if (inboundQueueResult.status == BSPLBUtils.constants().successStatus){
-                    log.debug(
-                        functionName + " - Create Inbound Queue SUCCESS",
-                        {inboundQueueRecId:inboundQueueResult.message, queueId:inboundQueueResult.queueId}
-                    );
-                }else{
-                    log.error(
-                        functionName + " - Create Inbound Queue ERROR",
-                        {errorMessage:inboundQueueResult.message}
-                    );
-                    let errorSource = "BSP | LB | MR | Get Orders  - " + functionName;
-                    BSPLBUtils.createErrorLog(
-                        errorSource,
-                        inboundQueueResult.code,
-                        BSPLBUtils.buildErrorDetails({error:inboundQueueResult.message, queueId:inboundQueueResult.queueId})
-                    );
-                }
-            }catch (error)
-            {
-                log.error(functionName, {error: error.toString()});
-                let errorSource = "BSP | LB | MR | Get Orders - " + functionName;
+                log.debug(functionName, JSON.stringify(logicBlockTransactionData));
+            
+            } catch (error) {
+                log.error(functionName, {error: error.message});
+                let errorDetail = {error:error, queueIdRec: logicBlockTransactionData.value.lbTransaction.queueRecID, queueId: logicBlockTransactionData.value.lbTransaction.queueId}
+                let errorSource = "BSP | LB | MR | Create NS Records - " + functionName;
                 BSPLBUtils.createErrorLog(
                     errorSource,
                     error.message,
-                    error
+                    errorDetail
                 );
             }
         }
@@ -131,33 +143,18 @@ define(['N/runtime', './lib/bsp_lb_utils.js', './lib/bsp_lb_ordersservice_api.js
          * @since 2015.2
          */
         const summarize = (summaryContext) => {
-            let functionName = 'Summarize';
-            try{
-                /*let objScriptParams = getParameters();
-                BSPLBUtils.updateLastRuntimeExecution(objScriptParams.integrationSettingsRecID);*/
-            }catch (error)
-            {
-                log.error(functionName, {error: error.toString()});
-                let errorSource = "BSP | LB | MR | Get Orders - " + functionName;
-                BSPLBUtils.createErrorLog(
-                    errorSource,
-                    error.message,
-                    error
-                );
-            }
-            log.audit(functionName, {'UsageConsumed' : summaryContext.usage, 'NumberOfQueues' : summaryContext.concurrency, 'NumberOfYields' : summaryContext.yields});
-            log.debug(functionName, "************ EXECUTION COMPLETED ************");
+
         }
 
         /**
          * Retieves Script parameters set up in the Deployment Record
          * @returns {Object} Script parameters
         */
-        const getParameters = () => {
+         const getParameters = () => {
             let objParams = {};
             let objScript = runtime.getCurrentScript();
             objParams = {
-                integrationSettingsRecID : objScript.getParameter({name: "custscript_bsp_lb_integration_settings"})
+                integrationSettingsRecID : objScript.getParameter({name: "custscript_bsp_lb_integration_settings_1"})
             }         
             return objParams;
         }

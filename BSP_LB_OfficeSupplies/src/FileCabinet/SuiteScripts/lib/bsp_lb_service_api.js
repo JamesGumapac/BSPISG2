@@ -10,23 +10,28 @@
     * Login request
     * @returns 
     */
-    function login(){
+    function login(integrationSettings){
 
-        let requestBodyXML = getLoginXMLStrRequest();
+        let userID = integrationSettings.custrecord_bsp_lb_user_id;
+        let password = integrationSettings.custrecord_bsp_lb_password;
+
+        let serviceURL = integrationSettings.custrecord_bsp_lb_orders_service_url;
+        let soapLoginAction = integrationSettings.custrecord_bsp_lb_login_soap_action;
+
+        let requestBodyXML = getLoginXMLStrRequest(userID, password);
 
         log.debug("login", {requestBodyXML});
 
-        let logicBlockServerResponse = http.request({
-            "method":  http.Method.POST,
-            "url": "http://theofficecity.7cart.com/api/OrdersService.svc",
-            "body": requestBodyXML,
-            "headers": {
-                "Content-Type": "text/xml",
-                "SOAPAction": BSPLBUtils.serverConstants().loginAction
-            }
-        });
+        let logicBlockServerResponse = runService(serviceURL, requestBodyXML, soapLoginAction);
 
-        log.debug("login", JSON.stringify({body:logicBlockServerResponse}));
+        BSPLBUtils.createServiceLog(
+            serviceURL, 
+            soapLoginAction, 
+            requestBodyXML, 
+            logicBlockServerResponse.code, 
+            logicBlockServerResponse.headers, 
+            (logicBlockServerResponse.body).substring(0, 100000)
+        );
 
         let loginData = {};
         if(logicBlockServerResponse.code && logicBlockServerResponse.code == BSPLBUtils.serverConstants().successCode){
@@ -35,18 +40,36 @@
         return loginData;
     }
 
+    /**
+     * Execute HTTP request
+     * @param {*} serviceURL 
+     * @param {*} requestBodyXML 
+     * @param {*} soapAction 
+     * @returns 
+     */
+    function runService(serviceURL, requestBodyXML, soapAction){
+        return http.request({
+            "method":  http.Method.POST,
+            "url": serviceURL,
+            "body": requestBodyXML,
+            "headers": {
+                "Content-Type": "text/xml",
+                "SOAPAction": soapAction
+            }
+        });
+    }
 
     /**
      * Body of Login Request
      * @returns 
      */
-    function getLoginXMLStrRequest(){
+    function getLoginXMLStrRequest(userID, password){
         return `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/">
                     <soapenv:Header/>
                     <soapenv:Body>
                         <tem:Login>
-                            <tem:username>mcasaretto@bspny.com</tem:username>
-                            <tem:password>mcasaretto@bspny.com</tem:password>
+                            <tem:username>${userID}</tem:username>
+                            <tem:password>${password}</tem:password>
                         </tem:Login>
                     </soapenv:Body>
                 </soapenv:Envelope>`;
@@ -73,8 +96,6 @@
                 TokenRejected: getTagText(xml.XPath.select({node: xmlDocument,xpath: '//a:TokenRejected'})),
             };
         }
-
-        log.debug("parseResponseXml", JSON.stringify(responseObj));
         return responseObj;
     }
 
@@ -90,7 +111,8 @@
     }
 
     return {
-        login: login
+        login: login,
+        runService: runService
     };
     
 });
