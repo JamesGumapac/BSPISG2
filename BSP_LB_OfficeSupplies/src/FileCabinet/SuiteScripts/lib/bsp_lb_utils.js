@@ -7,7 +7,6 @@
     
     const API_CONSTANTS = Object.freeze({
         startIndex: 0,
-        pageSize: 10,
         successCode: 200
     });
 
@@ -123,15 +122,41 @@
                 "custrecord_bsp_lb_get_orders_soap_action",
                 "custrecord_bsp_lb_login_soap_action",
                 "custrecord_bsp_lb_get_vend_soap_action",
+                "custrecord_bsp_lb_get_prod_soap_action",
                 "custrecord_bsp_lb_user_id",
                 "custrecord_bsp_lb_password",
-                "custrecord_bsp_lb_last_runtime_exec"
+                "custrecord_bsp_lb_last_runtime_exec",
+                "custrecord_bsp_lb_orders_page_size"
             ]
         });
        
         return settings;
     }
 
+
+    /**
+     * Update Retry count on Inbound Queue
+     * @param {*} inboundQueueRecId 
+    */
+    function updateInboundQueueRetryCount(inboundQueueRecId){
+        let retryCount = search.lookupFields({
+            type: "customrecord_bsp_lb_inbound_queue",
+            id: inboundQueueRecId,
+            columns: "custrecord_bsp_lb_retry_count",
+        }).custrecord_bsp_lb_retry_count;
+    
+        retryCount = (retryCount) ? retryCount : 0;
+        retryCount++;
+
+        record.submitFields({
+            type: "customrecord_bsp_lb_inbound_queue",
+            id: inboundQueueRecId,
+            values: {
+                custrecord_bsp_lb_retry_count: retryCount
+            }
+        });
+
+    }
 
     /**
      * Create Service Log Record with each API call
@@ -397,39 +422,41 @@
                 name: "custrecord_bsp_lb_is_line_item",
             });
 
-            bodyFields.push({
-                isLineItem: lineValue,
-                netSuiteFieldName: result.getValue({
-                    name: "name",
-                }),
-                netSuiteFieldId: result.getValue({
-                    name: "custrecord_bsp_lb_ns_field_id",
-                }),
-                lbFieldId: result.getValue({
-                    name: "custrecord_bsp_lb_src_field_id",
-                }),
-                lbFieldDataType: result.getValue({
-                    name: "custrecord_bsp_lb_data_type",
-                }),
-                lbFieldSearchFilter: result.getValue({
-                    name: "custrecord_bsp_lb_search_filter",
-                }),
-                lbFieldSearchRecord: result.getValue({
-                    name: "custrecord_bsp_lb_search_record",
-                }),
-                lbFieldSearchColumn: result.getValue({
-                    name: "custrecord_bsp_lb_search_column",
-                }),
-                lbFieldSearchOperator: result.getValue({
-                    name: "custrecord_bsp_lb_search_operator",
-                }),
-                defaultValue: result.getValue({
-                    name: "custrecord_bsp_lb_ns_default_value",
-                }),
-                isSetValue: result.getValue({
-                    name: "custrecord_bsp_lb_set_value",
-                })
-            });
+            if (lineValue == false || lineValue == "F") {
+                bodyFields.push({
+                    isLineItem: lineValue,
+                    netSuiteFieldName: result.getValue({
+                        name: "name",
+                    }),
+                    netSuiteFieldId: result.getValue({
+                        name: "custrecord_bsp_lb_ns_field_id",
+                    }),
+                    lbFieldId: result.getValue({
+                        name: "custrecord_bsp_lb_src_field_id",
+                    }),
+                    lbFieldDataType: result.getValue({
+                        name: "custrecord_bsp_lb_data_type",
+                    }),
+                    lbFieldSearchFilter: result.getValue({
+                        name: "custrecord_bsp_lb_search_filter",
+                    }),
+                    lbFieldSearchRecord: result.getValue({
+                        name: "custrecord_bsp_lb_search_record",
+                    }),
+                    lbFieldSearchColumn: result.getValue({
+                        name: "custrecord_bsp_lb_search_column",
+                    }),
+                    lbFieldSearchOperator: result.getValue({
+                        name: "custrecord_bsp_lb_search_operator",
+                    }),
+                    defaultValue: result.getValue({
+                        name: "custrecord_bsp_lb_ns_default_value",
+                    }),
+                    isSetValue: result.getValue({
+                        name: "custrecord_bsp_lb_set_value",
+                    })
+                });    
+            }
 
             if (lineValue == true || lineValue == "T") {
                 lineFields.push({
@@ -437,7 +464,7 @@
                     sublistId: result.getValue({
                         name: "custrecord_bsp_lb_ns_sublist_field",
                     }),
-                    netsuiteFieldId: result.getValue({
+                    netSuiteFieldId: result.getValue({
                         name: "custrecord_bsp_lb_ns_field_id",
                     }),
                     lbFieldId: result.getValue({
@@ -492,76 +519,6 @@
     }
     
     /**
-     * Converts XML to JSON
-     * @param {*} xmlNode 
-     * @returns 
-     */
-    function xmlToJson(xmlNode) {
-        let obj = Object.create(null);
-
-        if (xmlNode.nodeType == xmlMod.NodeType.ELEMENT_NODE) { // element
-            if (xmlNode.hasAttributes()) {
-                obj['@attributes'] = Object.create(null);
-                for (let j in xmlNode.attributes) {
-                    if(xmlNode.hasAttribute({name : j})){
-                        obj['@attributes'][j] = xmlNode.getAttribute({
-                            name : j
-                        });
-                    }
-                }
-            }
-        } else if (xmlNode.nodeType == xmlMod.NodeType.TEXT_NODE) {
-            obj = xmlNode.nodeValue;
-        }
-
-        if (xmlNode.hasChildNodes()) {
-            for (let i = 0, childLen = xmlNode.childNodes.length; i < childLen; i++) {
-                let childItem = xmlNode.childNodes[i];
-                let nodeName = childItem.nodeName;
-                if (nodeName in obj) {
-                    if (!Array.isArray(obj[nodeName])) {
-                        obj[nodeName] = [
-                            obj[nodeName]
-                        ];
-                    }
-                    obj[nodeName].push(xmlToJson(childItem));
-                } else {
-                    obj[nodeName] = xmlToJson(childItem);
-                }
-            }
-        }
-
-        return obj;
-    }
-
-    /**
-     * Narrow down the JSON converted object to retrieve the Order list
-     * @param {*} jsonObj 
-     * @returns 
-     */
-    function getVendorsAttributeFromJSON(jsonObj){
-        return jsonObj["s:Body"].FindAllVendorsResponse.FindAllVendorsResult["a:Vendor"];
-    }
-
-    /**
-     * Narrow down the JSON converted object to retrieve the Vendor list
-     * @param {*} jsonObj 
-     * @returns 
-    */
-    function getOrdersAttributeFromJSON(jsonObj){
-        return jsonObj["s:Body"].GetOrdersByCriteriaResponse.GetOrdersByCriteriaResult["a:List"];
-    }
-
-    /**
-     * Narrow down the JSON converted object to retrieve the Total Orders number
-     * @param {*} jsonObj 
-     * @returns 
-    */
-    function getTotalOrdersAttributeFromJSON(jsonObj){
-        return (jsonObj["s:Body"].GetOrdersByCriteriaResponse.GetOrdersByCriteriaResult["a:TotalRows"])["#text"];
-    }
-
-    /**
      * Returns value of property
      * @param {*} obj 
      * @param {*} prop 
@@ -585,10 +542,6 @@
         recTypes: recTypes,
         isEmpty:isEmpty,
         getProp: getProp,
-        xmlToJson:xmlToJson,
-        getOrdersAttributeFromJSON: getOrdersAttributeFromJSON,
-        getVendorsAttributeFromJSON: getVendorsAttributeFromJSON,
-        getTotalOrdersAttributeFromJSON: getTotalOrdersAttributeFromJSON,
         getIntegrationSettings: getIntegrationSettings,
         createServiceLog: createServiceLog,
         createErrorLog: createErrorLog,
@@ -598,6 +551,7 @@
         buildErrorDetails: buildErrorDetails,
         getInboundQueues: getInboundQueues,
         getMappingFields: getMappingFields,
-        getRecordInternalID: getRecordInternalID
+        getRecordInternalID: getRecordInternalID,
+        updateInboundQueueRetryCount: updateInboundQueueRetryCount
 	};
 });

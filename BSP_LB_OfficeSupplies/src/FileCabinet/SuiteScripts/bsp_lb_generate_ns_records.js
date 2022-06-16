@@ -2,13 +2,13 @@
  * @NApiVersion 2.1
  * @NScriptType MapReduceScript
  */
-define(['N/record', 'N/runtime', 'N/search', './lib/bsp_lb_utils.js', './lib/bsp_lb_entities.js'],
+define(['N/record', 'N/runtime', 'N/search', './lib/bsp_lb_utils.js', './lib/bsp_lb_entities.js', './lib/bsp_lb_items.js', './lib/bsp_lb_login_api.js'],
     /**
  * @param{record} record
  * @param{runtime} runtime
  * @param{search} search
  */
-    (record, runtime, search, BSPLBUtils, BSPLBEntities) => {
+    (record, runtime, search, BSPLBUtils, BSPLBEntities, BSPLBItems, BSPLBLoginAPI) => {
         /**
          * Defines the function that is executed at the beginning of the map/reduce process and generates the input data.
          * @param {Object} inputContext
@@ -56,7 +56,8 @@ define(['N/record', 'N/runtime', 'N/search', './lib/bsp_lb_utils.js', './lib/bsp
                 recordType = BSPLBUtils.recTypes().item;
                 let itemObjMappingFields = BSPLBUtils.getMappingFields(recordType, false);
 
-                let vendors = BSPLBEntities.fetchVendors(settings);
+                let loginData = BSPLBLoginAPI.login(settings);
+                let vendors = BSPLBEntities.fetchVendors(settings, loginData);
 
                 log.debug(functionName, 
                     {
@@ -72,7 +73,9 @@ define(['N/record', 'N/runtime', 'N/search', './lib/bsp_lb_utils.js', './lib/bsp
                             salesOrderObjMappingFields: salesOrderObjMappingFields,
                             customerObjMappingFields: customerObjMappingFields,
                             itemObjMappingFields: itemObjMappingFields,
-                            vendors: vendors
+                            vendors: vendors,
+                            settings: settings,
+                            loginData: loginData
                         }
                     });
                 });
@@ -113,9 +116,45 @@ define(['N/record', 'N/runtime', 'N/search', './lib/bsp_lb_utils.js', './lib/bsp
         const reduce = (reduceContext) => {
             let functionName = "reduce";
             let logicBlockTransactionData = JSON.parse(reduceContext.values);
-            try{
-                log.debug(functionName, JSON.stringify(logicBlockTransactionData));
-            
+            try{               
+                let updateRetryCount = false;
+                let settings = logicBlockTransactionData.value.settings;
+                let loginData = logicBlockTransactionData.value.loginData;
+                let inboundQueueRecID = logicBlockTransactionData.value.lbTransaction.queueRecID;
+                let logicBlockOrder = logicBlockTransactionData.value.lbTransaction.jsonResponse;
+
+                /*************************
+                 * 
+                 * Create Customer Record
+                 * 
+                 *************************/
+
+                let logicBlockUserAccount = logicBlockOrder.UserAccount;
+                let customerObjMappingFields = logicBlockTransactionData.value.customerObjMappingFields;
+                let customerRecordResult = BSPLBEntities.fetchCustomer(logicBlockUserAccount, customerObjMappingFields);
+
+                log.debug(functionName, {customerRecordResult});
+
+                if(customerRecordResult){
+
+                    /*************************
+                     * 
+                     * Create Item Records
+                     * 
+                     *************************/
+
+                    let itemObjMappingFields = logicBlockTransactionData.value.itemObjMappingFields;
+                    let itemRecordsResult = BSPLBItems.fetchItems(logicBlockOrder.LineItems.LineItem, itemObjMappingFields, settings, loginData);
+                
+                    log.debug(functionName, {itemRecordsResult});
+                }else{
+                    updateRetryCount = true;
+                }
+
+                if(updateRetryCount){
+                    BSPLBUtils.updateInboundQueueRetryCount(inboundQueueRecID);
+                }
+
             } catch (error) {
                 log.error(functionName, {error: error.message});
                 let errorDetail = {error:error, queueIdRec: logicBlockTransactionData.value.lbTransaction.queueRecID, queueId: logicBlockTransactionData.value.lbTransaction.queueId}

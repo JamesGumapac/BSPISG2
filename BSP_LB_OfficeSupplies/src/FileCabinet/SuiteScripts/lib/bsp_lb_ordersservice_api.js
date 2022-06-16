@@ -3,8 +3,8 @@
  * @NModuleScope Public
  */
 
- define(['./bsp_lb_utils.js', './bsp_lb_service_api.js', 'N/xml'],
- function (BSPLBUtils, BSPLBServiceAPI, xml){
+ define(['./bsp_lb_utils.js', './bsp_lb_login_api.js', './bsp_lb_service_api.js', 'N/xml'],
+ function (BSPLBUtils, BSPLBLoginAPI, BSPLBServiceAPI, xml){
 
 
     /**
@@ -16,12 +16,12 @@
             
         let settings = BSPLBUtils.getIntegrationSettings(integrationSettingsRecID);
 
+        let loginData = BSPLBLoginAPI.login(settings);
+        lbOrdersResultObj.loginData = loginData;
+
         let serviceURL = settings.custrecord_bsp_lb_orders_service_url;
         let soapGetOrdersAction = settings.custrecord_bsp_lb_get_orders_soap_action;
 
-        let loginData = BSPLBServiceAPI.login(settings);
-        lbOrdersResultObj.loginData = loginData;
-        
         let lastRuntimeExecution = settings.custrecord_bsp_lb_last_runtime_exec;
         let startDate = null;
         let endDate = new Date().toISOString();
@@ -29,31 +29,20 @@
             startDate = lastRuntimeExecution;
         }
         let startIndex = BSPLBUtils.serverConstants().startIndex;
-        let pageSize = BSPLBUtils.serverConstants().pageSize;
+        let pageSize = settings.custrecord_bsp_lb_orders_page_size;
+
 
         let orders = [];
         let requestBodyXML = getOrdersXMLStrRequest(loginData, startDate, endDate, startIndex, pageSize);
-
-        log.debug("getOrders", {requestBodyXML});
-
         let logicBlockServerResponse = BSPLBServiceAPI.runService(serviceURL, requestBodyXML, soapGetOrdersAction);
         
-        BSPLBUtils.createServiceLog(
-            serviceURL, 
-            soapGetOrdersAction, 
-            requestBodyXML, 
-            logicBlockServerResponse.code, 
-            logicBlockServerResponse.headers, 
-            (logicBlockServerResponse.body).substring(0, 100000)
-        );
-
         let lbOrdersResult = null;
-        if(logicBlockServerResponse.code && logicBlockServerResponse.code == BSPLBUtils.serverConstants().successCode){
-            lbOrdersResult = parseOrdersResponseXml(logicBlockServerResponse.body);
-
-            orders = orders.concat(lbOrdersResult.ordersList);
-
-            let totalOrders = lbOrdersResult.totalOrders; 
+        if(!BSPLBUtils.isEmpty(logicBlockServerResponse)){
+            lbOrdersResult = logicBlockServerResponse.GetOrdersByCriteriaResponse.GetOrdersByCriteriaResult.List.Order;
+            if(lbOrdersResult.length > 0){
+                orders = orders.concat(lbOrdersResult);
+            }
+            let totalOrders =  logicBlockServerResponse.GetOrdersByCriteriaResponse.GetOrdersByCriteriaResult.TotalRows;
 
             /*if(totalOrders > pageSize){
                 let totalRequests = parseInt(totalOrders / pageSize);
@@ -63,18 +52,11 @@
                     let requestBodyXML = getOrdersXMLStrRequest(loginData, reqIndex, pageSize);
                     let logicBlockServerResponse = BSPLBServiceAPI.runService(serviceURL, requestBodyXML, soapGetOrdersAction);
         
-                    BSPLBUtils.createServiceLog(
-                        serviceURL, 
-                        soapGetOrdersAction, 
-                        requestBodyXML, 
-                        logicBlockServerResponse.code, 
-                        logicBlockServerResponse.headers, 
-                        (logicBlockServerResponse.body).substring(0, 100000)
-                    );
-
-                    if(logicBlockServerResponse.code && logicBlockServerResponse.code == BSPLBUtils.serverConstants().successCode){
-                        lbOrdersResult = parseOrdersResponseXml(logicBlockServerResponse.body);
-                        orders = orders.concat(lbOrdersResult.ordersList);
+                    if(logicBlockServerResponse){
+                        lbOrdersResult = logicBlockServerResponse.GetOrdersByCriteriaResponse.GetOrdersByCriteriaResult.List.Order;
+                        if(lbOrdersResult.length > 0){
+                            orders = orders.concat(lbOrdersResult);
+                        }
                     }else{
                         lbOrdersResultObj.lbOrders = null;
                         lbOrdersResultObj.error = logicBlockServerResponse;
@@ -122,36 +104,6 @@
                     </soapenv:Body>
                 </soapenv:Envelope>`;
     }
-
-
-    /**
-     * Parse XML response from Get Orders request
-     * @param {*} xmlStr 
-     * @returns 
-    */
-    function parseOrdersResponseXml(xmlStr){
-        let objOrdersResult = {};
-
-        var xmlDocument = xml.Parser.fromString({
-            text: xmlStr
-        });
-
-        let jsonObj = BSPLBUtils.xmlToJson(xmlDocument.documentElement);
-        let totalOrders = BSPLBUtils.getTotalOrdersAttributeFromJSON(jsonObj);
-        let ordersList = [];
-        ordersList = BSPLBUtils.getOrdersAttributeFromJSON(jsonObj);
-        let ordersStr = JSON.stringify(ordersList).replaceAll("a:","");
-        ordersStr = ordersStr.replaceAll('"@attributes":{}',"");
-        ordersStr = ordersStr.replaceAll('#text',"value");
-        ordersList = JSON.parse(ordersStr).Order;
-
-        objOrdersResult = {
-            totalOrders: totalOrders,
-            ordersList: ordersList
-        }
-        return objOrdersResult;
-    }
-
 
     return {
         getOrders: getOrders

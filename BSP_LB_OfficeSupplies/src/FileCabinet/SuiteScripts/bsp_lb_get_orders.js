@@ -75,29 +75,34 @@ define(['N/runtime', './lib/bsp_lb_utils.js', './lib/bsp_lb_ordersservice_api.js
             try{
                 let objLogicblockOrder = reduceContext.values;
                 let lbOrder = JSON.parse(objLogicblockOrder);
-                let queueId = lbOrder.Id["#text"]; 
+                log.debug(functionName,{lbOrder});
 
-                let inboundQueueResult = BSPLBUtils.createInboundQueue(
-                    queueId,
-                    lbOrder
-                );
+                let queueId = lbOrder.Id; 
 
-                if (inboundQueueResult.status == BSPLBUtils.constants().successStatus){
-                    log.debug(
-                        functionName + " - Create Inbound Queue SUCCESS",
-                        {inboundQueueRecId:inboundQueueResult.message, queueId:inboundQueueResult.queueId}
+                let hasUserID = (BSPLBUtils.isEmpty(lbOrder.UserId) ? false : true);
+                if(hasUserID){
+                    let inboundQueueResult = BSPLBUtils.createInboundQueue(
+                        queueId,
+                        lbOrder
                     );
-                }else{
-                    log.error(
-                        functionName + " - Create Inbound Queue ERROR",
-                        {errorMessage:inboundQueueResult.message}
-                    );
-                    let errorSource = "BSP | LB | MR | Get Orders  - " + functionName;
-                    BSPLBUtils.createErrorLog(
-                        errorSource,
-                        inboundQueueResult.code,
-                        BSPLBUtils.buildErrorDetails({error:inboundQueueResult.message, queueId:inboundQueueResult.queueId})
-                    );
+    
+                    if (inboundQueueResult.status == BSPLBUtils.constants().successStatus){
+                        log.debug(
+                            functionName + " - Create Inbound Queue SUCCESS",
+                            {inboundQueueRecId:inboundQueueResult.message, queueId:inboundQueueResult.queueId}
+                        );
+                    }else{
+                        log.error(
+                            functionName + " - Create Inbound Queue ERROR",
+                            {errorMessage:inboundQueueResult.message}
+                        );
+                        let errorSource = "BSP | LB | MR | Get Orders  - " + functionName;
+                        BSPLBUtils.createErrorLog(
+                            errorSource,
+                            inboundQueueResult.code,
+                            BSPLBUtils.buildErrorDetails({error:inboundQueueResult.message, queueId:inboundQueueResult.queueId})
+                        );
+                    }
                 }
             }catch (error)
             {
