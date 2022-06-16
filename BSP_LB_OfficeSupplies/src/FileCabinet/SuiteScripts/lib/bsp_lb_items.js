@@ -107,8 +107,7 @@
                         } 
                     }                
                 }
-            }
-            
+            }           
         }catch(error){
             log.error(functionName, {error: error.message});
             let errorDetail = JSON.stringify({error: error.message})

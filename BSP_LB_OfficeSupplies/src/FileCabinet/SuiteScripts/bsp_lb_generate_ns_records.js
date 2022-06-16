@@ -147,6 +147,12 @@ define(['N/record', 'N/runtime', 'N/search', './lib/bsp_lb_utils.js', './lib/bsp
                     let itemRecordsResult = BSPLBItems.fetchItems(logicBlockOrder.LineItems.LineItem, itemObjMappingFields, settings, loginData);
                 
                     log.debug(functionName, {itemRecordsResult});
+
+                    if(!BSPLBUtils.isEmpty(itemRecordsResult)){
+
+                    }else{
+                        updateRetryCount = true;
+                    }
                 }else{
                     updateRetryCount = true;
                 }
