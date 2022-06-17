@@ -2,13 +2,13 @@
  * @NApiVersion 2.1
  * @NScriptType MapReduceScript
  */
-define(['N/record', 'N/runtime', 'N/search', './lib/bsp_lb_utils.js', './lib/bsp_lb_entities.js', './lib/bsp_lb_items.js', './lib/bsp_lb_login_api.js'],
+define(['N/record', 'N/runtime', 'N/search', './lib/bsp_lb_utils.js', './lib/bsp_lb_entities.js', './lib/bsp_lb_items.js', './lib/bsp_lb_transactions.js', './lib/bsp_lb_login_api.js'],
     /**
  * @param{record} record
  * @param{runtime} runtime
  * @param{search} search
  */
-    (record, runtime, search, BSPLBUtils, BSPLBEntities, BSPLBItems, BSPLBLoginAPI) => {
+    (record, runtime, search, BSPLBUtils, BSPLBEntities, BSPLBItems, BSPLBTransactions, BSPLBLoginAPI) => {
         /**
          * Defines the function that is executed at the beginning of the map/reduce process and generates the input data.
          * @param {Object} inputContext
@@ -135,7 +135,7 @@ define(['N/record', 'N/runtime', 'N/search', './lib/bsp_lb_utils.js', './lib/bsp
 
                 log.debug(functionName, {customerRecordResult});
 
-                if(customerRecordResult){
+                if(!BSPLBUtils.isEmpty(customerRecordResult)){
 
                     /*************************
                      * 
@@ -150,6 +150,19 @@ define(['N/record', 'N/runtime', 'N/search', './lib/bsp_lb_utils.js', './lib/bsp
 
                     if(!BSPLBUtils.isEmpty(itemRecordsResult)){
 
+                        /***************************
+                         * 
+                         * Create Sales Order Record
+                         * 
+                         ***************************/
+
+                        let salesOrderObjMappingFields = logicBlockTransactionData.value.salesOrderObjMappingFields;
+                        let salesOrderRecordsResult = BSPLBTransactions.fetchSalesOrder(logicBlockOrder, salesOrderObjMappingFields, customerRecordResult, itemRecordsResult);
+                        log.debug(functionName, {salesOrderRecordsResult});
+                        
+                        if(BSPLBUtils.isEmpty(salesOrderRecordsResult)){
+                            updateRetryCount = true;
+                        }
                     }else{
                         updateRetryCount = true;
                     }

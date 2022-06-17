@@ -517,7 +517,25 @@
     function buildErrorDetails(objErrorDetail){
         return (~(objErrorDetail.error).indexOf(LOGICBLOCK_CONTANTS.errorMessageQueueAlreadyExists)) ? JSON.stringify({error:objErrorDetail.error}) : JSON.stringify(objErrorDetail);
     }
-    
+
+    /**
+     * Delete transaction Record
+     * @param {*} recType 
+     * @param {*} recID 
+     */
+     function deleteTransaction(recType, recID){
+        let recordType = null;
+        if(recType == REC_TYPES.salesOrder){
+            recordType = record.Type.SALES_ORDER
+        }else{
+            recordType = record.Type.PURCHASE_ORDER
+        }
+        record.delete({
+            type: recordType,
+            id: recID,
+        });
+    }
+
     /**
      * Returns value of property
      * @param {*} obj 
@@ -542,6 +560,7 @@
         recTypes: recTypes,
         isEmpty:isEmpty,
         getProp: getProp,
+        deleteTransaction: deleteTransaction,
         getIntegrationSettings: getIntegrationSettings,
         createServiceLog: createServiceLog,
         createErrorLog: createErrorLog,

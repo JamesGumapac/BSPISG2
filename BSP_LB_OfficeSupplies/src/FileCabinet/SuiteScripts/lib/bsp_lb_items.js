@@ -79,7 +79,7 @@
                     lbProductsResult.lbProducts.forEach(productElement => {
                         let internalId = BSPLBUtils.getRecordInternalID(productElement.Id);
                         if(internalId){
-                            itemsRecordResult.push({nsID: internalId, logicBlockID: productElement.Id})
+                            itemsRecordResult.push({nsID: internalId, logicBlockID: productElement.Id, productSKU: productElement.Sku})
                         }else{
                             let objFields = {
                                 product: productElement
@@ -87,7 +87,7 @@
                             let recordCreationResult = createItemRecord(objFields, objMappingFields);
                             if(recordCreationResult && recordCreationResult.recordId){
                                 internalId = recordCreationResult.recordId;
-                                itemsRecordResult.push({nsID: internalId, logicBlockID: productElement.Id})
+                                itemsRecordResult.push({nsID: internalId, logicBlockID: productElement.Id, productSKU: productElement.Sku})
                             }
                         }
                     });
@@ -95,7 +95,7 @@
                     let productElement = lbProductsResult.lbProducts;
                     let internalId = BSPLBUtils.getRecordInternalID(productElement.Id);
                     if(internalId){
-                        itemsRecordResult.push({nsID: internalId, logicBlockID: productElement.Id})
+                        itemsRecordResult.push({nsID: internalId, logicBlockID: productElement.Id, productSKU: productElement.Sku})
                     }else{
                         let objFields = {
                             product: productElement
@@ -103,7 +103,7 @@
                         let recordCreationResult = createItemRecord(objFields, objMappingFields);
                         if(recordCreationResult && recordCreationResult.recordId){
                             internalId = recordCreationResult.recordId;
-                            itemsRecordResult.push({nsID: internalId, logicBlockID: productElement.Id})
+                            itemsRecordResult.push({nsID: internalId, logicBlockID: productElement.Id, productSKU: productElement.Sku})
                         } 
                     }                
                 }
@@ -145,8 +145,25 @@
         return productsSKU;
     }
 
+    /**
+     * Get Item's NS Record ID
+     * @param {*} productSKU 
+     * @param {*} itemRecordsResult 
+     * @returns 
+     */
+    function getItemNetSuiteRecID(productSKU, itemRecordsResult){
+        let itemRecID = null;
+        itemRecordsResult.forEach(item => {
+            if(item.productSKU == productSKU){
+                itemRecID = item.nsID;
+            }
+        });
+        return itemRecID;
+    }
+
     return {
-		fetchItems: fetchItems
+		fetchItems: fetchItems,
+        getItemNetSuiteRecID: getItemNetSuiteRecID
 	};
 
 });
