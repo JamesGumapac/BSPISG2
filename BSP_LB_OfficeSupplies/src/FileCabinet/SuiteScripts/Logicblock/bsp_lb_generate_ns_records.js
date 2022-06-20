@@ -51,7 +51,7 @@ define(['N/record', 'N/runtime', 'N/search', './lib/bsp_lb_utils.js', './lib/bsp
                 let salesOrderObjMappingFields = BSPLBUtils.getMappingFields(recordType, true);
 
                 recordType = BSPLBUtils.recTypes().customer;
-                let customerObjMappingFields = BSPLBUtils.getMappingFields(recordType, true);
+                let customerObjMappingFields = BSPLBUtils.getMappingFields(recordType, false);
 
                 recordType = BSPLBUtils.recTypes().item;
                 let itemObjMappingFields = BSPLBUtils.getMappingFields(recordType, false);
@@ -155,9 +155,9 @@ define(['N/record', 'N/runtime', 'N/search', './lib/bsp_lb_utils.js', './lib/bsp
                          * Create Sales Order Record
                          * 
                          ***************************/
-
+                        
                         let salesOrderObjMappingFields = logicBlockTransactionData.value.salesOrderObjMappingFields;
-                        let salesOrderRecordsResult = BSPLBTransactions.fetchSalesOrder(logicBlockOrder, salesOrderObjMappingFields, customerRecordResult, itemRecordsResult);
+                        let salesOrderRecordsResult = BSPLBTransactions.fetchSalesOrder(logicBlockOrder, salesOrderObjMappingFields, customerRecordResult, itemRecordsResult, settings.custrecord_bsp_lb_sales_order_form);
                         log.debug(functionName, {salesOrderRecordsResult});
                         
                         if(BSPLBUtils.isEmpty(salesOrderRecordsResult)){

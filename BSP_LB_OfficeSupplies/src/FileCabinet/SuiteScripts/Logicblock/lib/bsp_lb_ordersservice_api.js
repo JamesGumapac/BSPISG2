@@ -22,18 +22,10 @@
         let serviceURL = settings.custrecord_bsp_lb_orders_service_url;
         let soapGetOrdersAction = settings.custrecord_bsp_lb_get_orders_soap_action;
 
-        let lastRuntimeExecution = settings.custrecord_bsp_lb_last_runtime_exec;
-        let startDate = null;
-        let endDate = new Date().toISOString();
-        if(lastRuntimeExecution){
-            startDate = lastRuntimeExecution;
-        }
-        let startIndex = BSPLBUtils.serverConstants().startIndex;
-        let pageSize = settings.custrecord_bsp_lb_orders_page_size;
-
+        let requestParams = getOrdersRequestParams(settings);
 
         let orders = [];
-        let requestBodyXML = getOrdersXMLStrRequest(loginData, startDate, endDate, startIndex, pageSize);
+        let requestBodyXML = getOrdersXMLStrRequest(loginData, requestParams);
         let logicBlockServerResponse = BSPLBServiceAPI.runService(serviceURL, requestBodyXML, soapGetOrdersAction);
         
         let lbOrdersResult = null;
@@ -77,11 +69,32 @@
         return lbOrdersResultObj;
     }
    
+
+    function getOrdersRequestParams(settings){
+        let lastRuntimeExecution = settings.custrecord_bsp_lb_last_runtime_exec;
+        let startDate = null;
+        let endDate = new Date().toISOString();
+        if(lastRuntimeExecution){
+            startDate = lastRuntimeExecution;
+        }
+        let startIndex = BSPLBUtils.serverConstants().startIndex;
+        let pageSize = settings.custrecord_bsp_lb_orders_page_size;
+        let canceledOrders = settings.custrecord_bsp_lb_exclude_canceled_ord;
+
+        return {
+            startDate: startDate,
+            endDate: endDate,
+            startIndex: startIndex,
+            pageSize: pageSize,
+            canceledOrders: canceledOrders
+        };
+    }
+
     /**
      * Body of Order Request
      * @returns 
      */
-     function getOrdersXMLStrRequest(loginData, startDate, endDate, startIndex, pageSize){
+     function getOrdersXMLStrRequest(loginData, requestParams){
         return `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/" xmlns:log="http://schemas.datacontract.org/2004/07/Logicblock.Commerce.Domain">
                     <soapenv:Header/>
                     <soapenv:Body>
@@ -94,12 +107,12 @@
                                 <log:TokenRejected>${loginData.TokenRejected}</log:TokenRejected>
                             </tem:token>
                             <tem:criteria>
-                                <log:StartDate>${startDate}</log:StartDate>
-                                <log:EndDate>${endDate}</log:EndDate>
-                                <log:ExcludeCanceledOrders>true</log:ExcludeCanceledOrders>
+                                <log:StartDate>${requestParams.startDate}</log:StartDate>
+                                <log:EndDate>${requestParams.endDate}</log:EndDate>
+                                <log:ExcludeCanceledOrders>${requestParams.canceledOrders}</log:ExcludeCanceledOrders>
                             </tem:criteria>
-                            <tem:startIndex>${startIndex}</tem:startIndex>
-                            <tem:pageSize>${pageSize}</tem:pageSize>
+                            <tem:startIndex>${requestParams.startIndex}</tem:startIndex>
+                            <tem:pageSize>${requestParams.pageSize}</tem:pageSize>
                         </tem:GetOrdersByCriteria>
                     </soapenv:Body>
                 </soapenv:Envelope>`;

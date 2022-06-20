@@ -33,6 +33,7 @@
             let isLineItem = fieldMapping.isLineItem;
             let fieldDataType = fieldMapping.lbFieldDataType;
             let lbValue = BSPLBUtils.getProp(objFields, lbField);
+            let isSetValue = fieldMapping.isSetValue;
 
             log.debug("createItemRecord", 
                 {
@@ -42,11 +43,26 @@
             );
 
             if (isLineItem == "F" || (isLineItem == false && nsField)) {
-                if(fieldDataType == "String"){
-                    if(!BSPLBUtils.isEmpty(lbValue)){
-                        itemRec.setValue({ fieldId: nsField, value: lbValue });
-                    }
-                }                
+                if(!BSPLBUtils.isEmpty(lbValue)){
+                    if(isSetValue){
+                        let searchFilter = fieldMapping.lbFieldSearchFilter;
+                        let searchRecord = fieldMapping.lbFieldSearchRecord;
+                        let searchColumn = fieldMapping.lbFieldSearchColumn;
+                        let searchOperator = fieldMapping.lbFieldSearchOperator;
+                        let resultValue =  BSPLBUtils.searchRecordToGetInternalId(
+                            lbValue,
+                            searchFilter,
+                            searchRecord,
+                            searchColumn,
+                            searchOperator
+                        );
+                        itemRec.setValue({ fieldId: nsField, value: resultValue });
+                    }else{
+                        if(fieldDataType == "String"){               
+                            itemRec.setValue({ fieldId: nsField, value: lbValue });                       
+                        }      
+                    }           
+                }                            
             }
         }
 

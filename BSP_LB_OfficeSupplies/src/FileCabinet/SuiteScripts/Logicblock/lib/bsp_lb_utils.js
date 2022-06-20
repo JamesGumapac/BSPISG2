@@ -126,14 +126,37 @@
                 "custrecord_bsp_lb_user_id",
                 "custrecord_bsp_lb_password",
                 "custrecord_bsp_lb_last_runtime_exec",
-                "custrecord_bsp_lb_orders_page_size"
+                "custrecord_bsp_lb_orders_page_size",
+                "custrecord_bsp_lb_exclude_canceled_ord",
+                "custrecord_bsp_lb_sales_order_form"
             ]
         });
        
         return settings;
     }
 
+    /**
+     * Return Logicblock Integration settings - filter by Order Status field
+     * @param {*} settingRecID 
+     * @returns 
+    */
+    function getOrderStatusFilter(settingRecID) {
+        let settings = search.lookupFields({
+            type: "customrecord_bsp_lb_integration_settings",
+            id: settingRecID,
+            columns: [
+                "custrecord_bsp_lb_filter_by_order_status"
+            ]
+        });
 
+        let orderStatuses = null;
+        if(settings && settings.custrecord_bsp_lb_filter_by_order_status){
+            let orderStatusesField = settings.custrecord_bsp_lb_filter_by_order_status;
+            orderStatuses = orderStatusesField.map((status) => { return status.text;});
+        }
+        
+        return orderStatuses;
+    }
     /**
      * Update Retry count on Inbound Queue
      * @param {*} inboundQueueRecId 
@@ -386,7 +409,7 @@
             searchFilters = [
                 ["isinactive","is","F"], 
                 "AND", 
-                [["name","is",recordType],"OR",["name","is","Billing Addres"],"OR",["name","is","Shipping Address"]]
+                [["name","is",recordType],"OR",["name","is","Billing Address"],"OR",["name","is","Shipping Address"]]
             ];
         }else{
             searchFilters = [
@@ -507,7 +530,102 @@
 
         return objFieldMapper;
 
-     }
+    }
+
+
+    function searchRecordToGetInternalId(lbValue, searchFilter, searchRecord, searchColumn, searchOperator){
+        let functionName = "searchRecordToGetInternalId";
+
+		let recordSearch = search.create({
+			type: searchRecord,
+			filters: [[searchFilter, searchOperator, lbValue]],
+			columns: [search.createColumn({ name: searchColumn })],
+		});
+
+		log.debug(functionName, "recordSearch : " + JSON.stringify(recordSearch));
+
+		let recordIdSearch = searchAll(recordSearch);
+		log.debug(functionName, "recordIdSearch.length : " + recordIdSearch.length);
+
+		return recordIdSearch.length > 0
+			? recordIdSearch[0].getValue(searchColumn)
+			: "";
+    }
+
+    /**
+     * Delete mapped key from NS
+     * @param {*} orderID 
+     */
+    function deleteMappedKey(orderID){
+        let searchRecord = "customrecord_bsp_lb_mapped_keys";
+        let searchFilter = "custrecord_bsp_lb_logicblock_id";
+        let searchOperator = "is";
+        let searchColumn = "internalid"
+        let recID = searchRecordToGetInternalId(orderID, searchFilter, searchRecord, searchColumn, searchOperator);
+
+        record.delete({
+            type: searchRecord,
+            id: recID,
+        });
+    }
+    /**
+     * Return Formatted date to store in NS field
+     * @param {*} nsDate 
+     * @returns 
+     */
+    function convertResponseDateToNSDate(nsDate) {
+        let month = new Date(nsDate).getUTCMonth() + 1;
+        let day = new Date(nsDate).getUTCDate();
+        let year = new Date(nsDate).getUTCFullYear();
+
+        nsDate = format.parse({
+            value: new Date(month + "/" + day + "/" + year),
+            type: format.Type.DATE,
+        });
+
+        return nsDate;
+    }
+
+    /**
+     * Get all results from a saved search
+     * @param {*} objSavedSearch 
+     * @returns 
+     */
+    function searchAll(objSavedSearch) {
+		let title = "searchAll";
+		let arrReturnSearchResults = [];
+		try {
+			let objResultset = objSavedSearch.run();
+			let intSearchIndex = 0;
+			let objResultSlice = null;
+			let maxSearchReturn = 1000;
+
+			let maxResults = 0;
+
+			do {
+				let start = intSearchIndex;
+				let end = intSearchIndex + maxSearchReturn;
+				if (maxResults && maxResults <= end) {
+					end = maxResults;
+				}
+				objResultSlice = objResultset.getRange(start, end);
+
+				if (!objResultSlice) {
+					break;
+				}
+
+				arrReturnSearchResults = arrReturnSearchResults.concat(objResultSlice);
+				intSearchIndex = intSearchIndex + objResultSlice.length;
+
+				if (maxResults && maxResults == intSearchIndex) {
+					break;
+				}
+			} while (objResultSlice.length >= maxSearchReturn);
+		} catch (error) {
+			log.error(title, error.toString());
+		}
+		return arrReturnSearchResults;
+	}
 
     /**
     * Build Error Details 
@@ -530,6 +648,10 @@
         }else{
             recordType = record.Type.PURCHASE_ORDER
         }
+        log.debug("deleteTransaction", {
+            recordType: recordType,
+            recID: recID
+        })
         record.delete({
             type: recordType,
             id: recID,
@@ -560,8 +682,11 @@
         recTypes: recTypes,
         isEmpty:isEmpty,
         getProp: getProp,
+        convertResponseDateToNSDate: convertResponseDateToNSDate,
         deleteTransaction: deleteTransaction,
+        deleteMappedKey: deleteMappedKey,
         getIntegrationSettings: getIntegrationSettings,
+        getOrderStatusFilter: getOrderStatusFilter,
         createServiceLog: createServiceLog,
         createErrorLog: createErrorLog,
         createMappingKeyRecord: createMappingKeyRecord,
@@ -570,6 +695,7 @@
         buildErrorDetails: buildErrorDetails,
         getInboundQueues: getInboundQueues,
         getMappingFields: getMappingFields,
+        searchRecordToGetInternalId: searchRecordToGetInternalId,
         getRecordInternalID: getRecordInternalID,
         updateInboundQueueRetryCount: updateInboundQueueRetryCount
 	};

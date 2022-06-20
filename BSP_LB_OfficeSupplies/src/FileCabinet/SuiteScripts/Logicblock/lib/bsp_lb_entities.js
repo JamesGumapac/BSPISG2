@@ -148,7 +148,6 @@
                 }                
             }
         }
-        processCustomerAddress(customerRec, objMappingFields, objFields);
 
         newRecordId = customerRec.save();
         BSPLBUtils.createMappingKeyRecord(newRecordId, BSPLBUtils.recTypes().customer, objFields.customer.Id, BSPLBUtils.recTypes().customer)
@@ -159,46 +158,6 @@
         };
         
         return objResult;
-    }
-
-    /**
-     * Add Addresses to Customer Record
-     * @param {*} customerRec 
-     * @param {*} objFields 
-     */
-    function processCustomerAddress(customerRec, objMappingFields, objFields){
-        for (const fieldMapping of objMappingFields.lineFields) {
-            let nsSublistId = fieldMapping.sublistId;
-            let nsLineFieldId = fieldMapping.netSuiteFieldId;
-            let lbLineFieldId = fieldMapping.lbFieldId;
-            let lbValue = BSPLBUtils.getProp(objFields, lbLineFieldId);
-
-            log.debug("processCustomerAddress", 
-                {
-                    objMappingFields: JSON.stringify(fieldMapping),
-                    lbValue: lbValue
-                }
-            );
-
-            customerRec.selectNewLine({
-                sublistId: nsSublistId
-            })
-        
-            let addressSubRecord = customerRec.getCurrentSublistSubrecord({
-                sublistId: nsSublistId,
-                fieldId: 'addressbookaddress'
-            })
-
-            if(!BSPLBUtils.isEmpty(lbValue)){
-                addressSubRecord.setValue({
-                    fieldId: nsLineFieldId,
-                    value: lbValue
-                })
-            }                 
-        }
-        customerRec.commitLine({
-            sublistId: 'addressbook'
-        });
     }
 
     /**
@@ -215,9 +174,7 @@
                 customerRecordResult = {nsID: internalId, logicBlockID: logicBlockUserAccount.Id};
             }else{
                 let objFields = {
-                    customer: logicBlockUserAccount,
-                    BillingAddress: logicBlockUserAccount.BillingAddress,
-                    ShippingAddress: logicBlockUserAccount.ShippingAddress
+                    customer: logicBlockUserAccount
                 }
                 let recordCreationResult = createCustomerRecord(objFields, objMappingFields);
                 if(recordCreationResult && recordCreationResult.recordId){

@@ -79,8 +79,8 @@ define(['N/runtime', './lib/bsp_lb_utils.js', './lib/bsp_lb_ordersservice_api.js
 
                 let queueId = lbOrder.Id; 
 
-                let hasUserID = (BSPLBUtils.isEmpty(lbOrder.UserId) ? false : true);
-                if(hasUserID){
+                let validOrder = validOrderForNetSuite(lbOrder);
+                if(validOrder){
                     let inboundQueueResult = BSPLBUtils.createInboundQueue(
                         queueId,
                         lbOrder
@@ -165,6 +165,29 @@ define(['N/runtime', './lib/bsp_lb_utils.js', './lib/bsp_lb_ordersservice_api.js
                 integrationSettingsRecID : objScript.getParameter({name: "custscript_bsp_lb_integration_settings"})
             }         
             return objParams;
+        }
+
+        /**
+         * Check if Logicblock Order is valid for creation in NetSuite
+         * @param {*} lbOrder 
+         * @returns 
+         */
+        const validOrderForNetSuite = (lbOrder) =>{
+            let hasUserID = (BSPLBUtils.isEmpty(lbOrder.UserId) ? false : true);
+
+            let objScriptParams = getParameters();
+            let orderStatusesFilter = BSPLBUtils.getOrderStatusFilter(objScriptParams.integrationSettingsRecID);
+            log.debug("validOrderForNetSuite", {
+                orderStatusesFilter: orderStatusesFilter
+            });
+            let orderStatus = lbOrder.OrderStatusName;
+            let statusValud = (orderStatusesFilter.indexOf(orderStatus) != -1);
+            log.debug("validOrderForNetSuite", {
+                hasUserID: hasUserID,
+                orderStatus: orderStatus,
+                statusValud: statusValud
+            });
+            return hasUserID && statusValud;
         }
 
         return {getInputData, reduce, summarize}
