@@ -532,20 +532,23 @@
 
     }
 
-
+    /**
+     * Retrieve internalID of record mapped to LogicBlock ID
+     * @param {*} lbValue 
+     * @param {*} searchFilter 
+     * @param {*} searchRecord 
+     * @param {*} searchColumn 
+     * @param {*} searchOperator 
+     * @returns 
+     */
     function searchRecordToGetInternalId(lbValue, searchFilter, searchRecord, searchColumn, searchOperator){
-        let functionName = "searchRecordToGetInternalId";
-
 		let recordSearch = search.create({
 			type: searchRecord,
 			filters: [[searchFilter, searchOperator, lbValue]],
 			columns: [search.createColumn({ name: searchColumn })],
 		});
 
-		log.debug(functionName, "recordSearch : " + JSON.stringify(recordSearch));
-
 		let recordIdSearch = searchAll(recordSearch);
-		log.debug(functionName, "recordIdSearch.length : " + recordIdSearch.length);
 
 		return recordIdSearch.length > 0
 			? recordIdSearch[0].getValue(searchColumn)
