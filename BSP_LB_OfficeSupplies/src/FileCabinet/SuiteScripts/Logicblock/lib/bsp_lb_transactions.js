@@ -75,7 +75,7 @@
      */
     function processSalesOrderLines(salesOrderRecord, order, objMappingFields, itemRecordsResult){
 
-        for (const fieldMapping of objMappingFields.lineFields) {
+        /*for (const fieldMapping of objMappingFields.lineFields) {
             let nsSublistId = fieldMapping.sublistId;
             let nsLineFieldId = fieldMapping.netSuiteFieldId;
             let lbLineFieldId = fieldMapping.lbFieldId;
@@ -106,7 +106,7 @@
         }
         salesOrderRecord.commitLine({
             sublistId: 'addressbook'
-        });
+        });*/
 
         let lineItems = [];
         if(order.LineItems.LineItem.length && order.LineItems.LineItem.length > 0){
