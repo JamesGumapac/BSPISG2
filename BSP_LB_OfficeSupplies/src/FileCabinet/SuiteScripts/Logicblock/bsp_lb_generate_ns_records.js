@@ -116,6 +116,10 @@ define(['N/record', 'N/runtime', 'N/search', './lib/bsp_lb_utils.js', './lib/bsp
         const reduce = (reduceContext) => {
             let functionName = "reduce";
             let logicBlockTransactionData = JSON.parse(reduceContext.values);
+            let customerRecordResult = null;
+            let itemRecordsResult = null;
+            let salesOrderRecordsResult = null;
+
             try{               
                 let updateRetryCount = false;
                 let settings = logicBlockTransactionData.value.settings;
@@ -131,7 +135,7 @@ define(['N/record', 'N/runtime', 'N/search', './lib/bsp_lb_utils.js', './lib/bsp
 
                 let logicBlockUserAccount = logicBlockOrder.UserAccount;
                 let customerObjMappingFields = logicBlockTransactionData.value.customerObjMappingFields;
-                let customerRecordResult = BSPLBEntities.fetchCustomer(logicBlockUserAccount, customerObjMappingFields);
+                customerRecordResult = BSPLBEntities.fetchCustomer(logicBlockUserAccount, customerObjMappingFields);
 
                 log.debug(functionName, {customerRecordResult});
 
@@ -144,7 +148,7 @@ define(['N/record', 'N/runtime', 'N/search', './lib/bsp_lb_utils.js', './lib/bsp
                      *************************/
 
                     let itemObjMappingFields = logicBlockTransactionData.value.itemObjMappingFields;
-                    let itemRecordsResult = BSPLBItems.fetchItems(logicBlockOrder.LineItems.LineItem, itemObjMappingFields, settings, loginData);
+                    itemRecordsResult = BSPLBItems.fetchItems(logicBlockOrder.LineItems.LineItem, itemObjMappingFields, settings, loginData);
                 
                     log.debug(functionName, {itemRecordsResult});
 
@@ -157,7 +161,7 @@ define(['N/record', 'N/runtime', 'N/search', './lib/bsp_lb_utils.js', './lib/bsp
                          ***************************/
                         
                         let salesOrderObjMappingFields = logicBlockTransactionData.value.salesOrderObjMappingFields;
-                        let salesOrderRecordsResult = BSPLBTransactions.fetchSalesOrder(logicBlockOrder, salesOrderObjMappingFields, customerRecordResult, itemRecordsResult, settings.custrecord_bsp_lb_sales_order_form);
+                        salesOrderRecordsResult = BSPLBTransactions.fetchSalesOrder(logicBlockOrder, salesOrderObjMappingFields, customerRecordResult, itemRecordsResult, settings.custrecord_bsp_lb_sales_order_form);
                         log.debug(functionName, {salesOrderRecordsResult});
                         
                         if(BSPLBUtils.isEmpty(salesOrderRecordsResult)){
@@ -209,7 +213,11 @@ define(['N/record', 'N/runtime', 'N/search', './lib/bsp_lb_utils.js', './lib/bsp
             let functionName = 'Summarize';
             try{
                 /*let objScriptParams = getParameters();
-                BSPLBUtils.updateLastRuntimeExecution(objScriptParams.integrationSettingsRecID);*/
+                BSPLBUtils.updateLastRuntimeExecution(objScriptParams.integrationSettingsRecID);
+
+                let deletedQueues = BSPLBUtils.deleteProcessedQueues(objScriptParams.integrationSettingsRecID);
+                log.audit(functionName, {'deletedProcessedQueues': deletedQueues});*/
+
             }catch (error)
             {
                 log.error(functionName, {error: error.toString()});

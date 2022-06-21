@@ -273,6 +273,57 @@
     }
 
     /**
+     * Get Max Retry Count setUp for Logicblock Integration
+     * @param {*} settingRecID 
+     * @returns 
+    */
+    function getSettingsMaxRetryCount(settingRecID) {
+        let maxRetryCount = null;
+
+        let objSettingsField = search.lookupFields({
+            type: "customrecord_bsp_lb_integration_settings",
+            id: settingRecID,
+            columns: 'custrecord_bsp_lb_max_retry_count'
+        });
+
+        if(objSettingsField && objSettingsField.custrecord_bsp_lb_max_retry_count){
+            maxRetryCount = objSettingsField.custrecord_bsp_lb_max_retry_count;
+        }
+       
+		return maxRetryCount;
+	}
+
+    /**
+     * Delete queues that had been processed
+    */
+    function deleteProcessedQueues(settingsRecID){
+
+        let maxRetryCount = getSettingsMaxRetryCount(settingsRecID);
+
+        let inboundQueueSearchObj = search.create({
+            type: "customrecord_bsp_lb_inbound_queue",
+            filters:
+            [
+                ["isinactive","is","F"],
+                "AND", 
+                [["custrecord_bsp_lb_retry_count","isempty",""],"OR",["custrecord_bsp_lb_retry_count","equalto",maxRetryCount]]
+            ],
+            columns:
+            []
+        });
+        let deletedQueues = 0;
+        inboundQueueSearchObj.run().each(function (result) {
+            record.delete({
+                type: "customrecord_bsp_lb_inbound_queue",
+                id: result.id,
+            });
+            deletedQueues++;
+            return true;
+        });
+        return deletedQueues;
+    }
+
+    /**
      * Create Inbound Queue for each Logicblock Order 
      * @param {*} queueId 
      * @param {*} jsonObject 
@@ -694,6 +745,7 @@
         createErrorLog: createErrorLog,
         createMappingKeyRecord: createMappingKeyRecord,
         updateLastRuntimeExecution: updateLastRuntimeExecution,
+        deleteProcessedQueues: deleteProcessedQueues,
         createInboundQueue: createInboundQueue,
         buildErrorDetails: buildErrorDetails,
         getInboundQueues: getInboundQueues,
