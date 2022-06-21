@@ -60,11 +60,20 @@
                     }else{
                         if(fieldDataType == "String"){               
                             itemRec.setValue({ fieldId: nsField, value: lbValue });                       
-                        }      
+                        } else if(fieldDataType == "Integer"){               
+                            itemRec.setValue({ fieldId: nsField, value: parseInt(lbValue) });                       
+                        } else if(fieldDataType == "Double"){               
+                            itemRec.setValue({ fieldId: nsField, value: parseFloat(lbValue) });                       
+                        }       
                     }           
                 }                            
             }
         }
+
+        /**
+         * Default quantity avaiable MAX
+         */
+        setDefaultQuantityAvaiableForItem(itemRec);
 
         newRecordId = itemRec.save();
         BSPLBUtils.createMappingKeyRecord(newRecordId, BSPLBUtils.recTypes().item, objFields.product.Id, "Product");
@@ -75,6 +84,22 @@
         };
         
         return objResult;
+    }
+
+    /**
+     * Set default Quantity on hand
+     * @param {*} itemRec 
+     */
+    function setDefaultQuantityAvaiableForItem(itemRec){
+        let lineNumber = itemRec.findSublistLineWithValue({ sublistId: "locations", fieldId: "location", value: BSPLBUtils.constants().defaultInventoryLocation });
+        itemRec.selectLine({
+            sublistId: 'locations',
+            line: lineNumber
+        });
+        itemRec.setCurrentSublistValue({ sublistId: "locations", fieldId: "quantityonhand", value: BSPLBUtils.constants().defaultQuantityOnHand });
+        itemRec.commitLine({
+            sublistId: "locations",
+        });
     }
 
     /**

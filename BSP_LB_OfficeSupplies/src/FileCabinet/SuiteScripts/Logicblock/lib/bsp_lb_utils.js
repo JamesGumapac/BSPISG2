@@ -3,7 +3,7 @@
  * @NModuleScope Public
  */
 
- define(['N/search', 'N/record', './lodash.min.js', 'N/task', 'N/format', 'N/xml'], function (search, record, lodash, task, format, xmlMod) {
+ define(['N/search', 'N/record', './lodash.min.js', 'N/task', 'N/format'], function (search, record, lodash, task, format) {
     
     const API_CONSTANTS = Object.freeze({
         startIndex: 0,
@@ -15,7 +15,11 @@
         errorStatus: "ERROR",
         errorCodeCreatingQueue: "ERROR_CREATING_QUEUE",
         errorMessageCreatingQueue: "An error has occurred creating Queue record.",
-        errorMessageQueueAlreadyExists: "The Queue record already exists."
+        errorMessageQueueAlreadyExists: "The Queue record already exists.",
+        mrCreateRecordsScriptId: "customscript_bsp_lb_mr_create_ns_records",
+        mrCreateRecordsDeploymentId: "customdeploy_bsp_lb_mr_create_ns_records",
+        defaultInventoryLocation: 3,
+        defaultQuantityOnHand: 99999
     });
 
     const REC_TYPES = Object.freeze({
@@ -566,7 +570,7 @@
                         name: "custrecord_bsp_lb_set_value",
                     }),
                     defaultValue: result.getValue({
-                            name: "custrecord_bsp_lb_ns_default_value",
+                        name: "custrecord_bsp_lb_ns_default_value",
                     })
                 });
             }
@@ -622,6 +626,23 @@
             id: recID,
         });
     }
+
+    /**
+     * Schedule MR Task
+     * @param {*} scriptId 
+     * @param {*} objParams 
+     */
+     function scheduleMRTask(scriptId, deploymentId){
+        let functionName = "scheduleMRTask";
+        let objMRTask = task.create({
+            taskType: task.TaskType.MAP_REDUCE,
+            scriptId: scriptId,
+            deploymentId: deploymentId
+        });
+        let intTaskID = objMRTask.submit();
+        log.audit(functionName, `MR Task submitted with ID: ${intTaskID}`);
+    }
+
     /**
      * Return Formatted date to store in NS field
      * @param {*} nsDate 
@@ -736,6 +757,7 @@
         recTypes: recTypes,
         isEmpty:isEmpty,
         getProp: getProp,
+        scheduleMRTask: scheduleMRTask,
         convertResponseDateToNSDate: convertResponseDateToNSDate,
         deleteTransaction: deleteTransaction,
         deleteMappedKey: deleteMappedKey,

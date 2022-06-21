@@ -33,10 +33,14 @@
             lbOrdersResult = logicBlockServerResponse.GetOrdersByCriteriaResponse.GetOrdersByCriteriaResult.List.Order;
             if(lbOrdersResult.length > 0){
                 orders = orders.concat(lbOrdersResult);
+            }else if(!BSPLBUtils.isEmpty(lbOrdersResult)){
+                orders.push(lbOrdersResult);
             }
-            let totalOrders =  logicBlockServerResponse.GetOrdersByCriteriaResponse.GetOrdersByCriteriaResult.TotalRows;
 
-            /*if(totalOrders > pageSize){
+            let totalOrders =  logicBlockServerResponse.GetOrdersByCriteriaResponse.GetOrdersByCriteriaResult.TotalRows;
+            let pageSize = settings.custrecord_bsp_lb_orders_page_size;
+
+            if(totalOrders > pageSize){
                 let totalRequests = parseInt(totalOrders / pageSize);
                 let reqIndex = 1;
 
@@ -48,6 +52,8 @@
                         lbOrdersResult = logicBlockServerResponse.GetOrdersByCriteriaResponse.GetOrdersByCriteriaResult.List.Order;
                         if(lbOrdersResult.length > 0){
                             orders = orders.concat(lbOrdersResult);
+                        }else if(!BSPLBUtils.isEmpty(lbOrdersResult)){
+                            orders.push(lbOrdersResult);
                         }
                     }else{
                         lbOrdersResultObj.lbOrders = null;
@@ -57,7 +63,7 @@
                     }
                     reqIndex++;
                 }
-            }*/
+            }
 
             lbOrdersResultObj.lbOrders = orders;
         }else{
@@ -69,7 +75,11 @@
         return lbOrdersResultObj;
     }
    
-
+    /**
+     * Get Paramters for the Logicblock Service request
+     * @param {*} settings 
+     * @returns 
+     */
     function getOrdersRequestParams(settings){
         let lastRuntimeExecution = settings.custrecord_bsp_lb_last_runtime_exec;
         let startDate = null;

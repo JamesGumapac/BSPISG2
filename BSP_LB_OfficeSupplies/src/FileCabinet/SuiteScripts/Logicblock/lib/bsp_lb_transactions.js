@@ -50,23 +50,25 @@
 
             if (isLineItem == "F" || (isLineItem == false && nsField)) {
                 if(nsFieldName == BSPLBUtils.recTypes().salesOrder){
-                    if(fieldDataType == "String"){
-                        if(!BSPLBUtils.isEmpty(lbValue)){
+                    if(!BSPLBUtils.isEmpty(lbValue)){
+                        if(fieldDataType == "String"){
                             salesOrderRecord.setValue({ fieldId: nsField, value: lbValue });
-                        }else{
-                            if(!BSPLBUtils.isEmpty(defaultValue)){
-                                salesOrderRecord.setValue({
-                                    fieldId: nsField,
-                                    value: defaultValue
-                                })
-                            }
-                        }
-                    }else if(fieldDataType == "Date"){
-                        if(!BSPLBUtils.isEmpty(lbValue)){
+                        }else if(fieldDataType == "Date"){
                             let ddate = lbValue;
                             ddate = BSPLBUtils.convertResponseDateToNSDate(ddate);
                             salesOrderRecord.setValue({ fieldId: nsField, value: ddate });
-                        }              
+                        }else if(fieldDataType == "Integer"){               
+                            salesOrderRecord.setValue({ fieldId: nsField, value: parseInt(lbValue) });                       
+                        } else if(fieldDataType == "Double"){               
+                            salesOrderRecord.setValue({ fieldId: nsField, value: parseFloat(lbValue) });                       
+                        }                                
+                    }else{
+                        if(!BSPLBUtils.isEmpty(defaultValue)){
+                            salesOrderRecord.setValue({
+                                fieldId: nsField,
+                                value: defaultValue
+                            })
+                        } 
                     }
                 }else{
                     let addressSubRecord = null;
@@ -143,8 +145,11 @@
                         let nsSublistId = fieldMapping.sublistId;
                         let nsLineFieldId = fieldMapping.netSuiteFieldId;
                         let lbLineFieldId = fieldMapping.lbFieldId;
+                        let fieldDataType = fieldMapping.lbFieldDataType;
+                        let defaultValue = fieldMapping.defaultValue;
                         let lbValue = BSPLBUtils.getProp(itemDetail, lbLineFieldId);
-    
+                        let isSetValue = fieldMapping.isSetValue;
+
                         log.debug("processSalesOrderLines", 
                             {
                                 objMappingFields: JSON.stringify(fieldMapping),
@@ -153,8 +158,31 @@
 
                         if(nsSublistId == strSublistID){
                             if(!BSPLBUtils.isEmpty(lbValue)){
-                                salesOrderRecord.selectNewLine({ sublistId: nsSublistId });    
-                                salesOrderRecord.setCurrentSublistValue({ sublistId: nsSublistId, fieldId: nsLineFieldId, value: lbValue });            
+                                salesOrderRecord.selectNewLine({ sublistId: nsSublistId });  
+                                if(isSetValue){
+                                    let searchFilter = fieldMapping.lbFieldSearchFilter;
+                                    let searchRecord = fieldMapping.lbFieldSearchRecord;
+                                    let searchColumn = fieldMapping.lbFieldSearchColumn;
+                                    let searchOperator = fieldMapping.lbFieldSearchOperator;
+                                    let resultValue =  BSPLBUtils.searchRecordToGetInternalId(
+                                        lbValue,
+                                        searchFilter,
+                                        searchRecord,
+                                        searchColumn,
+                                        searchOperator
+                                    );
+                                    salesOrderRecord.setCurrentSublistValue({sublistId: nsSublistId, fieldId: nsLineFieldId, value: resultValue });
+                                }else{
+                                    if(fieldDataType == "String"){               
+                                        salesOrderRecord.setCurrentSublistValue({ sublistId: nsSublistId, fieldId: nsLineFieldId, value: lbValue });
+                                    } else if(fieldDataType == "Integer"){ 
+                                        salesOrderRecord.setCurrentSublistValue({ sublistId: nsSublistId, fieldId: nsLineFieldId, value: parseInt(lbValue) });                                  
+                                    } else if(fieldDataType == "Double"){        
+                                        salesOrderRecord.setCurrentSublistValue({ sublistId: nsSublistId, fieldId: nsLineFieldId, value: parseFloat(lbValue) });                          
+                                    }     
+                                }
+                            }else if(!BSPLBUtils.isEmpty(defaultValue)){
+                                salesOrderRecord.setCurrentSublistValue({sublistId: nsSublistId, fieldId: nsLineFieldId, value: defaultValue });
                             }                                       
                         }
                    }

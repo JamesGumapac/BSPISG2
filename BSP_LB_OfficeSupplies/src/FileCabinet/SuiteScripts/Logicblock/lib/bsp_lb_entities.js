@@ -41,10 +41,16 @@
                 }
             );
 
-            if (isLineItem == "F" || (isLineItem == false && nsField)) {
-                if(fieldDataType == "String"){
-                    vendorRec.setValue({ fieldId: nsField, value: lbValue });
-                }                 
+            if (isLineItem == "F" || (isLineItem == false && nsField)) {    
+                if(!BSPLBUtils.isEmpty(lbValue)){
+                    if(fieldDataType == "String"){
+                        vendorRec.setValue({ fieldId: nsField, value: lbValue });              
+                    } else if(fieldDataType == "Integer"){               
+                        vendorRec.setValue({ fieldId: nsField, value: parseInt(lbValue) });                       
+                    } else if(fieldDataType == "Double"){               
+                        vendorRec.setValue({ fieldId: nsField, value: parseFloat(lbValue) });                       
+                    }   
+                }                  
             }
         }
 
@@ -141,11 +147,15 @@
             );
 
             if (isLineItem == "F" || (isLineItem == false && nsField)) {
-                if(fieldDataType == "String"){
-                    if(!BSPLBUtils.isEmpty(lbValue)){
-                        customerRec.setValue({ fieldId: nsField, value: lbValue });
-                    }
-                }                
+                if(!BSPLBUtils.isEmpty(lbValue)){
+                    if(fieldDataType == "String"){
+                        customerRec.setValue({ fieldId: nsField, value: lbValue });              
+                    } else if(fieldDataType == "Integer"){               
+                        customerRec.setValue({ fieldId: nsField, value: parseInt(lbValue) });                       
+                    } else if(fieldDataType == "Double"){               
+                        customerRec.setValue({ fieldId: nsField, value: parseFloat(lbValue) });                       
+                    }   
+                }        
             }
         }
 

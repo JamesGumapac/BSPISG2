@@ -20,12 +20,8 @@
 
         let requestBodyXML = getLoginXMLStrRequest(userID, password);
 
-        log.debug("login", {requestBodyXML});
-
         loginData = BSPLBServiceAPI.runService(serviceURL, requestBodyXML, soapLoginAction);
         loginData = loginData.LoginResponse.LoginResult;
-
-        log.debug("login", {loginData});
 
         return loginData;
     }
