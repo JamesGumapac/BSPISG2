@@ -3,8 +3,8 @@
  * @NModuleScope Public
  */
 
- define(['./bsp_lb_utils.js', './bsp_lb_login_api.js', './bsp_lb_service_api.js', 'N/xml'],
- function (BSPLBUtils, BSPLBLoginAPI, BSPLBServiceAPI, xml){
+ define(['./bsp_lb_utils.js', './bsp_lb_login_api.js', './bsp_lb_service_api.js'],
+ function (BSPLBUtils, BSPLBLoginAPI, BSPLBServiceAPI){
 
 
     /**
@@ -74,7 +74,56 @@
 
         return lbOrdersResultObj;
     }
-   
+
+    /**
+     * Create Package in Logicblock System
+     * @param {*} settings 
+     * @param {*} shipPackageData 
+     * @returns 
+     */
+    function createPackage(settings, shipPackageData){
+        let lbPackageResultObj = {};
+
+        let loginData = BSPLBLoginAPI.login(settings);
+        lbPackageResultObj.loginData = loginData;
+
+        let serviceURL = settings.custrecord_bsp_lb_orders_service_url;
+        let soapCreatePackageAction = settings.custrecord_bsp_lb_create_pkg_soap_action;
+
+        let requestBodyXML = createPackageXMLStrRequest(loginData, shipPackageData);
+
+        let logicBlockServerResponse = BSPLBServiceAPI.runService(serviceURL, requestBodyXML, soapCreatePackageAction);
+
+        let lbPackageId = null;
+        if(!BSPLBUtils.isEmpty(logicBlockServerResponse)){
+            lbPackageId = logicBlockServerResponse.CreatePackageResponse.CreatePackageResult;
+            lbPackageResultObj.packageId = lbPackageId;
+        }
+        return lbPackageResultObj;
+    }
+
+    /**
+     * Ship Package to Logicblock system
+     * @param {*} settings 
+     * @param {*} lbPackageObj 
+     * @returns 
+     */
+    function shipPackage(settings, lbPackageObj){
+        let shipPackageResult = null;
+        let serviceURL = settings.custrecord_bsp_lb_orders_service_url;
+        let soapShipPackageAction = settings.custrecord_bsp_lb_ship_pkg_soap_action;
+        let loginData = lbPackageObj.loginData;
+        let packageId = lbPackageObj.packageId;
+
+        let requestBodyXML = shipPackageXMLStrRequest(loginData, packageId);
+        let logicBlockServerResponse = BSPLBServiceAPI.runService(serviceURL, requestBodyXML, soapShipPackageAction);
+
+        if(!BSPLBUtils.isEmpty(logicBlockServerResponse)){
+            shipPackageResult = logicBlockServerResponse.ShipPackageResponse.ShipPackageResult;
+        }
+        return shipPackageResult;
+    }
+
     /**
      * Get Paramters for the Logicblock Service request
      * @param {*} settings 
@@ -128,7 +177,74 @@
                 </soapenv:Envelope>`;
     }
 
+    /**
+     * Body of Create Package Request
+     * @param {*} loginData 
+     * @param {*} shipPackageData 
+     * @returns 
+     */
+    function createPackageXMLStrRequest(loginData, shipPackageData){
+
+        let packageItem = ``;
+        shipPackageData.packageItems.forEach(item => {
+            packageItem += `<log:PackageItem>
+            <log:LineItemId>${item.lineItemId}</log:LineItemId>
+            <log:ProductId>${item.productId}</log:ProductId>
+            <log:Quantity>${item.quantity}</log:Quantity>
+            </log:PackageItem>`
+        });
+    
+        let xmlBodyRequest = `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/" xmlns:log="http://schemas.datacontract.org/2004/07/Logicblock.Commerce.Domain">
+        <soapenv:Header/>
+        <soapenv:Body>
+        <tem:CreatePackage>
+        <tem:token>
+        <log:ApiId>${loginData.ApiId}</log:ApiId>
+        <log:ExpirationDateUtc>${loginData.ExpirationDateUtc}</log:ExpirationDateUtc>
+        <log:Id>${loginData.Id}</log:Id>
+        <log:IsExpired>${loginData.IsExpired}</log:IsExpired>
+        <log:TokenRejected>${loginData.TokenRejected}</log:TokenRejected>
+        </tem:token>
+        <tem:orderId>${shipPackageData.logicBlockOrderID}</tem:orderId>
+        <tem:items>
+        ${packageItem}
+        </tem:items>
+        <tem:shippingProviderId>${shipPackageData.shippingProviderId}</tem:shippingProviderId>
+        <tem:shippingMethodId>${shipPackageData.shippingMethodId}</tem:shippingMethodId>
+        </tem:CreatePackage>
+        </soapenv:Body>
+        </soapenv:Envelope>`;
+
+        return xmlBodyRequest;
+    }
+
+    /**
+     * Body of Ship Package Request
+     * @param {*} loginData 
+     * @param {*} packageId 
+     * @returns 
+     */
+    function shipPackageXMLStrRequest(loginData, packageId){
+        return `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/" xmlns:log="http://schemas.datacontract.org/2004/07/Logicblock.Commerce.Domain">
+        <soapenv:Header/>
+            <soapenv:Body>
+            <tem:ShipPackage>
+                <tem:token>
+                    <log:ApiId>${loginData.ApiId}</log:ApiId>
+                    <log:ExpirationDateUtc>${loginData.ExpirationDateUtc}</log:ExpirationDateUtc>
+                    <log:Id>${loginData.Id}</log:Id>
+                    <log:IsExpired>${loginData.IsExpired}</log:IsExpired>
+                    <log:TokenRejected>${loginData.TokenRejected}</log:TokenRejected>
+                </tem:token>
+                <tem:packageId>${packageId}</tem:packageId>
+            </tem:ShipPackage>
+            </soapenv:Body>
+        </soapenv:Envelope>`;
+    }
+
     return {
-        getOrders: getOrders
+        getOrders: getOrders,
+        createPackage: createPackage,
+        shipPackage: shipPackage
     };
 });

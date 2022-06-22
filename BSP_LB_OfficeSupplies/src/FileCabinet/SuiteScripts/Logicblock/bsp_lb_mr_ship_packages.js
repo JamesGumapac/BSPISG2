@@ -2,13 +2,11 @@
  * @NApiVersion 2.1
  * @NScriptType MapReduceScript
  */
-define(['N/record', 'N/runtime', 'N/search', './lib/bsp_lb_utils.js', './lib/bsp_lb_entities.js', './lib/bsp_lb_items.js', './lib/bsp_lb_transactions.js', './lib/bsp_lb_login_api.js'],
+define(['N/runtime', './lib/bsp_lb_utils.js', './lib/bsp_lb_ordersservice_api.js'],
     /**
- * @param{record} record
  * @param{runtime} runtime
- * @param{search} search
  */
-    (record, runtime, search, BSPLBUtils, BSPLBEntities, BSPLBItems, BSPLBTransactions, BSPLBLoginAPI) => {
+    (runtime, BSPLBUtils, LBOrdersAPI) => {
         /**
          * Defines the function that is executed at the beginning of the map/reduce process and generates the input data.
          * @param {Object} inputContext
@@ -24,78 +22,32 @@ define(['N/record', 'N/runtime', 'N/search', './lib/bsp_lb_utils.js', './lib/bsp
 
         const getInputData = (inputContext) => {
             let functionName = "getInputData";
-            let lbTransactionsData = [];
+            let outboundQueues = [];
             try{
                 log.debug(functionName, "************ EXECUTION STARTED ************");
                 let objScriptParams = getParameters();
                 let settings = BSPLBUtils.getIntegrationSettings(objScriptParams.integrationSettingsRecID);
-                let lbTransactions = [];
-                let inboundQueues = BSPLBUtils.getInboundQueues();
-                inboundQueues.run().each(function (result) {
+ 
+                let queues = BSPLBUtils.getOutboundQueues();
+                queues.run().each(function (result) {
                     let queueRecID = result.id;
 
-                    let queueId = result.getValue({
-                        name: "custrecord_bsp_lb_queue_id",
+                    let itemFulfillmentId = result.getValue({
+                        name: "custrecord_bsp_lb_transaction",
                     });
-                    let jsonResponse = result.getValue({
-                        name: "custrecord_bsp_lb_json_resp",
-                    });
-
-                    let data = {queueRecID : queueRecID, queueId: queueId, jsonResponse: JSON.parse(jsonResponse)};
-
-                    lbTransactions.push(data);                      
+                    outboundQueues.push({queueRecID:queueRecID, itemFulfillmentId: itemFulfillmentId, settings: settings});                      
                     return true;
                 });
-
-                let recordType = BSPLBUtils.recTypes().salesOrder;
-                let salesOrderObjMappingFields = BSPLBUtils.getMappingFields(recordType, true);
-
-                recordType = BSPLBUtils.recTypes().customer;
-                let customerObjMappingFields = BSPLBUtils.getMappingFields(recordType, false);
-
-                recordType = BSPLBUtils.recTypes().item;
-                let itemObjMappingFields = BSPLBUtils.getMappingFields(recordType, false);
-
-                let loginData = BSPLBLoginAPI.login(settings);
-                let vendors = BSPLBEntities.fetchVendors(settings, loginData);
-
-                log.debug(functionName, 
-                    {
-                        vendors: vendors
-                    }
-                );
-
-                lbTransactions.forEach(element => {
-                    lbTransactionsData.push({
-                        key: element.queueId,
-                        value: {
-                            lbTransaction: element,
-                            salesOrderObjMappingFields: salesOrderObjMappingFields,
-                            customerObjMappingFields: customerObjMappingFields,
-                            itemObjMappingFields: itemObjMappingFields,
-                            vendors: vendors,
-                            settings: settings,
-                            loginData: loginData
-                        }
-                    });
-                });
-
-                log.debug(functionName, 
-                    {
-                        lbTransactionsData: lbTransactionsData.length
-                    }
-                );
-
             }catch (error){
                 log.error(functionName, {error: error.message});
-                let errorSource = "BSP | LB | MR | Create NS Records - " + functionName;
+                let errorSource = "BSP | LB | MR | Ship Packages - " + functionName;
                 BSPLBUtils.createErrorLog(
                     errorSource,
                     error.message,
                     error
                 );
             }
-            return lbTransactionsData;
+            return outboundQueues;
         }
 
         /**
@@ -115,80 +67,55 @@ define(['N/record', 'N/runtime', 'N/search', './lib/bsp_lb_utils.js', './lib/bsp
          */
         const reduce = (reduceContext) => {
             let functionName = "reduce";
-            let logicBlockTransactionData = JSON.parse(reduceContext.values);
-            let customerRecordResult = null;
-            let itemRecordsResult = null;
-            let salesOrderRecordsResult = null;
+            try{
+                let objOutboundQueueData = reduceContext.values;
+                let outboundQueueData = JSON.parse(objOutboundQueueData);
 
-            try{               
+                let inboundQueueRecID = outboundQueueData.queueRecID;
+                let settings = outboundQueueData.settings;
+                let itemFulfillmentId = outboundQueueData.itemFulfillmentId;
+
                 let updateRetryCount = false;
-                let settings = logicBlockTransactionData.value.settings;
-                let loginData = logicBlockTransactionData.value.loginData;
-                let inboundQueueRecID = logicBlockTransactionData.value.lbTransaction.queueRecID;
-                let logicBlockOrder = logicBlockTransactionData.value.lbTransaction.jsonResponse;
+                let shipPackageData = BSPLBUtils.getShipPackageData(itemFulfillmentId);
+                log.debug(functionName,{shipPackageData});
 
-                /*************************
-                 * 
-                 * Create Customer Record
-                 * 
-                 *************************/
+                let lbPackageResultObj = LBOrdersAPI.createPackage(settings, shipPackageData);
+                log.debug(functionName,{lbPackageResultObj});
 
-                let logicBlockUserAccount = logicBlockOrder.UserAccount;
-                let customerObjMappingFields = logicBlockTransactionData.value.customerObjMappingFields;
-                customerRecordResult = BSPLBEntities.fetchCustomer(logicBlockUserAccount, customerObjMappingFields);
-
-                log.debug(functionName, {customerRecordResult});
-
-                if(!BSPLBUtils.isEmpty(customerRecordResult)){
-
-                    /*************************
-                     * 
-                     * Create Item Records
-                     * 
-                     *************************/
-
-                    let itemObjMappingFields = logicBlockTransactionData.value.itemObjMappingFields;
-                    itemRecordsResult = BSPLBItems.fetchItems(logicBlockOrder.LineItems.LineItem, itemObjMappingFields, settings, loginData);
-                
-                    log.debug(functionName, {itemRecordsResult});
-
-                    if(!BSPLBUtils.isEmpty(itemRecordsResult)){
-
-                        /***************************
-                         * 
-                         * Create Sales Order Record
-                         * 
-                         ***************************/
-                        
-                        let salesOrderObjMappingFields = logicBlockTransactionData.value.salesOrderObjMappingFields;
-                        salesOrderRecordsResult = BSPLBTransactions.fetchSalesOrder(logicBlockOrder, salesOrderObjMappingFields, customerRecordResult, itemRecordsResult, settings.custrecord_bsp_lb_sales_order_form);
-                        log.debug(functionName, {salesOrderRecordsResult});
-                        
-                        if(BSPLBUtils.isEmpty(salesOrderRecordsResult)){
+                if(!BSPLBUtils.isEmpty(lbPackageResultObj.packageId)){
+                   let shipPackageResult = LBOrdersAPI.shipPackage(settings, lbPackageResultObj);
+                   log.debug(functionName,{shipPackageResult});
+                    if(!BSPLBUtils.isEmpty(shipPackageResult)){
+                        if(shipPackageResult == "true"){
+                            log.debug(functionName, `Package ${lbPackageResultObj.packageId} has been shipped`);           
+                        }else{
                             updateRetryCount = true;
-                        }
+                            log.error(functionName, `There was an error while Shipping Package: ${lbPackageResultObj.packageId}`);    
+                        }          
                     }else{
                         updateRetryCount = true;
-                    }
+                        log.error(functionName, `There was an error while Shipping Package: ${lbPackageResultObj.packageId}`);    
+                    }  
                 }else{
                     updateRetryCount = true;
                 }
 
                 if(updateRetryCount){
-                    BSPLBUtils.updateInboundQueueRetryCount(inboundQueueRecID);
+                    BSPLBUtils.updateOutboundQueueRetryCount(inboundQueueRecID);
                 }
 
-            } catch (error) {
-                log.error(functionName, {error: error.message});
-                let errorDetail = {error:error, queueIdRec: logicBlockTransactionData.value.lbTransaction.queueRecID, queueId: logicBlockTransactionData.value.lbTransaction.queueId}
-                let errorSource = "BSP | LB | MR | Create NS Records - " + functionName;
+            }catch (error)
+            {
+                log.error(functionName, {error: error.toString()});
+                let errorSource = "BSP | LB | MR | Ship Packages - " + functionName;
                 BSPLBUtils.createErrorLog(
                     errorSource,
                     error.message,
-                    errorDetail
+                    error
                 );
             }
         }
+
 
         /**
          * Defines the function that is executed when the summarize entry point is triggered. This entry point is triggered
@@ -213,17 +140,14 @@ define(['N/record', 'N/runtime', 'N/search', './lib/bsp_lb_utils.js', './lib/bsp
             let functionName = 'Summarize';
             try{
                 /*let objScriptParams = getParameters();
-                BSPLBUtils.updateLastRuntimeExecution(objScriptParams.integrationSettingsRecID);
-
-                let queueType = "customrecord_bsp_lb_inbound_queue";
-                let retryCountField = "custrecord_bsp_lb_retry_count";
+                let queueType = "customrecord_bsp_lb_outbound_queue";
+                let retryCountField = "custrecord_bsp_lb_outbound_retry_count";
                 let deletedQueues = BSPLBUtils.deleteProcessedQueues(objScriptParams.integrationSettingsRecID, queueType, retryCountField);
                 log.audit(functionName, {'deletedProcessedQueues': deletedQueues});*/
-
             }catch (error)
             {
                 log.error(functionName, {error: error.toString()});
-                let errorSource = "BSP | LB | MR | Create NS Records - " + functionName;
+                let errorSource = "BSP | LB | MR | Ship Packages - " + functionName;
                 BSPLBUtils.createErrorLog(
                     errorSource,
                     error.message,
@@ -238,11 +162,11 @@ define(['N/record', 'N/runtime', 'N/search', './lib/bsp_lb_utils.js', './lib/bsp
          * Retieves Script parameters set up in the Deployment Record
          * @returns {Object} Script parameters
         */
-         const getParameters = () => {
+          const getParameters = () => {
             let objParams = {};
             let objScript = runtime.getCurrentScript();
             objParams = {
-                integrationSettingsRecID : objScript.getParameter({name: "custscript_bsp_lb_integration_settings_1"})
+                integrationSettingsRecID : objScript.getParameter({name: "custscript_bsp_lb_integration_settings_2"})
             }         
             return objParams;
         }

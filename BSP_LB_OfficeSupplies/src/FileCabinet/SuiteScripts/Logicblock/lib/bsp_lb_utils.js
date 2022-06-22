@@ -18,6 +18,9 @@
         errorMessageQueueAlreadyExists: "The Queue record already exists.",
         mrCreateRecordsScriptId: "customscript_bsp_lb_mr_create_ns_records",
         mrCreateRecordsDeploymentId: "customdeploy_bsp_lb_mr_create_ns_records",
+        transactionTypeField: "ntype",
+        itemFulfillmentShipStatus: "shipstatus",
+        shipstatus: "C",
         defaultInventoryLocation: 3,
         defaultQuantityOnHand: 99999
     });
@@ -29,7 +32,8 @@
         vendor:"Vendor",
         item: "Item",
         billingAddress: "Billing Address",
-        shippingAddress: "Shipping Address"
+        shippingAddress: "Shipping Address",
+        itemFulfillment: "itemfulfillment"
     });
 
      /**
@@ -76,6 +80,38 @@
 				})(value))
 		);
 	}
+
+    /**
+     * Returns Logicblock ID mapped in NS
+     * @param {*} nsID 
+     * @returns 
+     */
+    function getLogicblockID(nsID){
+        let logicblockId = null;
+        if(nsID){
+            const mappingKeysSearchObj = search.create({
+                type: "customrecord_bsp_lb_mapped_keys",
+                filters:
+                [
+                    ["custrecord_bsp_lb_netsuite_id","is",nsID]
+                ],
+                columns:
+                [
+                    search.createColumn({name: "custrecord_bsp_lb_logicblock_id", label: "Logicblock ID"})
+                ]
+            });
+            let mappingKeysSearchResultCount = mappingKeysSearchObj.runPaged().count;
+            if(mappingKeysSearchResultCount > 0){
+                mappingKeysSearchObj.run().each(function(result){
+                    logicblockId = result.getValue({
+                        name: "custrecord_bsp_lb_logicblock_id",
+                    });
+                    return true;
+                });
+            }
+        }        
+        return logicblockId;
+    }
 
     /**
      * Returns NS Internal ID if exists in NS
@@ -127,6 +163,8 @@
                 "custrecord_bsp_lb_login_soap_action",
                 "custrecord_bsp_lb_get_vend_soap_action",
                 "custrecord_bsp_lb_get_prod_soap_action",
+                "custrecord_bsp_lb_create_pkg_soap_action",
+                "custrecord_bsp_lb_ship_pkg_soap_action",
                 "custrecord_bsp_lb_user_id",
                 "custrecord_bsp_lb_password",
                 "custrecord_bsp_lb_last_runtime_exec",
@@ -161,6 +199,7 @@
         
         return orderStatuses;
     }
+
     /**
      * Update Retry count on Inbound Queue
      * @param {*} inboundQueueRecId 
@@ -183,6 +222,29 @@
             }
         });
 
+    }
+
+    /**
+     * Update Retry count on Outbound Queue
+     * @param {*} outboundQueueRecId 
+    */
+    function updateOutboundQueueRetryCount(outboundQueueRecId){
+        let retryCount = search.lookupFields({
+            type: "customrecord_bsp_lb_outbound_queue",
+            id: outboundQueueRecId,
+            columns: "custrecord_bsp_lb_outbound_retry_count",
+        }).custrecord_bsp_lb_outbound_retry_count;
+    
+        retryCount = (retryCount) ? retryCount : 0;
+        retryCount++;
+
+        record.submitFields({
+            type: "customrecord_bsp_lb_outbound_queue",
+            id: outboundQueueRecId,
+            values: {
+                custrecord_bsp_lb_outbound_retry_count: retryCount
+            }
+        });
     }
 
     /**
@@ -300,17 +362,17 @@
     /**
      * Delete queues that had been processed
     */
-    function deleteProcessedQueues(settingsRecID){
+    function deleteProcessedQueues(settingsRecID, queueType, retryCountField){
 
         let maxRetryCount = getSettingsMaxRetryCount(settingsRecID);
 
         let inboundQueueSearchObj = search.create({
-            type: "customrecord_bsp_lb_inbound_queue",
+            type: queueType,
             filters:
             [
                 ["isinactive","is","F"],
                 "AND", 
-                [["custrecord_bsp_lb_retry_count","isempty",""],"OR",["custrecord_bsp_lb_retry_count","equalto",maxRetryCount]]
+                [[retryCountField,"isempty",""],"OR",[retryCountField,"equalto",maxRetryCount]]
             ],
             columns:
             []
@@ -318,7 +380,7 @@
         let deletedQueues = 0;
         inboundQueueSearchObj.run().each(function (result) {
             record.delete({
-                type: "customrecord_bsp_lb_inbound_queue",
+                type: queueType,
                 id: result.id,
             });
             deletedQueues++;
@@ -339,10 +401,11 @@
         let code = LOGICBLOCK_CONTANTS.errorCodeCreatingQueue;
         let message = LOGICBLOCK_CONTANTS.errorMessageCreatingQueue;
         try {
-
-            if(!queueExists(queueId)){
+            let queueType = "customrecord_bsp_lb_inbound_queue";
+            let fieldId = "custrecord_bsp_lb_queue_id";
+            if(!queueExists(queueId, queueType, fieldId)){
                 let queueRecord = record.create({
-                    type: "customrecord_bsp_lb_inbound_queue",
+                    type: queueType,
                 });
         
                 queueRecord.setValue({
@@ -374,6 +437,34 @@
         };
 
         return objQueueReturn;
+    }
+
+    /**
+     * Create Outbound Queue for each NetSuite IF to be processed 
+     * @param {*} recID 
+     * @param {*} recType 
+     * @returns 
+    */
+    function createOutboundQueue(recID, recType){
+        let queueType = "customrecord_bsp_lb_outbound_queue";
+        let fieldId = "custrecord_bsp_lb_transaction";
+        if(!queueExists(recID, queueType, fieldId)){
+            let queueRecord = record.create({
+                type: "customrecord_bsp_lb_outbound_queue",
+            });
+    
+            queueRecord.setValue({
+                fieldId: "custrecord_bsp_lb_transaction",
+                value: recID,
+            });
+            queueRecord.setValue({
+                fieldId: "custrecord_bsp_lb_transaction_type",
+                value: recType,
+            });
+    
+            queueRecord.save();    
+            log.debug("createOutboundQueue", "Outbound Queue Created");          
+        }     
     }
 
     /**
@@ -412,12 +503,12 @@
      * @param {*} queueId 
      * @returns 
      */
-    function queueExists(queueId){
+    function queueExists(queueId, queueType, fieldId){
         let inboundQueueSearchObj = search.create({
-            type: "customrecord_bsp_lb_inbound_queue",
+            type: queueType,
             filters:
             [
-                ["custrecord_bsp_lb_queue_id","is",queueId],
+                [fieldId,"is",queueId],
                 "AND", 
                 ["isinactive","is","F"]
             ],
@@ -448,6 +539,26 @@
         return inboundQueueSearchObj;
     }
 
+    /**
+     * Get all Outbound Queue Records to be processed
+     * @returns 
+     */
+    function getOutboundQueues(){
+        let outboundQueueSearchObj = search.create({
+            type: "customrecord_bsp_lb_outbound_queue",
+            filters:
+            [
+                ["isinactive","is","F"]
+            ],
+            columns:
+            [
+                search.createColumn({name: "custrecord_bsp_lb_transaction", label: "Transaction ID"}),
+                search.createColumn({name: "custrecord_bsp_lb_transaction_type", label: "Transaction Type"})
+            ]
+        });
+
+        return outboundQueueSearchObj;
+    }
     /**
      * Return Mapping Fields configured in the NS account
      * @param {*} recordType 
@@ -628,6 +739,72 @@
     }
 
     /**
+     * Returns true if the Order was obtained from Logicblock
+     * @param {*} salesOrderID 
+     * @returns 
+     */
+    function logicBlockOrder(salesOrderID){
+        if(salesOrderID){
+            let logicblockOrderIdField = search.lookupFields({
+                type: search.Type.SALES_ORDER,
+                id: salesOrderID,
+                columns: "custbody_bsp_lb_order_number"
+            });
+            if(logicblockOrderIdField && logicblockOrderIdField.custbody_bsp_lb_order_number){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Get ShipPackage data to make API request to Logicblock
+     * @param {*} itemFulfillmentId 
+     * @returns 
+     */
+    function getShipPackageData(itemFulfillmentId){
+        var itemFulfillmentRecord = record.load({
+            type: record.Type.ITEM_FULFILLMENT,
+            id: itemFulfillmentId
+        });
+
+        let salesOrderID = itemFulfillmentRecord.getValue("createdfrom");
+        let logicBlockOrderID = getLogicblockID(salesOrderID);
+
+        let logicBlockFields = search.lookupFields({
+            type: search.Type.SALES_ORDER,
+            id: salesOrderID,
+            columns: ["custbody_bsp_lb_shipping_provider_id", "custbody_bsp_lb_shipping_method_id", "custbody_bsp_lb_ship_prov_service_code"]
+        });
+        let shippingProviderId = null;
+        let shippingMethodId = null;
+        let shippingProviderServiceCode = null;
+        if(logicBlockFields){
+            shippingProviderId = logicBlockFields.custbody_bsp_lb_shipping_provider_id || null;
+            shippingMethodId = logicBlockFields.custbody_bsp_lb_shipping_method_id || null;
+            shippingProviderServiceCode = logicBlockFields.custbody_bsp_lb_ship_prov_service_code || null;
+        }
+
+        let packageItems = [];
+        let itemCount = itemFulfillmentRecord.getLineCount({ sublistId: 'item' });
+        for (let i = 0; i < itemCount; i++) {
+            let itemId = itemFulfillmentRecord.getSublistValue({sublistId: 'item', fieldId: 'item', line: i });
+            let quantity = itemFulfillmentRecord.getSublistValue({sublistId: 'item', fieldId: 'quantity', line: i });
+            let lineItemId = itemFulfillmentRecord.getSublistValue({sublistId: 'item', fieldId: 'custcol_bsp_lb_line_item_id', line: i });
+            let logicBlockProductID = getLogicblockID(itemId);
+            packageItems.push({lineItemId: lineItemId, productId: logicBlockProductID, quantity: quantity});
+        }
+
+        return {
+            logicBlockOrderID: logicBlockOrderID, 
+            packageItems: packageItems, 
+            shippingProviderId: shippingProviderId, 
+            shippingMethodId: shippingMethodId, 
+            shippingProviderServiceCode: shippingProviderServiceCode
+        }
+    }
+
+    /**
      * Schedule MR Task
      * @param {*} scriptId 
      * @param {*} objParams 
@@ -769,11 +946,16 @@
         updateLastRuntimeExecution: updateLastRuntimeExecution,
         deleteProcessedQueues: deleteProcessedQueues,
         createInboundQueue: createInboundQueue,
+        createOutboundQueue: createOutboundQueue,
         buildErrorDetails: buildErrorDetails,
         getInboundQueues: getInboundQueues,
+        getOutboundQueues: getOutboundQueues,
         getMappingFields: getMappingFields,
+        getShipPackageData: getShipPackageData,
         searchRecordToGetInternalId: searchRecordToGetInternalId,
         getRecordInternalID: getRecordInternalID,
-        updateInboundQueueRetryCount: updateInboundQueueRetryCount
+        updateInboundQueueRetryCount: updateInboundQueueRetryCount,
+        updateOutboundQueueRetryCount: updateOutboundQueueRetryCount,
+        logicBlockOrder: logicBlockOrder
 	};
 });
