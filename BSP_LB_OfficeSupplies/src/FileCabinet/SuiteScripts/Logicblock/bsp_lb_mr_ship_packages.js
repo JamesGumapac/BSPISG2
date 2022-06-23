@@ -2,11 +2,11 @@
  * @NApiVersion 2.1
  * @NScriptType MapReduceScript
  */
-define(['N/runtime', './lib/bsp_lb_utils.js', './lib/bsp_lb_ordersservice_api.js'],
+define(['N/runtime', './lib/bsp_lb_utils.js', './lib/bsp_lb_packages.js'],
     /**
  * @param{runtime} runtime
  */
-    (runtime, BSPLBUtils, LBOrdersAPI) => {
+    (runtime, BSPLBUtils, BSPLBPackages) => {
         /**
          * Defines the function that is executed at the beginning of the map/reduce process and generates the input data.
          * @param {Object} inputContext
@@ -35,7 +35,12 @@ define(['N/runtime', './lib/bsp_lb_utils.js', './lib/bsp_lb_ordersservice_api.js
                     let itemFulfillmentId = result.getValue({
                         name: "custrecord_bsp_lb_transaction",
                     });
-                    outboundQueues.push({queueRecID:queueRecID, itemFulfillmentId: itemFulfillmentId, settings: settings});                      
+
+                    let queueDateCreated = result.getValue({
+                        name: "created",
+                    });
+
+                    outboundQueues.push({queueRecID:queueRecID, itemFulfillmentId: itemFulfillmentId, queueDateCreated: queueDateCreated, settings: settings});                      
                     return true;
                 });
             }catch (error){
@@ -74,17 +79,15 @@ define(['N/runtime', './lib/bsp_lb_utils.js', './lib/bsp_lb_ordersservice_api.js
                 let inboundQueueRecID = outboundQueueData.queueRecID;
                 let settings = outboundQueueData.settings;
                 let itemFulfillmentId = outboundQueueData.itemFulfillmentId;
-
+                let dateCreated = outboundQueueData.queueDateCreated;
                 let updateRetryCount = false;
-                let shipPackageData = BSPLBUtils.getShipPackageData(itemFulfillmentId);
-                log.debug(functionName,{shipPackageData});
 
-                let lbPackageResultObj = LBOrdersAPI.createPackage(settings, shipPackageData);
+                let lbPackageResultObj = BSPLBPackages.createPackage(settings, itemFulfillmentId, dateCreated);
                 log.debug(functionName,{lbPackageResultObj});
 
                 if(!BSPLBUtils.isEmpty(lbPackageResultObj.packageId)){
-                   let shipPackageResult = LBOrdersAPI.shipPackage(settings, lbPackageResultObj);
-                   log.debug(functionName,{shipPackageResult});
+                    let shipPackageResult = BSPLBPackages.shipPackage(settings, lbPackageResultObj);
+                    log.debug(functionName,{shipPackageResult});
                     if(!BSPLBUtils.isEmpty(shipPackageResult)){
                         if(shipPackageResult == "true"){
                             log.debug(functionName, `Package ${lbPackageResultObj.packageId} has been shipped`);           

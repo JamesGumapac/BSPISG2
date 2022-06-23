@@ -50,6 +50,9 @@ define(['N/record', 'N/runtime', 'N/search', './lib/bsp_lb_utils.js', './lib/bsp
                 let recordType = BSPLBUtils.recTypes().salesOrder;
                 let salesOrderObjMappingFields = BSPLBUtils.getMappingFields(recordType, true);
 
+                recordType = BSPLBUtils.recTypes().cashSale;
+                let cashSaleObjMappingFields = BSPLBUtils.getMappingFields(recordType, false);
+
                 recordType = BSPLBUtils.recTypes().customer;
                 let customerObjMappingFields = BSPLBUtils.getMappingFields(recordType, false);
 
@@ -71,6 +74,7 @@ define(['N/record', 'N/runtime', 'N/search', './lib/bsp_lb_utils.js', './lib/bsp
                         value: {
                             lbTransaction: element,
                             salesOrderObjMappingFields: salesOrderObjMappingFields,
+                            cashSaleObjMappingFields: cashSaleObjMappingFields,
                             customerObjMappingFields: customerObjMappingFields,
                             itemObjMappingFields: itemObjMappingFields,
                             vendors: vendors,
@@ -119,6 +123,7 @@ define(['N/record', 'N/runtime', 'N/search', './lib/bsp_lb_utils.js', './lib/bsp
             let customerRecordResult = null;
             let itemRecordsResult = null;
             let salesOrderRecordsResult = null;
+            let cashSaleRecordsResult = null;
 
             try{               
                 let updateRetryCount = false;
@@ -154,19 +159,53 @@ define(['N/record', 'N/runtime', 'N/search', './lib/bsp_lb_utils.js', './lib/bsp
 
                     if(!BSPLBUtils.isEmpty(itemRecordsResult)){
 
-                        /***************************
-                         * 
-                         * Create Sales Order Record
-                         * 
-                         ***************************/
+                        let isOrderPaid = BSPLBTransactions.orderPaid(logicBlockOrder);
+
+                        if(isOrderPaid){
+
+                            /***************************
+                            * 
+                            * Create Cash Sale Record
+                            * 
+                            ***************************/
+
+                            let cashSaleObjMappingFields = logicBlockTransactionData.value.cashSaleObjMappingFields;
+                            cashSaleRecordsResult = BSPLBTransactions.fetchTransaction(
+                                logicBlockOrder, 
+                                cashSaleObjMappingFields, 
+                                customerRecordResult, 
+                                itemRecordsResult, 
+                                settings.custrecord_bsp_lb_cash_sale_form,
+                                record.Type.CASH_SALE
+                            );
+                            log.debug(functionName, {cashSaleRecordsResult});
+                             
+                            if(BSPLBUtils.isEmpty(cashSaleRecordsResult)){
+                                updateRetryCount = true;
+                            }
+                        }else{
+
+                            /***************************
+                            * 
+                            * Create Sales Order Record
+                            * 
+                            ***************************/
                         
-                        let salesOrderObjMappingFields = logicBlockTransactionData.value.salesOrderObjMappingFields;
-                        salesOrderRecordsResult = BSPLBTransactions.fetchSalesOrder(logicBlockOrder, salesOrderObjMappingFields, customerRecordResult, itemRecordsResult, settings.custrecord_bsp_lb_sales_order_form);
-                        log.debug(functionName, {salesOrderRecordsResult});
-                        
-                        if(BSPLBUtils.isEmpty(salesOrderRecordsResult)){
-                            updateRetryCount = true;
-                        }
+                            let salesOrderObjMappingFields = logicBlockTransactionData.value.salesOrderObjMappingFields;
+                            salesOrderRecordsResult = BSPLBTransactions.fetchTransaction(
+                                logicBlockOrder, 
+                                salesOrderObjMappingFields, 
+                                customerRecordResult, 
+                                itemRecordsResult, 
+                                settings.custrecord_bsp_lb_sales_order_form,
+                                record.Type.SALES_ORDER
+                            );
+                            log.debug(functionName, {salesOrderRecordsResult});
+                            
+                            if(BSPLBUtils.isEmpty(salesOrderRecordsResult)){
+                                updateRetryCount = true;
+                            }
+                        }               
                     }else{
                         updateRetryCount = true;
                     }

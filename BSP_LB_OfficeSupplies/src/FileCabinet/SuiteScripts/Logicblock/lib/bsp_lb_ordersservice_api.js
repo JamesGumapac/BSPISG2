@@ -210,7 +210,8 @@
         ${packageItem}
         </tem:items>
         <tem:shippingProviderId>${shipPackageData.shippingProviderId}</tem:shippingProviderId>
-        <tem:shippingMethodId>${shipPackageData.shippingMethodId}</tem:shippingMethodId>
+        <tem:shippingMethodId>${shipPackageData.shippingMethodId}</tem:shippingMethodId>         
+        <tem:shipDate>${shipPackageData.dateCreated}</tem:shipDate>
         </tem:CreatePackage>
         </soapenv:Body>
         </soapenv:Envelope>`;

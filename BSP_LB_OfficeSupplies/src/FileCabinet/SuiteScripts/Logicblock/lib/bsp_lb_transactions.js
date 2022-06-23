@@ -6,31 +6,31 @@
  define(['N/record', './bsp_lb_utils.js', './bsp_lb_items.js'], function (record, BSPLBUtils, BSPLBItems) {
 
     /**
-     * Create Sales Order Record in NS
+     * Create Transaction Record in NS
      * @param {*} objFields 
      * @param {*} objMappingFields
      * @param {*} customerRecordResult 
      * @param {*} itemRecordsResult 
      * @returns 
      */
-     function createSalesOrderRecord(objFields, objMappingFields, customerRecordResult, itemRecordsResult){
+     function createTransactionRecord(objFields, objMappingFields, customerRecordResult, itemRecordsResult, recType){
         let objResult = {};
         let status = BSPLBUtils.constants().successStatus;
         let newRecordId = "";
 
-        log.debug("createSalesOrderRecord", 
+        log.debug("createTransactionRecord", 
             {
                 objFields: JSON.stringify(objFields)
             }
         );
 
-        let salesOrderRecord = record.create({
-            type: record.Type.SALES_ORDER,
+        let transactionRecord = record.create({
+            type: recType,
             isDynamic: true,
         });
 
-        salesOrderRecord.setValue({ fieldId: "entity", value: parseInt(customerRecordResult.nsID)});
-        salesOrderRecord.setValue({ fieldId: "customform", value: parseInt(objFields.logicBlockForm)});
+        transactionRecord.setValue({ fieldId: "entity", value: parseInt(customerRecordResult.nsID)});
+        transactionRecord.setValue({ fieldId: "customform", value: parseInt(objFields.logicBlockForm)});
 
         for (const fieldMapping of objMappingFields.bodyFields) {
             let nsField = fieldMapping.netSuiteFieldId;
@@ -41,7 +41,7 @@
             let defaultValue = fieldMapping.defaultValue;
             let lbValue = BSPLBUtils.getProp(objFields, lbField);
 
-            log.debug("createSalesOrderRecord", 
+            log.debug("createTransactionRecord", 
                 {
                     objMappingFields: JSON.stringify(fieldMapping),
                     lbValue: lbValue
@@ -49,22 +49,22 @@
             );
 
             if (isLineItem == "F" || (isLineItem == false && nsField)) {
-                if(nsFieldName == BSPLBUtils.recTypes().salesOrder){
+                if(nsFieldName == BSPLBUtils.recTypes().salesOrder || nsFieldName == BSPLBUtils.recTypes().cashSale){
                     if(!BSPLBUtils.isEmpty(lbValue)){
                         if(fieldDataType == "String"){
-                            salesOrderRecord.setValue({ fieldId: nsField, value: lbValue });
+                            transactionRecord.setValue({ fieldId: nsField, value: lbValue });
                         }else if(fieldDataType == "Date"){
                             let ddate = lbValue;
                             ddate = BSPLBUtils.convertResponseDateToNSDate(ddate);
-                            salesOrderRecord.setValue({ fieldId: nsField, value: ddate });
+                            transactionRecord.setValue({ fieldId: nsField, value: ddate });
                         }else if(fieldDataType == "Integer"){               
-                            salesOrderRecord.setValue({ fieldId: nsField, value: parseInt(lbValue) });                       
+                            transactionRecord.setValue({ fieldId: nsField, value: parseInt(lbValue) });                       
                         } else if(fieldDataType == "Double"){               
-                            salesOrderRecord.setValue({ fieldId: nsField, value: parseFloat(lbValue) });                       
+                            transactionRecord.setValue({ fieldId: nsField, value: parseFloat(lbValue) });                       
                         }                                
                     }else{
                         if(!BSPLBUtils.isEmpty(defaultValue)){
-                            salesOrderRecord.setValue({
+                            transactionRecord.setValue({
                                 fieldId: nsField,
                                 value: defaultValue
                             })
@@ -73,11 +73,11 @@
                 }else{
                     let addressSubRecord = null;
                     if(nsFieldName == BSPLBUtils.recTypes().shippingAddress){
-                        addressSubRecord = salesOrderRecord.getSubrecord({
+                        addressSubRecord = transactionRecord.getSubrecord({
                             fieldId: 'shippingaddress'
                         })  
                     }else{
-                        addressSubRecord = salesOrderRecord.getSubrecord({
+                        addressSubRecord = transactionRecord.getSubrecord({
                             fieldId: 'billingaddress'
                         })
                     }
@@ -99,15 +99,15 @@
                 }                            
             }
         }
-        processSalesOrderLines(salesOrderRecord, objFields.order, objMappingFields, itemRecordsResult);
+        processTransactionLines(transactionRecord, objFields.order, objMappingFields, itemRecordsResult);
 
         /**
          * Default values
          */
-        salesOrderRecord.setValue({ fieldId: "shipmethod", value: ""});
+        transactionRecord.setValue({ fieldId: "shipmethod", value: ""});
 
-        newRecordId = salesOrderRecord.save();
-        BSPLBUtils.createMappingKeyRecord(newRecordId, BSPLBUtils.recTypes().salesOrder, objFields.order.Id, "Order");
+        newRecordId = transactionRecord.save();
+        BSPLBUtils.createMappingKeyRecord(newRecordId, recType, objFields.order.Id, "Order");
 
         objResult = {
             status: status,
@@ -119,12 +119,12 @@
 
     /**
      * Process lines of Sales Order
-     * @param {*} salesOrderRecord 
+     * @param {*} transactionRecord 
      * @param {*} order 
      * @param {*} objMappingFields 
      * @param {*} itemRecordsResult 
      */
-    function processSalesOrderLines(salesOrderRecord, order, objMappingFields, itemRecordsResult){
+    function processTransactionLines(transactionRecord, order, objMappingFields, itemRecordsResult){
 
         let lineItems = [];
         if(order.LineItems.LineItem.length && order.LineItems.LineItem.length > 0){
@@ -139,7 +139,7 @@
             if(productSKU){
                 let itemRecId = BSPLBItems.getItemNetSuiteRecID(productSKU, itemRecordsResult);
                 if(itemRecId){
-                    salesOrderRecord.setCurrentSublistValue({ sublistId: strSublistID, fieldId: "item", value: itemRecId });
+                    transactionRecord.setCurrentSublistValue({ sublistId: strSublistID, fieldId: "item", value: itemRecId });
 
                     for (const fieldMapping of objMappingFields.lineFields) {
                         let nsSublistId = fieldMapping.sublistId;
@@ -150,7 +150,7 @@
                         let lbValue = BSPLBUtils.getProp(itemDetail, lbLineFieldId);
                         let isSetValue = fieldMapping.isSetValue;
 
-                        log.debug("processSalesOrderLines", 
+                        log.debug("processTransactionLines", 
                             {
                                 objMappingFields: JSON.stringify(fieldMapping),
                                 lbValue: lbValue
@@ -158,7 +158,7 @@
 
                         if(nsSublistId == strSublistID){
                             if(!BSPLBUtils.isEmpty(lbValue)){
-                                salesOrderRecord.selectNewLine({ sublistId: nsSublistId });  
+                                transactionRecord.selectNewLine({ sublistId: nsSublistId });  
                                 if(isSetValue){
                                     let searchFilter = fieldMapping.lbFieldSearchFilter;
                                     let searchRecord = fieldMapping.lbFieldSearchRecord;
@@ -171,23 +171,23 @@
                                         searchColumn,
                                         searchOperator
                                     );
-                                    salesOrderRecord.setCurrentSublistValue({sublistId: nsSublistId, fieldId: nsLineFieldId, value: resultValue });
+                                    transactionRecord.setCurrentSublistValue({sublistId: nsSublistId, fieldId: nsLineFieldId, value: resultValue });
                                 }else{
                                     if(fieldDataType == "String"){               
-                                        salesOrderRecord.setCurrentSublistValue({ sublistId: nsSublistId, fieldId: nsLineFieldId, value: lbValue });
+                                        transactionRecord.setCurrentSublistValue({ sublistId: nsSublistId, fieldId: nsLineFieldId, value: lbValue });
                                     } else if(fieldDataType == "Integer"){ 
-                                        salesOrderRecord.setCurrentSublistValue({ sublistId: nsSublistId, fieldId: nsLineFieldId, value: parseInt(lbValue) });                                  
+                                        transactionRecord.setCurrentSublistValue({ sublistId: nsSublistId, fieldId: nsLineFieldId, value: parseInt(lbValue) });                                  
                                     } else if(fieldDataType == "Double"){        
-                                        salesOrderRecord.setCurrentSublistValue({ sublistId: nsSublistId, fieldId: nsLineFieldId, value: parseFloat(lbValue) });                          
+                                        transactionRecord.setCurrentSublistValue({ sublistId: nsSublistId, fieldId: nsLineFieldId, value: parseFloat(lbValue) });                          
                                     }     
                                 }
                             }else if(!BSPLBUtils.isEmpty(defaultValue)){
-                                salesOrderRecord.setCurrentSublistValue({sublistId: nsSublistId, fieldId: nsLineFieldId, value: defaultValue });
+                                transactionRecord.setCurrentSublistValue({sublistId: nsSublistId, fieldId: nsLineFieldId, value: defaultValue });
                             }                                       
                         }
                    }
     
-                    salesOrderRecord.commitLine({
+                    transactionRecord.commitLine({
                         sublistId: strSublistID,
                     });
                 }                
@@ -197,24 +197,24 @@
     }
 
     /**
-     * Create Sales Order Record in NS
+     * Create Transaction Record in NS
      * @param {*} order 
      * @param {*} objMappingFields 
      * @param {*} customerRecordResult 
      * @param {*} itemRecordsResult 
      * @returns 
      */
-    function fetchSalesOrder(order, objMappingFields, customerRecordResult, itemRecordsResult, objLogicBlockForm){
-        let functionName = "fetchSalesOrder";
-        let salesOrderRecordResult = {};
-        let salesOrderUpdated = false;
+    function fetchTransaction(order, objMappingFields, customerRecordResult, itemRecordsResult, objLogicBlockForm, recType){
+        let functionName = "fetchTransaction";
+        let transactionRecordResult = {};
+        let transactionUpdated = false;
         try{   
-            let salesOrderRecID = BSPLBUtils.getRecordInternalID(order.Id);
-            if(salesOrderRecID){
-                salesOrderUpdated = true;
+            let transactionRecID = BSPLBUtils.getRecordInternalID(order.Id);
+            if(transactionRecID){
+                transactionUpdated = true;
                 try{
                     BSPLBUtils.deleteMappedKey(order.Id);
-                    BSPLBUtils.deleteTransaction(BSPLBUtils.recTypes().salesOrder, salesOrderRecID);
+                    BSPLBUtils.deleteTransaction(recType, transactionRecID);
                 }catch(error){
                     log.error(functionName, {error: error.message});
                     let errorDetail = JSON.stringify({error: error.message})
@@ -235,10 +235,10 @@
                 itemRecordsResult: itemRecordsResult,
                 logicBlockForm: objLogicBlockForm[0].value
             }
-            let recordCreationResult = createSalesOrderRecord(objFields, objMappingFields, customerRecordResult, itemRecordsResult);
+            let recordCreationResult = createTransactionRecord(objFields, objMappingFields, customerRecordResult, itemRecordsResult, recType);
             if(recordCreationResult && recordCreationResult.recordId){
                 internalId = recordCreationResult.recordId;
-                salesOrderRecordResult = {nsID: internalId, logicBlockID: order.Id, salesOrderUpdated: salesOrderUpdated};
+                transactionRecordResult = {nsID: internalId, logicBlockID: order.Id, transactionUpdated: transactionUpdated};
             }
                                  
         }catch(error){
@@ -251,12 +251,22 @@
                 errorDetail
             );
         }      
-        return salesOrderRecordResult;
+        return transactionRecordResult;
     }
 
-  
+    /**
+     * Returns true if Logicblock Order is already paid
+     * @param {*} logicBlockOrder 
+     * @returns 
+     */
+    function orderPaid(logicBlockOrder){
+        let paymentStatus = logicBlockOrder.PaymentStatus;
+        return (paymentStatus == BSPLBUtils.constants().statusPaid);
+    }
+
     return {
-		fetchSalesOrder: fetchSalesOrder
+		fetchTransaction: fetchTransaction,
+        orderPaid: orderPaid
 	};
 
 });

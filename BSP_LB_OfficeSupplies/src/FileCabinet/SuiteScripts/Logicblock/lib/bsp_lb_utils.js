@@ -22,12 +22,14 @@
         itemFulfillmentShipStatus: "shipstatus",
         shipstatus: "C",
         defaultInventoryLocation: 3,
-        defaultQuantityOnHand: 99999
+        defaultQuantityOnHand: 99999,
+        statusPaid: "Paid"
     });
 
     const REC_TYPES = Object.freeze({
         customer:  "Customer",
         salesOrder: "Sales Order",
+        cashSale: "Cash Sale",
         purchaseOrder: "Purchase Order",
         vendor:"Vendor",
         item: "Item",
@@ -170,7 +172,8 @@
                 "custrecord_bsp_lb_last_runtime_exec",
                 "custrecord_bsp_lb_orders_page_size",
                 "custrecord_bsp_lb_exclude_canceled_ord",
-                "custrecord_bsp_lb_sales_order_form"
+                "custrecord_bsp_lb_sales_order_form",
+                "custrecord_bsp_lb_cash_sale_form"
             ]
         });
        
@@ -553,7 +556,8 @@
             columns:
             [
                 search.createColumn({name: "custrecord_bsp_lb_transaction", label: "Transaction ID"}),
-                search.createColumn({name: "custrecord_bsp_lb_transaction_type", label: "Transaction Type"})
+                search.createColumn({name: "custrecord_bsp_lb_transaction_type", label: "Transaction Type"}),
+                search.createColumn({name: "created", label: "Date Created"}),
             ]
         });
 
@@ -758,53 +762,6 @@
     }
 
     /**
-     * Get ShipPackage data to make API request to Logicblock
-     * @param {*} itemFulfillmentId 
-     * @returns 
-     */
-    function getShipPackageData(itemFulfillmentId){
-        var itemFulfillmentRecord = record.load({
-            type: record.Type.ITEM_FULFILLMENT,
-            id: itemFulfillmentId
-        });
-
-        let salesOrderID = itemFulfillmentRecord.getValue("createdfrom");
-        let logicBlockOrderID = getLogicblockID(salesOrderID);
-
-        let logicBlockFields = search.lookupFields({
-            type: search.Type.SALES_ORDER,
-            id: salesOrderID,
-            columns: ["custbody_bsp_lb_shipping_provider_id", "custbody_bsp_lb_shipping_method_id", "custbody_bsp_lb_ship_prov_service_code"]
-        });
-        let shippingProviderId = null;
-        let shippingMethodId = null;
-        let shippingProviderServiceCode = null;
-        if(logicBlockFields){
-            shippingProviderId = logicBlockFields.custbody_bsp_lb_shipping_provider_id || null;
-            shippingMethodId = logicBlockFields.custbody_bsp_lb_shipping_method_id || null;
-            shippingProviderServiceCode = logicBlockFields.custbody_bsp_lb_ship_prov_service_code || null;
-        }
-
-        let packageItems = [];
-        let itemCount = itemFulfillmentRecord.getLineCount({ sublistId: 'item' });
-        for (let i = 0; i < itemCount; i++) {
-            let itemId = itemFulfillmentRecord.getSublistValue({sublistId: 'item', fieldId: 'item', line: i });
-            let quantity = itemFulfillmentRecord.getSublistValue({sublistId: 'item', fieldId: 'quantity', line: i });
-            let lineItemId = itemFulfillmentRecord.getSublistValue({sublistId: 'item', fieldId: 'custcol_bsp_lb_line_item_id', line: i });
-            let logicBlockProductID = getLogicblockID(itemId);
-            packageItems.push({lineItemId: lineItemId, productId: logicBlockProductID, quantity: quantity});
-        }
-
-        return {
-            logicBlockOrderID: logicBlockOrderID, 
-            packageItems: packageItems, 
-            shippingProviderId: shippingProviderId, 
-            shippingMethodId: shippingMethodId, 
-            shippingProviderServiceCode: shippingProviderServiceCode
-        }
-    }
-
-    /**
      * Schedule MR Task
      * @param {*} scriptId 
      * @param {*} objParams 
@@ -895,17 +852,13 @@
      */
      function deleteTransaction(recType, recID){
         let recordType = null;
-        if(recType == REC_TYPES.salesOrder){
-            recordType = record.Type.SALES_ORDER
-        }else{
-            recordType = record.Type.PURCHASE_ORDER
-        }
+
         log.debug("deleteTransaction", {
-            recordType: recordType,
+            recordType: recType,
             recID: recID
         })
         record.delete({
-            type: recordType,
+            type: recType,
             id: recID,
         });
     }
@@ -951,9 +904,9 @@
         getInboundQueues: getInboundQueues,
         getOutboundQueues: getOutboundQueues,
         getMappingFields: getMappingFields,
-        getShipPackageData: getShipPackageData,
         searchRecordToGetInternalId: searchRecordToGetInternalId,
         getRecordInternalID: getRecordInternalID,
+        getLogicblockID: getLogicblockID,
         updateInboundQueueRetryCount: updateInboundQueueRetryCount,
         updateOutboundQueueRetryCount: updateOutboundQueueRetryCount,
         logicBlockOrder: logicBlockOrder
