@@ -2,11 +2,11 @@
  * @NApiVersion 2.1
  * @NScriptType MapReduceScript
  */
-define(['N/runtime', './lib/bsp_lb_utils.js', './lib/bsp_lb_packages.js', './lib/bsp_lb_login_api.js'],
+define(['N/runtime', './lib/bsp_lb_utils.js', './lib/bsp_lb_payments.js', './lib/bsp_lb_login_api.js'],
     /**
  * @param{runtime} runtime
  */
-    (runtime, BSPLBUtils, BSPLBPackages, BSPLBLoginAPI) => {
+    (runtime, BSPLBUtils, BSPLBPayments, BSPLBLoginAPI) => {
         /**
          * Defines the function that is executed at the beginning of the map/reduce process and generates the input data.
          * @param {Object} inputContext
@@ -29,12 +29,19 @@ define(['N/runtime', './lib/bsp_lb_utils.js', './lib/bsp_lb_packages.js', './lib
                 let settings = BSPLBUtils.getIntegrationSettings(objScriptParams.integrationSettingsRecID);
                 let loginData = BSPLBLoginAPI.login(settings);
 
-                let queues = BSPLBUtils.getOutboundQueues(BSPLBUtils.constants().transactionTypeIF);
+                let recordType = BSPLBUtils.recTypes().payment;
+                let paymentObjMappingFields = BSPLBUtils.getMappingFields(recordType, false);
+
+                let queues = BSPLBUtils.getOutboundQueues([BSPLBUtils.constants().transactionTypeInv, BSPLBUtils.constants().transactionTypePayment]);
                 queues.run().each(function (result) {
                     let queueRecID = result.id;
 
-                    let itemFulfillmentId = result.getValue({
+                    let transactionId = result.getValue({
                         name: "custrecord_bsp_lb_transaction",
+                    });
+
+                    let transactionType = result.getValue({
+                        name: "custrecord_bsp_lb_transaction_type",
                     });
 
                     let queueDateCreated = result.getValue({
@@ -43,17 +50,19 @@ define(['N/runtime', './lib/bsp_lb_utils.js', './lib/bsp_lb_packages.js', './lib
 
                     outboundQueues.push({
                         queueRecID:queueRecID, 
-                        itemFulfillmentId: itemFulfillmentId, 
+                        transactionId: transactionId, 
+                        transactionType: transactionType, 
                         queueDateCreated: queueDateCreated, 
-                        settings: settings, 
+                        paymentObjMappingFields: paymentObjMappingFields,
+                        settings: settings,
                         loginData: loginData
-                    });         
+                    });           
 
                     return true;
                 });
             }catch (error){
                 log.error(functionName, {error: error.message});
-                let errorSource = "BSP | LB | MR | Ship Packages - " + functionName;
+                let errorSource = "BSP | LB | MR | Process Payments - " + functionName;
                 BSPLBUtils.createErrorLog(
                     errorSource,
                     error.message,
@@ -86,29 +95,30 @@ define(['N/runtime', './lib/bsp_lb_utils.js', './lib/bsp_lb_packages.js', './lib
 
                 let inboundQueueRecID = outboundQueueData.queueRecID;
                 let settings = outboundQueueData.settings;
-                let itemFulfillmentId = outboundQueueData.itemFulfillmentId;
-                let dateCreated = outboundQueueData.queueDateCreated;
+                let transactionId = outboundQueueData.transactionId;
+                let transactionType = outboundQueueData.transactionType;
+                let paymentObjMappingFields = outboundQueueData.paymentObjMappingFields;
                 let loginData = outboundQueueData.loginData;
                 let updateRetryCount = false;
 
-                let lbPackageResultObj = BSPLBPackages.createPackage(settings, loginData, itemFulfillmentId, dateCreated);
-                log.debug(functionName,{lbPackageResultObj});
+                log.debug(functionName, {outboundQueueData});
 
-                if(!BSPLBUtils.isEmpty(lbPackageResultObj.packageId)){
-                    let shipPackageResult = BSPLBPackages.shipPackage(settings, lbPackageResultObj);
-                    log.debug(functionName,{shipPackageResult});
-                    if(!BSPLBUtils.isEmpty(shipPackageResult)){
-                        if(shipPackageResult == "true"){
-                            log.debug(functionName, `Package ${lbPackageResultObj.packageId} has been shipped`);           
-                        }else{
-                            updateRetryCount = true;
-                            log.error(functionName, `There was an error while Shipping Package: ${lbPackageResultObj.packageId}`);    
-                        }          
-                    }else{
-                        updateRetryCount = true;
-                        log.error(functionName, `There was an error while Shipping Package: ${lbPackageResultObj.packageId}`);    
-                    }  
-                }else{
+                let logicBlockPayments = BSPLBPayments.fetchPayments(settings, loginData, transactionId);
+                log.debug(functionName, {logicBlockPayments});
+
+                let processedPayments = null;
+
+                processedPayments = BSPLBPayments.processPayments(logicBlockPayments, 
+                    settings, 
+                    loginData, 
+                    transactionId, 
+                    transactionType, 
+                    paymentObjMappingFields
+                );
+
+                log.debug(functionName, {processedPayments});
+
+                if(BSPLBUtils.isEmpty(processedPayments)){
                     updateRetryCount = true;
                 }
 
@@ -119,7 +129,7 @@ define(['N/runtime', './lib/bsp_lb_utils.js', './lib/bsp_lb_packages.js', './lib
             }catch (error)
             {
                 log.error(functionName, {error: error.toString()});
-                let errorSource = "BSP | LB | MR | Ship Packages - " + functionName;
+                let errorSource = "BSP | LB | MR | Process Payments - " + functionName;
                 BSPLBUtils.createErrorLog(
                     errorSource,
                     error.message,
@@ -159,7 +169,7 @@ define(['N/runtime', './lib/bsp_lb_utils.js', './lib/bsp_lb_packages.js', './lib
             }catch (error)
             {
                 log.error(functionName, {error: error.toString()});
-                let errorSource = "BSP | LB | MR | Ship Packages - " + functionName;
+                let errorSource = "BSP | LB | MR | Process Payments - " + functionName;
                 BSPLBUtils.createErrorLog(
                     errorSource,
                     error.message,
@@ -174,11 +184,11 @@ define(['N/runtime', './lib/bsp_lb_utils.js', './lib/bsp_lb_packages.js', './lib
          * Retieves Script parameters set up in the Deployment Record
          * @returns {Object} Script parameters
         */
-          const getParameters = () => {
+         const getParameters = () => {
             let objParams = {};
             let objScript = runtime.getCurrentScript();
             objParams = {
-                integrationSettingsRecID : objScript.getParameter({name: "custscript_bsp_lb_integration_settings_2"})
+                integrationSettingsRecID : objScript.getParameter({name: "custscript_bsp_lb_integration_settings_3"})
             }         
             return objParams;
         }

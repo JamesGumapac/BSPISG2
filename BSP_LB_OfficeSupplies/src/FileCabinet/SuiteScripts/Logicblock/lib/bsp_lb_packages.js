@@ -11,9 +11,9 @@
      * @param {*} itemFulfillmentId 
      * @returns 
      */
-    function createPackage(settings, itemFulfillmentId, dateCreated){
+    function createPackage(settings, loginData, itemFulfillmentId, dateCreated){
         let shipPackageData = getShipPackageData(itemFulfillmentId, dateCreated);
-        let lbPackageResultObj = LBOrdersAPI.createPackage(settings, shipPackageData);
+        let lbPackageResultObj = LBOrdersAPI.createPackage(settings, loginData, shipPackageData);
         return lbPackageResultObj;
     }
 

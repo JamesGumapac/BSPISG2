@@ -81,12 +81,10 @@
      * @param {*} shipPackageData 
      * @returns 
      */
-    function createPackage(settings, shipPackageData){
+    function createPackage(settings, loginData, shipPackageData){
         let lbPackageResultObj = {};
 
-        let loginData = BSPLBLoginAPI.login(settings);
         lbPackageResultObj.loginData = loginData;
-
         let serviceURL = settings.custrecord_bsp_lb_orders_service_url;
         let soapCreatePackageAction = settings.custrecord_bsp_lb_create_pkg_soap_action;
 
@@ -125,6 +123,56 @@
     }
 
     /**
+     * Get order payments from Logicblock
+     * @param {*} settings 
+     * @param {*} loginData 
+     * @param {*} logicBlockOrderID 
+     * @returns 
+     */
+    function getOrderPayments(settings, loginData, logicBlockOrderID){
+        let orderPayments = [];
+        let serviceURL = settings.custrecord_bsp_lb_orders_service_url;
+        let soapGetOrderPaymentsAction = settings.custrecord_bsp_lb_get_pymnts_soap_action;
+        let requestBodyXML = getOrderPaymentsXMLStrRequest(loginData, logicBlockOrderID);
+
+        let logicBlockServerResponse = BSPLBServiceAPI.runService(serviceURL, requestBodyXML, soapGetOrderPaymentsAction);
+
+        let lbPaymentsResult = null;
+        if(!BSPLBUtils.isEmpty(logicBlockServerResponse)){
+            lbPaymentsResult = logicBlockServerResponse.GetOrderPaymentsResponse.GetOrderPaymentsResult.OrderPayment;
+
+            if(lbPaymentsResult.length > 0){
+                orderPayments = orderPayments.concat(lbPaymentsResult);
+            }else if(!BSPLBUtils.isEmpty(lbPaymentsResult)){
+                orderPayments.push(lbPaymentsResult);
+            }
+        }
+        return orderPayments;
+    }
+
+
+    /**
+     * Call Logicblock API to Capture Payment
+     * @param {*} settings 
+     * @param {*} loginData 
+     * @param {*} paymentData 
+     * @returns 
+     */
+    function capturePayment(settings, loginData, paymentData){
+        let capturePayment = null;
+        let serviceURL = settings.custrecord_bsp_lb_orders_service_url;
+        let soapCapturePaymentsAction = settings.custrecord_bsp_lb_capt_pymnt_soap_action;
+        let requestBodyXML = capturePaymentsXMLStrRequest(loginData, paymentData);
+
+        let logicBlockServerResponse = BSPLBServiceAPI.runService(serviceURL, requestBodyXML, soapCapturePaymentsAction);
+
+        if(!BSPLBUtils.isEmpty(logicBlockServerResponse)){
+            capturePayment = logicBlockServerResponse.CapturePaymentResponse.CapturePaymentResult;
+        }
+        return capturePayment;
+    }
+
+    /**
      * Get Paramters for the Logicblock Service request
      * @param {*} settings 
      * @returns 
@@ -150,7 +198,33 @@
     }
 
     /**
+     * Body of Get Order Payments Request
+     * @param {*} loginData 
+     * @param {*} logicBlockOrderID 
+     * @returns 
+     */
+    function getOrderPaymentsXMLStrRequest(loginData, logicBlockOrderID){
+       return `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/" xmlns:log="http://schemas.datacontract.org/2004/07/Logicblock.Commerce.Domain">
+        <soapenv:Header/>
+        <soapenv:Body>
+            <tem:GetOrderPayments>
+                <tem:token>
+                    <log:ApiId>${loginData.ApiId}</log:ApiId>
+                    <log:ExpirationDateUtc>${loginData.ExpirationDateUtc}</log:ExpirationDateUtc>
+                    <log:Id>${loginData.Id}</log:Id>
+                    <log:IsExpired>${loginData.IsExpired}</log:IsExpired>
+                    <log:TokenRejected>${loginData.TokenRejected}</log:TokenRejected>
+                </tem:token>
+                <tem:orderId>${logicBlockOrderID}</tem:orderId>
+            </tem:GetOrderPayments>
+        </soapenv:Body>
+        </soapenv:Envelope>`;
+    }
+
+    /**
      * Body of Order Request
+     * @param {*} loginData 
+     * @param {*} requestParams 
      * @returns 
      */
      function getOrdersXMLStrRequest(loginData, requestParams){
@@ -243,9 +317,35 @@
         </soapenv:Envelope>`;
     }
 
+    /**
+     * Body of Capture Payment Request
+     * @param {*} loginData 
+     * @param {*} paymentData 
+     * @returns 
+     */
+    function capturePaymentsXMLStrRequest(loginData, paymentData){
+        return `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/" xmlns:log="http://schemas.datacontract.org/2004/07/Logicblock.Commerce.Domain">
+            <soapenv:Header/>
+            <soapenv:Body>
+            <tem:CapturePayment>
+                <tem:token>
+                    <log:ApiId>${loginData.ApiId}</log:ApiId>
+                    <log:ExpirationDateUtc>${loginData.ExpirationDateUtc}</log:ExpirationDateUtc>
+                    <log:Id>${loginData.Id}</log:Id>
+                    <log:IsExpired>${loginData.IsExpired}</log:IsExpired>
+                    <log:TokenRejected>${loginData.TokenRejected}</log:TokenRejected>
+                </tem:token>
+                <tem:paymentId>${paymentData.paymentId}</tem:paymentId>
+            </tem:CapturePayment>
+            </soapenv:Body>
+        </soapenv:Envelope>`;
+    }
+
     return {
         getOrders: getOrders,
         createPackage: createPackage,
-        shipPackage: shipPackage
+        shipPackage: shipPackage,
+        getOrderPayments: getOrderPayments,
+        capturePayment: capturePayment
     };
 });

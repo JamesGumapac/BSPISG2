@@ -1,0 +1,69 @@
+/**
+ * @NApiVersion 2.1
+ * @NModuleScope Public
+ */
+
+ define([
+    'N/search', 
+    './bsp_lb_utils.js', 
+    './bsp_lb_ordersservice_api.js', 
+    './bsp_lb_cc_payments.js'
+ ], 
+ function (search, BSPLBUtils, LBOrdersAPI, BSPLBCCPayments) {
+
+    /**
+     * 
+     * @param {*} settings 
+     * @param {*} loginData 
+     * @param {*} transactionId 
+     */
+    function fetchPayments(settings, loginData, transactionId){
+        let logicBlockPayments = [];
+
+        let createdFromField = search.lookupFields({
+            type: search.Type.INVOICE,
+            id: transactionId,
+            columns: ["createdfrom"]
+        });
+        let salesOrderID = null;
+        if(createdFromField && createdFromField.createdfrom){
+            salesOrderID = createdFromField.createdfrom[0].value;
+        }
+
+        let logicBlockOrderID = null;
+        if(salesOrderID){
+             logicBlockOrderID = BSPLBUtils.getLogicblockID(salesOrderID);
+        }
+
+        if(logicBlockOrderID){
+            let paymentsResult = LBOrdersAPI.getOrderPayments(settings, loginData, logicBlockOrderID);
+            if(paymentsResult){
+                logicBlockPayments = paymentsResult;
+            }
+        }
+        return logicBlockPayments;
+    }
+
+    /**
+     * Process logicblock payments
+     * @param {*} logicBlockPayments 
+     * @param {*} transactionId 
+     * @param {*} transactionType 
+     * @returns 
+     */
+    function processPayments(logicBlockPayments, settings, loginData, transactionId, transactionType, paymentObjMappingFields){
+        let processedPayments = null;
+        if(transactionType == BSPLBUtils.constants().transactionTypeInv){
+            processedPayments = BSPLBCCPayments.processCreditCardPayments(logicBlockPayments, settings, loginData, transactionId, paymentObjMappingFields);
+        }else if(transactionType == BSPLBUtils.constants().transactionTypePayment){
+
+        }
+        return processedPayments;
+    }
+
+    return {
+        fetchPayments: fetchPayments,
+        processPayments: processPayments
+	};
+
+});

@@ -19,18 +19,31 @@ define(['./lib/bsp_lb_utils.js'],
                 let rec = scriptContext.newRecord;
                 let recId = rec.id;
                 let transactionType = rec.type; 
+                let recType = rec.getValue(BSPLBUtils.constants().transactionTypeField);  
+                let createdFrom = null;
+                let isLogicBlockOrder = null;
+                switch (transactionType) {
+                    case BSPLBUtils.recTypes().itemFulfillment:
+                        let status = rec.getValue(BSPLBUtils.constants().itemFulfillmentShipStatus);
 
-                if(transactionType == BSPLBUtils.recTypes().itemFulfillment){
-                    let recType = rec.getValue(BSPLBUtils.constants().transactionTypeField);  
-                    let status = rec.getValue(BSPLBUtils.constants().itemFulfillmentShipStatus);
-
-                    let createdFrom = rec.getValue("createdfrom");
-                    let isLogicBlockOrder = BSPLBUtils.logicBlockOrder(createdFrom);
-
-                    if(isLogicBlockOrder && status == BSPLBUtils.constants().shipstatus){
-                        BSPLBUtils.createOutboundQueue(recId, recType);
-                    }                        
-                } 
+                        createdFrom = rec.getValue("createdfrom");
+                        isLogicBlockOrder = BSPLBUtils.logicBlockOrder(createdFrom);
+    
+                        if(isLogicBlockOrder && status == BSPLBUtils.constants().shipstatus){
+                            BSPLBUtils.createOutboundQueue(recId, recType);
+                        }    
+                        break;
+                    case BSPLBUtils.recTypes().invoice:
+                        createdFrom = rec.getValue("createdfrom");
+                        isLogicBlockOrder = BSPLBUtils.logicBlockOrder(createdFrom);
+                        if(isLogicBlockOrder){
+                            BSPLBUtils.createOutboundQueue(recId, recType);
+                        }  
+                        break;
+                    case BSPLBUtils.recTypes().customerPayment:
+                        
+                        break
+                }
             }catch (error){
                 log.error(functionName, {error: error.message});
                 let errorSource = "BSP | LB | UE | Create Outbound Queue - " + functionName;

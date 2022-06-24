@@ -18,12 +18,17 @@
         errorMessageQueueAlreadyExists: "The Queue record already exists.",
         mrCreateRecordsScriptId: "customscript_bsp_lb_mr_create_ns_records",
         mrCreateRecordsDeploymentId: "customdeploy_bsp_lb_mr_create_ns_records",
+        errorCapturePayment: "An error occured while try to Capture Logicblock payment",
         transactionTypeField: "ntype",
         itemFulfillmentShipStatus: "shipstatus",
         shipstatus: "C",
         defaultInventoryLocation: 3,
         defaultQuantityOnHand: 99999,
-        statusPaid: "Paid"
+        statusPaid: "Paid",
+        transactionTypeIF: 32,
+        transactionTypeInv: 7,
+        transactionTypePayment: 9,
+        creditCard: "Credit Card"
     });
 
     const REC_TYPES = Object.freeze({
@@ -33,9 +38,12 @@
         purchaseOrder: "Purchase Order",
         vendor:"Vendor",
         item: "Item",
+        payment: "Payment",
         billingAddress: "Billing Address",
         shippingAddress: "Shipping Address",
-        itemFulfillment: "itemfulfillment"
+        itemFulfillment: "itemfulfillment",
+        invoice: "invoice",
+        customerPayment: "customerpayment"
     });
 
      /**
@@ -167,6 +175,8 @@
                 "custrecord_bsp_lb_get_prod_soap_action",
                 "custrecord_bsp_lb_create_pkg_soap_action",
                 "custrecord_bsp_lb_ship_pkg_soap_action",
+                "custrecord_bsp_lb_get_pymnts_soap_action",
+                "custrecord_bsp_lb_capt_pymnt_soap_action",
                 "custrecord_bsp_lb_user_id",
                 "custrecord_bsp_lb_password",
                 "custrecord_bsp_lb_last_runtime_exec",
@@ -292,7 +302,7 @@
         });
 
         let servicelogRecID = serviceLogRec.save();
-        log.audit(functionName, "Service Log Created: " + servicelogRecID);  
+        log.audit(functionName, "Service Log Created: " + servicelogRecID + " - soapAction: " + soapAction);  
     }
 
     /**
@@ -546,12 +556,14 @@
      * Get all Outbound Queue Records to be processed
      * @returns 
      */
-    function getOutboundQueues(){
+    function getOutboundQueues(transactionType){
         let outboundQueueSearchObj = search.create({
             type: "customrecord_bsp_lb_outbound_queue",
             filters:
             [
-                ["isinactive","is","F"]
+                ["isinactive","is","F"],
+                "AND", 
+                ["custrecord_bsp_lb_transaction_type","anyof",transactionType]
             ],
             columns:
             [
