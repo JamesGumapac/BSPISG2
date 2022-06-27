@@ -178,6 +178,8 @@ define(['N/runtime', './lib/bsp_lb_utils.js', './lib/bsp_lb_ordersservice_api.js
         const validOrderForNetSuite = (lbOrder) =>{
             let hasUserID = (BSPLBUtils.isEmpty(lbOrder.UserId) ? false : true);
 
+            let isPlaced = ((lbOrder.IsPlaced == "true") ? true : false);
+
             let objScriptParams = getParameters();
             let orderStatusesFilter = BSPLBUtils.getOrderStatusFilter(objScriptParams.integrationSettingsRecID);
             log.debug("validOrderForNetSuite", {
@@ -190,7 +192,7 @@ define(['N/runtime', './lib/bsp_lb_utils.js', './lib/bsp_lb_ordersservice_api.js
                 orderStatus: orderStatus,
                 statusValud: statusValud
             });
-            return hasUserID && statusValud;
+            return hasUserID && statusValud && isPlaced;
         }
 
         return {getInputData, reduce, summarize}

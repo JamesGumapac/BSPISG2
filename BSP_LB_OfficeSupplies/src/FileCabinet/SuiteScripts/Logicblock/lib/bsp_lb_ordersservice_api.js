@@ -336,6 +336,7 @@
                     <log:TokenRejected>${loginData.TokenRejected}</log:TokenRejected>
                 </tem:token>
                 <tem:paymentId>${paymentData.paymentId}</tem:paymentId>
+                <tem:amount>${paymentData.paymentAmount}</tem:amount>
             </tem:CapturePayment>
             </soapenv:Body>
         </soapenv:Envelope>`;

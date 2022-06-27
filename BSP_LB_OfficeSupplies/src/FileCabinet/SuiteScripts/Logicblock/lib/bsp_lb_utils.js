@@ -28,7 +28,8 @@
         transactionTypeIF: 32,
         transactionTypeInv: 7,
         transactionTypePayment: 9,
-        creditCard: "Credit Card"
+        creditCard: "Credit Card",
+        purchaseOrder: "Purchase Order"
     });
 
     const REC_TYPES = Object.freeze({
@@ -183,7 +184,9 @@
                 "custrecord_bsp_lb_orders_page_size",
                 "custrecord_bsp_lb_exclude_canceled_ord",
                 "custrecord_bsp_lb_sales_order_form",
-                "custrecord_bsp_lb_cash_sale_form"
+                "custrecord_bsp_lb_cash_sale_form",
+                "custrecord_bsp_lb_undep_founds",
+                "custrecord_bsp_lb_account"
             ]
         });
        

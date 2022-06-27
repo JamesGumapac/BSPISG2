@@ -11,7 +11,7 @@
      * @param {*} objMappingFields 
      * @returns 
      */
-    function createPaymentRecord(objFields, objMappingFields){
+    function createPaymentRecord(objFields, objMappingFields, settings){
         let objResult = {};
         let status = BSPLBUtils.constants().successStatus;
         let newRecordId = "";
@@ -29,6 +29,13 @@
             toType: record.Type.CUSTOMER_PAYMENT,
             isDynamic: true,
         });
+
+        let account = settings.custrecord_bsp_lb_account[0].value;
+        if(account){
+            transactionRecord.setValue({ fieldId: "account", value: account});
+        }else{
+            transactionRecord.setValue({ fieldId: "undepfunds", value: 'T'});
+        }
 
         for (const fieldMapping of objMappingFields.bodyFields) {
             let nsField = fieldMapping.netSuiteFieldId;
@@ -99,9 +106,9 @@
         creditCardPayments.forEach(lbPayment => {
             let paymentId = lbPayment.Id;
             let paymentAmount = (parseFloat(lbPayment.AmountAuthorized)).toFixed(1);
+
             let paymentData = {paymentId: paymentId, paymentAmount: paymentAmount};
             let capturePayment = LBOrdersAPI.capturePayment(settings, loginData, paymentData);
-
             if(capturePayment == "true"){
                 let paymentDate = lbPayment.AuditDate;
                 netSuitePaymentsData.push({
@@ -116,7 +123,7 @@
                     netsuiteId: null,
                     logicblockId: paymentId
                 })
-            }
+            }        
         });
 
         try{   
@@ -124,7 +131,7 @@
                 let objFields = {
                     payment: paymentData
                 }
-                let recordCreationResult = createPaymentRecord(objFields, objMappingFields);
+                let recordCreationResult = createPaymentRecord(objFields, objMappingFields, settings);
                 if(recordCreationResult && recordCreationResult.recordId){
                     internalId = recordCreationResult.recordId;
                     netSuitePayment.push({

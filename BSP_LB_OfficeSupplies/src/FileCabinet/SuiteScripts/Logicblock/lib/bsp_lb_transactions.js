@@ -13,7 +13,7 @@
      * @param {*} itemRecordsResult 
      * @returns 
      */
-     function createTransactionRecord(objFields, objMappingFields, customerRecordResult, itemRecordsResult, recType){
+     function createTransactionRecord(objFields, objMappingFields, customerRecordResult, itemRecordsResult, recType, settings){
         let objResult = {};
         let status = BSPLBUtils.constants().successStatus;
         let newRecordId = "";
@@ -29,8 +29,23 @@
             isDynamic: true,
         });
 
+        if(recType == record.Type.CASH_SALE){
+           let account = settings.custrecord_bsp_lb_account[0].value;
+           if(account){
+                transactionRecord.setValue({ fieldId: "account", value: account});
+           }else{
+                transactionRecord.setValue({ fieldId: "undepfunds", value: 'T'});
+           }
+        }
+
         transactionRecord.setValue({ fieldId: "entity", value: parseInt(customerRecordResult.nsID)});
         transactionRecord.setValue({ fieldId: "customform", value: parseInt(objFields.logicBlockForm)});
+
+        if(BSPLBUtils.isEmpty(objFields.order.CustomerPurchaseOrderNumber)){
+            transactionRecord.setValue({ fieldId: "custbody_bsp_lb_payment_method", value: BSPLBUtils.constants().creditCard});
+        }else{
+            transactionRecord.setValue({ fieldId: "custbody_bsp_lb_payment_method", value: BSPLBUtils.constants().purchaseOrder});
+        }
 
         for (const fieldMapping of objMappingFields.bodyFields) {
             let nsField = fieldMapping.netSuiteFieldId;
@@ -204,7 +219,7 @@
      * @param {*} itemRecordsResult 
      * @returns 
      */
-    function fetchTransaction(order, objMappingFields, customerRecordResult, itemRecordsResult, objLogicBlockForm, recType){
+    function fetchTransaction(order, objMappingFields, customerRecordResult, itemRecordsResult, settings, recType){
         let functionName = "fetchTransaction";
         let transactionRecordResult = {};
         let transactionUpdated = false;
@@ -233,9 +248,9 @@
                 BillingAddress: order.BillingAddress,
                 customerRecordResult: customerRecordResult,
                 itemRecordsResult: itemRecordsResult,
-                logicBlockForm: objLogicBlockForm[0].value
+                logicBlockForm: (recType == record.Type.CASH_SALE ? settings.custrecord_bsp_lb_cash_sale_form[0].value : settings.custrecord_bsp_lb_sales_order_form[0].value)
             }
-            let recordCreationResult = createTransactionRecord(objFields, objMappingFields, customerRecordResult, itemRecordsResult, recType);
+            let recordCreationResult = createTransactionRecord(objFields, objMappingFields, customerRecordResult, itemRecordsResult, recType, settings);
             if(recordCreationResult && recordCreationResult.recordId){
                 internalId = recordCreationResult.recordId;
                 transactionRecordResult = {nsID: internalId, logicBlockID: order.Id, transactionUpdated: transactionUpdated};

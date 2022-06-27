@@ -175,7 +175,7 @@ define(['N/record', 'N/runtime', 'N/search', './lib/bsp_lb_utils.js', './lib/bsp
                                 cashSaleObjMappingFields, 
                                 customerRecordResult, 
                                 itemRecordsResult, 
-                                settings.custrecord_bsp_lb_cash_sale_form,
+                                settings,
                                 record.Type.CASH_SALE
                             );
                             log.debug(functionName, {cashSaleRecordsResult});
@@ -197,7 +197,7 @@ define(['N/record', 'N/runtime', 'N/search', './lib/bsp_lb_utils.js', './lib/bsp
                                 salesOrderObjMappingFields, 
                                 customerRecordResult, 
                                 itemRecordsResult, 
-                                settings.custrecord_bsp_lb_sales_order_form,
+                                settings,
                                 record.Type.SALES_ORDER
                             );
                             log.debug(functionName, {salesOrderRecordsResult});
