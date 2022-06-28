@@ -32,7 +32,7 @@ define(['N/runtime', './lib/bsp_lb_utils.js', './lib/bsp_lb_payments.js', './lib
                 let recordType = BSPLBUtils.recTypes().payment;
                 let paymentObjMappingFields = BSPLBUtils.getMappingFields(recordType, false);
 
-                let queues = BSPLBUtils.getOutboundQueues([BSPLBUtils.constants().transactionTypeInv, BSPLBUtils.constants().transactionTypePayment]);
+                let queues = BSPLBUtils.getOutboundQueues(BSPLBUtils.outboundQueueOperations().processPayment);
                 queues.run().each(function (result) {
                     let queueRecID = result.id;
 
@@ -118,12 +118,14 @@ define(['N/runtime', './lib/bsp_lb_utils.js', './lib/bsp_lb_payments.js', './lib
 
                 log.debug(functionName, {processedPayments});
 
-                if(BSPLBUtils.isEmpty(processedPayments)){
+                if(!BSPLBUtils.isEmpty(processedPayments.error)){
                     updateRetryCount = true;
                 }
 
                 if(updateRetryCount){
                     BSPLBUtils.updateOutboundQueueRetryCount(inboundQueueRecID);
+                }else{
+                    BSPLBUtils.markQueueAsProcessed(inboundQueueRecID, "customrecord_bsp_lb_outbound_queue");
                 }
 
             }catch (error)
@@ -161,11 +163,9 @@ define(['N/runtime', './lib/bsp_lb_utils.js', './lib/bsp_lb_payments.js', './lib
         const summarize = (summaryContext) => {
             let functionName = 'Summarize';
             try{
-                /*let objScriptParams = getParameters();
-                let queueType = "customrecord_bsp_lb_outbound_queue";
-                let retryCountField = "custrecord_bsp_lb_outbound_retry_count";
-                let deletedQueues = BSPLBUtils.deleteProcessedQueues(objScriptParams.integrationSettingsRecID, queueType, retryCountField);
-                log.audit(functionName, {'deletedProcessedQueues': deletedQueues});*/
+                let objScriptParams = getParameters();
+                let deletedQueues = BSPLBUtils.deleteProcessedOutboundQueues(objScriptParams.integrationSettingsRecID, BSPLBUtils.outboundQueueOperations().processPayment);
+                log.audit(functionName, {'deletedProcessedQueues': deletedQueues});
             }catch (error)
             {
                 log.error(functionName, {error: error.toString()});

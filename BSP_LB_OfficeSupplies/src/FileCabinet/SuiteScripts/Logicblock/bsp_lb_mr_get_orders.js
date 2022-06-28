@@ -138,8 +138,8 @@ define(['N/runtime', './lib/bsp_lb_utils.js', './lib/bsp_lb_ordersservice_api.js
         const summarize = (summaryContext) => {
             let functionName = 'Summarize';
             try{
-                /*let objScriptParams = getParameters();
-                BSPLBUtils.updateLastRuntimeExecution(objScriptParams.integrationSettingsRecID);*/
+                let objScriptParams = getParameters();
+                BSPLBUtils.updateLastRuntimeExecution(objScriptParams.integrationSettingsRecID);
                 let scriptId = BSPLBUtils.constants().mrCreateRecordsScriptId;
                 let deploymentId = BSPLBUtils.constants().mrCreateRecordsDeploymentId;
                 BSPLBUtils.scheduleMRTask(scriptId,deploymentId);

@@ -29,7 +29,7 @@ define(['N/runtime', './lib/bsp_lb_utils.js', './lib/bsp_lb_packages.js', './lib
                 let settings = BSPLBUtils.getIntegrationSettings(objScriptParams.integrationSettingsRecID);
                 let loginData = BSPLBLoginAPI.login(settings);
 
-                let queues = BSPLBUtils.getOutboundQueues(BSPLBUtils.constants().transactionTypeIF);
+                let queues = BSPLBUtils.getOutboundQueues(BSPLBUtils.outboundQueueOperations().shipPackage);
                 queues.run().each(function (result) {
                     let queueRecID = result.id;
 
@@ -114,6 +114,8 @@ define(['N/runtime', './lib/bsp_lb_utils.js', './lib/bsp_lb_packages.js', './lib
 
                 if(updateRetryCount){
                     BSPLBUtils.updateOutboundQueueRetryCount(inboundQueueRecID);
+                }else{
+                    BSPLBUtils.markQueueAsProcessed(inboundQueueRecID, "customrecord_bsp_lb_outbound_queue");
                 }
 
             }catch (error)
@@ -151,11 +153,9 @@ define(['N/runtime', './lib/bsp_lb_utils.js', './lib/bsp_lb_packages.js', './lib
         const summarize = (summaryContext) => {
             let functionName = 'Summarize';
             try{
-                /*let objScriptParams = getParameters();
-                let queueType = "customrecord_bsp_lb_outbound_queue";
-                let retryCountField = "custrecord_bsp_lb_outbound_retry_count";
-                let deletedQueues = BSPLBUtils.deleteProcessedQueues(objScriptParams.integrationSettingsRecID, queueType, retryCountField);
-                log.audit(functionName, {'deletedProcessedQueues': deletedQueues});*/
+                let objScriptParams = getParameters();
+                let deletedQueues = BSPLBUtils.deleteProcessedOutboundQueues(objScriptParams.integrationSettingsRecID, BSPLBUtils.outboundQueueOperations().shipPackage);
+                log.audit(functionName, {'deletedProcessedQueues': deletedQueues});
             }catch (error)
             {
                 log.error(functionName, {error: error.toString()});

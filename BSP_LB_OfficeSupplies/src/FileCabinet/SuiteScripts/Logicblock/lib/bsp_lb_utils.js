@@ -32,6 +32,12 @@
         purchaseOrder: "Purchase Order"
     });
 
+    const OUTBOUND_QUEUE_OPERATIONS = Object.freeze({
+        shipPackage: 1,
+        processPayment: 2,
+        sendInvoice: 3
+    });
+
     const REC_TYPES = Object.freeze({
         customer:  "Customer",
         salesOrder: "Sales Order",
@@ -69,6 +75,14 @@
     */
     function recTypes(){
         return REC_TYPES;
+    }
+
+    /**
+     * Returns Outbound Queue Operations 
+     * @returns 
+    */
+    function outboundQueueOperations(){
+        return OUTBOUND_QUEUE_OPERATIONS;
     }
 
     /**
@@ -178,6 +192,7 @@
                 "custrecord_bsp_lb_ship_pkg_soap_action",
                 "custrecord_bsp_lb_get_pymnts_soap_action",
                 "custrecord_bsp_lb_capt_pymnt_soap_action",
+                "custrecord_bsp_lb_po_payment_soap_action",
                 "custrecord_bsp_lb_user_id",
                 "custrecord_bsp_lb_password",
                 "custrecord_bsp_lb_last_runtime_exec",
@@ -378,17 +393,17 @@
     /**
      * Delete queues that had been processed
     */
-    function deleteProcessedQueues(settingsRecID, queueType, retryCountField){
+    function deleteProcessedInboundQueues(settingsRecID){
 
         let maxRetryCount = getSettingsMaxRetryCount(settingsRecID);
 
         let inboundQueueSearchObj = search.create({
-            type: queueType,
+            type: "customrecord_bsp_lb_inbound_queue",
             filters:
             [
                 ["isinactive","is","F"],
                 "AND", 
-                [[retryCountField,"isempty",""],"OR",[retryCountField,"equalto",maxRetryCount]]
+                [["custrecord_bsp_lb_retry_count","equalto",maxRetryCount],"OR",["custrecord_bsp_lb_inbound_q_processed","is","T"]]
             ],
             columns:
             []
@@ -396,13 +411,70 @@
         let deletedQueues = 0;
         inboundQueueSearchObj.run().each(function (result) {
             record.delete({
-                type: queueType,
+                type: "customrecord_bsp_lb_inbound_queue",
                 id: result.id,
             });
             deletedQueues++;
             return true;
         });
         return deletedQueues;
+    }
+
+    /**
+     * Delete Outbound queues that had been processed
+    */
+     function deleteProcessedOutboundQueues(settingsRecID, operation){
+
+        let maxRetryCount = getSettingsMaxRetryCount(settingsRecID);
+
+        let inboundQueueSearchObj = search.create({
+            type: "customrecord_bsp_lb_outbound_queue",
+            filters:
+            [
+                ["isinactive","is","F"],
+                "AND", 
+                [["custrecord_bsp_lb_outbound_retry_count","equalto",maxRetryCount],"OR",["custrecord_bsp_lb_outbound_q_processed","is","T"]],
+                "AND", 
+                ["custrecord_bsp_lb_operation","anyof",operation]
+            ],
+            columns:
+            []
+        });
+        let deletedQueues = 0;
+        inboundQueueSearchObj.run().each(function (result) {
+            record.delete({
+                type: "customrecord_bsp_lb_outbound_queue",
+                id: result.id,
+            });
+            deletedQueues++;
+            return true;
+        });
+        return deletedQueues;
+    }
+
+    /**
+     * Marked Queue as Processed
+     * @param {*} queueID 
+     * @param {*} queueType 
+     */
+    function markQueueAsProcessed(queueID, queueType){
+        if(queueType == "customrecord_bsp_lb_inbound_queue"){
+            record.submitFields({
+                type: queueType,
+                id: queueID,
+                values: {
+                    custrecord_bsp_lb_inbound_q_processed: true
+                }
+            });
+        }else{
+            record.submitFields({
+                type: queueType,
+                id: queueID,
+                values: {
+                    custrecord_bsp_lb_outbound_q_processed: true
+                }
+            });
+        }
     }
 
     /**
@@ -419,7 +491,7 @@
         try {
             let queueType = "customrecord_bsp_lb_inbound_queue";
             let fieldId = "custrecord_bsp_lb_queue_id";
-            if(!queueExists(queueId, queueType, fieldId)){
+            if(!queueExists(queueId, queueType, fieldId, null)){
                 let queueRecord = record.create({
                     type: queueType,
                 });
@@ -461,10 +533,10 @@
      * @param {*} recType 
      * @returns 
     */
-    function createOutboundQueue(recID, recType){
+    function createOutboundQueue(recID, recType, operation){
         let queueType = "customrecord_bsp_lb_outbound_queue";
         let fieldId = "custrecord_bsp_lb_transaction";
-        if(!queueExists(recID, queueType, fieldId)){
+        if(!queueExists(recID, queueType, fieldId, operation)){
             let queueRecord = record.create({
                 type: "customrecord_bsp_lb_outbound_queue",
             });
@@ -476,6 +548,10 @@
             queueRecord.setValue({
                 fieldId: "custrecord_bsp_lb_transaction_type",
                 value: recType,
+            });
+            queueRecord.setValue({
+                fieldId: "custrecord_bsp_lb_operation",
+                value: operation,
             });
     
             queueRecord.save();    
@@ -519,18 +595,35 @@
      * @param {*} queueId 
      * @returns 
      */
-    function queueExists(queueId, queueType, fieldId){
-        let inboundQueueSearchObj = search.create({
-            type: queueType,
-            filters:
-            [
-                [fieldId,"is",queueId],
-                "AND", 
-                ["isinactive","is","F"]
-            ],
-            columns:[]
+    function queueExists(queueId, queueType, fieldId, operation){
+        let inboundQueueSearchObj = null;
+        if(queueType == "customrecord_bsp_lb_outbound_queue"){
+            inboundQueueSearchObj = search.create({
+                type: queueType,
+                filters:
+                [
+                    [fieldId,"is",queueId],
+                    "AND", 
+                    ["custrecord_bsp_lb_operation","anyof",operation], 
+                    "AND", 
+                    ["isinactive","is","F"]
+                ],
+                columns:[]
             });
-            return (inboundQueueSearchObj.runPaged().count > 0);
+        }else{
+            inboundQueueSearchObj = search.create({
+                type: queueType,
+                filters:
+                [
+                    [fieldId,"is",queueId],
+                    "AND", 
+                    ["isinactive","is","F"]
+                ],
+                columns:[]
+            });
+        }
+       
+        return (inboundQueueSearchObj.runPaged().count > 0);
     }
 
 
@@ -559,14 +652,14 @@
      * Get all Outbound Queue Records to be processed
      * @returns 
      */
-    function getOutboundQueues(transactionType){
+    function getOutboundQueues(operation){
         let outboundQueueSearchObj = search.create({
             type: "customrecord_bsp_lb_outbound_queue",
             filters:
             [
                 ["isinactive","is","F"],
                 "AND", 
-                ["custrecord_bsp_lb_transaction_type","anyof",transactionType]
+                ["custrecord_bsp_lb_operation","anyof",operation]
             ],
             columns:
             [
@@ -758,22 +851,22 @@
     }
 
     /**
-     * Returns true if the Order was obtained from Logicblock
+     * Returns Logicblock Order Data storded in Sales Order
      * @param {*} salesOrderID 
      * @returns 
      */
-    function logicBlockOrder(salesOrderID){
+    function logicBlockOrderData(salesOrderID){
         if(salesOrderID){
-            let logicblockOrderIdField = search.lookupFields({
+            let logicblockOrderFields = search.lookupFields({
                 type: search.Type.SALES_ORDER,
                 id: salesOrderID,
-                columns: "custbody_bsp_lb_order_number"
+                columns: ["custbody_bsp_lb_order_number", "custbody_bsp_lb_payment_method", "custbody_bsp_lb_purchase_order_num"]
             });
-            if(logicblockOrderIdField && logicblockOrderIdField.custbody_bsp_lb_order_number){
-                return true;
+            if(logicblockOrderFields && logicblockOrderFields.custbody_bsp_lb_order_number){
+                return logicblockOrderFields;
             }
         }
-        return false;
+        return null;
     }
 
     /**
@@ -866,12 +959,6 @@
      * @param {*} recID 
      */
      function deleteTransaction(recType, recID){
-        let recordType = null;
-
-        log.debug("deleteTransaction", {
-            recordType: recType,
-            recID: recID
-        })
         record.delete({
             type: recType,
             id: recID,
@@ -900,6 +987,7 @@
         serverConstants: serverConstants,
         constants: constants,
         recTypes: recTypes,
+        outboundQueueOperations: outboundQueueOperations,
         isEmpty:isEmpty,
         getProp: getProp,
         scheduleMRTask: scheduleMRTask,
@@ -912,7 +1000,8 @@
         createErrorLog: createErrorLog,
         createMappingKeyRecord: createMappingKeyRecord,
         updateLastRuntimeExecution: updateLastRuntimeExecution,
-        deleteProcessedQueues: deleteProcessedQueues,
+        deleteProcessedInboundQueues: deleteProcessedInboundQueues,
+        deleteProcessedOutboundQueues: deleteProcessedOutboundQueues,
         createInboundQueue: createInboundQueue,
         createOutboundQueue: createOutboundQueue,
         buildErrorDetails: buildErrorDetails,
@@ -924,6 +1013,7 @@
         getLogicblockID: getLogicblockID,
         updateInboundQueueRetryCount: updateInboundQueueRetryCount,
         updateOutboundQueueRetryCount: updateOutboundQueueRetryCount,
-        logicBlockOrder: logicBlockOrder
+        logicBlockOrderData: logicBlockOrderData,
+        markQueueAsProcessed: markQueueAsProcessed
 	};
 });

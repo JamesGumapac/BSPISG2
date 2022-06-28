@@ -30,11 +30,11 @@
             isDynamic: true,
         });
 
-        let account = settings.custrecord_bsp_lb_account[0].value;
+        let account = !BSPLBUtils.isEmpty(settings.custrecord_bsp_lb_account) ? settings.custrecord_bsp_lb_account[0].value : null;
         if(account){
-            transactionRecord.setValue({ fieldId: "account", value: account});
+            paymentRec.setValue({ fieldId: "account", value: account});
         }else{
-            transactionRecord.setValue({ fieldId: "undepfunds", value: 'T'});
+            paymentRec.setValue({ fieldId: "undepfunds", value: 'T'});
         }
 
         for (const fieldMapping of objMappingFields.bodyFields) {
@@ -105,7 +105,7 @@
         let netSuitePaymentsData = [];
         creditCardPayments.forEach(lbPayment => {
             let paymentId = lbPayment.Id;
-            let paymentAmount = (parseFloat(lbPayment.AmountAuthorized)).toFixed(1);
+            let paymentAmount = parseFloat(lbPayment.AmountAuthorized);
 
             let paymentData = {paymentId: paymentId, paymentAmount: paymentAmount};
             let capturePayment = LBOrdersAPI.capturePayment(settings, loginData, paymentData);
@@ -144,7 +144,7 @@
         }catch(error){
             log.error(functionName, {error: error.message});
             let errorDetail = JSON.stringify({error: error.message})
-            let errorSource = "BSP | LB | MR | Create NS Records - " + functionName;
+            let errorSource = "BSP | LB | MR | Process Payments - " + functionName;
             BSPLBUtils.createErrorLog(
                 errorSource,
                 error.message,

@@ -215,6 +215,8 @@ define(['N/record', 'N/runtime', 'N/search', './lib/bsp_lb_utils.js', './lib/bsp
 
                 if(updateRetryCount){
                     BSPLBUtils.updateInboundQueueRetryCount(inboundQueueRecID);
+                }else{
+                    BSPLBUtils.markQueueAsProcessed(inboundQueueRecID, "customrecord_bsp_lb_inbound_queue");
                 }
 
             } catch (error) {
@@ -251,13 +253,9 @@ define(['N/record', 'N/runtime', 'N/search', './lib/bsp_lb_utils.js', './lib/bsp
         const summarize = (summaryContext) => {
             let functionName = 'Summarize';
             try{
-                /*let objScriptParams = getParameters();
-                BSPLBUtils.updateLastRuntimeExecution(objScriptParams.integrationSettingsRecID);
-
-                let queueType = "customrecord_bsp_lb_inbound_queue";
-                let retryCountField = "custrecord_bsp_lb_retry_count";
-                let deletedQueues = BSPLBUtils.deleteProcessedQueues(objScriptParams.integrationSettingsRecID, queueType, retryCountField);
-                log.audit(functionName, {'deletedProcessedQueues': deletedQueues});*/
+                let objScriptParams = getParameters();
+                let deletedQueues = BSPLBUtils.deleteProcessedInboundQueues(objScriptParams.integrationSettingsRecID);
+                log.audit(functionName, {'deletedProcessedQueues': deletedQueues});
 
             }catch (error)
             {

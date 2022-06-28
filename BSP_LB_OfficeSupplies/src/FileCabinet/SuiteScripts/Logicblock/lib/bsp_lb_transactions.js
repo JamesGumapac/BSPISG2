@@ -30,7 +30,7 @@
         });
 
         if(recType == record.Type.CASH_SALE){
-           let account = settings.custrecord_bsp_lb_account[0].value;
+            let account = !BSPLBUtils.isEmpty(settings.custrecord_bsp_lb_account) ? settings.custrecord_bsp_lb_account[0].value : null;
            if(account){
                 transactionRecord.setValue({ fieldId: "account", value: account});
            }else{

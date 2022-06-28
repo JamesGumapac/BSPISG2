@@ -22,26 +22,37 @@ define(['./lib/bsp_lb_utils.js'],
                 let recType = rec.getValue(BSPLBUtils.constants().transactionTypeField);  
                 let createdFrom = null;
                 let isLogicBlockOrder = null;
+                let logicblockOrderData = null;
                 switch (transactionType) {
                     case BSPLBUtils.recTypes().itemFulfillment:
                         let status = rec.getValue(BSPLBUtils.constants().itemFulfillmentShipStatus);
-
                         createdFrom = rec.getValue("createdfrom");
-                        isLogicBlockOrder = BSPLBUtils.logicBlockOrder(createdFrom);
-    
+                        logicblockOrderData = BSPLBUtils.logicBlockOrderData(createdFrom);
+                        isLogicBlockOrder = logicblockOrderData.custbody_bsp_lb_order_number ? true : false;
                         if(isLogicBlockOrder && status == BSPLBUtils.constants().shipstatus){
-                            BSPLBUtils.createOutboundQueue(recId, recType);
+                            BSPLBUtils.createOutboundQueue(recId, recType, BSPLBUtils.outboundQueueOperations().shipPackage);
                         }    
                         break;
                     case BSPLBUtils.recTypes().invoice:
                         createdFrom = rec.getValue("createdfrom");
-                        isLogicBlockOrder = BSPLBUtils.logicBlockOrder(createdFrom);
+                        logicblockOrderData = BSPLBUtils.logicBlockOrderData(createdFrom);              
+                        isLogicBlockOrder = logicblockOrderData.custbody_bsp_lb_order_number ? true : false;
                         if(isLogicBlockOrder){
-                            BSPLBUtils.createOutboundQueue(recId, recType);
+                            BSPLBUtils.createOutboundQueue(recId, recType, BSPLBUtils.outboundQueueOperations().sendInvoice);
+                            let orderPaymentMethod = logicblockOrderData.custbody_bsp_lb_payment_method;
+                            if(orderPaymentMethod == BSPLBUtils.constants().creditCard){
+                                BSPLBUtils.createOutboundQueue(recId, recType, BSPLBUtils.outboundQueueOperations().processPayment);
+                            }
                         }  
                         break;
                     case BSPLBUtils.recTypes().customerPayment:
-                        
+                        logicblockOrderData = getLogicBlockDataFromPayment(rec);
+                        log.debug(functionName, {logicblockOrderData});
+                        isLogicBlockOrder = logicblockOrderData.custbody_bsp_lb_order_number ? true : false;
+                        let orderPaymentMethod = logicblockOrderData.custbody_bsp_lb_payment_method;
+                        if(isLogicBlockOrder && orderPaymentMethod == BSPLBUtils.constants().purchaseOrder){
+                            BSPLBUtils.createOutboundQueue(recId, recType, BSPLBUtils.outboundQueueOperations().processPayment);                 
+                        }  
                         break
                 }
             }catch (error){
@@ -53,6 +64,24 @@ define(['./lib/bsp_lb_utils.js'],
                     error
                 );
             }
+        }
+
+        /**
+         * Get LogicBlock Order data from linked Payment
+         * @param {*} rec 
+         * @returns 
+         */
+        const getLogicBlockDataFromPayment = (rec) => {
+            let logicblockOrderData = null;
+            let createdFrom = rec.getSublistValue({
+                sublistId: 'apply',
+                fieldId: 'createdfrom',
+                line: 0
+            });
+            if(createdFrom){
+                logicblockOrderData = BSPLBUtils.logicBlockOrderData(createdFrom);
+            }
+            return logicblockOrderData;
         }
 
         return {afterSubmit}

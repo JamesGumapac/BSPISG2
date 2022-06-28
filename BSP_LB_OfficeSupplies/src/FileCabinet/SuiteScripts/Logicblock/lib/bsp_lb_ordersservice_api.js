@@ -31,11 +31,13 @@
         let lbOrdersResult = null;
         if(!BSPLBUtils.isEmpty(logicBlockServerResponse)){
             lbOrdersResult = logicBlockServerResponse.GetOrdersByCriteriaResponse.GetOrdersByCriteriaResult.List.Order;
-            if(lbOrdersResult.length > 0){
-                orders = orders.concat(lbOrdersResult);
-            }else if(!BSPLBUtils.isEmpty(lbOrdersResult)){
-                orders.push(lbOrdersResult);
-            }
+            if(!BSPLBUtils.isEmpty(lbOrdersResult)){
+                if(lbOrdersResult.length > 0){
+                    orders = orders.concat(lbOrdersResult);
+                }else{
+                    orders.push(lbOrdersResult);
+                }
+            }         
 
             let totalOrders =  logicBlockServerResponse.GetOrdersByCriteriaResponse.GetOrdersByCriteriaResult.TotalRows;
             let pageSize = settings.custrecord_bsp_lb_orders_page_size;
@@ -170,6 +172,22 @@
             capturePayment = logicBlockServerResponse.CapturePaymentResponse.CapturePaymentResult;
         }
         return capturePayment;
+    }
+
+
+    function addPOPayment(settings, loginData, paymentData){
+        let poPayment = null;
+
+        let serviceURL = settings.custrecord_bsp_lb_orders_service_url;
+        let soapAddPOPaymentAction = settings.custrecord_bsp_lb_po_payment_soap_action;
+        let requestBodyXML = addPOPaymentXMLStrRequest(loginData, paymentData);
+
+        let logicBlockServerResponse = BSPLBServiceAPI.runService(serviceURL, requestBodyXML, soapAddPOPaymentAction);
+
+        if(!BSPLBUtils.isEmpty(logicBlockServerResponse)){
+            poPayment = logicBlockServerResponse.AddPurchaseOrderPaymentResponse.AddPurchaseOrderPaymentResult;
+        }
+        return poPayment;
     }
 
     /**
@@ -342,11 +360,39 @@
         </soapenv:Envelope>`;
     }
 
+    /**
+     *  Body of Add PO Payment Request
+     * @param {*} loginData 
+     * @param {*} paymentData 
+     * @returns 
+     */
+    function addPOPaymentXMLStrRequest(loginData, paymentData){
+        return `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/" xmlns:log="http://schemas.datacontract.org/2004/07/Logicblock.Commerce.Domain">
+            <soapenv:Header/>
+            <soapenv:Body>
+            <tem:AddPurchaseOrderPayment>
+                <tem:token>
+                    <log:ApiId>${loginData.ApiId}</log:ApiId>
+                    <log:ExpirationDateUtc>${loginData.ExpirationDateUtc}</log:ExpirationDateUtc>
+                    <log:Id>${loginData.Id}</log:Id>
+                    <log:IsExpired>${loginData.IsExpired}</log:IsExpired>
+                    <log:TokenRejected>${loginData.TokenRejected}</log:TokenRejected>
+                </tem:token>
+                <tem:orderId>${paymentData.orderId}</tem:orderId>
+                <tem:amountCharged>${paymentData.amountCharged}</tem:amountCharged>
+                <tem:auditDate>${paymentData.auditDate}</tem:auditDate>
+                <tem:purchaseOrderNumber>${paymentData.purchaseOrderNumber}</tem:purchaseOrderNumber>
+            </tem:AddPurchaseOrderPayment>
+            </soapenv:Body>
+        </soapenv:Envelope>`;
+    }
+
     return {
         getOrders: getOrders,
         createPackage: createPackage,
         shipPackage: shipPackage,
         getOrderPayments: getOrderPayments,
-        capturePayment: capturePayment
+        capturePayment: capturePayment,
+        addPOPayment: addPOPayment
     };
 });

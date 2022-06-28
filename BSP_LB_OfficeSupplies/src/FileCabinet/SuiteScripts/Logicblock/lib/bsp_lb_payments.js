@@ -7,9 +7,10 @@
     'N/search', 
     './bsp_lb_utils.js', 
     './bsp_lb_ordersservice_api.js', 
-    './bsp_lb_cc_payments.js'
+    './bsp_lb_cc_payments.js',
+    './bsp_lb_po_payments.js'
  ], 
- function (search, BSPLBUtils, LBOrdersAPI, BSPLBCCPayments) {
+ function (search, BSPLBUtils, LBOrdersAPI, BSPLBCCPayments, BSPLBPOPayments) {
 
     /**
      * 
@@ -56,7 +57,7 @@
         if(transactionType == BSPLBUtils.constants().transactionTypeInv){
             processedPayments = BSPLBCCPayments.processCreditCardPayments(logicBlockPayments, settings, loginData, transactionId, paymentObjMappingFields);
         }else if(transactionType == BSPLBUtils.constants().transactionTypePayment){
-
+            processedPayments = BSPLBPOPayments.processPuchaseOrderPayments(settings, loginData, transactionId);
         }
         return processedPayments;
     }
