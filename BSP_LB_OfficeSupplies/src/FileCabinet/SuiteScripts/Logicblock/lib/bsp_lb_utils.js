@@ -355,7 +355,10 @@
      * @param {*} settingRecID 
      */
     function updateLastRuntimeExecution(settingRecID){
-        let lastRuntimeExecutionDate = new Date().toISOString();
+        let date =  new Date();
+        date.setHours(date.getHours() - 5);
+        let lastRuntimeExecutionDate = date.toISOString();
+
         record.submitFields({
             type: 'customrecord_bsp_lb_integration_settings',
             id: settingRecID,

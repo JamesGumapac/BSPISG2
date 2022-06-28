@@ -38,7 +38,7 @@ define(['./lib/bsp_lb_utils.js'],
                         logicblockOrderData = BSPLBUtils.logicBlockOrderData(createdFrom);              
                         isLogicBlockOrder = logicblockOrderData.custbody_bsp_lb_order_number ? true : false;
                         if(isLogicBlockOrder){
-                            BSPLBUtils.createOutboundQueue(recId, recType, BSPLBUtils.outboundQueueOperations().sendInvoice);
+                            //BSPLBUtils.createOutboundQueue(recId, recType, BSPLBUtils.outboundQueueOperations().sendInvoice);
                             let orderPaymentMethod = logicblockOrderData.custbody_bsp_lb_payment_method;
                             if(orderPaymentMethod == BSPLBUtils.constants().creditCard){
                                 BSPLBUtils.createOutboundQueue(recId, recType, BSPLBUtils.outboundQueueOperations().processPayment);
@@ -47,7 +47,6 @@ define(['./lib/bsp_lb_utils.js'],
                         break;
                     case BSPLBUtils.recTypes().customerPayment:
                         logicblockOrderData = getLogicBlockDataFromPayment(rec);
-                        log.debug(functionName, {logicblockOrderData});
                         isLogicBlockOrder = logicblockOrderData.custbody_bsp_lb_order_number ? true : false;
                         let orderPaymentMethod = logicblockOrderData.custbody_bsp_lb_payment_method;
                         if(isLogicBlockOrder && orderPaymentMethod == BSPLBUtils.constants().purchaseOrder){
