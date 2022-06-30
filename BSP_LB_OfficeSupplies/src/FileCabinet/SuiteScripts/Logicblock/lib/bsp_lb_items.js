@@ -43,7 +43,9 @@
                             searchColumn,
                             searchOperator
                         );
-                        itemRec.setValue({ fieldId: nsField, value: resultValue });
+                        if(!BSPLBUtils.isEmpty(resultValue)){
+                            itemRec.setValue({ fieldId: nsField, value: resultValue });
+                        }              
                     }else{
                         if(fieldDataType == "String"){               
                             itemRec.setValue({ fieldId: nsField, value: lbValue });                       

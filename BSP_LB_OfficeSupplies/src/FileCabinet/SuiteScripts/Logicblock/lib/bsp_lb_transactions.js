@@ -170,7 +170,9 @@
                                         searchColumn,
                                         searchOperator
                                     );
-                                    transactionRecord.setCurrentSublistValue({sublistId: nsSublistId, fieldId: nsLineFieldId, value: resultValue });
+                                    if(!BSPLBUtils.isEmpty(resultValue)){
+                                        transactionRecord.setCurrentSublistValue({sublistId: nsSublistId, fieldId: nsLineFieldId, value: resultValue });
+                                    }           
                                 }else{
                                     if(fieldDataType == "String"){               
                                         transactionRecord.setCurrentSublistValue({ sublistId: nsSublistId, fieldId: nsLineFieldId, value: lbValue });
