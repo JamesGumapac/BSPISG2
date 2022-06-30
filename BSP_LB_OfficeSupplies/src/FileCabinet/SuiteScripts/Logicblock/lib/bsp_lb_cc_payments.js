@@ -15,12 +15,6 @@
         let objResult = {};
         let status = BSPLBUtils.constants().successStatus;
         let newRecordId = "";
-
-        log.debug("createPaymentRecord", 
-            {
-                objFields: JSON.stringify(objFields)
-            }
-        );
         let invoiceID = objFields.payment.transactionId;
 
         let paymentRec = record.transform({
@@ -44,13 +38,6 @@
             let fieldDataType = fieldMapping.lbFieldDataType;
             let defaultValue = fieldMapping.defaultValue;
             let lbValue = BSPLBUtils.getProp(objFields, lbField);
-
-            log.debug("createTransactionRecord", 
-                {
-                    objMappingFields: JSON.stringify(fieldMapping),
-                    lbValue: lbValue
-                }
-            );
 
             if (isLineItem == "F" || (isLineItem == false && nsField)) {
                 if(!BSPLBUtils.isEmpty(lbValue)){

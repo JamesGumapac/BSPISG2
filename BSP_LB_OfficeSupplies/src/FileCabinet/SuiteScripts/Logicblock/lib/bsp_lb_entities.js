@@ -16,12 +16,6 @@
         let status = BSPLBUtils.constants().successStatus;
         let newRecordId = "";
 
-        log.debug("createVendorRecord", 
-            {
-                objFields: JSON.stringify(objFields)
-            }
-        );
-
         let vendorRec = record.create({
             type: record.Type.VENDOR,
             isDynamic: true,
@@ -33,13 +27,6 @@
             let isLineItem = fieldMapping.isLineItem;
             let fieldDataType = fieldMapping.lbFieldDataType;
             let lbValue = BSPLBUtils.getProp(objFields, lbField);
-
-            log.debug("createVendorRecord", 
-                {
-                    objFields: JSON.stringify(fieldMapping),
-                    lbValue: JSON.stringify(lbValue)
-                }
-            );
 
             if (isLineItem == "F" || (isLineItem == false && nsField)) {    
                 if(!BSPLBUtils.isEmpty(lbValue)){
@@ -119,12 +106,6 @@
         let status = BSPLBUtils.constants().successStatus;
         let newRecordId = "";
 
-        log.debug("createCustomerRecord", 
-            {
-                objFields: JSON.stringify(objFields)
-            }
-        );
-
         let customerRec = record.create({
             type: record.Type.CUSTOMER,
             isDynamic: true,
@@ -138,13 +119,6 @@
             let isLineItem = fieldMapping.isLineItem;
             let fieldDataType = fieldMapping.lbFieldDataType;
             let lbValue = BSPLBUtils.getProp(objFields, lbField);
-
-            log.debug("createCustomerRecord", 
-                {
-                    objMappingFields: JSON.stringify(fieldMapping),
-                    lbValue: lbValue
-                }
-            );
 
             if (isLineItem == "F" || (isLineItem == false && nsField)) {
                 if(!BSPLBUtils.isEmpty(lbValue)){

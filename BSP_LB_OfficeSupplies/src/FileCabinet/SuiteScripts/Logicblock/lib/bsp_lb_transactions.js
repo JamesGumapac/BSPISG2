@@ -3,7 +3,7 @@
  * @NModuleScope Public
  */
 
- define(['N/record', './bsp_lb_utils.js', './bsp_lb_items.js'], function (record, BSPLBUtils, BSPLBItems) {
+ define(['N/record', './bsp_lb_utils.js', './bsp_lb_items.js', './bsp_lb_ordersservice_api.js'], function (record, BSPLBUtils, BSPLBItems, LBOrdersAPI) {
 
     /**
      * Create Transaction Record in NS
@@ -13,16 +13,10 @@
      * @param {*} itemRecordsResult 
      * @returns 
      */
-     function createTransactionRecord(objFields, objMappingFields, customerRecordResult, itemRecordsResult, recType, settings){
+     function createTransactionRecord(objFields, objMappingFields, customerRecordResult, itemRecordsResult, recType, settings, loginData){
         let objResult = {};
         let status = BSPLBUtils.constants().successStatus;
         let newRecordId = "";
-
-        log.debug("createTransactionRecord", 
-            {
-                objFields: JSON.stringify(objFields)
-            }
-        );
 
         let transactionRecord = record.create({
             type: recType,
@@ -30,8 +24,9 @@
         });
 
         if(recType == record.Type.CASH_SALE){
-            let account = !BSPLBUtils.isEmpty(settings.custrecord_bsp_lb_account) ? settings.custrecord_bsp_lb_account[0].value : null;
+           let account = !BSPLBUtils.isEmpty(settings.custrecord_bsp_lb_account) ? settings.custrecord_bsp_lb_account[0].value : null;
            if(account){
+                transactionRecord.setValue({ fieldId: "undepfunds", value: 'F'});
                 transactionRecord.setValue({ fieldId: "account", value: account});
            }else{
                 transactionRecord.setValue({ fieldId: "undepfunds", value: 'T'});
@@ -40,11 +35,14 @@
 
         transactionRecord.setValue({ fieldId: "entity", value: parseInt(customerRecordResult.nsID)});
         transactionRecord.setValue({ fieldId: "customform", value: parseInt(objFields.logicBlockForm)});
-
-        if(BSPLBUtils.isEmpty(objFields.order.CustomerPurchaseOrderNumber)){
-            transactionRecord.setValue({ fieldId: "custbody_bsp_lb_payment_method", value: BSPLBUtils.constants().creditCard});
-        }else{
+    
+        if(!BSPLBUtils.isEmpty(objFields.order.CustomerPurchaseOrderNumber)){
             transactionRecord.setValue({ fieldId: "custbody_bsp_lb_payment_method", value: BSPLBUtils.constants().purchaseOrder});
+        }else{
+            let paymentMethod = getOrderPaymentMethod(settings, loginData, objFields.order.Id);
+            if(paymentMethod){
+                transactionRecord.setValue({ fieldId: "custbody_bsp_lb_payment_method", value: paymentMethod});
+            }           
         }
 
         for (const fieldMapping of objMappingFields.bodyFields) {
@@ -55,13 +53,6 @@
             let fieldDataType = fieldMapping.lbFieldDataType;
             let defaultValue = fieldMapping.defaultValue;
             let lbValue = BSPLBUtils.getProp(objFields, lbField);
-
-            log.debug("createTransactionRecord", 
-                {
-                    objMappingFields: JSON.stringify(fieldMapping),
-                    lbValue: lbValue
-                }
-            );
 
             if (isLineItem == "F" || (isLineItem == false && nsField)) {
                 if(nsFieldName == BSPLBUtils.recTypes().salesOrder || nsFieldName == BSPLBUtils.recTypes().cashSale){
@@ -140,7 +131,6 @@
      * @param {*} itemRecordsResult 
      */
     function processTransactionLines(transactionRecord, order, objMappingFields, itemRecordsResult){
-
         let lineItems = [];
         if(order.LineItems.LineItem.length && order.LineItems.LineItem.length > 0){
             lineItems = order.LineItems.LineItem;
@@ -164,12 +154,6 @@
                         let defaultValue = fieldMapping.defaultValue;
                         let lbValue = BSPLBUtils.getProp(itemDetail, lbLineFieldId);
                         let isSetValue = fieldMapping.isSetValue;
-
-                        log.debug("processTransactionLines", 
-                            {
-                                objMappingFields: JSON.stringify(fieldMapping),
-                                lbValue: lbValue
-                            });
 
                         if(nsSublistId == strSublistID){
                             if(!BSPLBUtils.isEmpty(lbValue)){
@@ -200,15 +184,13 @@
                                 transactionRecord.setCurrentSublistValue({sublistId: nsSublistId, fieldId: nsLineFieldId, value: defaultValue });
                             }                                       
                         }
-                   }
-    
+                    }  
                     transactionRecord.commitLine({
                         sublistId: strSublistID,
                     });
                 }                
             }       
-        });
-       
+        });   
     }
 
     /**
@@ -219,7 +201,7 @@
      * @param {*} itemRecordsResult 
      * @returns 
      */
-    function fetchTransaction(order, objMappingFields, customerRecordResult, itemRecordsResult, settings, recType){
+    function fetchTransaction(order, objMappingFields, customerRecordResult, itemRecordsResult, settings, loginData, recType){
         let functionName = "fetchTransaction";
         let transactionRecordResult = {};
         let transactionUpdated = false;
@@ -250,7 +232,7 @@
                 itemRecordsResult: itemRecordsResult,
                 logicBlockForm: (recType == record.Type.CASH_SALE ? settings.custrecord_bsp_lb_cash_sale_form[0].value : settings.custrecord_bsp_lb_sales_order_form[0].value)
             }
-            let recordCreationResult = createTransactionRecord(objFields, objMappingFields, customerRecordResult, itemRecordsResult, recType, settings);
+            let recordCreationResult = createTransactionRecord(objFields, objMappingFields, customerRecordResult, itemRecordsResult, recType, settings, loginData);
             if(recordCreationResult && recordCreationResult.recordId){
                 internalId = recordCreationResult.recordId;
                 transactionRecordResult = {nsID: internalId, logicBlockID: order.Id, transactionUpdated: transactionUpdated};
@@ -277,6 +259,23 @@
     function orderPaid(logicBlockOrder){
         let paymentStatus = logicBlockOrder.PaymentStatus;
         return (paymentStatus == BSPLBUtils.constants().statusPaid);
+    }
+
+    /**
+     * Returns the Payment Method selected for the Logicblock Order
+     * @param {*} settings 
+     * @param {*} loginData 
+     * @param {*} logicBlockOrderID 
+     * @returns 
+     */
+    function getOrderPaymentMethod(settings, loginData, logicBlockOrderID){
+        let orderPaymentMethod = null;
+        let paymentsResult = LBOrdersAPI.getOrderPayments(settings, loginData, logicBlockOrderID);
+        if(!BSPLBUtils.isEmpty(paymentsResult)){
+            let logicBlockPayment = paymentsResult[0];
+            orderPaymentMethod = logicBlockPayment.PaymentMethodName;
+        }
+        return orderPaymentMethod;
     }
 
     return {

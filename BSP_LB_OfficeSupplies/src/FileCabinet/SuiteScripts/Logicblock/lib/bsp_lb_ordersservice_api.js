@@ -143,11 +143,13 @@
         if(!BSPLBUtils.isEmpty(logicBlockServerResponse)){
             lbPaymentsResult = logicBlockServerResponse.GetOrderPaymentsResponse.GetOrderPaymentsResult.OrderPayment;
 
-            if(lbPaymentsResult.length > 0){
-                orderPayments = orderPayments.concat(lbPaymentsResult);
-            }else if(!BSPLBUtils.isEmpty(lbPaymentsResult)){
-                orderPayments.push(lbPaymentsResult);
-            }
+            if(!BSPLBUtils.isEmpty(lbPaymentsResult)){
+                if(lbPaymentsResult.length > 0){
+                    orderPayments = orderPayments.concat(lbPaymentsResult);
+                }else{
+                    orderPayments.push(lbPaymentsResult);
+                }
+            }    
         }
         return orderPayments;
     }

@@ -176,6 +176,7 @@ define(['N/record', 'N/runtime', 'N/search', './lib/bsp_lb_utils.js', './lib/bsp
                                 customerRecordResult, 
                                 itemRecordsResult, 
                                 settings,
+                                loginData,
                                 record.Type.CASH_SALE
                             );
                             log.debug(functionName, {cashSaleRecordsResult});
@@ -198,6 +199,7 @@ define(['N/record', 'N/runtime', 'N/search', './lib/bsp_lb_utils.js', './lib/bsp
                                 customerRecordResult, 
                                 itemRecordsResult, 
                                 settings,
+                                loginData,
                                 record.Type.SALES_ORDER
                             );
                             log.debug(functionName, {salesOrderRecordsResult});

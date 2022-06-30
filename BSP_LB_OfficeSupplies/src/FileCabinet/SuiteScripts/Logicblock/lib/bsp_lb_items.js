@@ -16,12 +16,6 @@
         let status = BSPLBUtils.constants().successStatus;
         let newRecordId = "";
 
-        log.debug("createItemRecord", 
-            {
-                objFields: JSON.stringify(objFields)
-            }
-        );
-
         let itemRec = record.create({
             type: record.Type.INVENTORY_ITEM,
             isDynamic: true,
@@ -34,13 +28,6 @@
             let fieldDataType = fieldMapping.lbFieldDataType;
             let lbValue = BSPLBUtils.getProp(objFields, lbField);
             let isSetValue = fieldMapping.isSetValue;
-
-            log.debug("createItemRecord", 
-                {
-                    objMappingFields: JSON.stringify(fieldMapping),
-                    lbValue: lbValue
-                }
-            );
 
             if (isLineItem == "F" || (isLineItem == false && nsField)) {
                 if(!BSPLBUtils.isEmpty(lbValue)){
