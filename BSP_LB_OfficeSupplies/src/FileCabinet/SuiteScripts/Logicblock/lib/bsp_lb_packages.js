@@ -8,7 +8,9 @@
     /**
      * Create package in Logicblock
      * @param {*} settings 
+     * @param {*} loginData 
      * @param {*} itemFulfillmentId 
+     * @param {*} dateCreated 
      * @returns 
      */
     function createPackage(settings, loginData, itemFulfillmentId, dateCreated){
@@ -30,6 +32,7 @@
     /**
      * Get ShipPackage data to make API request to Logicblock
      * @param {*} itemFulfillmentId 
+     * @param {*} dateCreated 
      * @returns 
     */
     function getShipPackageData(itemFulfillmentId, dateCreated){

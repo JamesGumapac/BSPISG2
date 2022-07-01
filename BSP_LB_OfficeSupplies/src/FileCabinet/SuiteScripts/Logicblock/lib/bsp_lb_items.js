@@ -96,6 +96,7 @@
      * @param {*} lineItems
      * @param {*} objMappingFields  
      * @param {*} settings  
+     * @param {*} loginData 
      * @returns 
      */
     function fetchItems(lineItems, objMappingFields, settings, loginData){

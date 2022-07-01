@@ -146,7 +146,8 @@
 
     /**
      * Gets Customer Record or Creates it if it does not exist
-     * @param {*} logicBlockUserAccount 
+     * @param {*} logicBlockUserAccount
+     * @param {*} objMappingFields  
      * @returns 
      */
     function fetchCustomer(logicBlockUserAccount, objMappingFields){

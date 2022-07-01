@@ -280,13 +280,12 @@
 
     /**
      * Create Service Log Record with each API call
-     * @param {*} endPoint 
-     * @param {*} apiMethod 
-     * @param {*} reqHeaders 
-     * @param {*} reqBody 
+     * @param {*} serviceURL 
+     * @param {*} soapAction 
+     * @param {*} request 
      * @param {*} respCode 
      * @param {*} respHeaders 
-     * @param {*} respBody 
+     * @param {*} respBody
      */
     function createServiceLog(serviceURL, soapAction, request, respCode, respHeaders, respBody){
         let functionName = "createServiceLog";
@@ -395,6 +394,7 @@
 
     /**
      * Delete queues that had been processed
+     * @param {*} settingRecID 
     */
     function deleteProcessedInboundQueues(settingsRecID){
 
@@ -425,6 +425,8 @@
 
     /**
      * Delete Outbound queues that had been processed
+     * @param {*} settingRecID 
+     * @param {*} operation 
     */
      function deleteProcessedOutboundQueues(settingsRecID, operation){
 
@@ -534,6 +536,7 @@
      * Create Outbound Queue for each NetSuite IF to be processed 
      * @param {*} recID 
      * @param {*} recType 
+     * @param {*} operation 
      * @returns 
     */
     function createOutboundQueue(recID, recType, operation){
@@ -596,6 +599,9 @@
     /**
      * Check if the Inbound Queue was already created on a previous execution
      * @param {*} queueId 
+     * @param {*} queueType 
+     * @param {*} fieldId 
+     * @param {*} operation 
      * @returns 
      */
     function queueExists(queueId, queueType, fieldId, operation){
@@ -653,6 +659,7 @@
 
     /**
      * Get all Outbound Queue Records to be processed
+     * @param {*} operation 
      * @returns 
      */
     function getOutboundQueues(operation){
@@ -875,7 +882,7 @@
     /**
      * Schedule MR Task
      * @param {*} scriptId 
-     * @param {*} objParams 
+     * @param {*} deploymentId 
      */
      function scheduleMRTask(scriptId, deploymentId){
         let functionName = "scheduleMRTask";

@@ -3,12 +3,13 @@
  * @NModuleScope Public
  */
 
- define(['N/record', 'N/search', './bsp_lb_utils.js', './bsp_lb_ordersservice_api.js'], function (record, search, BSPLBUtils, LBOrdersAPI) {
+ define(['N/record', './bsp_lb_utils.js', './bsp_lb_ordersservice_api.js'], function (record, BSPLBUtils, LBOrdersAPI) {
 
     /**
      * Create Payment Record in NetSuite
      * @param {*} objFields 
      * @param {*} objMappingFields 
+     * @param {*} settings
      * @returns 
      */
     function createPaymentRecord(objFields, objMappingFields, settings){

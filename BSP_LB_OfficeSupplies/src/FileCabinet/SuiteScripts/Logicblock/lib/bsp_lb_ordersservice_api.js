@@ -6,10 +6,9 @@
  define(['./bsp_lb_utils.js', './bsp_lb_login_api.js', './bsp_lb_service_api.js'],
  function (BSPLBUtils, BSPLBLoginAPI, BSPLBServiceAPI){
 
-
     /**
      * Returns LogicBlock Orders from Orders Service API
-     * @param {*} - integrationSettingsRecID
+     * @param {*} integrationSettingsRecID
     */
     function getOrders(integrationSettingsRecID){
         let lbOrdersResultObj = {};
@@ -80,6 +79,7 @@
     /**
      * Create Package in Logicblock System
      * @param {*} settings 
+     * @param {*} loginData
      * @param {*} shipPackageData 
      * @returns 
      */
@@ -176,7 +176,13 @@
         return capturePayment;
     }
 
-
+    /**
+     * Send PO Payment to Logicblock
+     * @param {*} settings 
+     * @param {*} loginData 
+     * @param {*} paymentData 
+     * @returns 
+     */
     function addPOPayment(settings, loginData, paymentData){
         let poPayment = null;
 

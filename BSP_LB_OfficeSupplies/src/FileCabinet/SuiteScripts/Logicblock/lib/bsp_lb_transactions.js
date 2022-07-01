@@ -11,6 +11,9 @@
      * @param {*} objMappingFields
      * @param {*} customerRecordResult 
      * @param {*} itemRecordsResult 
+     * @param {*} recType 
+     * @param {*} settings 
+     * @param {*} loginData 
      * @returns 
      */
      function createTransactionRecord(objFields, objMappingFields, customerRecordResult, itemRecordsResult, recType, settings, loginData){
@@ -196,11 +199,14 @@
     }
 
     /**
-     * Create Transaction Record in NS
+     * Create Transaction Record in NS or update it if it already exists
      * @param {*} order 
      * @param {*} objMappingFields 
      * @param {*} customerRecordResult 
      * @param {*} itemRecordsResult 
+     * @param {*} settings 
+     * @param {*} loginData 
+     * @param {*} recType 
      * @returns 
      */
     function fetchTransaction(order, objMappingFields, customerRecordResult, itemRecordsResult, settings, loginData, recType){

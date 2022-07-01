@@ -8,6 +8,7 @@
 
     /**
     * Login request
+    * @param {*} integrationSettings
     * @returns 
     */
     function login(integrationSettings){
@@ -28,6 +29,8 @@
 
     /**
      * Body of Login Request
+     * @param {*} userID
+     * @param {*} password
      * @returns 
     */
     function getLoginXMLStrRequest(userID, password){

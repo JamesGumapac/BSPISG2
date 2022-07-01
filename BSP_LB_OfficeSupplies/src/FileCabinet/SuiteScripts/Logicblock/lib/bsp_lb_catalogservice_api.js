@@ -3,7 +3,7 @@
  * @NModuleScope Public
  */
 
- define(['./bsp_lb_utils.js', './bsp_lb_login_api.js', './bsp_lb_service_api.js', 'N/xml'], function (BSPLBUtils, BSPLBLoginAPI, BSPLBServiceAPI, xml) {
+ define(['./bsp_lb_utils.js', './bsp_lb_service_api.js'], function (BSPLBUtils, BSPLBServiceAPI) {
 
     /**
      * Get Vendors from Logicblock API
@@ -35,6 +35,7 @@
 
     /**
      * Body of Vendor Request
+     * @param {*} loginData 
      * @returns 
      */
      function getVendorsXMLStrRequest(loginData){
@@ -58,6 +59,7 @@
     /**
      * Get Items from Logicblock API
      * @param {*} settings 
+     * @param {*} loginData 
      * @param {*} productsSKU 
      * @returns 
      */
@@ -85,6 +87,8 @@
 
     /**
      * Body of Items Request
+     * @param {*} loginData 
+     * @param {*} productsSKU 
      * @returns 
      */
     function getProductsXMLStrRequest(loginData, productsSKU){

@@ -48,8 +48,11 @@
     /**
      * Process logicblock payments
      * @param {*} logicBlockPayments 
+     * @param {*} settings 
+     * @param {*} loginData 
      * @param {*} transactionId 
      * @param {*} transactionType 
+     * @param {*} paymentObjMappingFields 
      * @returns 
      */
     function processPayments(logicBlockPayments, settings, loginData, transactionId, transactionType, paymentObjMappingFields){

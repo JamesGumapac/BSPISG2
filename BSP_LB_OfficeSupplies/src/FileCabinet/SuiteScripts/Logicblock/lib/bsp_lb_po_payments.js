@@ -3,7 +3,7 @@
  * @NModuleScope Public
  */
 
- define(['N/record', 'N/search', './bsp_lb_utils.js', './bsp_lb_ordersservice_api.js'], function (record, search, BSPLBUtils, LBOrdersAPI) {
+ define(['N/record', './bsp_lb_utils.js', './bsp_lb_ordersservice_api.js'], function (record, BSPLBUtils, LBOrdersAPI) {
 
 
     /**
@@ -61,7 +61,9 @@
 
     /**
      * Create logicBlock PO Payment from NetSuite Customer Payment
-     * @param {*} transactionId 
+     * @param {*} settings
+     * @param {*} loginData
+     * @param {*} transactionId
      * @returns 
      */
     function processPuchaseOrderPayments(settings, loginData, transactionId){
