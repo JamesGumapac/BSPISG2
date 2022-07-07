@@ -2,11 +2,11 @@
  * @NApiVersion 2.1
  * @NScriptType MapReduceScript
  */
-define(['N/runtime', './lib/bsp_lb_utils.js', './lib/bsp_lb_ordersservice_api.js'],
+define(['N/runtime', './lib/bsp_lb_utils.js', './lib/bsp_lb_ordersservice_api.js', './lib/bsp_lb_settings.js'],
     /**
      * @param{runtime} runtime
      */
-    (runtime, BSPLBUtils, LBOrdersAPI) => {
+    (runtime, BSPLBUtils, LBOrdersAPI, BSPLBSettings) => {
         /**
          * Defines the function that is executed at the beginning of the map/reduce process and generates the input data.
          * @param {Object} inputContext
@@ -163,9 +163,10 @@ define(['N/runtime', './lib/bsp_lb_utils.js', './lib/bsp_lb_ordersservice_api.js
         */
         const getParameters = () => {
             let objParams = {};
-            let objScript = runtime.getCurrentScript();
+            let environment = runtime.envType;
+            log.debug("getParameters", {environment});
             objParams = {
-                integrationSettingsRecID : objScript.getParameter({name: "custscript_bsp_lb_integration_settings"})
+                integrationSettingsRecID : BSPLBSettings.getSettingsID(environment)
             }         
             return objParams;
         }
@@ -182,16 +183,8 @@ define(['N/runtime', './lib/bsp_lb_utils.js', './lib/bsp_lb_ordersservice_api.js
 
             let objScriptParams = getParameters();
             let orderStatusesFilter = BSPLBUtils.getOrderStatusFilter(objScriptParams.integrationSettingsRecID);
-            log.debug("validOrderForNetSuite", {
-                orderStatusesFilter: orderStatusesFilter
-            });
             let orderStatus = lbOrder.OrderStatusName;
             let statusValud = (orderStatusesFilter.indexOf(orderStatus) != -1);
-            log.debug("validOrderForNetSuite", {
-                hasUserID: hasUserID,
-                orderStatus: orderStatus,
-                statusValud: statusValud
-            });
             return hasUserID && statusValud && isPlaced;
         }
 

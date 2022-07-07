@@ -2,13 +2,13 @@
  * @NApiVersion 2.1
  * @NScriptType MapReduceScript
  */
-define(['N/record', 'N/runtime', 'N/search', './lib/bsp_lb_utils.js', './lib/bsp_lb_entities.js', './lib/bsp_lb_items.js', './lib/bsp_lb_transactions.js', './lib/bsp_lb_login_api.js'],
+define(['N/record', 'N/runtime', 'N/search', './lib/bsp_lb_utils.js', './lib/bsp_lb_entities.js', './lib/bsp_lb_items.js', './lib/bsp_lb_transactions.js', './lib/bsp_lb_login_api.js', './lib/bsp_lb_settings.js'],
     /**
  * @param{record} record
  * @param{runtime} runtime
  * @param{search} search
  */
-    (record, runtime, search, BSPLBUtils, BSPLBEntities, BSPLBItems, BSPLBTransactions, BSPLBLoginAPI) => {
+    (record, runtime, search, BSPLBUtils, BSPLBEntities, BSPLBItems, BSPLBTransactions, BSPLBLoginAPI, BSPLBSettings) => {
         /**
          * Defines the function that is executed at the beginning of the map/reduce process and generates the input data.
          * @param {Object} inputContext
@@ -279,9 +279,9 @@ define(['N/record', 'N/runtime', 'N/search', './lib/bsp_lb_utils.js', './lib/bsp
         */
          const getParameters = () => {
             let objParams = {};
-            let objScript = runtime.getCurrentScript();
+            let environment = runtime.envType;
             objParams = {
-                integrationSettingsRecID : objScript.getParameter({name: "custscript_bsp_lb_integration_settings_1"})
+                integrationSettingsRecID : BSPLBSettings.getSettingsID(environment)
             }         
             return objParams;
         }
