@@ -62,7 +62,7 @@
         /**
          * Default quantity avaiable MAX
          */
-        setDefaultQuantityAvaiableForItem(itemRec);
+        //setDefaultQuantityAvaiableForItem(itemRec);
 
         newRecordId = itemRec.save();
         BSPLBUtils.createMappingKeyRecord(newRecordId, BSPLBUtils.recTypes().item, objFields.product.Id, "Product");

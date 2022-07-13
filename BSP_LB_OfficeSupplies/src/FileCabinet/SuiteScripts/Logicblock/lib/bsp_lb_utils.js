@@ -201,7 +201,9 @@
                 "custrecord_bsp_lb_sales_order_form",
                 "custrecord_bsp_lb_cash_sale_form",
                 "custrecord_bsp_lb_undep_founds",
-                "custrecord_bsp_lb_account"
+                "custrecord_bsp_lb_account",
+                "custrecord_bsp_lb_default_location_trans",
+                "custrecord_bsp_lb_default_route_code"
             ]
         });
        
@@ -694,11 +696,20 @@
         let searchFilters = [];
 
         if(hasAddressSubRecord){
-            searchFilters = [
-                ["isinactive","is","F"], 
-                "AND", 
-                [["name","is",recordType],"OR",["name","is","Billing Address"],"OR",["name","is","Shipping Address"]]
-            ];
+
+            if(recordType == REC_TYPES.customer){
+                searchFilters = [
+                    ["isinactive","is","F"], 
+                    "AND", 
+                    [["name","is",recordType],"OR",["name","is","Customer Address"]]
+                ];
+            }else{
+                searchFilters = [
+                    ["isinactive","is","F"], 
+                    "AND", 
+                    [["name","is",recordType],"OR",["name","is","Billing Address"],"OR",["name","is","Shipping Address"]]
+                ];
+            }      
         }else{
             searchFilters = [
                 ["isinactive","is","F"], 

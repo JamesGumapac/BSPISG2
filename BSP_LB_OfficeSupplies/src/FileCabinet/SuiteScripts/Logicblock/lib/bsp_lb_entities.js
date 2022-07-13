@@ -113,24 +113,57 @@
 
         customerRec.setValue({ fieldId: "isperson", value: 'T' });
 
+        let addressIsSet = false;
         for (const fieldMapping of objMappingFields.bodyFields) {
             let nsField = fieldMapping.netSuiteFieldId;
+            let nsFieldName = fieldMapping.netSuiteFieldName;
             let lbField = fieldMapping.lbFieldId;
             let isLineItem = fieldMapping.isLineItem;
             let fieldDataType = fieldMapping.lbFieldDataType;
             let lbValue = BSPLBUtils.getProp(objFields, lbField);
 
             if (isLineItem == "F" || (isLineItem == false && nsField)) {
-                if(!BSPLBUtils.isEmpty(lbValue)){
-                    if(fieldDataType == "String"){
-                        customerRec.setValue({ fieldId: nsField, value: lbValue });              
-                    } else if(fieldDataType == "Integer"){               
-                        customerRec.setValue({ fieldId: nsField, value: parseInt(lbValue) });                       
-                    } else if(fieldDataType == "Double"){               
-                        customerRec.setValue({ fieldId: nsField, value: parseFloat(lbValue) });                       
-                    }   
-                }        
+                if(nsFieldName == BSPLBUtils.recTypes().customer){
+                    if(!BSPLBUtils.isEmpty(lbValue)){
+                        if(fieldDataType == "String"){
+                            customerRec.setValue({ fieldId: nsField, value: lbValue });              
+                        } else if(fieldDataType == "Integer"){               
+                            customerRec.setValue({ fieldId: nsField, value: parseInt(lbValue) });                       
+                        } else if(fieldDataType == "Double"){               
+                            customerRec.setValue({ fieldId: nsField, value: parseFloat(lbValue) });                       
+                        }   
+                    }      
+                }else{
+                    customerRec.selectNewLine({
+                        sublistId: 'addressbook'
+                    })
+                
+                    let addressSubRecord = customerRec.getCurrentSublistSubrecord({
+                        sublistId: 'addressbook',
+                        fieldId: 'addressbookaddress'
+                    })
+                    if(!BSPLBUtils.isEmpty(lbValue)){
+                        addressSubRecord.setValue({
+                            fieldId: nsField,
+                            value: lbValue
+                        })
+                    }else{
+                        if(!BSPLBUtils.isEmpty(defaultValue)){
+                            addressSubRecord.setValue({
+                                fieldId: nsField,
+                                value: defaultValue
+                            })
+                        }
+                    }        
+                    addressIsSet = true;   
+                }             
             }
+        }
+
+        if(addressIsSet){
+            customerRec.commitLine({
+                sublistId: 'addressbook'
+            });
         }
 
         newRecordId = customerRec.save();
@@ -181,10 +214,45 @@
         return customerRecordResult;
     }
 
-    
+    /**
+     * Returns Customer Address Route Code  
+     * If Customer Address does not have a Route Code it will return the Customer Route Code
+     * @param {*} customerRecID 
+     * @returns 
+     */
+    function getRouteCodeFromCustomer(customerRecID){
+        let routeCode = null;
+
+        let customerRec = record.load({
+            type: record.Type.CUSTOMER,
+            id: customerRecID
+        });
+
+        let addressSubRecord = customerRec.getSublistSubrecord({
+            sublistId: 'addressbook',
+            fieldId: 'addressbookaddress',
+            line: 0
+        });
+
+        if(addressSubRecord){
+            routeCode = addressSubRecord.getValue({
+                fieldId: 'custrecord_bsp_lb_route_code'
+            });
+        }
+
+        if(BSPLBUtils.isEmpty(routeCode)){
+            routeCode = customerRec.getValue({
+                fieldId: 'custentity_bsp_lb_route_code'
+            });
+        }       
+
+        return routeCode;
+    }
+
     return {
 		fetchVendors: fetchVendors,
-        fetchCustomer: fetchCustomer
+        fetchCustomer: fetchCustomer,
+        getRouteCodeFromCustomer: getRouteCodeFromCustomer
 	};
 
 });

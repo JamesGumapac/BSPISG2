@@ -75,8 +75,6 @@ define(['N/runtime', './lib/bsp_lb_utils.js', './lib/bsp_lb_ordersservice_api.js
             try{
                 let objLogicblockOrder = reduceContext.values;
                 let lbOrder = JSON.parse(objLogicblockOrder);
-                log.debug(functionName,{lbOrder});
-
                 let queueId = lbOrder.Id; 
 
                 let validOrder = validOrderForNetSuite(lbOrder);

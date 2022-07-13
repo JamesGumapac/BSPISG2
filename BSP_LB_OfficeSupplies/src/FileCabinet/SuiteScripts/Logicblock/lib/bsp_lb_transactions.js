@@ -3,7 +3,7 @@
  * @NModuleScope Public
  */
 
- define(['N/record', './bsp_lb_utils.js', './bsp_lb_items.js', './bsp_lb_ordersservice_api.js'], function (record, BSPLBUtils, BSPLBItems, LBOrdersAPI) {
+ define(['N/record', './bsp_lb_utils.js', './bsp_lb_items.js', './bsp_lb_ordersservice_api.js', './bsp_lb_entities.js'], function (record, BSPLBUtils, BSPLBItems, LBOrdersAPI, BSPLBEntities) {
 
     /**
      * Create Transaction Record in NS
@@ -26,19 +26,33 @@
             isDynamic: true,
         });
 
+        transactionRecord.setValue({ fieldId: "customform", value: parseInt(objFields.logicBlockForm)});
+        transactionRecord.setValue({ fieldId: "entity", value: parseInt(customerRecordResult.nsID)});
+
         if(recType == record.Type.CASH_SALE){
            let account = !BSPLBUtils.isEmpty(settings.custrecord_bsp_lb_account) ? settings.custrecord_bsp_lb_account[0].value : null;
-           if(account){
+           let location = !BSPLBUtils.isEmpty(settings.custrecord_bsp_lb_default_location_trans) ? settings.custrecord_bsp_lb_default_location_trans[0].value : null;
+           
+            if(account){
                 transactionRecord.setValue({ fieldId: "undepfunds", value: 'F'});
                 transactionRecord.setValue({ fieldId: "account", value: account});
-           }else{
+            }else{
                 transactionRecord.setValue({ fieldId: "undepfunds", value: 'T'});
-           }
+            }
+
+            if(location){
+                transactionRecord.setValue({ fieldId: "location", value: location});
+            }
         }
 
-        transactionRecord.setValue({ fieldId: "entity", value: parseInt(customerRecordResult.nsID)});
-        transactionRecord.setValue({ fieldId: "customform", value: parseInt(objFields.logicBlockForm)});
-    
+        let routeCode = BSPLBEntities.getRouteCodeFromCustomer(customerRecordResult.nsID);
+        if(BSPLBUtils.isEmpty(routeCode)){
+            routeCode = settings.custrecord_bsp_lb_default_route_code[0].value;
+        }
+        if(routeCode){
+            transactionRecord.setValue({ fieldId: "custbody_bsp_lb_route_code", value: routeCode});
+        }
+        
         if(!BSPLBUtils.isEmpty(objFields.order.CustomerPurchaseOrderNumber)){
             transactionRecord.setValue({ fieldId: "custbody_bsp_lb_payment_method", value: BSPLBUtils.constants().purchaseOrder});
         }else{

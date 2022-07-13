@@ -54,7 +54,7 @@ define(['N/record', 'N/runtime', 'N/search', './lib/bsp_lb_utils.js', './lib/bsp
                 let cashSaleObjMappingFields = BSPLBUtils.getMappingFields(recordType, false);
 
                 recordType = BSPLBUtils.recTypes().customer;
-                let customerObjMappingFields = BSPLBUtils.getMappingFields(recordType, false);
+                let customerObjMappingFields = BSPLBUtils.getMappingFields(recordType, true);
 
                 recordType = BSPLBUtils.recTypes().item;
                 let itemObjMappingFields = BSPLBUtils.getMappingFields(recordType, false);
