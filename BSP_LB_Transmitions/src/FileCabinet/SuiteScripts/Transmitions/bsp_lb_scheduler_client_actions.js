@@ -7,7 +7,7 @@ define([],
 
 function() {
     
-    const FREQUENCY_FIELDS = ["custrecord_bsp_lb_months", "custrecord_bsp_lb_day_of_month", "custrecord_bsp_lb_time_of_day", "custrecord_bsp_lb_weekdays"];
+    const FREQUENCY_FIELDS = ["custrecord_bsp_lb_ts_months", "custrecord_bsp_lb_ts_day_of_month", "custrecord_bsp_lb_ts_time_of_day", "custrecord_bsp_lb_ts_weekdays"];
 
     /**
      * Function to be executed after page is initialized.
@@ -20,8 +20,8 @@ function() {
      */
     function pageInit(scriptContext) {
         let currentRec = scriptContext.currentRecord;
+        let frequency = currentRec.getValue('custrecord_bsp_lb_ts_frequency');
         try{
-            let frequency = currentRec.getValue('custrecord_bsp_lb_frequency');
             for (let index = 0; index < FREQUENCY_FIELDS.length; index++) {
                 let fieldElement = FREQUENCY_FIELDS[index];
                 let field = currentRec.getField({ fieldId: fieldElement});
@@ -29,39 +29,39 @@ function() {
                 field.isDisplay = false;
             }
             if (frequency == '2'){
-                let field = currentRec.getField({ fieldId: 'custrecord_bsp_lb_time_of_day'});
+                let field = currentRec.getField({ fieldId: 'custrecord_bsp_lb_ts_time_of_day'});
                 field.isVisible = true;
                 field.isDisplay = true;
             }
             else if (frequency == '3'){
-                let weekDaysfield = currentRec.getField({ fieldId: 'custrecord_bsp_lb_weekdays'});
+                let weekDaysfield = currentRec.getField({ fieldId: 'custrecord_bsp_lb_ts_weekdays'});
                 weekDaysfield.isVisible = true;
                 weekDaysfield.isDisplay = false;
-                let timefield = currentRec.getField({ fieldId: 'custrecord_bsp_lb_time_of_day'});
+                let timefield = currentRec.getField({ fieldId: 'custrecord_bsp_lb_ts_time_of_day'});
                 timefield.isVisible = true;
                 timefield.isDisplay = true;
             }
             else if (frequency == '4'){
-                let dayOfMonthfield = currentRec.getField({ fieldId: 'custrecord_bsp_lb_day_of_month'});
+                let dayOfMonthfield = currentRec.getField({ fieldId: 'custrecord_bsp_lb_ts_day_of_month'});
                 dayOfMonthfield.isVisible = true;
                 dayOfMonthfield.isDisplay = true;
-                let timefield = currentRec.getField({ fieldId: 'custrecord_bsp_lb_time_of_day'});
+                let timefield = currentRec.getField({ fieldId: 'custrecord_bsp_lb_ts_time_of_day'});
                 timefield.isVisible = true;
                 timefield.isDisplay = true;
             }
             else if (frequency == '5'){
-                let monthfield = currentRec.getField({ fieldId: 'custrecord_bsp_lb_months'});
+                let monthfield = currentRec.getField({ fieldId: 'custrecord_bsp_lb_ts_months'});
                 monthfield.isVisible = true;     
                 monthfield.isDisplay = true;
-                let dayOfMonthfield = currentRec.getField({ fieldId: 'custrecord_bsp_lb_day_of_month'});
+                let dayOfMonthfield = currentRec.getField({ fieldId: 'custrecord_bsp_lb_ts_day_of_month'});
                 dayOfMonthfield.isVisible = true;
                 dayOfMonthfield.isDisplay = true;
-                let timefield = currentRec.getField({ fieldId: 'custrecord_bsp_lb_time_of_day'});
+                let timefield = currentRec.getField({ fieldId: 'custrecord_bsp_lb_ts_time_of_day'});
                 timefield.isVisible = true;
                 timefield.isDisplay = true;
             }
         }catch(error){
-            log.debug(error.message);
+            console.log("pageInit", error.message);
         } 
     }
 
@@ -81,8 +81,8 @@ function() {
         let currentRec = scriptContext.currentRecord;
         try{
             let name = scriptContext.fieldId;
-            if (name == 'custrecord_bsp_lb_frequency'){
-                let frequency = currentRec.getValue('custrecord_bsp_lb_frequency');
+            if (name == 'custrecord_bsp_lb_ts_frequency'){
+                let frequency = currentRec.getValue('custrecord_bsp_lb_ts_frequency');
                 for (let index = 0; index < FREQUENCY_FIELDS.length; index++) {
                     let fieldElement = FREQUENCY_FIELDS[index];
                     let field = currentRec.getField({ fieldId: fieldElement});
@@ -90,40 +90,40 @@ function() {
                     field.isDisplay = false;
                 }
                 if (frequency == 2){
-                    let field = currentRec.getField({ fieldId: 'custrecord_bsp_lb_time_of_day'});
+                    let field = currentRec.getField({ fieldId: 'custrecord_bsp_lb_ts_time_of_day'});
                     field.isVisible = true;
                     field.isDisplay = true;
                 }
                 else if (frequency == 3){
-                    let weekDaysfield = currentRec.getField({ fieldId: 'custrecord_bsp_lb_weekdays'});
+                    let weekDaysfield = currentRec.getField({ fieldId: 'custrecord_bsp_lb_ts_weekdays'});
                     weekDaysfield.isVisible = true;
                     weekDaysfield.isDisplay = true;
-                    let timefield = currentRec.getField({ fieldId: 'custrecord_bsp_lb_time_of_day'});
+                    let timefield = currentRec.getField({ fieldId: 'custrecord_bsp_lb_ts_time_of_day'});
                     timefield.isVisible = true;
                     timefield.isDisplay = true;
                 }
                 else if (frequency == 4){
-                    let dayOfMonthfield = currentRec.getField({ fieldId: 'custrecord_bsp_lb_day_of_month'});
+                    let dayOfMonthfield = currentRec.getField({ fieldId: 'custrecord_bsp_lb_ts_day_of_month'});
                     dayOfMonthfield.isVisible = true;
                     dayOfMonthfield.isDisplay = true;
-                    let timefield = currentRec.getField({ fieldId: 'custrecord_bsp_lb_time_of_day'});
+                    let timefield = currentRec.getField({ fieldId: 'custrecord_bsp_lb_ts_time_of_day'});
                     timefield.isVisible = true;
                     timefield.isDisplay = true;
                 }
                 else if (frequency == 5){
-                    let monthfield = currentRec.getField({ fieldId: 'custrecord_bsp_lb_months'});
+                    let monthfield = currentRec.getField({ fieldId: 'custrecord_bsp_lb_ts_months'});
                     monthfield.isVisible = true;  
                     monthfield.isDisplay = true;             
-                    let dayOfMonthfield = currentRec.getField({ fieldId: 'custrecord_bsp_lb_day_of_month'});
+                    let dayOfMonthfield = currentRec.getField({ fieldId: 'custrecord_bsp_lb_ts_day_of_month'});
                     dayOfMonthfield.isVisible = true;
                     dayOfMonthfield.isDisplay = true;
-                    let timefield = currentRec.getField({ fieldId: 'custrecord_bsp_lb_time_of_day'});
+                    let timefield = currentRec.getField({ fieldId: 'custrecord_bsp_lb_ts_time_of_day'});
                     timefield.isVisible = true;
                     timefield.isDisplay = true;
                 }
             }
         }catch(error){
-            log.debug(error.message);
+            console.log("fieldChanged", error.message);
         } 
     }
 
