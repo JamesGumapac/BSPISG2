@@ -31,12 +31,46 @@ define(['N/runtime', './lib/bsp_transmitions_util.js'],
                 transmitionRecID = paramsObj.transmitionRecID;
 
                 log.debug(functionName, `Work with transmition ${transmitionRecID}`);
-                               
+
+                /*
+                    TODO 
+                    Mark Transmition as transmitting
+                    LookUpFields of Transmition Record for Transmition Saved search
+                    Run Transmition Search and build array with result plus transmitionRecID
+                    Pass array to Map
+                */        
             } catch (error)
             {
                 log.error(functionName, {error: error.toString()});
             }
             return transmitionRecID;
+        }
+
+        /**
+         * Defines the function that is executed when the map entry point is triggered. This entry point is triggered automatically
+         * when the associated getInputData stage is complete. This function is applied to each key-value pair in the provided
+         * context.
+         * @param {Object} mapContext - Data collection containing the key-value pairs to process in the map stage. This parameter
+         *     is provided automatically based on the results of the getInputData stage.
+         * @param {Iterator} mapContext.errors - Serialized errors that were thrown during previous attempts to execute the map
+         *     function on the current key-value pair
+         * @param {number} mapContext.executionNo - Number of times the map function has been executed on the current key-value
+         *     pair
+         * @param {boolean} mapContext.isRestarted - Indicates whether the current invocation of this function is the first
+         *     invocation (if true, the current invocation is not the first invocation and this function has been restarted)
+         * @param {string} mapContext.key - Key to be processed during the map stage
+         * @param {string} mapContext.value - Value to be processed during the map stage
+         * @since 2015.2
+         */
+         const map = (mapContext) => {
+            let functionName = "map";
+            try{
+
+ 
+            }catch (error)
+            {
+                log.error(functionName, {error: error.toString()});
+            }
         }
 
         /**
@@ -54,7 +88,7 @@ define(['N/runtime', './lib/bsp_transmitions_util.js'],
          *     for processing
          * @since 2015.2
          */
-        const reduce = (reduceContext) => {
+        const reduce = () => {
             let functionName = "reduce";
             try{
 
@@ -104,6 +138,6 @@ define(['N/runtime', './lib/bsp_transmitions_util.js'],
             return objParams;
         }
 
-        return {getInputData, reduce, summarize}
+        return {getInputData, map, reduce, summarize}
 
     });
