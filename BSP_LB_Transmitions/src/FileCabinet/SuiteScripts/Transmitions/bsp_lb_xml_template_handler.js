@@ -2,7 +2,7 @@
  * @NApiVersion 2.1
  * @NScriptType ScheduledScript
  */
-define(['./lib/xml_template_handler.js', './lib/bsp_lb_transmitions_util.js'],
+define(['./lib/xml_template_handler.js', './lib/bsp_transmitions_util.js'],
 
     (XMLTemplateHandler, BSPTransmitionUtil) => {
 
