@@ -11,7 +11,7 @@
       <object>customrecord_bsp_lb_transmition_schedule</object>
     </objects>
     <files>
-      <file>/SuiteScripts/Transmitions/bsp_lb_scheduler_client_actions.js</file>
+      <file></file>
     </files>
   </dependencies>
 </manifest>

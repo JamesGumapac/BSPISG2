@@ -35,7 +35,10 @@ define(['N/runtime', 'N/task', './lib/bsp_transmitions_util.js'],
                         taskType: task.TaskType.MAP_REDUCE,
                         scriptId: paramsObj.mr_script_id,
                         deploymentId: paramsObj.mr_script_dep_id,
-                        params: {custscript_bsp_mr_transm_rec_id: transmitionRecord.value}
+                        params: {
+                            custscript_bsp_mr_transm_rec_id: transmitionRecord.value,
+                            custscript_bsp_mr_transm_queue_id: transmitionQueueRecID
+                        }
                     });
                     let intTaskID = objMRTask.submit();
                     log.debug(functionName, `MR Task submitted with ID: ${intTaskID} for Transmition: ${transmitionRecord.text}`);

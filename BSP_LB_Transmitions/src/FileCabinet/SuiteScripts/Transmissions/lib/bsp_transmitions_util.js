@@ -7,16 +7,31 @@
     
     const CONTANTS = Object.freeze({
         actionCode: "R",
-        documentControlNumber: "00001",
-        transmitionStatusNotStarted: 1
+        documentControlNumber: "00001"
     });
 
+    const TRANSMITION_STATUSES = Object.freeze({
+        notStarted: 1,
+        transmitting: 2,
+        transmitted: 3,
+        acknowledged: 4,
+        complete: 5
+    });
+    
     /**
      * Returns Integration Project Constants
      * @returns 
     */
     function constants(){
         return CONTANTS;
+    }
+
+    /**
+     * Returns Transmition Status Constants
+     * @returns 
+    */   
+    function transmitionStatus(){
+        return TRANSMITION_STATUSES;
     }
 
     /**
@@ -152,7 +167,7 @@
         });
         transmitionQueueRec.setValue({
             fieldId: "custrecord_bsp_transmition_status",
-            value: CONTANTS.transmitionStatusNotStarted,
+            value: TRANSMITION_STATUSES.notStarted,
         });
         let transmitionQueueRecId = transmitionQueueRec.save();
         return transmitionQueueRecId;
@@ -180,7 +195,7 @@
         });
 
         let resultSearch = searchAll(transmitionQueueSearchObj);
-        if(resultSearch[0].getValue("custrecord_bsp_transmition_status") == CONTANTS.transmitionStatusNotStarted){
+        if(resultSearch[0].getValue("custrecord_bsp_transmition_status") == TRANSMITION_STATUSES.notStarted){
             transmitionQueueRecID = resultSearch[0].getValue("internalid");
         }
          
@@ -188,6 +203,12 @@
     }
 
 
+    /**
+     * It takes THE Queue Rec ID and returns the Tranmsition Rec linked to that Queue.
+     * @param transmitionQueueRecID - The internal ID of the custom record that is used to queue up the
+     * transmition.
+     * @returns The transmitionRec is being returned.
+    */
     function getTransmitionRecordFromQueue(transmitionQueueRecID){
         let transmitionRec = null;
 
@@ -202,6 +223,245 @@
         }
         
 		return transmitionRec;
+    }
+
+
+    /**
+     * It updates the status of a record in the custom record "BSP Transmition Queue" to the status passed
+     * in.
+     * @param transmitionQueueRecID - The internal ID of the record in the custom record.
+     * @param status - The status of the transmition queue record.
+    */
+    function updateTransmitionQueueStatus(transmitionQueueRecID, status){
+        record.submitFields({
+            type: "customrecord_bsp_transmition_queue",
+            id: transmitionQueueRecID,
+            values: {
+                custrecord_bsp_transmition_status: status
+            }
+        });
+    }
+
+
+    /**
+     * This function takes a transmition record ID and returns an object with the fields from the transmition record.
+     * @param transmitionRecID - The ID of the custom record that holds the fields to be returned.
+     * @returns An object with the following properties:
+     * - savedSearch
+     * - vendor
+     * - location
+     */
+    function getFieldsFromTransmitionRecord(transmitionRecID){
+        let savedSearch, vendor, location, autoreceive = null;
+
+        let transmitionFieldsObj = search.lookupFields({
+            type: "customrecord_bsp_lb_transmition",
+            id: transmitionRecID,
+            columns: ['custrecord_bsp_lb_transmition_ss', 'custrecord_bsp_lb_vendor_account', 'custrecord_bsp_lb_transmition_loc', 'custrecord_bsp_autoreceive']
+        });
+
+        if(transmitionFieldsObj){
+            if(!(isEmpty(transmitionFieldsObj.custrecord_bsp_lb_transmition_ss))){
+                log.debug("getFieldsFromTransmitionRecord", `Getting Seaved Search: ${transmitionFieldsObj.custrecord_bsp_lb_transmition_ss[0].text}`);
+                savedSearch = transmitionFieldsObj.custrecord_bsp_lb_transmition_ss[0].value;
+            }    
+            if(!(isEmpty(transmitionFieldsObj.custrecord_bsp_lb_vendor_account))){
+                log.debug("getFieldsFromTransmitionRecord", `Getting Vendor: ${transmitionFieldsObj.custrecord_bsp_lb_vendor_account[0].text}`);
+                vendor = transmitionFieldsObj.custrecord_bsp_lb_vendor_account[0].value;
+            } 
+            if(!(isEmpty(transmitionFieldsObj.custrecord_bsp_lb_transmition_loc))){
+                log.debug("getFieldsFromTransmitionRecord", `Getting Location: ${transmitionFieldsObj.custrecord_bsp_lb_transmition_loc}`);
+                location = transmitionFieldsObj.custrecord_bsp_lb_transmition_loc;
+            }  
+            if(!(isEmpty(transmitionFieldsObj.custrecord_bsp_autoreceive))){
+                log.debug("getFieldsFromTransmitionRecord", `Getting autoreceive checkbox: ${transmitionFieldsObj.custrecord_bsp_autoreceive}`);
+                autoreceive = transmitionFieldsObj.custrecord_bsp_autoreceive;
+            }     
+        }
+        
+        let transmitionFields = {savedSearch: savedSearch, vendor: vendor, location: location, autoreceive: autoreceive};
+		return transmitionFields;
+    }
+
+
+    /**
+     * It creates a purchase order record with default values coming from the SO, then removes any items that are not
+     * included in the transmission. 
+     * @param poData - 
+     * @returns The ID of the newly created Purchase Order.
+    */
+    function createPurchaseOrders(poData){
+        let poID = null;
+
+        let purchaseOrderRec = record.create({
+            type: record.Type.PURCHASE_ORDER,
+            isDynamic: true,
+            defaultValues: {
+                'soid' : poData.salesOrderID,
+                'dropship' : 'T',
+                'specord' : 'T',
+                'custid': poData.customer,
+                'entity': poData.vendor
+            }
+        });
+
+        purchaseOrderRec.setValue({
+            fieldId: "location",
+            value: parseInt(poData.routeCode.location),
+        });
+
+        purchaseOrderRec.setValue({
+            fieldId: "custbody_bsp_autoreceived",
+            value: poData.autoreceive,
+        });
+
+        purchaseOrderRec.setValue({
+            fieldId: "custbody_bsp_transm_queue_id",
+            value: poData.transmitionQueueID,
+        });
+
+        let itemCount = purchaseOrderRec.getLineCount({
+            sublistId: 'item'
+        });
+        if(itemCount > 0){
+            for(let i = 0 ; i < itemCount ; i++){
+                let item = purchaseOrderRec.getSublistValue({
+                    sublistId: 'item',
+                    fieldId: 'item',
+                    line: i
+                });
+                if(itemNotIncludedInTransmission(item, poData.itemData)){
+                    log.debug("createPurchaseOrders", `Item ${item} will be removed`);
+                    purchaseOrderRec.removeLine({
+                        sublistId: 'item',
+                        line: i,
+                   });
+                }
+            }
+            poID = purchaseOrderRec.save();
+        }else{
+            throw `There was an unexpected Error while trynig to create a PO for Sales Order ID ${poData.salesOrderID}`;
+        }
+       
+
+        return poID;
+    }
+
+
+    /**
+     * If the itemID is not in the items array, return true, otherwise return false.
+     * @param itemID - The ID of the item you want to check
+     * @param items - This is an array of objects that are to be transmitted.
+     * @returns a boolean value.
+    */
+    function itemNotIncludedInTransmission(itemID, items){
+        for (let index = 0; index < items.length; index++) {
+            const element = JSON.parse(items[index]);
+            if(itemID == element.itemID){
+                return false;
+            }
+        }
+        return true;
+    }
+
+
+    function getPurchaseOrdersForTransmission(transmitionQueueID){
+        let purchaseOrderList = [];
+        const purchaseOrderSearchObj = search.create({
+            type: "purchaseorder",
+            filters:
+            [
+               ["type","anyof","PurchOrd"], 
+               "AND", 
+               ["mainline","is","F"], 
+               "AND", 
+               ["custbody_bsp_transm_queue_id","is",transmitionQueueID]
+            ],
+            columns:
+            [
+               search.createColumn({name: "tranid", label: "Document Number"}),
+               search.createColumn({name: "line", label: "Line ID"}),
+               search.createColumn({name: "item", label: "Item"}),
+               search.createColumn({name: "quantity", label: "Quantity"}),
+               search.createColumn({name: "unitabbreviation", label: "Units"}),
+               search.createColumn({
+                  name: "entityid",
+                  join: "customer",
+                  label: "Name"
+               }),
+               search.createColumn({
+                  name: "addressee",
+                  join: "customer",
+                  label: "Addressee"
+               }),
+               search.createColumn({
+                  name: "address1",
+                  join: "customer",
+                  label: "Address 1"
+               }),
+               search.createColumn({
+                  name: "city",
+                  join: "customer",
+                  label: "City"
+               }),
+               search.createColumn({
+                  name: "state",
+                  join: "customer",
+                  label: "State/Province"
+               }),
+               search.createColumn({
+                  name: "zipcode",
+                  join: "customer",
+                  label: "Zip Code"
+               }),
+               search.createColumn({
+                  name: "countrycode",
+                  join: "customer",
+                  label: "Country Code"
+               }),
+               search.createColumn({
+                  name: "symbol",
+                  join: "Currency",
+                  label: "Symbol"
+               })
+            ]
+        });
+
+        purchaseOrderSearchObj.run().each(function(result){
+            
+            //TODO Build purchaseOrder Object and Push it to purchaseOrderList array
+
+            return true;
+        });
+        return purchaseOrderList; 
+    }
+
+   /**
+    * It creates an Error Log custom record.
+    * The function sets
+    * @param errorSource - The name of the script that is calling the function.
+    * @param errorMessage - The error message that you want to display in the error log.
+    * @param errorDetail - The error object.
+    */
+    function createErrorLog(errorSource, errorMessage, errorDetail){
+        let errorLogRec = record.create({
+            type: "customrecord_bsp_transm_error_logs",
+        });
+
+        errorLogRec.setValue({
+            fieldId: "custrecord_bsp_transm_error_source",
+            value: errorSource,
+        });
+        errorLogRec.setValue({
+            fieldId: "custrecord_bsp_transm_error_message",
+            value: errorMessage,
+        });
+        errorLogRec.setValue({
+            fieldId: "custrecord_bsp_transm_error_detail",
+            value: errorDetail,
+        });
+        
+        errorLogRec.save();
     }
 
     /**
@@ -362,12 +622,19 @@
 
     return {
         constants: constants,
+        transmitionStatus: transmitionStatus,
         isEmpty:isEmpty,
         getProp: getProp,
+        searchAll: searchAll,
         getTransmitions: getTransmitions,
         createTransmitionQueueRecord: createTransmitionQueueRecord,
         findNextTransmitionInQueue: findNextTransmitionInQueue,
         getTransmitionRecordFromQueue: getTransmitionRecordFromQueue,
+        updateTransmitionQueueStatus: updateTransmitionQueueStatus,
+        getFieldsFromTransmitionRecord: getFieldsFromTransmitionRecord,
+        createPurchaseOrders: createPurchaseOrders,
+        getPurchaseOrdersForTransmission: getPurchaseOrdersForTransmission,
+        createErrorLog:createErrorLog,
         getCompanyInfo: getCompanyInfo,
         getOrdersData: getOrdersData
 	};

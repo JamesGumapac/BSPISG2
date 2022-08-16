@@ -2,11 +2,13 @@
  * @NApiVersion 2.1
  * @NScriptType MapReduceScript
  */
-define(['N/runtime', './lib/bsp_transmitions_util.js'],
+define(['N/runtime', 'N/search', 'N/task', './lib/bsp_transmitions_util.js'],
     /**
- * @param{runtime} runtime
- */
-    (runtime, BSPTransmitionsUtil) => {
+    * @param{runtime} runtime
+    * @param{search} search
+    * @param{BSPTransmitionsUtil} BSPTransmitionsUtil
+    */
+    (runtime, search, task, BSPTransmitionsUtil) => {
         /**
          * Defines the function that is executed at the beginning of the map/reduce process and generates the input data.
          * @param {Object} inputContext
@@ -22,28 +24,53 @@ define(['N/runtime', './lib/bsp_transmitions_util.js'],
 
         const getInputData = (inputContext) => {
             let functionName = "getInputData";
-            let transmitionRecID = null;
+            let transmitionData = [];
             try
             {
                 log.debug(functionName, "************ EXECUTION STARTED ************");
 
                 let paramsObj = getParameters();
-                transmitionRecID = paramsObj.transmitionRecID;
+                let transmitionRecID = paramsObj.transmitionRecID;
+                let transmitionQueueID = paramsObj.transmitionQueueID;
 
-                log.debug(functionName, `Work with transmition ${transmitionRecID}`);
+                log.debug(functionName, `Work with transmition ${transmitionRecID} of Queue: ${transmitionQueueID}`);
 
-                /*
-                    TODO 
-                    Mark Transmition as transmitting
-                    LookUpFields of Transmition Record for Transmition Saved search
-                    Run Transmition Search and build array with result plus transmitionRecID
-                    Pass array to Map
-                */        
+                BSPTransmitionsUtil.updateTransmitionQueueStatus(transmitionQueueID, BSPTransmitionsUtil.transmitionStatus().transmitting);
+                
+                let transmitionRecFields = BSPTransmitionsUtil.getFieldsFromTransmitionRecord(transmitionRecID);
+                let transmitionSavedSearchID = transmitionRecFields.savedSearch;  
+                let vendor = transmitionRecFields.vendor;
+                let autoreceive = transmitionRecFields.autoreceive;
+
+                let transmitionSavedSearcObj = search.load({id: transmitionSavedSearchID});
+                let resultSearch = BSPTransmitionsUtil.searchAll(transmitionSavedSearcObj);
+                resultSearch.forEach(element => {
+                    let salesOrderID = element.id;
+                    let routeCodeID = element.getValue("custbody_bsp_lb_route_code");
+                    let location = element.getValue({name: "custrecord_bsp_lb_location", join: "CUSTBODY_BSP_LB_ROUTE_CODE"});
+                    let itemID = element.getValue("item");
+                    let itemQuantity = element.getValue("quantity");
+                    let itemQuantityCommited = element.getValue("quantitycommitted");
+                    let resultQuantity = (itemQuantity - itemQuantityCommited);
+                    let customer = element.getValue("entity");
+
+                    transmitionData.push({
+                        transmitionRecID: transmitionRecID,
+                        transmitionQueueID: transmitionQueueID,
+                        salesOrderID: salesOrderID,
+                        routeCode: {routeCodeID: routeCodeID, location: location},
+                        itemID: itemID,
+                        vendor: vendor,
+                        itemQuantity: resultQuantity,
+                        customer: customer,
+                        autoreceive: autoreceive
+                    });           
+                });  
             } catch (error)
             {
                 log.error(functionName, {error: error.toString()});
             }
-            return transmitionRecID;
+            return transmitionData;
         }
 
         /**
@@ -65,8 +92,9 @@ define(['N/runtime', './lib/bsp_transmitions_util.js'],
          const map = (mapContext) => {
             let functionName = "map";
             try{
-
- 
+                let mapValue = JSON.parse(mapContext.value);
+                let salesOrderID = mapValue.salesOrderID;
+                mapContext.write({key: salesOrderID, value: mapValue});
             }catch (error)
             {
                 log.error(functionName, {error: error.toString()});
@@ -88,17 +116,34 @@ define(['N/runtime', './lib/bsp_transmitions_util.js'],
          *     for processing
          * @since 2015.2
          */
-        const reduce = () => {
+        const reduce = (reduceContext) => {
             let functionName = "reduce";
             try{
+                let salesOrderID = reduceContext.key;
+                let itemData = reduceContext.values;
+                let commonData = JSON.parse(reduceContext.values[0]);
+                let transmitionQueueID = commonData.transmitionQueueID;
+                let customer =  commonData.customer;
+                let vendor = commonData.vendor;
+                let routeCode = commonData.routeCode;
+                let autoreceive = commonData.autoreceive;
+                let poData = {transmitionQueueID: transmitionQueueID, salesOrderID:salesOrderID, customer:customer, vendor:vendor, routeCode: routeCode, autoreceive: autoreceive, itemData: itemData};
+                log.debug(functionName, `Working with SO data: ${JSON.stringify(poData)}`);
 
- 
+                let purchaseOrder = BSPTransmitionsUtil.createPurchaseOrders(poData);
+                log.debug(functionName, `PO Created: ${purchaseOrder}`);
+
             }catch (error)
             {
-                log.error(functionName, {error: error.toString()});
+                log.error(functionName, `Error Creating PO: ${error.toString()}`);
+                let errorSource = "BSP | MR | Process Transmission - " + functionName;
+                BSPTransmitionsUtil.createErrorLog(
+                    errorSource,
+                    error.message,
+                    error.toString()
+                );
             }
         }
-
 
         /**
          * Defines the function that is executed when the summarize entry point is triggered. This entry point is triggered
@@ -120,10 +165,31 @@ define(['N/runtime', './lib/bsp_transmitions_util.js'],
          * @since 2015.2
          */
         const summarize = (summaryContext) => {
-
+            let functionName = 'Summarize';
+            try{
+                let paramsObj = getParameters();
+                let transmitionRecID = paramsObj.transmitionRecID;
+                let transmitionQueueID = paramsObj.transmitionQueueID;
+                let objMRTask = task.create({
+                    taskType: task.TaskType.MAP_REDUCE,
+                    scriptId: paramsObj.mr_script_id,
+                    deploymentId: paramsObj.mr_script_dep_id,
+                    params: {
+                        custscript_bsp_mr_transm_queue: transmitionQueueID,
+                        custscript_bsp_mr_transm_rec: transmitionRecID
+                    }
+                });
+                let intTaskID = objMRTask.submit();
+                log.debug(functionName, `MR Task submitted with ID: ${intTaskID} for Transmition Queue: ${transmitionQueueID}`);
+            }catch (error)
+            {
+                log.error(functionName, {error: error.toString()});
+            }
+            log.audit(functionName, {'UsageConsumed' : summaryContext.usage, 'NumberOfQueues' : summaryContext.concurrency, 'NumberOfYields' : summaryContext.yields});
+            log.debug(functionName, "************ EXECUTION COMPLETED ************");
         }
 
-         /**
+        /**
          * Retieves Script parameters set up in the Deployment Record
          * @returns {Object} Script parameters
         */
@@ -133,6 +199,9 @@ define(['N/runtime', './lib/bsp_transmitions_util.js'],
             let objScript = runtime.getCurrentScript();
             objParams = {
                 transmitionRecID : objScript.getParameter({name: "custscript_bsp_mr_transm_rec_id"}),
+                transmitionQueueID : objScript.getParameter({name: "custscript_bsp_mr_transm_queue_id"}),
+                mr_script_id : objScript.getParameter({name: "custscript_bsp_mr_transmit_po_script"}),
+                mr_script_dep_id : objScript.getParameter({name: "custscript_bsp_mr_transmit_po_dep"})
             }
     
             return objParams;
@@ -141,3 +210,4 @@ define(['N/runtime', './lib/bsp_transmitions_util.js'],
         return {getInputData, map, reduce, summarize}
 
     });
+/*  */
