@@ -96,7 +96,7 @@ define(['N/runtime', './lib/bsp_transmitions_util.js'],
                     TODO
                      - Create xml payload
                      - Send to AS2 service
-                     - if sent correctly, update Transmission queue Rec as transmitted
+                     - if sent correctly, update Transmission queue Rec as transmitted. If not, update as tranmsision failed
                 */
             }catch (error)
             {
