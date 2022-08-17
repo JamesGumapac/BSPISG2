@@ -365,9 +365,16 @@
     }
 
 
+    /**
+     * It searches for all purchase orders that belongs to a specific transmission Queue and returns an array of
+     * objects that contain the purchase order ID, route code, currency, customer information, and an array
+     * of items. 
+     * @param transmitionQueueID - The ID of the transmission queue record.
+     * @returns An array of objects.
+    */
     function getPurchaseOrdersForTransmission(transmitionQueueID){
         let purchaseOrderList = [];
-        const purchaseOrderSearchObj = search.create({
+        let purchaseOrderSearchObj = search.create({
             type: "purchaseorder",
             filters:
             [
@@ -380,9 +387,11 @@
             columns:
             [
                search.createColumn({name: "tranid", label: "Document Number"}),
+               search.createColumn({name: "custbody_bsp_lb_route_code", label: "Route Code"}),
                search.createColumn({name: "line", label: "Line ID"}),
                search.createColumn({name: "item", label: "Item"}),
                search.createColumn({name: "quantity", label: "Quantity"}),
+               search.createColumn({name: "rate", label: "Item Rate"}),
                search.createColumn({name: "unitabbreviation", label: "Units"}),
                search.createColumn({
                   name: "entityid",
@@ -427,13 +436,60 @@
             ]
         });
 
-        purchaseOrderSearchObj.run().each(function(result){
-            
-            //TODO Build purchaseOrder Object and Push it to purchaseOrderList array
+        let poResultList = searchAll(purchaseOrderSearchObj);
+        poResultList.forEach(element => {
+            let purchaseOrderID = element.id;
+            let routeCode = element.getValue("custbody_bsp_lb_route_code");
+            let currency = element.getValue({name: "symbol", join: "Currency"});
+            let customer = {
+                companyName: element.getValue({name: "entityid", join: "customer"}),
+                addressee: element.getValue({name: "addressee", join: "customer"}),
+                address1: element.getValue({name: "address1", join: "customer"}),
+                city: element.getValue({name: "city", join: "customer"}),
+                zipcode: element.getValue({name: "zipcode", join: "customer"}),
+                countrycode: element.getValue({name: "countrycode", join: "customer"})
+            }
+            let item = {
+                itemLine: element.getValue("line"),
+                itemID: element.getValue("item"),
+                itemQuantity:element.getValue("quantity"),
+                itemRate: element.getValue("rate"),
+                itemUOM: element.getValue("unitabbreviation")
+           }   
+           
+           let poIndex = getPOindex(purchaseOrderList, purchaseOrderID);
+           if(poIndex){
+                purchaseOrderList[poIndex].items.push(item);
+           }else{
+                purchaseOrderList.push({
+                    purchaseOrderID: purchaseOrderID,
+                    routeCode: routeCode,
+                    currency: currency,
+                    customer: customer,
+                    items: [item]
+                })
+           }
+        });  
 
-            return true;
-        });
         return purchaseOrderList; 
+    }
+
+
+    /**
+     * It returns the index of the purchase order in the purchase order list that has the specified
+     * purchase order ID.
+     * @param purchaseOrderList - the list of purchase orders
+     * @param purchaseOrderID - the ID of the purchase order you want to find
+     * @returns The index of the purchaseOrderID in the purchaseOrderList array.
+    */
+    function getPOindex(purchaseOrderList, purchaseOrderID){
+        for (let index = 0; index < purchaseOrderList.length; index++) {
+            const element = purchaseOrderList[index];
+            if (element.purchaseOrderID == purchaseOrderID){
+                return index;
+            }
+        }
+        return null;
     }
 
    /**
