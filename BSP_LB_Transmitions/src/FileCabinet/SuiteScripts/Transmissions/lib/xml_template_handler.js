@@ -16,7 +16,7 @@ function (file, xml, render){
      * @param {*} content 
      * @returns 
      */
-    function buildFileFromTemplate(templateID, content){
+    function buildFileFromTemplate(templateID, content, fileName, outputFolder){
         let functionName = "buildFileFromTemplate";
         let resultFile = null;
         log.debug(functionName, content);
@@ -38,10 +38,10 @@ function (file, xml, render){
 
         let xmlObj = renderer.renderAsString();
         resultFile = file.create({
-            name: 'sampleGeneratedRequest.xml',
+            name: fileName,
             fileType: file.Type.XMLDOC,
             contents: xmlObj,
-            folder: 11256
+            folder: outputFolder
         });
         let resultFileId = resultFile.save();
         return resultFileId;

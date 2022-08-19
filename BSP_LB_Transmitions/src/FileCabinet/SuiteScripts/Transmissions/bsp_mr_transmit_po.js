@@ -2,12 +2,12 @@
  * @NApiVersion 2.1
  * @NScriptType MapReduceScript
  */
-define(['N/runtime', './lib/bsp_transmitions_util.js'],
+define(['N/runtime', './lib/bsp_transmitions_util.js', './lib/bsp_edi_settings.js', './lib/xml_template_handler.js', './lib/bsp_as2_service.js'],
     /**
      * @param{runtime} runtime
      * @param{BSPTransmitionsUtil} BSPTransmitionsUtil
      */
-    (runtime, BSPTransmitionsUtil) => {
+    (runtime, BSPTransmitionsUtil, BSP_EDISettingsUtil, BSP_XMLTemplateHandler, BSP_AS2Service) => {
         /**
          * Defines the function that is executed at the beginning of the map/reduce process and generates the input data.
          * @param {Object} inputContext
@@ -23,7 +23,7 @@ define(['N/runtime', './lib/bsp_transmitions_util.js'],
 
         const getInputData = (inputContext) => {
             let functionName = "getInputData";
-            let transmitionData = [];
+            let transmitionDataList = [];
             try
             {
                 log.debug(functionName, "************ EXECUTION STARTED ************");
@@ -35,16 +35,27 @@ define(['N/runtime', './lib/bsp_transmitions_util.js'],
 
                 let puchaseOrderList = BSPTransmitionsUtil.getPurchaseOrdersForTransmission(transmitionQueueID);
 
-                /*
-                 TODO 
-                  - GET EDI settings info
-                  - GET Vendor Trading partner info from Transmission Record
-                  - Build data to send to map
-                */
+                let ediSettings = BSP_EDISettingsUtil.getEDIsettings(paramsObj.environment);
+                
+                let transmitionRecFields = BSPTransmitionsUtil.getFieldsFromTransmitionRecord(transmitionRecID);
+                let vendor = transmitionRecFields.vendor;
+                let tradingParnterInfo = BSPTransmitionsUtil.getTradingPartnerInfo(vendor);
+                
+                puchaseOrderList.forEach(po => {
+                    transmitionDataList.push({
+                        data: {
+                            ediSettings: ediSettings,
+                            transmissionData: transmitionRecFields,
+                            tradingPartner: tradingParnterInfo,
+                            purchaseOrder: po
+                        }
+                    })
+                });
             } catch (error)
             {
                 log.error(functionName, {error: error.toString()});
             }
+            return transmitionDataList;
         }
 
         /**
@@ -67,7 +78,17 @@ define(['N/runtime', './lib/bsp_transmitions_util.js'],
         const map = (mapContext) => {
             let functionName = "map";
             try{
-                // TODO : Group by Tranmsission and send to Reduce Stage
+                let tranmsission = JSON.parse(mapContext.value);
+                log.debug(functionName, `Tranmsission PO: ${JSON.stringify(tranmsission)}`);
+                let poId = tranmsission.data.purchaseOrder.purchaseOrderID;
+                /*
+                    TODO:   If we are going to send Essendant multiple POs per transmission
+                            Then we have to group the POs by Transmission ID before sending to Reduce stage
+                */
+                mapContext.write({
+                    key: poId, 
+                    value: tranmsission.data
+                });
             }catch (error)
             {
                 log.error(functionName, {error: error.toString()});
@@ -92,9 +113,18 @@ define(['N/runtime', './lib/bsp_transmitions_util.js'],
         const reduce = (reduceContext) => {
             let functionName = "reduce";
             try{
+                let tranmsissionData = JSON.parse(reduceContext.values);
+
+                let templateId = tranmsissionData.tradingPartner.xmlTemplateFileID;
+                let fileName = `${tranmsissionData.ediSettings.name}_PO${tranmsissionData.purchaseOrder.purchaseOrderNumber}.xml`;
+                let outputFolder = tranmsissionData.tradingPartner.transmissionOutputFolderID;
+                let xmlFileID = BSP_XMLTemplateHandler.buildFileFromTemplate(templateId, tranmsissionData, fileName, outputFolder);
+                log.debug(functionName, `Tranmsission XML File created - ID: ${xmlFileID}`);
+                
+                let serverBodyParameters = BSP_AS2Service.buildRequestBody(tranmsissionData);
+                
                 /*
                     TODO
-                     - Create xml payload
                      - Send to AS2 service
                      - if sent correctly, update Transmission queue Rec as transmitted. If not, update as tranmsision failed
                 */
@@ -149,10 +179,14 @@ define(['N/runtime', './lib/bsp_transmitions_util.js'],
          const getParameters = () => {
             let objParams = {};
 
+            let environment = runtime.envType;
+            log.debug("Account Environment", `ENV: ${environment}`);
+
             let objScript = runtime.getCurrentScript();
             objParams = {
                 transmitionQueueID : objScript.getParameter({name: "custscript_bsp_mr_transm_queue"}),
-                transmitionRecID : objScript.getParameter({name: "custscript_bsp_mr_transm_rec"})
+                transmitionRecID : objScript.getParameter({name: "custscript_bsp_mr_transm_rec"}),
+                environment: environment
             }
     
             return objParams;

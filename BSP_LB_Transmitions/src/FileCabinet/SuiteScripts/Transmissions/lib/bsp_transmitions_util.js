@@ -252,34 +252,52 @@
      * - location
      */
     function getFieldsFromTransmitionRecord(transmitionRecID){
-        let savedSearch, vendor, location, autoreceive = null;
+        let savedSearch, vendor, location, autoreceive, accountNumber, essendantADOT = null;
 
         let transmitionFieldsObj = search.lookupFields({
             type: "customrecord_bsp_lb_transmition",
             id: transmitionRecID,
-            columns: ['custrecord_bsp_lb_transmition_ss', 'custrecord_bsp_lb_vendor_account', 'custrecord_bsp_lb_transmition_loc', 'custrecord_bsp_autoreceive']
+            columns: [
+                'custrecord_bsp_lb_transmition_ss', 
+                'custrecord_bsp_lb_vendor_account', 
+                'custrecord_bsp_lb_transmition_loc', 
+                'custrecord_bsp_autoreceive',
+                'custrecord_bsp_lb_acct_number',
+                'custrecord_bsp_lb_essendant_adot'
+            ]
         });
 
         if(transmitionFieldsObj){
             if(!(isEmpty(transmitionFieldsObj.custrecord_bsp_lb_transmition_ss))){
-                log.debug("getFieldsFromTransmitionRecord", `Getting Seaved Search: ${transmitionFieldsObj.custrecord_bsp_lb_transmition_ss[0].text}`);
                 savedSearch = transmitionFieldsObj.custrecord_bsp_lb_transmition_ss[0].value;
             }    
             if(!(isEmpty(transmitionFieldsObj.custrecord_bsp_lb_vendor_account))){
-                log.debug("getFieldsFromTransmitionRecord", `Getting Vendor: ${transmitionFieldsObj.custrecord_bsp_lb_vendor_account[0].text}`);
                 vendor = transmitionFieldsObj.custrecord_bsp_lb_vendor_account[0].value;
             } 
             if(!(isEmpty(transmitionFieldsObj.custrecord_bsp_lb_transmition_loc))){
-                log.debug("getFieldsFromTransmitionRecord", `Getting Location: ${transmitionFieldsObj.custrecord_bsp_lb_transmition_loc}`);
                 location = transmitionFieldsObj.custrecord_bsp_lb_transmition_loc;
             }  
             if(!(isEmpty(transmitionFieldsObj.custrecord_bsp_autoreceive))){
-                log.debug("getFieldsFromTransmitionRecord", `Getting autoreceive checkbox: ${transmitionFieldsObj.custrecord_bsp_autoreceive}`);
                 autoreceive = transmitionFieldsObj.custrecord_bsp_autoreceive;
-            }     
+            } 
+            if(!(isEmpty(transmitionFieldsObj.custrecord_bsp_lb_acct_number))){
+                accountNumber = transmitionFieldsObj.custrecord_bsp_lb_acct_number[0];
+            }  
+            if(!(isEmpty(transmitionFieldsObj.custrecord_bsp_lb_essendant_adot))){
+                essendantADOT = transmitionFieldsObj.custrecord_bsp_lb_essendant_adot;
+            }      
         }
         
-        let transmitionFields = {savedSearch: savedSearch, vendor: vendor, location: location, autoreceive: autoreceive};
+        let transmitionFields = {
+            transmitionRecID: transmitionRecID,
+            savedSearch: savedSearch, 
+            vendor: vendor, 
+            location: location, 
+            autoreceive: autoreceive,
+            accountNumber: accountNumber,
+            essendantADOT: essendantADOT
+        };
+
 		return transmitionFields;
     }
 
@@ -439,30 +457,34 @@
         let poResultList = searchAll(purchaseOrderSearchObj);
         poResultList.forEach(element => {
             let purchaseOrderID = element.id;
-            let routeCode = element.getValue("custbody_bsp_lb_route_code");
+            let purchaseOrderNumber = element.getValue("tranid");
+            let routeCode = element.getText("custbody_bsp_lb_route_code");
             let currency = element.getValue({name: "symbol", join: "Currency"});
             let customer = {
                 companyName: element.getValue({name: "entityid", join: "customer"}),
                 addressee: element.getValue({name: "addressee", join: "customer"}),
                 address1: element.getValue({name: "address1", join: "customer"}),
                 city: element.getValue({name: "city", join: "customer"}),
+                state: element.getValue({name: "state", join: "customer"}),
                 zipcode: element.getValue({name: "zipcode", join: "customer"}),
                 countrycode: element.getValue({name: "countrycode", join: "customer"})
             }
             let item = {
                 itemLine: element.getValue("line"),
                 itemID: element.getValue("item"),
+                itemName: element.getText("item"),
                 itemQuantity:element.getValue("quantity"),
                 itemRate: element.getValue("rate"),
                 itemUOM: element.getValue("unitabbreviation")
            }   
            
            let poIndex = getPOindex(purchaseOrderList, purchaseOrderID);
-           if(poIndex){
+           if(poIndex >= 0){
                 purchaseOrderList[poIndex].items.push(item);
            }else{
                 purchaseOrderList.push({
                     purchaseOrderID: purchaseOrderID,
+                    purchaseOrderNumber: purchaseOrderNumber,
                     routeCode: routeCode,
                     currency: currency,
                     customer: customer,
@@ -489,7 +511,122 @@
                 return index;
             }
         }
-        return null;
+        return -1;
+    }
+
+
+    /**
+     * This function takes a vendor ID and returns an object containing the trading partner settings for
+     * that vendor.
+     * @param vendor - The vendor ID of the vendor you want to get the trading partner info for.
+     * @returns the tradingPartnerData object.
+    */
+    function getTradingPartnerInfo(vendor){
+        let tradingPartnerData = null;
+        const tradingPartnerSearchObj = search.create({
+            type: "vendor",
+            filters:
+            [
+               ["internalid","anyof",vendor], 
+               "AND", 
+               ["isinactive","is","F"]
+            ],
+            columns:
+            [
+               search.createColumn({
+                  name: "internalid",
+                  join: "CUSTENTITY_BSP_LB_TRADING_PARTN_SETTINGS",
+                  label: "Internal ID"
+               }),
+               search.createColumn({
+                  name: "name",
+                  join: "CUSTENTITY_BSP_LB_TRADING_PARTN_SETTINGS",
+                  label: "Name"
+               }),
+               search.createColumn({
+                  name: "custrecord_bsp_lb_as2_id",
+                  join: "CUSTENTITY_BSP_LB_TRADING_PARTN_SETTINGS",
+                  label: "AS2 Identifier"
+               }),
+               search.createColumn({
+                  name: "custrecord_bsp_compress_msg",
+                  join: "CUSTENTITY_BSP_LB_TRADING_PARTN_SETTINGS",
+                  label: "Compress Message"
+               }),
+               search.createColumn({
+                  name: "custrecord_bsp_encrypt_msg",
+                  join: "CUSTENTITY_BSP_LB_TRADING_PARTN_SETTINGS",
+                  label: "Encrypt Message"
+               }),
+               search.createColumn({
+                  name: "custrecord_bsp_encryption_algorithm",
+                  join: "CUSTENTITY_BSP_LB_TRADING_PARTN_SETTINGS",
+                  label: "Encryption Algorithm"
+               }),
+               search.createColumn({
+                  name: "custrecord_bsp_mdn_to",
+                  join: "CUSTENTITY_BSP_LB_TRADING_PARTN_SETTINGS",
+                  label: "MDN to"
+               }),
+               search.createColumn({
+                  name: "custrecord_bsp_sign_msg",
+                  join: "CUSTENTITY_BSP_LB_TRADING_PARTN_SETTINGS",
+                  label: "Sign Message"
+               }),
+               search.createColumn({
+                  name: "custrecord_bsp_signature_algorith",
+                  join: "CUSTENTITY_BSP_LB_TRADING_PARTN_SETTINGS",
+                  label: "Signature Algorithm"
+               }),
+               search.createColumn({
+                  name: "custrecord_bsp_lb_target_url",
+                  join: "CUSTENTITY_BSP_LB_TRADING_PARTN_SETTINGS",
+                  label: "Target URL"
+               }),
+               search.createColumn({
+                  name: "custrecord_bsp_template_xml_file",
+                  join: "CUSTENTITY_BSP_LB_TRADING_PARTN_SETTINGS",
+                  label: "Template XML file"
+               }),
+               search.createColumn({
+                  name: "custrecord_bsp_transm_output_folder_id",
+                  join: "CUSTENTITY_BSP_LB_TRADING_PARTN_SETTINGS",
+                  label: "Template XML file"
+               }),
+
+            ]
+        });
+        tradingPartnerSearchObj.run().each(function(result){
+            let id = result.getValue({name: "internalid", join: "CUSTENTITY_BSP_LB_TRADING_PARTN_SETTINGS"});
+            let name = result.getValue({name: "name", join: "CUSTENTITY_BSP_LB_TRADING_PARTN_SETTINGS"});
+            let as2Identifier = result.getValue({name: "custrecord_bsp_lb_as2_id", join: "CUSTENTITY_BSP_LB_TRADING_PARTN_SETTINGS"});
+            let compressMessage = result.getValue({name: "custrecord_bsp_compress_msg", join: "CUSTENTITY_BSP_LB_TRADING_PARTN_SETTINGS"});
+            let encryptMessage = result.getValue({name: "custrecord_bsp_encrypt_msg", join: "CUSTENTITY_BSP_LB_TRADING_PARTN_SETTINGS"});
+            let encryptionAlgorithm = result.getValue({name: "custrecord_bsp_encryption_algorithm", join: "CUSTENTITY_BSP_LB_TRADING_PARTN_SETTINGS"});
+            let mdnTo = result.getValue({name: "custrecord_bsp_mdn_to", join: "CUSTENTITY_BSP_LB_TRADING_PARTN_SETTINGS"});
+            let signMessage = result.getValue({name: "custrecord_bsp_sign_msg", join: "CUSTENTITY_BSP_LB_TRADING_PARTN_SETTINGS"});
+            let signatureAlgorithm = result.getValue({name: "custrecord_bsp_signature_algorith", join: "CUSTENTITY_BSP_LB_TRADING_PARTN_SETTINGS"});
+            let targetURL = result.getValue({name: "custrecord_bsp_lb_target_url", join: "CUSTENTITY_BSP_LB_TRADING_PARTN_SETTINGS"});
+            let xmlTemplateFileID = result.getValue({name: "custrecord_bsp_template_xml_file", join: "CUSTENTITY_BSP_LB_TRADING_PARTN_SETTINGS"});
+            let transmissionOutputFolderID = result.getValue({name: "custrecord_bsp_transm_output_folder_id", join: "CUSTENTITY_BSP_LB_TRADING_PARTN_SETTINGS"});
+
+            tradingPartnerData = {
+                id: id,
+                name: name,
+                as2Identifier: as2Identifier,
+                compressMessage: compressMessage,
+                encryptMessage: encryptMessage,
+                encryptionAlgorithm: encryptionAlgorithm,
+                mdnTo: mdnTo,
+                signMessage: signMessage,
+                signatureAlgorithm: signatureAlgorithm,
+                targetURL: targetURL,
+                xmlTemplateFileID: xmlTemplateFileID,
+                transmissionOutputFolderID: transmissionOutputFolderID
+            }
+            return true;
+        });
+        return tradingPartnerData;
     }
 
    /**
@@ -690,6 +827,7 @@
         getFieldsFromTransmitionRecord: getFieldsFromTransmitionRecord,
         createPurchaseOrders: createPurchaseOrders,
         getPurchaseOrdersForTransmission: getPurchaseOrdersForTransmission,
+        getTradingPartnerInfo: getTradingPartnerInfo,
         createErrorLog:createErrorLog,
         getCompanyInfo: getCompanyInfo,
         getOrdersData: getOrdersData
