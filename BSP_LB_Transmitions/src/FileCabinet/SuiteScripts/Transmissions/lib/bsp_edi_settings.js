@@ -32,6 +32,18 @@
                   name: "custrecord_bsp_as2_org_identifier",
                   join: "CUSTRECORD_BSP_EDI_ORGANIZATION",
                   label: "AS2 Identifier"
+               }),
+               search.createColumn({
+                  name: "custrecord_bsp_sb_endpoint_url",
+                  label: "Endpoint URL"
+               }),
+               search.createColumn({
+                  name: "custrecord_bsp_sb_user",
+                  label: "User"
+               }),
+               search.createColumn({
+                  name: "custrecord_bsp_sb_password",
+                  label: "Password"
                })
             ]
         });
@@ -39,9 +51,15 @@
         EDISettingsSearchObj.run().each(function(result){
             let name = result.getValue({name: "name", join: "CUSTRECORD_BSP_EDI_ORGANIZATION"});
             let as2Identifier = result.getValue({name: "custrecord_bsp_as2_org_identifier", join: "CUSTRECORD_BSP_EDI_ORGANIZATION"});
+            let endpointURL = result.getValue("custrecord_bsp_sb_endpoint_url");
+            let user = result.getValue("custrecord_bsp_sb_user");
+            let pwd = result.getValue("custrecord_bsp_sb_password");
             ediSettingsFields = {
                 name: name,
-                as2Identifier: as2Identifier
+                as2Identifier: as2Identifier,
+                endpointURL: endpointURL,
+                user: user,
+                pwd: pwd
             }
             return true;
          });

@@ -79,7 +79,7 @@ define(['N/runtime', './lib/bsp_transmitions_util.js', './lib/bsp_edi_settings.j
             let functionName = "map";
             try{
                 let tranmsission = JSON.parse(mapContext.value);
-                log.debug(functionName, `Tranmsission PO: ${JSON.stringify(tranmsission)}`);
+                log.debug(functionName, `Tranmission PO: ${JSON.stringify(tranmsission)}`);
                 let poId = tranmsission.data.purchaseOrder.purchaseOrderID;
                 /*
                     TODO:   If we are going to send Essendant multiple POs per transmission
@@ -116,13 +116,14 @@ define(['N/runtime', './lib/bsp_transmitions_util.js', './lib/bsp_edi_settings.j
                 let tranmsissionData = JSON.parse(reduceContext.values);
 
                 let templateId = tranmsissionData.tradingPartner.xmlTemplateFileID;
-                let fileName = `${tranmsissionData.ediSettings.name}_PO${tranmsissionData.purchaseOrder.purchaseOrderNumber}.xml`;
+                let fileName = `${tranmsissionData.ediSettings.name}_PO${tranmsissionData.purchaseOrder.purchaseOrderNumber}`;
                 let outputFolder = tranmsissionData.tradingPartner.transmissionOutputFolderID;
-                let xmlFileID = BSP_XMLTemplateHandler.buildFileFromTemplate(templateId, tranmsissionData, fileName, outputFolder);
-                log.debug(functionName, `Tranmsission XML File created - ID: ${xmlFileID}`);
-                
+                let xmlFileObj = BSP_XMLTemplateHandler.buildFileFromTemplate(templateId, tranmsissionData, fileName, outputFolder);
+                tranmsissionData.xmlFileObj = xmlFileObj;
                 let serverBodyParameters = BSP_AS2Service.buildRequestBody(tranmsissionData);
-                
+                log.debug(functionName, `server Body Parameters: ${JSON.stringify(serverBodyParameters)}`);
+
+                let as2ServerResponse = BSP_AS2Service.runService(tranmsissionData.ediSettings, serverBodyParameters);
                 /*
                     TODO
                      - Send to AS2 service
@@ -130,7 +131,7 @@ define(['N/runtime', './lib/bsp_transmitions_util.js', './lib/bsp_edi_settings.j
                 */
             }catch (error)
             {
-                log.error(functionName, `Error Creating PO: ${error.toString()}`);
+                log.error(functionName, `Error Transmitting PO: ${error.toString()}`);
                 let errorSource = "BSP | MR | Transmit POs - " + functionName;
                 BSPTransmitionsUtil.createErrorLog(
                     errorSource,

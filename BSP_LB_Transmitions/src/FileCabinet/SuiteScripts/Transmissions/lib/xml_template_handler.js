@@ -19,7 +19,7 @@ function (file, xml, render){
     function buildFileFromTemplate(templateID, content, fileName, outputFolder){
         let functionName = "buildFileFromTemplate";
         let resultFile = null;
-        log.debug(functionName, content);
+        //log.debug(functionName, content);
 
         let objFile = file.load({
             id: templateID
@@ -38,13 +38,18 @@ function (file, xml, render){
 
         let xmlObj = renderer.renderAsString();
         resultFile = file.create({
-            name: fileName,
+            name: `${fileName}.xml`,
             fileType: file.Type.XMLDOC,
             contents: xmlObj,
             folder: outputFolder
         });
         let resultFileId = resultFile.save();
-        return resultFileId;
+        let resultObj = {
+            fileId: resultFileId,
+            fileName: fileName,
+            fileContent: xmlObj
+        }
+        return resultObj;
     }
 
     return {
