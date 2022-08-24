@@ -81,10 +81,7 @@ define(['N/runtime', './lib/bsp_transmitions_util.js', './lib/bsp_edi_settings.j
                 let tranmsission = JSON.parse(mapContext.value);
                 log.debug(functionName, `Tranmission PO: ${JSON.stringify(tranmsission)}`);
                 let poId = tranmsission.data.purchaseOrder.purchaseOrderID;
-                /*
-                    TODO:   If we are going to send Essendant multiple POs per transmission
-                            Then we have to group the POs by Transmission ID before sending to Reduce stage
-                */
+
                 mapContext.write({
                     key: poId, 
                     value: tranmsission.data
@@ -121,14 +118,15 @@ define(['N/runtime', './lib/bsp_transmitions_util.js', './lib/bsp_edi_settings.j
                 let xmlFileObj = BSP_XMLTemplateHandler.buildFileFromTemplate(templateId, tranmsissionData, fileName, outputFolder);
                 tranmsissionData.xmlFileObj = xmlFileObj;
                 let serverBodyParameters = BSP_AS2Service.buildRequestBody(tranmsissionData);
-                log.debug(functionName, `server Body Parameters: ${JSON.stringify(serverBodyParameters)}`);
+                log.debug(functionName, `Server Body Parameters: ${JSON.stringify(serverBodyParameters)}`);
 
                 let as2ServerResponse = BSP_AS2Service.runService(tranmsissionData.ediSettings, serverBodyParameters);
+                log.debug(functionName, `Server Response: ${JSON.stringify(as2ServerResponse)}`);
                 /*
                     TODO
-                     - Send to AS2 service
                      - if sent correctly, update Transmission queue Rec as transmitted. If not, update as tranmsision failed
                 */
+                
             }catch (error)
             {
                 log.error(functionName, `Error Transmitting PO: ${error.toString()}`);
@@ -163,12 +161,6 @@ define(['N/runtime', './lib/bsp_transmitions_util.js', './lib/bsp_edi_settings.j
          */
         const summarize = (summaryContext) => {
             let functionName = 'Summarize';
-            try{
-
-            }catch (error)
-            {
-                log.error(functionName, {error: error.toString()});
-            }
             log.audit(functionName, {'UsageConsumed' : summaryContext.usage, 'NumberOfQueues' : summaryContext.concurrency, 'NumberOfYields' : summaryContext.yields});
             log.debug(functionName, "************ EXECUTION COMPLETED ************");
         }

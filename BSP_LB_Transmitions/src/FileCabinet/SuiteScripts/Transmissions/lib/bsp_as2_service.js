@@ -8,7 +8,7 @@
 
 
     /**
-     * Returns the Body for the EDI Request
+     * Returns the Body for the AS2 Request
      * @param transmissionData - 
      * @returns the bodyObj object.
     */
@@ -50,29 +50,37 @@
         return base64EncodedString;
     }
 
+
     /**
-     * Execute HTTPS request
-     * @param {*} serviceURL 
-     * @param {*} requestBodyXML 
-     * @param {*} soapAction 
-     * @returns 
-     */
+     * The function takes in an object containing the settings for the AS2 service, and a string containing
+     * the JSON request body, and returns a JSON object containing the response from the AS2 service.
+     * @param ediSettings - This is a custom record that contains the connection info
+     * @param requestBody - Request body in JSON format
+     * @returns The response from the server.
+    */
     function runService(ediSettings, requestBody){
         let jsonObjResponse = null;
+
+        let headers = new Object();
+        headers['Authorization'] = getToken(ediSettings);
+        headers['Accept'] = 'application/json';
+        headers['Content-Type'] = 'application/json';
 
         let as2ServerResponse = https.request({
             "method":  https.Method.POST,
             "url": ediSettings.endpointURL,
-            "body": requestBody,
-            "headers": {
-                'Authorization': getToken(ediSettings),
-                "Content-Type": "application/json",
-                "Accept": 'application/json'
-            }
+            "body": JSON.stringify(requestBody),
+            "headers": headers
         });
 
         log.debug("runService", JSON.stringify(as2ServerResponse));
 
+        if (as2ServerResponse.code != 200 && as2ServerResponse.code != 201){
+            throw ('TRANSMISSION_ERROR', 'An internal error occurred.');
+        }
+
+        let jsonResponseStr = as2ServerResponse.body;
+        jsonObjResponse = JSON.parse(jsonResponseStr);
         return jsonObjResponse;
     }
 
