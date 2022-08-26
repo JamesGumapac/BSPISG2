@@ -3,21 +3,20 @@
  * @NModuleScope Public
  */
 
- define(['N/search', 'N/record', './lodash.min.js', 'N/task', 'N/format', 'N/config'], function (search, record, lodash, task, format, config) {
+ define(['N/search', 'N/record'], function (search, record) {
     
     const CONTANTS = Object.freeze({
-        actionCode: "R",
-        documentControlNumber: "00001"
+        essendant : "Essendant Inc"
     });
 
-    const TRANSMITION_STATUSES = Object.freeze({
+    const TRANSMITION_QUEUE_STATUSES = Object.freeze({
         notStarted: 1,
         transmitting: 2,
         transmitted: 3,
         acknowledged: 4,
         complete: 5
     });
-    
+  
     /**
      * Returns Integration Project Constants
      * @returns 
@@ -27,11 +26,11 @@
     }
 
     /**
-     * Returns Transmition Status Constants
+     * Returns Transmition Queue Status Constants
      * @returns 
     */   
-    function transmitionStatus(){
-        return TRANSMITION_STATUSES;
+    function transmitionQueueStatus(){
+        return TRANSMITION_QUEUE_STATUSES;
     }
 
     /**
@@ -167,7 +166,7 @@
         });
         transmitionQueueRec.setValue({
             fieldId: "custrecord_bsp_transmition_status",
-            value: TRANSMITION_STATUSES.notStarted,
+            value: TRANSMITION_QUEUE_STATUSES.notStarted,
         });
         let transmitionQueueRecId = transmitionQueueRec.save();
         return transmitionQueueRecId;
@@ -195,13 +194,12 @@
         });
 
         let resultSearch = searchAll(transmitionQueueSearchObj);
-        if(resultSearch[0].getValue("custrecord_bsp_transmition_status") == TRANSMITION_STATUSES.notStarted){
+        if(resultSearch[0].getValue("custrecord_bsp_transmition_status") == TRANSMITION_QUEUE_STATUSES.notStarted){
             transmitionQueueRecID = resultSearch[0].getValue("internalid");
         }
          
         return transmitionQueueRecID;
     }
-
 
     /**
      * It takes THE Queue Rec ID and returns the Tranmsition Rec linked to that Queue.
@@ -225,14 +223,13 @@
 		return transmitionRec;
     }
 
-
     /**
      * It updates the status of a record in the custom record "BSP Transmition Queue" to the status passed
      * in.
      * @param transmitionQueueRecID - The internal ID of the record in the custom record.
      * @param status - The status of the transmition queue record.
     */
-    function updateTransmitionQueueStatus(transmitionQueueRecID, status){
+    function updateTransmissionQueueStatus(transmitionQueueRecID, status){
         record.submitFields({
             type: "customrecord_bsp_transmition_queue",
             id: transmitionQueueRecID,
@@ -241,7 +238,6 @@
             }
         });
     }
-
 
     /**
      * This function takes a transmition record ID and returns an object with the fields from the transmition record.
@@ -300,220 +296,6 @@
 
 		return transmitionFields;
     }
-
-
-    /**
-     * It creates a purchase order record with default values coming from the SO, then removes any items that are not
-     * included in the transmission. 
-     * @param poData - 
-     * @returns The ID of the newly created Purchase Order.
-    */
-    function createPurchaseOrders(poData){
-        let poID = null;
-
-        let purchaseOrderRec = record.create({
-            type: record.Type.PURCHASE_ORDER,
-            isDynamic: true,
-            defaultValues: {
-                'soid' : poData.salesOrderID,
-                'dropship' : 'T',
-                'specord' : 'T',
-                'custid': poData.customer,
-                'entity': poData.vendor
-            }
-        });
-
-        purchaseOrderRec.setValue({
-            fieldId: "location",
-            value: parseInt(poData.routeCode.location),
-        });
-
-        purchaseOrderRec.setValue({
-            fieldId: "custbody_bsp_autoreceived",
-            value: poData.autoreceive,
-        });
-
-        purchaseOrderRec.setValue({
-            fieldId: "custbody_bsp_transm_queue_id",
-            value: poData.transmitionQueueID,
-        });
-
-        let itemCount = purchaseOrderRec.getLineCount({
-            sublistId: 'item'
-        });
-        if(itemCount > 0){
-            for(let i = 0 ; i < itemCount ; i++){
-                let item = purchaseOrderRec.getSublistValue({
-                    sublistId: 'item',
-                    fieldId: 'item',
-                    line: i
-                });
-                if(itemNotIncludedInTransmission(item, poData.itemData)){
-                    log.debug("createPurchaseOrders", `Item ${item} will be removed`);
-                    purchaseOrderRec.removeLine({
-                        sublistId: 'item',
-                        line: i,
-                   });
-                }
-            }
-            poID = purchaseOrderRec.save();
-        }else{
-            throw `There was an unexpected Error while trynig to create a PO for Sales Order ID ${poData.salesOrderID}`;
-        }
-       
-
-        return poID;
-    }
-
-
-    /**
-     * If the itemID is not in the items array, return true, otherwise return false.
-     * @param itemID - The ID of the item you want to check
-     * @param items - This is an array of objects that are to be transmitted.
-     * @returns a boolean value.
-    */
-    function itemNotIncludedInTransmission(itemID, items){
-        for (let index = 0; index < items.length; index++) {
-            const element = JSON.parse(items[index]);
-            if(itemID == element.itemID){
-                return false;
-            }
-        }
-        return true;
-    }
-
-
-    /**
-     * It searches for all purchase orders that belongs to a specific transmission Queue and returns an array of
-     * objects that contain the purchase order ID, route code, currency, customer information, and an array
-     * of items. 
-     * @param transmitionQueueID - The ID of the transmission queue record.
-     * @returns An array of objects.
-    */
-    function getPurchaseOrdersForTransmission(transmitionQueueID){
-        let purchaseOrderList = [];
-        let purchaseOrderSearchObj = search.create({
-            type: "purchaseorder",
-            filters:
-            [
-               ["type","anyof","PurchOrd"], 
-               "AND", 
-               ["mainline","is","F"], 
-               "AND", 
-               ["custbody_bsp_transm_queue_id","is",transmitionQueueID]
-            ],
-            columns:
-            [
-               search.createColumn({name: "tranid", label: "Document Number"}),
-               search.createColumn({name: "custbody_bsp_lb_route_code", label: "Route Code"}),
-               search.createColumn({name: "line", label: "Line ID"}),
-               search.createColumn({name: "item", label: "Item"}),
-               search.createColumn({name: "quantity", label: "Quantity"}),
-               search.createColumn({name: "rate", label: "Item Rate"}),
-               search.createColumn({name: "unitabbreviation", label: "Units"}),
-               search.createColumn({
-                  name: "entityid",
-                  join: "customer",
-                  label: "Name"
-               }),
-               search.createColumn({
-                  name: "addressee",
-                  join: "customer",
-                  label: "Addressee"
-               }),
-               search.createColumn({
-                  name: "address1",
-                  join: "customer",
-                  label: "Address 1"
-               }),
-               search.createColumn({
-                  name: "city",
-                  join: "customer",
-                  label: "City"
-               }),
-               search.createColumn({
-                  name: "state",
-                  join: "customer",
-                  label: "State/Province"
-               }),
-               search.createColumn({
-                  name: "zipcode",
-                  join: "customer",
-                  label: "Zip Code"
-               }),
-               search.createColumn({
-                  name: "countrycode",
-                  join: "customer",
-                  label: "Country Code"
-               }),
-               search.createColumn({
-                  name: "symbol",
-                  join: "Currency",
-                  label: "Symbol"
-               })
-            ]
-        });
-
-        let poResultList = searchAll(purchaseOrderSearchObj);
-        poResultList.forEach(element => {
-            let purchaseOrderID = element.id;
-            let purchaseOrderNumber = element.getValue("tranid");
-            let routeCode = element.getText("custbody_bsp_lb_route_code");
-            let currency = element.getValue({name: "symbol", join: "Currency"});
-            let customer = {
-                companyName: element.getValue({name: "entityid", join: "customer"}),
-                addressee: element.getValue({name: "addressee", join: "customer"}),
-                address1: element.getValue({name: "address1", join: "customer"}),
-                city: element.getValue({name: "city", join: "customer"}),
-                state: element.getValue({name: "state", join: "customer"}),
-                zipcode: element.getValue({name: "zipcode", join: "customer"}),
-                countrycode: element.getValue({name: "countrycode", join: "customer"})
-            }
-            let item = {
-                itemLine: element.getValue("line"),
-                itemID: element.getValue("item"),
-                itemName: element.getText("item"),
-                itemQuantity:element.getValue("quantity"),
-                itemRate: element.getValue("rate"),
-                itemUOM: element.getValue("unitabbreviation")
-           }   
-           
-           let poIndex = getPOindex(purchaseOrderList, purchaseOrderID);
-           if(poIndex >= 0){
-                purchaseOrderList[poIndex].items.push(item);
-           }else{
-                purchaseOrderList.push({
-                    purchaseOrderID: purchaseOrderID,
-                    purchaseOrderNumber: purchaseOrderNumber,
-                    routeCode: routeCode,
-                    currency: currency,
-                    customer: customer,
-                    items: [item]
-                })
-           }
-        });  
-
-        return purchaseOrderList; 
-    }
-
-
-    /**
-     * It returns the index of the purchase order in the purchase order list that has the specified
-     * purchase order ID.
-     * @param purchaseOrderList - the list of purchase orders
-     * @param purchaseOrderID - the ID of the purchase order you want to find
-     * @returns The index of the purchaseOrderID in the purchaseOrderList array.
-    */
-    function getPOindex(purchaseOrderList, purchaseOrderID){
-        for (let index = 0; index < purchaseOrderList.length; index++) {
-            const element = purchaseOrderList[index];
-            if (element.purchaseOrderID == purchaseOrderID){
-                return index;
-            }
-        }
-        return -1;
-    }
-
 
     /**
      * This function takes a vendor ID and returns an object containing the trading partner settings for
@@ -593,7 +375,11 @@
                   join: "CUSTENTITY_BSP_LB_TRADING_PARTN_SETTINGS",
                   label: "Template XML file"
                }),
-
+               search.createColumn({
+                name: "custrecord_bsp_trading_partner_act_code",
+                join: "CUSTENTITY_BSP_LB_TRADING_PARTN_SETTINGS",
+                label: "Action Code"
+                })
             ]
         });
         tradingPartnerSearchObj.run().each(function(result){
@@ -609,7 +395,8 @@
             let targetURL = result.getValue({name: "custrecord_bsp_lb_target_url", join: "CUSTENTITY_BSP_LB_TRADING_PARTN_SETTINGS"});
             let xmlTemplateFileID = result.getValue({name: "custrecord_bsp_template_xml_file", join: "CUSTENTITY_BSP_LB_TRADING_PARTN_SETTINGS"});
             let transmissionOutputFolderID = result.getValue({name: "custrecord_bsp_transm_output_folder_id", join: "CUSTENTITY_BSP_LB_TRADING_PARTN_SETTINGS"});
-
+            let actionCode = result.getValue({name: "custrecord_bsp_trading_partner_act_code", join: "CUSTENTITY_BSP_LB_TRADING_PARTN_SETTINGS"});
+            
             tradingPartnerData = {
                 id: id,
                 name: name,
@@ -622,14 +409,56 @@
                 signatureAlgorithm: signatureAlgorithm,
                 targetURL: targetURL,
                 xmlTemplateFileID: xmlTemplateFileID,
-                transmissionOutputFolderID: transmissionOutputFolderID
+                transmissionOutputFolderID: transmissionOutputFolderID,
+                actionCode: actionCode
             }
             return true;
         });
         return tradingPartnerData;
     }
 
-   /**
+    /**
+     * It takes a record ID and a document control number, increments the document control number by 1, and
+     * then updates the record with the new document control number.
+     * @param id - the internal id of the record you want to update
+     * @param documentControlNumber - The document control number that is being used to generate the BOD
+     * ID.
+    */
+    function updateTradingPartnerBODId(id, documentControlNumber){
+        let bodID =  parseInt(documentControlNumber);
+        let newBODid = bodID + 1;
+        let newBODidString = String(newBODid).padStart(5, '0'); 
+
+        record.submitFields({
+            type: "customrecord_bsp_lb_trading_partner",
+            id: parseInt(id),
+            values: {
+                custrecord_bsp_trading_partner_bodid: newBODidString
+            }
+        });
+    }
+
+    /**
+     * It takes a trading partner ID and returns the BOD ID associated with that trading partner.
+     * @param id - The internal ID of the record you want to look up.
+     * @returns the value of the field "custrecord_bsp_trading_partner_bodid" from the record
+     * "customrecord_bsp_lb_trading_partner"
+    */
+    function getTradingPartnerBODId(id){
+        let bodID = null;
+        let objTradingPartnerField = search.lookupFields({
+            type: "customrecord_bsp_lb_trading_partner",
+            id: parseInt(id),
+            columns: 'custrecord_bsp_trading_partner_bodid'
+        });
+
+        if(objTradingPartnerField && objTradingPartnerField.custrecord_bsp_trading_partner_bodid){
+            bodID = objTradingPartnerField.custrecord_bsp_trading_partner_bodid;
+        }
+        return bodID;
+    }
+
+    /**
     * It creates an Error Log custom record.
     * The function sets
     * @param errorSource - The name of the script that is calling the function.
@@ -658,118 +487,58 @@
     }
 
     /**
-     * It takes a search ID, runs the search, and returns an array of Orders that contain the data from
-     * the search.
-     * @param searchId - The id of the saved search you want to run.
-     * @returns An array of Orders.
+     * This function creates a custom record of type "customrecord_bsp_edi_service_logs" and sets the
+     * values of the fields on the record
+     * @param serviceURL - The URL of the service you're calling
+     * @param method - HTTP method (GET, POST, PUT, DELETE)
+     * @param request 
+     * @param respCode 
+     * @param respHeaders 
+     * @param respBody 
     */
-    function getOrdersData(searchId){
-        let orders = [];
-        let ordersSearch = search.load({id: searchId});
-
-        ordersSearch.columns.push(search.createColumn({name: "shipaddress1", label: "Shipping Address 1"}));
-        ordersSearch.columns.push(search.createColumn({name: "shipaddress2", label: "Shipping Address 2"}));
-        ordersSearch.columns.push(search.createColumn({name: "shipaddress3", label: "Shipping Address 3"}));
-        ordersSearch.columns.push(search.createColumn({name: "shipaddressee", label: "Shipping Addressee"}));
-        ordersSearch.columns.push(search.createColumn({name: "shipcity", label: "Shipping City"}));
-        ordersSearch.columns.push(search.createColumn({name: "shipstate", label: "Shipping State/Province"}));
-        ordersSearch.columns.push(search.createColumn({name: "shipzip", label: "Shipping Zip"}));
-
-        ordersSearch.run().each(function(result){  
-            let salesOrderID = result.id;
-            let salesOrderNumber = result.getValue({name: "tranid"});
-            let orderDate = result.getValue({name: "datecreated"});
-            let routeCodeID = result.getValue({name: "custbody_bsp_lb_route_code"});
-            let routeCode = result.getText({name: "custbody_bsp_lb_route_code"});
-            let accountNumber = result.getText({
-                name: "custrecord_bsp_lb_account_number",
-                join: 'CUSTBODY_BSP_LB_ROUTE_CODE'
-            });
-
-            let addr1 = result.getValue({name: "shipaddress1"});
-            let addr2 = result.getValue({name: "shipaddress2"});
-            let addr3 = result.getValue({name: "shipaddress3"});
-            let city = result.getValue({name: "shipcity"});
-            let state = result.getValue({name: "shipstate"});
-            let zipCode = result.getValue({name: "shipzip"});
-            let addressee = result.getValue({name: "shipaddressee"});
-
-            let address = {
-                addr1: addr1,
-                addr2: addr2,
-                addr3: addr3,
-                city: city,
-                state: state,
-                zipCode: zipCode,
-                addressee: addressee
-            };
-
-            let item = result.getText({name: "item"});
-            let itemLineNumber = result.getValue({name: "line"});
-            let itemQuantity = result.getValue({name: "quantity"});
-            let itemUnitPrice = result.getValue({name: "rate"});
-
-            if(_.indexOf(orders,salesOrderID) == -1){
-                orders.push({
-                    poID: '1',
-                    poNumber: 'PO-1',
-                    poDate: orderDate,
-                    salesOrderNumber: salesOrderNumber,
-                    salesOrderID: salesOrderID,
-                    accountNumber: accountNumber,
-                    routeCode: routeCode,
-                    routeCodeID: routeCodeID,
-                    vendorName: "Essendant Inc",
-                    address: address,
-                    items: [{
-                        lineNumber: itemLineNumber,
-                        itemNumber: item,
-                        quantity: itemQuantity,
-                        unitPrice: itemUnitPrice
-                    }]
-                })
-            }else{
-                orders[getOrderPosition(orders,salesOrderID)].items.push({
-                    lineNumber: itemLineNumber,
-                    itemNumber: item,
-                    quantity: itemQuantity,
-                    unitPrice: itemUnitPrice
-                })
-            }
-            return true;
+    function createServiceLog(serviceURL, method, request, respCode, respHeaders, respBody){
+        let functionName = "createServiceLog";
+        let serviceLogRec = record.create({
+            type: "customrecord_bsp_edi_service_logs",
         });
-        return orders;
+
+        serviceLogRec.setValue({
+            fieldId: "custrecord_bsp_as2_service_url",
+            value: serviceURL,
+        });
+        serviceLogRec.setValue({
+            fieldId: "custrecord_bsp_edi_http_method",
+            value: method,
+        });
+        serviceLogRec.setValue({
+            fieldId: "custrecord_bsp_as2_request",
+            value: request,
+        });
+        serviceLogRec.setValue({
+            fieldId: "custrecord_bsp_edi_response_code",
+            value: respCode,
+        });
+        serviceLogRec.setValue({
+            fieldId: "custrecord_bsp_edi_response_header",
+            value: respHeaders,
+        });
+        serviceLogRec.setValue({
+            fieldId: "custrecord_bsp_edi_response_body",
+            value: respBody,
+        });
+
+        let servicelogRecID = serviceLogRec.save();
+        log.debug(functionName, "Service Log Created: " + servicelogRecID + " - method: " + method);
     }
 
     /**
-     * It returns the index of the order in the orders array that has the salesOrderID that matches the
-     * salesOrderID passed in as a parameter.
-     * @param orders - the array of orders
-     * @param salesOrderID - The ID of the order you want to update.
-     * @returns The index of the order in the orders array.
+     * It takes a purchase order number and returns a string that is the purchase order number. 
+     * Later to be used as fileName.
+     * @param purchaseOrderNumber - The purchase order number that you want to process.
+     * @returns A string.
     */
-    function getOrderPosition(orders, salesOrderID){
-        for (let index = 0; index < orders.length; index++) {
-            if(orders[index].salesOrderID == salesOrderID)  {
-                return index;
-            }
-        }
-        return -1;
-    }
-
-    /**
-     * It returns the company name from the company information record.
-     * @returns The company name.
-    */
-    function getCompanyInfo(){
-        let companyInfo = config.load({
-            type: config.Type.COMPANY_INFORMATION
-        });
-        let companyName = companyInfo.getValue({
-            fieldId:'companyname'
-        });
-        companyName = companyName.replace("&","and");
-        return companyName || null;
+    function buildFileName(purchaseOrderNumber){
+        return `ProcessPO${purchaseOrderNumber}`;
     }
 
     /**
@@ -815,7 +584,7 @@
 
     return {
         constants: constants,
-        transmitionStatus: transmitionStatus,
+        transmitionQueueStatus: transmitionQueueStatus,
         isEmpty:isEmpty,
         getProp: getProp,
         searchAll: searchAll,
@@ -823,13 +592,13 @@
         createTransmitionQueueRecord: createTransmitionQueueRecord,
         findNextTransmitionInQueue: findNextTransmitionInQueue,
         getTransmitionRecordFromQueue: getTransmitionRecordFromQueue,
-        updateTransmitionQueueStatus: updateTransmitionQueueStatus,
+        updateTransmissionQueueStatus: updateTransmissionQueueStatus,
         getFieldsFromTransmitionRecord: getFieldsFromTransmitionRecord,
-        createPurchaseOrders: createPurchaseOrders,
-        getPurchaseOrdersForTransmission: getPurchaseOrdersForTransmission,
         getTradingPartnerInfo: getTradingPartnerInfo,
+        getTradingPartnerBODId: getTradingPartnerBODId,
+        updateTradingPartnerBODId: updateTradingPartnerBODId,
         createErrorLog:createErrorLog,
-        getCompanyInfo: getCompanyInfo,
-        getOrdersData: getOrdersData
+        createServiceLog: createServiceLog,
+        buildFileName: buildFileName
 	};
 });

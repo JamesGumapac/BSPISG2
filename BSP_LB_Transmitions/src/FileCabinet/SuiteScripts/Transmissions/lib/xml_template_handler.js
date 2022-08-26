@@ -17,9 +17,7 @@ function (file, xml, render){
      * @returns 
      */
     function buildFileFromTemplate(templateID, content, fileName, outputFolder){
-        let functionName = "buildFileFromTemplate";
         let resultFile = null;
-        //log.debug(functionName, content);
 
         let objFile = file.load({
             id: templateID

@@ -2,12 +2,12 @@
  * @NApiVersion 2.1
  * @NScriptType MapReduceScript
  */
-define(['N/runtime', './lib/bsp_transmitions_util.js', './lib/bsp_edi_settings.js', './lib/xml_template_handler.js', './lib/bsp_as2_service.js'],
+define(['N/runtime', './lib/bsp_transmitions_util.js', './lib/bsp_edi_settings.js', './lib/xml_template_handler.js', './lib/bsp_as2_service.js', './lib/bsp_purchase_orders.js'],
     /**
      * @param{runtime} runtime
      * @param{BSPTransmitionsUtil} BSPTransmitionsUtil
      */
-    (runtime, BSPTransmitionsUtil, BSP_EDISettingsUtil, BSP_XMLTemplateHandler, BSP_AS2Service) => {
+    (runtime, BSPTransmitionsUtil, BSP_EDISettingsUtil, BSP_XMLTemplateHandler, BSP_AS2Service, BSP_POutil) => {
         /**
          * Defines the function that is executed at the beginning of the map/reduce process and generates the input data.
          * @param {Object} inputContext
@@ -33,7 +33,7 @@ define(['N/runtime', './lib/bsp_transmitions_util.js', './lib/bsp_edi_settings.j
                 let transmitionQueueID = paramsObj.transmitionQueueID;
                 log.debug(functionName, `Searching POs created from Transmission Queue: ${transmitionQueueID}`);
 
-                let puchaseOrderList = BSPTransmitionsUtil.getPurchaseOrdersForTransmission(transmitionQueueID);
+                let puchaseOrderList = BSP_POutil.getPurchaseOrdersForTransmission(transmitionQueueID);
 
                 let ediSettings = BSP_EDISettingsUtil.getEDIsettings(paramsObj.environment);
                 
@@ -109,27 +109,46 @@ define(['N/runtime', './lib/bsp_transmitions_util.js', './lib/bsp_edi_settings.j
          */
         const reduce = (reduceContext) => {
             let functionName = "reduce";
+            let poID = reduceContext.key;
             try{
                 let tranmsissionData = JSON.parse(reduceContext.values);
 
+                /**
+                * For Essendant get the BOD ID
+                */
+                if(tranmsissionData.tradingPartner.name == BSPTransmitionsUtil.constants().essendant){
+                    tranmsissionData.tradingPartner.documentControlNumber = BSPTransmitionsUtil.getTradingPartnerBODId(tranmsissionData.tradingPartner.id);
+                    tranmsissionData.transmissionData.dateCreated = new Date().toISOString();
+                }
+
                 let templateId = tranmsissionData.tradingPartner.xmlTemplateFileID;
-                let fileName = `${tranmsissionData.ediSettings.name}_PO${tranmsissionData.purchaseOrder.purchaseOrderNumber}`;
+                let fileName = BSPTransmitionsUtil.buildFileName(tranmsissionData.purchaseOrder.purchaseOrderNumber);
                 let outputFolder = tranmsissionData.tradingPartner.transmissionOutputFolderID;
                 let xmlFileObj = BSP_XMLTemplateHandler.buildFileFromTemplate(templateId, tranmsissionData, fileName, outputFolder);
                 tranmsissionData.xmlFileObj = xmlFileObj;
+
                 let serverBodyParameters = BSP_AS2Service.buildRequestBody(tranmsissionData);
                 log.debug(functionName, `Server Body Parameters: ${JSON.stringify(serverBodyParameters)}`);
 
                 let as2ServerResponse = BSP_AS2Service.runService(tranmsissionData.ediSettings, serverBodyParameters);
                 log.debug(functionName, `Server Response: ${JSON.stringify(as2ServerResponse)}`);
-                /*
-                    TODO
-                     - if sent correctly, update Transmission queue Rec as transmitted. If not, update as tranmsision failed
+    
+                BSP_POutil.updatePOtransmissionStatus(poID, BSP_POutil.transmitionPOStatus().pendingAcknowledment);
+                BSP_POutil.setPOMessageID(poID, as2ServerResponse);
+                
+                /**
+                 * For Essendant update the BOD ID
                 */
+                if(tranmsissionData.tradingPartner.name == BSPTransmitionsUtil.constants().essendant){
+                    BSPTransmitionsUtil.updateTradingPartnerBODId(tranmsissionData.tradingPartner.id, tranmsissionData.tradingPartner.documentControlNumber);
+                }
                 
             }catch (error)
             {
                 log.error(functionName, `Error Transmitting PO: ${error.toString()}`);
+
+                //BSP_POutil.updatePOtransmissionStatus(poID, BSP_POutil.transmitionPOStatus().transmissionFailed);
+
                 let errorSource = "BSP | MR | Transmit POs - " + functionName;
                 BSPTransmitionsUtil.createErrorLog(
                     errorSource,
@@ -161,6 +180,12 @@ define(['N/runtime', './lib/bsp_transmitions_util.js', './lib/bsp_edi_settings.j
          */
         const summarize = (summaryContext) => {
             let functionName = 'Summarize';
+            try{
+                //BSPTransmitionsUtil.updateTransmissionQueueStatus(transmitionQueueID, BSPTransmitionsUtil.transmitionQueueStatus().transmitted);
+            }catch (error)
+            {
+                log.error(functionName, {error: error.toString()});
+            }
             log.audit(functionName, {'UsageConsumed' : summaryContext.usage, 'NumberOfQueues' : summaryContext.concurrency, 'NumberOfYields' : summaryContext.yields});
             log.debug(functionName, "************ EXECUTION COMPLETED ************");
         }

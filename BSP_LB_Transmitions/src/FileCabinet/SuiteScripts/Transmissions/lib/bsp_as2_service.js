@@ -3,9 +3,8 @@
  * @NModuleScope Public
  */
 
- define(['N/https', 'N/encode'],
- function (https, encode){
-
+ define(['N/https', 'N/encode', './bsp_transmitions_util.js'],
+ function (https, encode, BSPTransmitionsUtil){
 
     /**
      * Returns the Body for the AS2 Request
@@ -50,7 +49,6 @@
         return base64EncodedString;
     }
 
-
     /**
      * The function takes in an object containing the settings for the AS2 service, and a string containing
      * the JSON request body, and returns a JSON object containing the response from the AS2 service.
@@ -74,6 +72,15 @@
         });
 
         log.debug("runService", JSON.stringify(as2ServerResponse));
+
+        BSPTransmitionsUtil.createServiceLog(
+            ediSettings.endpointURL, 
+            https.Method.POST, 
+            JSON.stringify(requestBody), 
+            as2ServerResponse.code, 
+            as2ServerResponse.headers, 
+            (as2ServerResponse.body).substring(0, 100000)
+        );
 
         if (as2ServerResponse.code != 200 && as2ServerResponse.code != 201){
             throw ('TRANSMISSION_ERROR', 'An internal error occurred.');

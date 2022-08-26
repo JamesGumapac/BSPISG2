@@ -2,13 +2,13 @@
  * @NApiVersion 2.1
  * @NScriptType MapReduceScript
  */
-define(['N/runtime', 'N/search', 'N/task', './lib/bsp_transmitions_util.js'],
+define(['N/runtime', 'N/search', 'N/task', './lib/bsp_transmitions_util.js', './lib/bsp_purchase_orders.js'],
     /**
     * @param{runtime} runtime
     * @param{search} search
     * @param{BSPTransmitionsUtil} BSPTransmitionsUtil
     */
-    (runtime, search, task, BSPTransmitionsUtil) => {
+    (runtime, search, task, BSPTransmitionsUtil, BSP_POutil) => {
         /**
          * Defines the function that is executed at the beginning of the map/reduce process and generates the input data.
          * @param {Object} inputContext
@@ -35,13 +35,14 @@ define(['N/runtime', 'N/search', 'N/task', './lib/bsp_transmitions_util.js'],
 
                 log.debug(functionName, `Work with transmition ${transmitionRecID} of Queue: ${transmitionQueueID}`);
 
-                BSPTransmitionsUtil.updateTransmitionQueueStatus(transmitionQueueID, BSPTransmitionsUtil.transmitionStatus().transmitting);
+                BSPTransmitionsUtil.updateTransmissionQueueStatus(transmitionQueueID, BSPTransmitionsUtil.transmitionQueueStatus().transmitting);
                 
                 let transmitionRecFields = BSPTransmitionsUtil.getFieldsFromTransmitionRecord(transmitionRecID);
                 let transmitionSavedSearchID = transmitionRecFields.savedSearch;  
                 let vendor = transmitionRecFields.vendor;
                 let autoreceive = transmitionRecFields.autoreceive;
-
+                let account = transmitionRecFields.accountNumber;
+                let transmissionLocation = transmitionRecFields.location;
                 let transmitionSavedSearcObj = search.load({id: transmitionSavedSearchID});
                 let resultSearch = BSPTransmitionsUtil.searchAll(transmitionSavedSearcObj);
                 resultSearch.forEach(element => {
@@ -63,7 +64,9 @@ define(['N/runtime', 'N/search', 'N/task', './lib/bsp_transmitions_util.js'],
                         vendor: vendor,
                         itemQuantity: resultQuantity,
                         customer: customer,
-                        autoreceive: autoreceive
+                        autoreceive: autoreceive,
+                        account: account,
+                        transmissionLocation: transmissionLocation
                     });           
                 });  
             } catch (error)
@@ -127,10 +130,22 @@ define(['N/runtime', 'N/search', 'N/task', './lib/bsp_transmitions_util.js'],
                 let vendor = commonData.vendor;
                 let routeCode = commonData.routeCode;
                 let autoreceive = commonData.autoreceive;
-                let poData = {transmitionQueueID: transmitionQueueID, salesOrderID:salesOrderID, customer:customer, vendor:vendor, routeCode: routeCode, autoreceive: autoreceive, itemData: itemData};
+                let account = commonData.account;
+                let transmissionLocation = commonData.transmissionLocation;
+                let poData = {
+                    transmitionQueueID: transmitionQueueID, 
+                    salesOrderID:salesOrderID, 
+                    customer:customer, 
+                    vendor:vendor, 
+                    routeCode: routeCode,
+                    autoreceive: autoreceive, 
+                    account: account,
+                    transmissionLocation: transmissionLocation,
+                    itemData: itemData
+                };
                 log.debug(functionName, `Working with SO data: ${JSON.stringify(poData)}`);
 
-                let purchaseOrder = BSPTransmitionsUtil.createPurchaseOrders(poData);
+                let purchaseOrder = BSP_POutil.createPurchaseOrders(poData);
                 log.debug(functionName, `PO Created: ${purchaseOrder}`);
 
             }catch (error)
