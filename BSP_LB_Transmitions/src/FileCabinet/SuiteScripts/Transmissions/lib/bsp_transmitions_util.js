@@ -427,6 +427,8 @@
     function updateTradingPartnerBODId(id, documentControlNumber){
         let bodID =  parseInt(documentControlNumber);
         let newBODid = bodID + 1;
+        newBODid = ((newBODid == 100000) ? 1 : newBODid);
+
         let newBODidString = String(newBODid).padStart(5, '0'); 
 
         record.submitFields({
