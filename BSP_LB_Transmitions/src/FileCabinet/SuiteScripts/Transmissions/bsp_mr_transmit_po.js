@@ -147,7 +147,7 @@ define(['N/runtime', './lib/bsp_transmitions_util.js', './lib/bsp_edi_settings.j
             {
                 log.error(functionName, `Error Transmitting PO: ${error.toString()}`);
 
-                //BSP_POutil.updatePOtransmissionStatus(poID, BSP_POutil.transmitionPOStatus().transmissionFailed);
+                BSP_POutil.updatePOtransmissionStatus(poID, BSP_POutil.transmitionPOStatus().transmissionFailed);
 
                 let errorSource = "BSP | MR | Transmit POs - " + functionName;
                 BSPTransmitionsUtil.createErrorLog(
