@@ -29,7 +29,8 @@
         transactionTypeInv: 7,
         transactionTypePayment: 9,
         creditCard: "Credit Card",
-        purchaseOrder: "Purchase Order"
+        purchaseOrder: "Purchase Order",
+        excludeFromTransmission: 3
     });
 
     const OUTBOUND_QUEUE_OPERATIONS = Object.freeze({

@@ -3,7 +3,7 @@
  * @NModuleScope Public
  */
 
- define(['N/record', './bsp_lb_utils.js', './bsp_lb_catalogservice_api.js'], function (record, BSPLBUtils, LBCatalogAPI) {
+ define(['N/record', 'N/search', './bsp_lb_utils.js', './bsp_lb_catalogservice_api.js'], function (record, search, BSPLBUtils, LBCatalogAPI) {
 
     /**
      * Create Item Record in NS
@@ -76,22 +76,6 @@
     }
 
     /**
-     * Set default Quantity on hand
-     * @param {*} itemRec 
-     */
-    function setDefaultQuantityAvaiableForItem(itemRec){
-        let lineNumber = itemRec.findSublistLineWithValue({ sublistId: "locations", fieldId: "location", value: BSPLBUtils.constants().defaultInventoryLocation });
-        itemRec.selectLine({
-            sublistId: 'locations',
-            line: lineNumber
-        });
-        itemRec.setCurrentSublistValue({ sublistId: "locations", fieldId: "quantityonhand", value: BSPLBUtils.constants().defaultQuantityOnHand });
-        itemRec.commitLine({
-            sublistId: "locations",
-        });
-    }
-
-    /**
      * Get Item Records or Create them if they do not exist
      * @param {*} lineItems
      * @param {*} objMappingFields  
@@ -112,14 +96,19 @@
                         if(internalId){
                             itemsRecordResult.push({nsID: internalId, logicBlockID: productElement.Id, productSKU: productElement.Sku})
                         }else{
-                            let objFields = {
-                                product: productElement
-                            }
-                            let recordCreationResult = createItemRecord(objFields, objMappingFields);
-                            if(recordCreationResult && recordCreationResult.recordId){
-                                internalId = recordCreationResult.recordId;
+                            internalId = fetchItemBySKU(productElement.Sku);
+                            if(internalId){
                                 itemsRecordResult.push({nsID: internalId, logicBlockID: productElement.Id, productSKU: productElement.Sku})
-                            }
+                            }else{
+                                let objFields = {
+                                    product: productElement
+                                }
+                                let recordCreationResult = createItemRecord(objFields, objMappingFields);
+                                if(recordCreationResult && recordCreationResult.recordId){
+                                    internalId = recordCreationResult.recordId;
+                                    itemsRecordResult.push({nsID: internalId, logicBlockID: productElement.Id, productSKU: productElement.Sku})
+                                }
+                            }            
                         }
                     });
                 }else{
@@ -128,14 +117,19 @@
                     if(internalId){
                         itemsRecordResult.push({nsID: internalId, logicBlockID: productElement.Id, productSKU: productElement.Sku})
                     }else{
-                        let objFields = {
-                            product: productElement
-                        }
-                        let recordCreationResult = createItemRecord(objFields, objMappingFields);
-                        if(recordCreationResult && recordCreationResult.recordId){
-                            internalId = recordCreationResult.recordId;
+                        internalId = fetchItemBySKU(productElement.Sku);
+                        if(internalId){
                             itemsRecordResult.push({nsID: internalId, logicBlockID: productElement.Id, productSKU: productElement.Sku})
-                        } 
+                        }else{
+                            let objFields = {
+                                product: productElement
+                            }
+                            let recordCreationResult = createItemRecord(objFields, objMappingFields);
+                            if(recordCreationResult && recordCreationResult.recordId){
+                                internalId = recordCreationResult.recordId;
+                                itemsRecordResult.push({nsID: internalId, logicBlockID: productElement.Id, productSKU: productElement.Sku})
+                            } 
+                        }        
                     }                
                 }
             }           
@@ -150,6 +144,33 @@
             );
         }      
         return itemsRecordResult;
+    }
+
+
+    /**
+     * It takes a SKU as an argument and returns the internal ID of the item record.
+     * @param sku - The SKU of the item you want to find the internal ID for.
+     * @returns The internalid of the item.
+    */
+    function fetchItemBySKU(sku){
+        let internalid = null;
+        const itemSearchObj = search.create({
+            type: "item",
+            filters:
+            [
+               ["itemid","is",sku]
+            ],
+            columns:
+            [
+               search.createColumn({name: "internalid", label: "Internal ID"})
+           ]
+         });
+
+         itemSearchObj.run().each(function(result){
+            internalid = result.id;
+            return true;
+        });
+        return internalid;
     }
 
     /**
@@ -192,9 +213,31 @@
         return itemRecID;
     }
 
+    /**
+     * It takes an item ID and a field name and returns the value of that field for that item.
+     * @param itemId - The internal ID of the item record.
+     * @param itemField - The field you want to get the value of.
+     * @returns the value of the field on the item.
+    */
+    function getItemField(itemId, itemField){
+        let fieldValue = null;
+        let fieldObj = search.lookupFields({
+            type: "item",
+            id: itemId,
+            columns: [
+                itemField
+            ]
+        });
+        if(fieldObj && fieldObj[itemField]){
+            fieldValue = fieldObj[itemField];
+        }
+        return fieldValue;
+    }
+
     return {
 		fetchItems: fetchItems,
-        getItemNetSuiteRecID: getItemNetSuiteRecID
+        getItemNetSuiteRecID: getItemNetSuiteRecID,
+        getItemField: getItemField
 	};
 
 });

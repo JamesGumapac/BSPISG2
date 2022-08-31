@@ -163,6 +163,12 @@
                 if(itemRecId){
                     transactionRecord.setCurrentSublistValue({ sublistId: strSublistID, fieldId: "item", value: itemRecId });
 
+                    let excludeItemFromTransmission = BSPLBItems.getItemField(itemRecId, "custitem_bsp_exclude_from_auto_transm");
+                    
+                    if(excludeItemFromTransmission){
+                        transactionRecord.setCurrentSublistValue({ sublistId: strSublistID, fieldId: "custcol_bsp_exclude_auto_transmission", value: BSPLBUtils.constants().excludeFromTransmission});
+                    }
+
                     for (const fieldMapping of objMappingFields.lineFields) {
                         let nsSublistId = fieldMapping.sublistId;
                         let nsLineFieldId = fieldMapping.netSuiteFieldId;
