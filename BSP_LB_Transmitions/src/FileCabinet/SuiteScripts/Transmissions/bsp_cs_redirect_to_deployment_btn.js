@@ -3,11 +3,11 @@
  * @NScriptType ClientScript
  * @NModuleScope SameAccount
  */
-define(['N/url', 'N/record'],
+define(['N/url', 'N/record', 'N/search'],
 /**
  * @param{redirect} redirect
  */
-function(url, record) {
+function(url, record, search) {
     
     /**
      * Function to be executed after page is initialized.
@@ -21,11 +21,41 @@ function(url, record) {
     function pageInit(context) { }
 
 
-    function onClick_RedirectToDeployment(deploymentID) {
+    function onClick_GoToDeployment(recID, scriptID) {
         try {
+            let deploymentRec = record.create({
+                type: record.Type.SCRIPT_DEPLOYMENT,
+                isDynamic: true,
+                defaultValues: {
+                    script: scriptID
+                }
+            });
+            deploymentRec.setValue('status', "SCHEDULED");
+            let scriptExternalID = `_bsp_transm_schd_${recID}`;
+            deploymentRec.setValue('scriptid', scriptExternalID); 
+            let deploymentRecID = deploymentRec.save();
+
+            let scriptDeploymentID = search.lookupFields({
+                type: record.Type.SCRIPT_DEPLOYMENT,
+                id: deploymentRecID,
+                columns: 'scriptid'
+            });
+
+            record.submitFields({
+                type: "customrecord_bsp_lb_transmition_schedule",
+                id: recID,
+                values: {
+                    custrecord_bsp_transm_schd_deployment_id: scriptDeploymentID.scriptid.toLowerCase()
+                },
+                 options: {        
+                     enableSourcing: false,        
+                     ignoreMandatoryFields : true    
+                }           
+            });
+
             let output = url.resolveRecord({
                 recordType: record.Type.SCRIPT_DEPLOYMENT,
-                recordId: deploymentID,
+                recordId: deploymentRecID,
                 isEditMode: true
             });
             var objParameters = {};
@@ -40,7 +70,7 @@ function(url, record) {
 
     return {
         pageInit: pageInit,
-        onClick_RedirectToDeployment: onClick_RedirectToDeployment
+        onClick_GoToDeployment: onClick_GoToDeployment
     };
     
 });

@@ -43,6 +43,9 @@ define(['N/runtime', 'N/search', 'N/task', './lib/bsp_transmitions_util.js', './
                 let autoreceive = transmitionRecFields.autoreceive;
                 let account = transmitionRecFields.accountNumber;
                 let transmissionLocation = transmitionRecFields.location;
+
+                let ediSettings = BSP_EDISettingsUtil.getEDIsettings(paramsObj.environment);
+
                 let transmitionSavedSearcObj = search.load({id: transmitionSavedSearchID});
                 let resultSearch = BSPTransmitionsUtil.searchAll(transmitionSavedSearcObj);
                 resultSearch.forEach(element => {
@@ -56,6 +59,7 @@ define(['N/runtime', 'N/search', 'N/task', './lib/bsp_transmitions_util.js', './
                     let customer = element.getValue("entity");
 
                     transmitionData.push({
+                        transactionForm: ediSettings.transactionForm,
                         transmitionRecID: transmitionRecID,
                         transmitionQueueID: transmitionQueueID,
                         salesOrderID: salesOrderID,
@@ -132,7 +136,9 @@ define(['N/runtime', 'N/search', 'N/task', './lib/bsp_transmitions_util.js', './
                 let autoreceive = commonData.autoreceive;
                 let account = commonData.account;
                 let transmissionLocation = commonData.transmissionLocation;
+                let transactionForm = commonData.transactionForm;
                 let poData = {
+                    transactionForm: transactionForm,
                     transmitionQueueID: transmitionQueueID, 
                     salesOrderID:salesOrderID, 
                     customer:customer, 
@@ -211,12 +217,14 @@ define(['N/runtime', 'N/search', 'N/task', './lib/bsp_transmitions_util.js', './
           const getParameters = () => {
             let objParams = {};
 
+            let environment = runtime.envType;
             let objScript = runtime.getCurrentScript();
             objParams = {
                 transmitionRecID : objScript.getParameter({name: "custscript_bsp_mr_transm_rec_id"}),
                 transmitionQueueID : objScript.getParameter({name: "custscript_bsp_mr_transm_queue_id"}),
                 mr_script_id : objScript.getParameter({name: "custscript_bsp_mr_transmit_po_script"}),
-                mr_script_dep_id : objScript.getParameter({name: "custscript_bsp_mr_transmit_po_dep"})
+                mr_script_dep_id : objScript.getParameter({name: "custscript_bsp_mr_transmit_po_dep"}),
+                environment: environment
             }
     
             return objParams;

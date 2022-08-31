@@ -2,12 +2,12 @@
  * @NApiVersion 2.1
  * @NScriptType MapReduceScript
  */
-define(['N/runtime', './lib/bsp_transmitions_util.js', './lib/bsp_edi_settings.js', './lib/xml_template_handler.js', './lib/bsp_as2_service.js', './lib/bsp_purchase_orders.js'],
+define(['N/runtime', 'N/https', './lib/bsp_transmitions_util.js', './lib/bsp_edi_settings.js', './lib/xml_template_handler.js', './lib/bsp_as2_service.js', './lib/bsp_purchase_orders.js'],
     /**
      * @param{runtime} runtime
      * @param{BSPTransmitionsUtil} BSPTransmitionsUtil
      */
-    (runtime, BSPTransmitionsUtil, BSP_EDISettingsUtil, BSP_XMLTemplateHandler, BSP_AS2Service, BSP_POutil) => {
+    (runtime, https, BSPTransmitionsUtil, BSP_EDISettingsUtil, BSP_XMLTemplateHandler, BSP_AS2Service, BSP_POutil) => {
         /**
          * Defines the function that is executed at the beginning of the map/reduce process and generates the input data.
          * @param {Object} inputContext
@@ -34,23 +34,26 @@ define(['N/runtime', './lib/bsp_transmitions_util.js', './lib/bsp_edi_settings.j
                 log.debug(functionName, `Searching POs created from Transmission Queue: ${transmitionQueueID}`);
 
                 let puchaseOrderList = BSP_POutil.getPurchaseOrdersForTransmission(transmitionQueueID);
+                log.debug(functionName, `Encountered: ${puchaseOrderList.length} POs`);
 
-                let ediSettings = BSP_EDISettingsUtil.getEDIsettings(paramsObj.environment);
+                if(puchaseOrderList.length > 0){
+                    let ediSettings = BSP_EDISettingsUtil.getEDIsettings(paramsObj.environment);
                 
-                let transmitionRecFields = BSPTransmitionsUtil.getFieldsFromTransmitionRecord(transmitionRecID);
-                let vendor = transmitionRecFields.vendor;
-                let tradingParnterInfo = BSPTransmitionsUtil.getTradingPartnerInfo(vendor);
-                
-                puchaseOrderList.forEach(po => {
-                    transmitionDataList.push({
-                        data: {
-                            ediSettings: ediSettings,
-                            transmissionData: transmitionRecFields,
-                            tradingPartner: tradingParnterInfo,
-                            purchaseOrder: po
-                        }
-                    })
-                });
+                    let transmitionRecFields = BSPTransmitionsUtil.getFieldsFromTransmitionRecord(transmitionRecID);
+                    let vendor = transmitionRecFields.vendor;
+                    let tradingParnterInfo = BSPTransmitionsUtil.getTradingPartnerInfo(vendor);
+                    
+                    puchaseOrderList.forEach(po => {
+                        transmitionDataList.push({
+                            data: {
+                                ediSettings: ediSettings,
+                                transmissionData: transmitionRecFields,
+                                tradingPartner: tradingParnterInfo,
+                                purchaseOrder: po
+                            }
+                        })
+                    });
+                }         
             } catch (error)
             {
                 log.error(functionName, {error: error.toString()});
@@ -118,7 +121,7 @@ define(['N/runtime', './lib/bsp_transmitions_util.js', './lib/bsp_edi_settings.j
                 */
                 if(tranmsissionData.tradingPartner.name == BSPTransmitionsUtil.constants().essendant){
                     tranmsissionData.tradingPartner.documentControlNumber = BSPTransmitionsUtil.getTradingPartnerBODId(tranmsissionData.tradingPartner.id);
-                    tranmsissionData.transmissionData.dateCreated = new Date().toISOString();
+                    tranmsissionData.transmissionData.dateCreated = BSPTransmitionsUtil.getXMLDate(new Date()); 
                 }
 
                 let templateId = tranmsissionData.tradingPartner.xmlTemplateFileID;
@@ -126,16 +129,27 @@ define(['N/runtime', './lib/bsp_transmitions_util.js', './lib/bsp_edi_settings.j
                 let outputFolder = tranmsissionData.tradingPartner.transmissionOutputFolderID;
                 let xmlFileObj = BSP_XMLTemplateHandler.buildFileFromTemplate(templateId, tranmsissionData, fileName, outputFolder);
                 tranmsissionData.xmlFileObj = xmlFileObj;
-
-                let serverBodyParameters = BSP_AS2Service.buildRequestBody(tranmsissionData);
-                log.debug(functionName, `Server Body Parameters: ${JSON.stringify(serverBodyParameters)}`);
-
-                let as2ServerResponse = BSP_AS2Service.runService(tranmsissionData.ediSettings, serverBodyParameters);
-                log.debug(functionName, `Server Response: ${JSON.stringify(as2ServerResponse)}`);
-    
-                BSP_POutil.updatePOtransmissionStatus(poID, BSP_POutil.transmitionPOStatus().pendingAcknowledment);
-                BSP_POutil.setPOMessageID(poID, as2ServerResponse);
                 
+                let serverBodyParameters = BSP_AS2Service.buildRequestBody(tranmsissionData);
+                let as2ServerResponse = BSP_AS2Service.runService(
+                    {
+                        httpMethod: https.Method.POST,
+                        ediSettings: tranmsissionData.ediSettings, 
+                        serverBodyParameters: serverBodyParameters
+                    }
+                );
+
+                if (as2ServerResponse.code != 200 && as2ServerResponse.code != 201){
+                    throw ('TRANSMISSION_ERROR', 'An internal error occurred.');
+                }
+
+                let jsonResponseStr = as2ServerResponse.body;
+                let jsonObjResponse = JSON.parse(jsonResponseStr);
+
+                BSP_POutil.updatePOtransmissionStatus(poID, BSP_POutil.transmitionPOStatus().pendingAcknowledment);
+                BSP_POutil.setPOMessageID(poID, jsonObjResponse);
+                
+
                 /**
                  * For Essendant update the BOD ID
                 */
@@ -147,7 +161,7 @@ define(['N/runtime', './lib/bsp_transmitions_util.js', './lib/bsp_edi_settings.j
             {
                 log.error(functionName, `Error Transmitting PO: ${error.toString()}`);
 
-                BSP_POutil.updatePOtransmissionStatus(poID, BSP_POutil.transmitionPOStatus().transmissionFailed);
+                //BSP_POutil.updatePOtransmissionStatus(poID, BSP_POutil.transmitionPOStatus().transmissionFailed);
 
                 let errorSource = "BSP | MR | Transmit POs - " + functionName;
                 BSPTransmitionsUtil.createErrorLog(

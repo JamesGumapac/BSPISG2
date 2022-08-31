@@ -161,7 +161,7 @@
                 purchaseOrderList.push({
                     purchaseOrderID: purchaseOrderID,
                     purchaseOrderNumber: purchaseOrderNumber,
-                    purchaseOrderDate: new Date(purchaseOrderDate).toISOString(),
+                    purchaseOrderDate: BSPTransmitionsUtil.getXMLDate(new Date(purchaseOrderDate)),
                     salesOrderID: salesOrderID,
                     salesOrder: salesOrder,
                     routeCodeID: routeCodeID,
@@ -212,6 +212,11 @@
                 'custid': poData.customer,
                 'entity': poData.vendor
             }
+        });
+
+        purchaseOrderRec.setValue({
+            fieldId: "customform",
+            value: transactionForm,
         });
 
         purchaseOrderRec.setValue({

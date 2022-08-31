@@ -44,6 +44,10 @@
                search.createColumn({
                   name: "custrecord_bsp_sb_password",
                   label: "Password"
+               }),
+               search.createColumn({
+                  name: "custrecord_bsp_po_form",
+                  label: "Purchase Order Form"
                })
             ]
         });
@@ -54,12 +58,14 @@
             let endpointURL = result.getValue("custrecord_bsp_sb_endpoint_url");
             let user = result.getValue("custrecord_bsp_sb_user");
             let pwd = result.getValue("custrecord_bsp_sb_password");
+            let transactionForm = result.getValue("custrecord_bsp_po_form");
             ediSettingsFields = {
                 name: name,
                 as2Identifier: as2Identifier,
                 endpointURL: endpointURL,
                 user: user,
-                pwd: pwd
+                pwd: pwd,
+                transactionForm: transactionForm
             }
             return true;
          });

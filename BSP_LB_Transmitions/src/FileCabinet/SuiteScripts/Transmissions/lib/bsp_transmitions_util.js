@@ -584,6 +584,16 @@
         return arrReturnSearchResults;
     }
 
+
+    /**
+     * It takes a JavaScript Date object and returns a string in the format of an XML dateTime.
+     * @param date - The date to be converted to XML format.
+     * @returns The date in ISO format.
+    */
+    function getXMLDate(date){
+        return date.toISOString().slice(0, 19);
+    }
+
     return {
         constants: constants,
         transmitionQueueStatus: transmitionQueueStatus,
@@ -601,6 +611,7 @@
         updateTradingPartnerBODId: updateTradingPartnerBODId,
         createErrorLog:createErrorLog,
         createServiceLog: createServiceLog,
-        buildFileName: buildFileName
+        buildFileName: buildFileName,
+        getXMLDate: getXMLDate
 	};
 });

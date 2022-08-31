@@ -3,8 +3,8 @@
  * @NModuleScope Public
  */
 
- define(['N/https', 'N/encode', './bsp_transmitions_util.js'],
- function (https, encode, BSPTransmitionsUtil){
+ define(['N/https', 'N/encode', './xmlTojson.js', 'N/xml', './bsp_transmitions_util.js'],
+ function (https, encode, parser, xml, BSPTransmitionsUtil){
 
     /**
      * Returns the Body for the AS2 Request
@@ -50,45 +50,51 @@
     }
 
     /**
+     * It takes a base64 encoded string and returns its XML String content.
+     * @param stringContent - A base64 encoded string that you want to encode.
+     * @returns The XML content string.
+    */
+    function decodeStringContent(stringContent){
+        let xmlDecodedString = encode.convert({
+            string: stringContent,
+            inputEncoding: encode.Encoding.BASE_64,
+            outputEncoding: encode.Encoding.UTF_8
+        });
+        return xmlDecodedString;
+    }
+
+    /**
      * The function takes in an object containing the settings for the AS2 service, and a string containing
      * the JSON request body, and returns a JSON object containing the response from the AS2 service.
      * @param ediSettings - This is a custom record that contains the connection info
      * @param requestBody - Request body in JSON format
      * @returns The response from the server.
     */
-    function runService(ediSettings, requestBody){
-        let jsonObjResponse = null;
-
+    function runService(data){
         let headers = new Object();
-        headers['Authorization'] = getToken(ediSettings);
+        headers['Authorization'] = getToken(data.ediSettings);
         headers['Accept'] = 'application/json';
         headers['Content-Type'] = 'application/json';
 
         let as2ServerResponse = https.request({
-            "method":  https.Method.POST,
-            "url": ediSettings.endpointURL,
-            "body": JSON.stringify(requestBody),
+            "method":  data.httpMethod,
+            "url": data.ediSettings.endpointURL,
+            "body": JSON.stringify(data.serverBodyParameters),
             "headers": headers
         });
 
         log.debug("runService", JSON.stringify(as2ServerResponse));
 
         BSPTransmitionsUtil.createServiceLog(
-            ediSettings.endpointURL, 
-            https.Method.POST, 
-            JSON.stringify(requestBody), 
+            data.ediSettings.endpointURL, 
+            data.httpMethod, 
+            JSON.stringify(data.serverBodyParameters), 
             as2ServerResponse.code, 
             as2ServerResponse.headers, 
             (as2ServerResponse.body).substring(0, 100000)
         );
 
-        if (as2ServerResponse.code != 200 && as2ServerResponse.code != 201){
-            throw ('TRANSMISSION_ERROR', 'An internal error occurred.');
-        }
-
-        let jsonResponseStr = as2ServerResponse.body;
-        jsonObjResponse = JSON.parse(jsonResponseStr);
-        return jsonObjResponse;
+        return as2ServerResponse;
     }
 
     /**
@@ -123,9 +129,25 @@
         return token;
     }
 
+    
+    /**
+     * Parse XML response from request
+     * @param {*} xmlStr 
+     * @returns 
+    */
+     function parseResponseXml(xmlStr){
+        var xmlDocument = xml.Parser.fromString({
+            text: xmlStr
+        });
+        let jsonObj = parser.xmlToJson(xmlDocument.documentElement);
+        return jsonObj;
+    }
+
     return {
         buildRequestBody: buildRequestBody,
-        runService: runService
+        runService: runService,
+        decodeStringContent: decodeStringContent,
+        parseResponseXml: parseResponseXml
     };
     
 });
