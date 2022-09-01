@@ -2,13 +2,13 @@
  * @NApiVersion 2.1
  * @NScriptType MapReduceScript
  */
-define(['N/runtime', 'N/search', 'N/task', './lib/bsp_transmitions_util.js', './lib/bsp_purchase_orders.js'],
+define(['N/runtime', 'N/search', 'N/task', './lib/bsp_transmitions_util.js', './lib/bsp_edi_settings.js', './lib/bsp_purchase_orders.js'],
     /**
     * @param{runtime} runtime
     * @param{search} search
     * @param{BSPTransmitionsUtil} BSPTransmitionsUtil
     */
-    (runtime, search, task, BSPTransmitionsUtil, BSP_POutil) => {
+    (runtime, search, task, BSPTransmitionsUtil, BSP_EDISettingsUtil, BSP_POutil) => {
         /**
          * Defines the function that is executed at the beginning of the map/reduce process and generates the input data.
          * @param {Object} inputContext

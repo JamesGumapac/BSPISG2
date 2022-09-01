@@ -31,23 +31,26 @@ define(['N/record', 'N/search', 'N/file', './lib/bsp_as2_service.js', './lib/bsp
                 /**
                  * Check Trading partner Origin
                 */
+                let folderID = null;
                 if(BSPTradingParnters.isAcknowledgmentSPR(jsonObjResponse)){
+                    folderID = 11266;
                     BSPTradingParnters.processPOAck(jsonObjResponse, BSPTradingParnters.constants().spr);
                 }else{
+                    folderID = 11267;
                     BSPTradingParnters.processPOAck(jsonObjResponse, BSPTradingParnters.constants().essendant);
                 }
-
-                let resultFile = file.create({
-                    name: `${requestBody.Payload.Name}.xml`,
-                    fileType: file.Type.XMLDOC,
-                    contents: decodedXMLresponse,
-                    folder: 11266
-                });
-
-                let resultFileId = resultFile.save();
-                log.debug(functionName, `XML Decoded - File created:  ${resultFileId}`);
+                if(folderID){
+                    let resultFile = file.create({
+                        name: `${requestBody.Payload.Name}.xml`,
+                        fileType: file.Type.XMLDOC,
+                        contents: decodedXMLresponse,
+                        folder: folderID
+                    });
+    
+                    let resultFileId = resultFile.save();
+                    log.debug(functionName, `XML Decoded - File created:  ${resultFileId}`);
+                }
                 
-
                 response = {
                     "operation_code": "200",
                     "operation_message": "OK",

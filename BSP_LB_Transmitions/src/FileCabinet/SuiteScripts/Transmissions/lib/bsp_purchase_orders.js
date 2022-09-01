@@ -216,7 +216,7 @@
 
         purchaseOrderRec.setValue({
             fieldId: "customform",
-            value: transactionForm,
+            value: parseInt(poData.transactionForm),
         });
 
         purchaseOrderRec.setValue({

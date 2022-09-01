@@ -223,7 +223,7 @@
 		return transmitionRec;
     }
 
-    
+
     function getAccountNumber(customer, transmissionAccount){
         let accountNumber = null;
         let customerRec = record.load({
@@ -243,12 +243,12 @@
             });
         }
   
-        if(BSPLBUtils.isEmpty(accountNumber)){
+        if(isEmpty(accountNumber)){
             accountNumber = customerRec.getValue({
                 fieldId: 'custentity_bsp_lb_acct_num_override'
             });
         }   
-        if(BSPLBUtils.isEmpty(accountNumber)){
+        if(isEmpty(accountNumber)){
             accountNumber = transmissionAccount;
         }    
 

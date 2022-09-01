@@ -3,7 +3,7 @@
  * @NModuleScope Public
  */
 
- define(['./bsp_spr.js', './bsp_essendant.js'], function (SPR, ESSENDANT) {
+ define(['N/search', 'N/record', './bsp_spr.js', './bsp_essendant.js'], function (search, record, SPR, ESSENDANT) {
 
     const CONTANTS = Object.freeze({
         essendant : "Essendant Inc",
