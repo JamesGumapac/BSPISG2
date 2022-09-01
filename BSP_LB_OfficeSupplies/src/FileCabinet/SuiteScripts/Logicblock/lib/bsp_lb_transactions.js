@@ -45,12 +45,18 @@
             }
         }
 
-        let routeCode = BSPLBEntities.getRouteCodeFromCustomer(customerRecordResult.nsID);
+        let objFields = BSPLBEntities.getFieldsFromCustomer(customerRecordResult.nsID);
+        let routeCode = objFields.routeCode;
+        let accountNumber = objFields.accountNumber;
         if(BSPLBUtils.isEmpty(routeCode)){
             routeCode = settings.custrecord_bsp_lb_default_route_code[0].value;
         }
         if(routeCode){
             transactionRecord.setValue({ fieldId: "custbody_bsp_lb_route_code", value: routeCode});
+        }
+
+        if(accountNumber){
+            transactionRecord.setValue({ fieldId: "custbody_bsp_cust_account_number", value: accountNumber});
         }
         
         if(!BSPLBUtils.isEmpty(objFields.order.CustomerPurchaseOrderNumber)){

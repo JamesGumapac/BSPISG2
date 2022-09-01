@@ -215,14 +215,14 @@
     }
 
     /**
-     * Returns Customer Address Route Code  
-     * If Customer Address does not have a Route Code it will return the Customer Route Code
+     * Returns Customer Address Route Code and Account Number
+     * If Customer Address does not have a Route Code it will return the Customer Route Code and Account Number
      * @param {*} customerRecID 
      * @returns 
      */
-    function getRouteCodeFromCustomer(customerRecID){
+    function getFieldsFromCustomer(customerRecID){
         let routeCode = null;
-
+        let accountNumber = null;
         let customerRec = record.load({
             type: record.Type.CUSTOMER,
             id: customerRecID
@@ -238,21 +238,32 @@
             routeCode = addressSubRecord.getValue({
                 fieldId: 'custrecord_bsp_lb_route_code'
             });
+            accountNumber = addressSubRecord.getValue({
+                fieldId: 'custrecord_bsp_lb_acct_num_ovverride'
+            });
         }
 
         if(BSPLBUtils.isEmpty(routeCode)){
             routeCode = customerRec.getValue({
                 fieldId: 'custentity_bsp_lb_route_code'
             });
-        }       
+        }   
+        if(BSPLBUtils.isEmpty(accountNumber)){
+            accountNumber = customerRec.getValue({
+                fieldId: 'custentity_bsp_lb_acct_num_override'
+            });
+        }      
 
-        return routeCode;
+        return {
+            routeCode: routeCode,
+            accountNumber: accountNumber
+        };
     }
 
     return {
 		fetchVendors: fetchVendors,
         fetchCustomer: fetchCustomer,
-        getRouteCodeFromCustomer: getRouteCodeFromCustomer
+        getFieldsFromCustomer: getFieldsFromCustomer
 	};
 
 });
