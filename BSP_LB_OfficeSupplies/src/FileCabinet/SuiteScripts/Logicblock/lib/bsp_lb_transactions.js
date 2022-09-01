@@ -45,9 +45,9 @@
             }
         }
 
-        let objFields = BSPLBEntities.getFieldsFromCustomer(customerRecordResult.nsID);
-        let routeCode = objFields.routeCode;
-        let accountNumber = objFields.accountNumber;
+        let objCustomerFields = BSPLBEntities.getFieldsFromCustomer(customerRecordResult.nsID);
+        let routeCode = objCustomerFields.routeCode;
+        let accountNumber = objCustomerFields.accountNumber;
         if(BSPLBUtils.isEmpty(routeCode)){
             routeCode = settings.custrecord_bsp_lb_default_route_code[0].value;
         }
