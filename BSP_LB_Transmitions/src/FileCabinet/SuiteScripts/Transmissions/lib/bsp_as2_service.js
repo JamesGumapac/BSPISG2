@@ -140,6 +140,9 @@
             text: xmlStr
         });
         let jsonObj = parser.xmlToJson(xmlDocument.documentElement);
+        let jsonStr = JSON.stringify(jsonObj).replaceAll("us:","");
+        jsonStr = jsonStr.replaceAll("oa:","");
+        jsonObj = JSON.parse(jsonStr);
         return jsonObj;
     }
 

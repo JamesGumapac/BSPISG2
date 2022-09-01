@@ -2,12 +2,12 @@
  * @NApiVersion 2.1
  * @NScriptType Restlet
  */
-define(['N/record', 'N/search', 'N/file', './lib/bsp_as2_service.js'],
+define(['N/record', 'N/search', 'N/file', './lib/bsp_as2_service.js', './lib/bsp_trading_partners.js'],
     /**
  * @param{record} record
  * @param{search} search
  */
-    (record, search, file, BSP_AS2Service) => {
+    (record, search, file, BSP_AS2Service, BSPTradingParnters) => {
 
         /**
          * Defines the function that is executed when a POST request is sent to a RESTlet.
@@ -25,9 +25,18 @@ define(['N/record', 'N/search', 'N/file', './lib/bsp_as2_service.js'],
                 log.debug(functionName, `Request Body:  ${JSON.stringify(requestBody)}`);
                 let decodedXMLresponse = BSP_AS2Service.decodeStringContent(requestBody.Payload.Content);
                 
-                let jsonObjResponse = BSP_AS2Service.parseResponseXml(decodedXMLresponse);
-                log.debug(functionName, `Json Obj Response:  ${JSON.stringify(jsonObjResponse)}`);
-                
+                let jsonObjResponse = BSP_AS2Service.parseResponseXml(decodedXMLresponse);  
+                log.debug(functionName, `${JSON.stringify(jsonObjResponse)}`);  
+                       
+                /**
+                 * Check Trading partner Origin
+                */
+                if(BSPTradingParnters.isAcknowledgmentSPR(jsonObjResponse)){
+                    BSPTradingParnters.processPOAck(jsonObjResponse, BSPTradingParnters.constants().spr);
+                }else{
+                    BSPTradingParnters.processPOAck(jsonObjResponse, BSPTradingParnters.constants().essendant);
+                }
+
                 let resultFile = file.create({
                     name: `${requestBody.Payload.Name}.xml`,
                     fileType: file.Type.XMLDOC,
@@ -37,15 +46,16 @@ define(['N/record', 'N/search', 'N/file', './lib/bsp_as2_service.js'],
 
                 let resultFileId = resultFile.save();
                 log.debug(functionName, `XML Decoded - File created:  ${resultFileId}`);
+                
 
                 response = {
-                    "operation_code": "SUCCESS",
-                    "operation_message": "Ok",
+                    "operation_code": "200",
+                    "operation_message": "OK",
                 };
             }catch(error){
                 log.error(functionName, `Error: ${error.toString()}`);
                 response = {
-                    "operation_code": "ERROR",
+                    "operation_code": "500",
                     "operation_message": "Internal error occured",
                 };
             } 

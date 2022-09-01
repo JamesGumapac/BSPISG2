@@ -231,7 +231,7 @@
 
         purchaseOrderRec.setValue({
             fieldId: "custbody_bsp_transmission_acct_num",
-            value: poData.account.value,
+            value: poData.account,
         });
 
         purchaseOrderRec.setValue({

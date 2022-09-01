@@ -131,10 +131,10 @@ define(['N/runtime', 'N/search', 'N/task', './lib/bsp_transmitions_util.js', './
                 let commonData = JSON.parse(reduceContext.values[0]);
                 let transmitionQueueID = commonData.transmitionQueueID;
                 let customer =  commonData.customer;
+                let account = BSPTransmitionsUtil.getAccountNumber(customer, commonData.account);
                 let vendor = commonData.vendor;
                 let routeCode = commonData.routeCode;
                 let autoreceive = commonData.autoreceive;
-                let account = commonData.account;
                 let transmissionLocation = commonData.transmissionLocation;
                 let transactionForm = commonData.transactionForm;
                 let poData = {

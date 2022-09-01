@@ -2,12 +2,20 @@
  * @NApiVersion 2.1
  * @NScriptType MapReduceScript
  */
-define(['N/runtime', 'N/https', './lib/bsp_transmitions_util.js', './lib/bsp_edi_settings.js', './lib/xml_template_handler.js', './lib/bsp_as2_service.js', './lib/bsp_purchase_orders.js'],
+define([
+    'N/runtime', 
+    'N/https', 
+    './lib/bsp_transmitions_util.js', 
+    './lib/bsp_edi_settings.js', 
+    './lib/xml_template_handler.js', 
+    './lib/bsp_as2_service.js', 
+    './lib/bsp_purchase_orders.js',
+    './lib/bsp_trading_partners.js'],
     /**
      * @param{runtime} runtime
      * @param{BSPTransmitionsUtil} BSPTransmitionsUtil
      */
-    (runtime, https, BSPTransmitionsUtil, BSP_EDISettingsUtil, BSP_XMLTemplateHandler, BSP_AS2Service, BSP_POutil) => {
+    (runtime, https, BSPTransmitionsUtil, BSP_EDISettingsUtil, BSP_XMLTemplateHandler, BSP_AS2Service, BSP_POutil, BSPTradingParnters) => {
         /**
          * Defines the function that is executed at the beginning of the map/reduce process and generates the input data.
          * @param {Object} inputContext
@@ -41,7 +49,7 @@ define(['N/runtime', 'N/https', './lib/bsp_transmitions_util.js', './lib/bsp_edi
                 
                     let transmitionRecFields = BSPTransmitionsUtil.getFieldsFromTransmitionRecord(transmitionRecID);
                     let vendor = transmitionRecFields.vendor;
-                    let tradingParnterInfo = BSPTransmitionsUtil.getTradingPartnerInfo(vendor);
+                    let tradingParnterInfo = BSPTradingParnters.getTradingPartnerInfo(vendor);
                     
                     puchaseOrderList.forEach(po => {
                         transmitionDataList.push({
@@ -120,7 +128,7 @@ define(['N/runtime', 'N/https', './lib/bsp_transmitions_util.js', './lib/bsp_edi
                 * For Essendant get the BOD ID
                 */
                 if(tranmsissionData.tradingPartner.name == BSPTransmitionsUtil.constants().essendant){
-                    tranmsissionData.tradingPartner.documentControlNumber = BSPTransmitionsUtil.getTradingPartnerBODId(tranmsissionData.tradingPartner.id);
+                    tranmsissionData.tradingPartner.documentControlNumber = BSPTradingParnters.getTradingPartnerBODId(tranmsissionData.tradingPartner.id);
                     tranmsissionData.transmissionData.dateCreated = BSPTransmitionsUtil.getXMLDate(new Date()); 
                 }
 
@@ -154,7 +162,7 @@ define(['N/runtime', 'N/https', './lib/bsp_transmitions_util.js', './lib/bsp_edi
                  * For Essendant update the BOD ID
                 */
                 if(tranmsissionData.tradingPartner.name == BSPTransmitionsUtil.constants().essendant){
-                    BSPTransmitionsUtil.updateTradingPartnerBODId(tranmsissionData.tradingPartner.id, tranmsissionData.tradingPartner.documentControlNumber);
+                    BSPTradingParnters.updateTradingPartnerBODId(tranmsissionData.tradingPartner.id, tranmsissionData.tradingPartner.documentControlNumber);
                 }
                 
             }catch (error)
