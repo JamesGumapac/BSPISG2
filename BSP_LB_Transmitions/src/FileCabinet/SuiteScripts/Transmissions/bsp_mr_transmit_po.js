@@ -157,7 +157,6 @@ define([
                 BSP_POutil.updatePOtransmissionStatus(poID, BSP_POutil.transmitionPOStatus().pendingAcknowledment);
                 BSP_POutil.setPOMessageID(poID, jsonObjResponse);
                 
-
                 /**
                  * For Essendant update the BOD ID
                 */

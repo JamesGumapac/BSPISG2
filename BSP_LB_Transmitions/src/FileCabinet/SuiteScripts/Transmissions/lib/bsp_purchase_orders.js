@@ -8,7 +8,7 @@
     const PO_TRANSMITION_STATUSES = Object.freeze({
         pendingTransmission: 1,
         pendingAcknowledment: 2,
-        completed: 3,
+        acknowledged: 3,
         transmissionFailed: 4,
     });
 
@@ -83,6 +83,8 @@
                search.createColumn({name: "unitabbreviation", label: "Units"}),
                search.createColumn({name: "trandate", label: "Date"}),
                search.createColumn({name: "createdfrom", label: "Sales Order"}),
+               search.createColumn({name: "custbody_bsp_transmission_acct_num", label: "Account Number"}),
+               search.createColumn({name: "custbody_bsp_transmission_loc", label: "Transmission Location"}),         
                search.createColumn({
                   name: "entityid",
                   join: "customer",
@@ -136,6 +138,10 @@
             let routeCodeID = element.getValue("custbody_bsp_lb_route_code");
             let routeCode = element.getText("custbody_bsp_lb_route_code");
             let currency = element.getValue({name: "symbol", join: "Currency"});
+            let accountNumberID = element.getValue("custbody_bsp_transmission_acct_num");
+            let accountNumberText = element.getText("custbody_bsp_transmission_acct_num");
+            let locationID = element.getValue("custbody_bsp_transmission_loc");
+            let locationText = element.getText("custbody_bsp_transmission_loc");
             let customer = {
                 companyName: element.getValue({name: "entityid", join: "customer"}),
                 addressee: element.getValue({name: "addressee", join: "customer"}),
@@ -168,6 +174,8 @@
                     routeCode: routeCode,
                     currency: currency,
                     customer: customer,
+                    account: {id:accountNumberID, text: accountNumberText},
+                    transmissionLocation: {id:locationID, text: locationText},
                     items: [item]
                 })
            }
@@ -231,7 +239,7 @@
 
         purchaseOrderRec.setValue({
             fieldId: "custbody_bsp_transmission_acct_num",
-            value: poData.account,
+            value: poData.account.value,
         });
 
         purchaseOrderRec.setValue({

@@ -6,7 +6,7 @@
  define(['N/search', 'N/record'], function (search, record) {
 
     function processPOAck(jsonObjResponse){
-        log.debug("processPOAck - SPR", `Processing PO Acknowledmgnet`);
+        log.debug("Trading Partner: SPR", `Processing PO Acknowledmgnet`);
     }
     
     return {

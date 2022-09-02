@@ -309,7 +309,7 @@
                 autoreceive = transmitionFieldsObj.custrecord_bsp_autoreceive;
             } 
             if(!(isEmpty(transmitionFieldsObj.custrecord_bsp_lb_acct_number))){
-                accountNumber = transmitionFieldsObj.custrecord_bsp_lb_acct_number[0].value;
+                accountNumber = transmitionFieldsObj.custrecord_bsp_lb_acct_number[0];
             }  
             if(!(isEmpty(transmitionFieldsObj.custrecord_bsp_lb_essendant_adot))){
                 essendantADOT = transmitionFieldsObj.custrecord_bsp_lb_essendant_adot;
