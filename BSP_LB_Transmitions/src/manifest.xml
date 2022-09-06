@@ -1,0 +1,17 @@
+<manifest projecttype="ACCOUNTCUSTOMIZATION">
+  <projectname>BSP_LB_Transmitions</projectname>
+  <frameworkversion>1.0</frameworkversion>
+  <dependencies>
+    <features>
+      <feature required="true">SERVERSIDESCRIPTING</feature>
+      <feature required="false">CRM</feature>
+    </features>
+    <objects>
+      <object>customrecord_bsp_lb_transmition</object>
+      <object>customrecord_bsp_lb_transmition_schedule</object>
+    </objects>
+    <files>
+      <file></file>
+    </files>
+  </dependencies>
+</manifest>
