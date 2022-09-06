@@ -29,7 +29,7 @@
     </features>
     <objects>
       <object>custtab_bsp_item_transmission</object>
-      <object>customscript_bsp_mr_queue_transm_schd</object>
+      <object>customscript_bsp_isg_mr_queue_transm_sch</object>
     </objects>
     <files>
       <file></file>

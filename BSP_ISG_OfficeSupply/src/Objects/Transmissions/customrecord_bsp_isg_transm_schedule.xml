@@ -85,7 +85,7 @@
       <applyformatting>F</applyformatting>
       <checkspelling>F</checkspelling>
       <defaultchecked>F</defaultchecked>
-      <defaultselection>[scriptid=customscript_bsp_mr_queue_transm_schd]</defaultselection>
+      <defaultselection>[scriptid=customscript_bsp_isg_mr_queue_transm_sch]</defaultselection>
       <defaultvalue></defaultvalue>
       <description></description>
       <displayheight></displayheight>
