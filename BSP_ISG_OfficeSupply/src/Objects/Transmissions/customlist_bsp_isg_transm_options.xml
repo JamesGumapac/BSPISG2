@@ -1,0 +1,24 @@
+<customlist scriptid="customlist_bsp_isg_transm_options">
+  <description></description>
+  <isinactive>F</isinactive>
+  <ismatrixoption>F</ismatrixoption>
+  <isordered>T</isordered>
+  <name>Transmission Options</name>
+  <customvalues>
+    <customvalue scriptid="val_886208_t927173_109">
+      <abbreviation>A</abbreviation>
+      <isinactive>F</isinactive>
+      <value>Automatic</value>
+    </customvalue>
+    <customvalue scriptid="val_886209_t927173_881">
+      <abbreviation>M</abbreviation>
+      <isinactive>F</isinactive>
+      <value>Manual</value>
+    </customvalue>
+    <customvalue scriptid="val_886210_t927173_399">
+      <abbreviation>E</abbreviation>
+      <isinactive>F</isinactive>
+      <value>Exclude</value>
+    </customvalue>
+  </customvalues>
+</customlist>
