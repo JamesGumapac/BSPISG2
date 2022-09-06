@@ -16,7 +16,7 @@
         errorCodeCreatingQueue: "ERROR_CREATING_QUEUE",
         errorMessageCreatingQueue: "An error has occurred creating Queue record.",
         errorMessageQueueAlreadyExists: "The Queue record already exists.",
-        mrCreateRecordsScriptId: "customscript_bsp_lb_mr_create_ns_records",
+        mrCreateRecordsScriptId: "customscript_bsp_isg_lb_mr_create_recs",
         mrCreateRecordsDeploymentId: "customdeploy_bsp_lb_mr_create_ns_records",
         errorCapturePayment: "An error occured while try to Capture Logicblock payment",
         transactionTypeField: "ntype",

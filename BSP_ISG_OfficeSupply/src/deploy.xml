@@ -3,7 +3,7 @@
         <path>~/AccountConfiguration/*</path>
     </configuration>
     <files>
-        <path>~/FileCabinet/Transmissions/*</path>
+        <path>~/FileCabinet/*</path>
     </files>
     <objects>
         <path>~/Objects/Transmissions/*</path>

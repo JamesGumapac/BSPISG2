@@ -169,10 +169,10 @@
                 if(itemRecId){
                     transactionRecord.setCurrentSublistValue({ sublistId: strSublistID, fieldId: "item", value: itemRecId });
 
-                    let excludeItemFromTransmission = BSPLBItems.getItemField(itemRecId, "custitem_bsp_exclude_from_auto_transm");
+                    let excludeItemFromTransmission = BSPLBItems.getItemField(itemRecId, "custitem_bsp_isg_excl_from_auto_transm");
                     
                     if(excludeItemFromTransmission){
-                        transactionRecord.setCurrentSublistValue({ sublistId: strSublistID, fieldId: "custcol_bsp_exclude_auto_transmission", value: BSPLBUtils.constants().excludeFromTransmission});
+                        transactionRecord.setCurrentSublistValue({ sublistId: strSublistID, fieldId: "custcol_bsp_isg_exclude_auto_transm", value: BSPLBUtils.constants().excludeFromTransmission});
                     }
 
                     for (const fieldMapping of objMappingFields.lineFields) {

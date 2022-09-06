@@ -236,21 +236,21 @@
 
         if(addressSubRecord){
             routeCode = addressSubRecord.getValue({
-                fieldId: 'custrecord_bsp_lb_route_code'
+                fieldId: 'custrecord_bsp_isg_route_code'
             });
             accountNumber = addressSubRecord.getValue({
-                fieldId: 'custrecord_bsp_lb_acct_num_ovverride'
+                fieldId: 'custrecord_bsp_isg_acct_num_override'
             });
         }
 
         if(BSPLBUtils.isEmpty(routeCode)){
             routeCode = customerRec.getValue({
-                fieldId: 'custentity_bsp_lb_route_code'
+                fieldId: 'custentity_bsp_isg_route_code'
             });
         }   
         if(BSPLBUtils.isEmpty(accountNumber)){
             accountNumber = customerRec.getValue({
-                fieldId: 'custentity_bsp_lb_acct_num_override'
+                fieldId: 'custentity_bsp_isg_acct_num_override'
             });
         }      
 
