@@ -27,7 +27,7 @@
     function getTradingPartnerBODId(id){
         let bodID = null;
         let objTradingPartnerField = search.lookupFields({
-            type: "customrecord_bsp_lb_trading_partner",
+            type: "customrecord_bsp_isg_trading_partner",
             id: parseInt(id),
             columns: 'custrecord_bsp_trading_partner_bodid'
         });
@@ -58,85 +58,85 @@
             [
                 search.createColumn({
                     name: "internalid",
-                    join: "CUSTENTITY_BSP_LB_TRADING_PARTN_SETTINGS",
+                    join: "custentity_bsp_isg_trading_part_settings",
                     label: "Internal ID"
                 }),
                 search.createColumn({
                     name: "name",
-                    join: "CUSTENTITY_BSP_LB_TRADING_PARTN_SETTINGS",
+                    join: "custentity_bsp_isg_trading_part_settings",
                     label: "Name"
                 }),
                 search.createColumn({
                     name: "custrecord_bsp_lb_as2_id",
-                    join: "CUSTENTITY_BSP_LB_TRADING_PARTN_SETTINGS",
+                    join: "custentity_bsp_isg_trading_part_settings",
                     label: "AS2 Identifier"
                 }),
                 search.createColumn({
                     name: "custrecord_bsp_compress_msg",
-                    join: "CUSTENTITY_BSP_LB_TRADING_PARTN_SETTINGS",
+                    join: "custentity_bsp_isg_trading_part_settings",
                     label: "Compress Message"
                 }),
                 search.createColumn({
                     name: "custrecord_bsp_encrypt_msg",
-                    join: "CUSTENTITY_BSP_LB_TRADING_PARTN_SETTINGS",
+                    join: "custentity_bsp_isg_trading_part_settings",
                     label: "Encrypt Message"
                 }),
                 search.createColumn({
                     name: "custrecord_bsp_encryption_algorithm",
-                    join: "CUSTENTITY_BSP_LB_TRADING_PARTN_SETTINGS",
+                    join: "custentity_bsp_isg_trading_part_settings",
                     label: "Encryption Algorithm"
                 }),
                 search.createColumn({
                     name: "custrecord_bsp_mdn_to",
-                    join: "CUSTENTITY_BSP_LB_TRADING_PARTN_SETTINGS",
+                    join: "custentity_bsp_isg_trading_part_settings",
                     label: "MDN to"
                 }),
                 search.createColumn({
                     name: "custrecord_bsp_sign_msg",
-                    join: "CUSTENTITY_BSP_LB_TRADING_PARTN_SETTINGS",
+                    join: "custentity_bsp_isg_trading_part_settings",
                     label: "Sign Message"
                 }),
                 search.createColumn({
                     name: "custrecord_bsp_signature_algorith",
-                    join: "CUSTENTITY_BSP_LB_TRADING_PARTN_SETTINGS",
+                    join: "custentity_bsp_isg_trading_part_settings",
                     label: "Signature Algorithm"
                 }),
                 search.createColumn({
                     name: "custrecord_bsp_lb_target_url",
-                    join: "CUSTENTITY_BSP_LB_TRADING_PARTN_SETTINGS",
+                    join: "custentity_bsp_isg_trading_part_settings",
                     label: "Target URL"
                 }),
                 search.createColumn({
                     name: "custrecord_bsp_template_xml_file",
-                    join: "CUSTENTITY_BSP_LB_TRADING_PARTN_SETTINGS",
+                    join: "custentity_bsp_isg_trading_part_settings",
                     label: "Template XML file"
                 }),
                 search.createColumn({
                     name: "custrecord_bsp_transm_output_folder_id",
-                    join: "CUSTENTITY_BSP_LB_TRADING_PARTN_SETTINGS",
+                    join: "custentity_bsp_isg_trading_part_settings",
                     label: "Template XML file"
                 }),
                 search.createColumn({
                 name: "custrecord_bsp_trading_partner_act_code",
-                join: "CUSTENTITY_BSP_LB_TRADING_PARTN_SETTINGS",
+                join: "custentity_bsp_isg_trading_part_settings",
                 label: "Action Code"
                 })
             ]
         });
         tradingPartnerSearchObj.run().each(function(result){
-            let id = result.getValue({name: "internalid", join: "CUSTENTITY_BSP_LB_TRADING_PARTN_SETTINGS"});
-            let name = result.getValue({name: "name", join: "CUSTENTITY_BSP_LB_TRADING_PARTN_SETTINGS"});
-            let as2Identifier = result.getValue({name: "custrecord_bsp_lb_as2_id", join: "CUSTENTITY_BSP_LB_TRADING_PARTN_SETTINGS"});
-            let compressMessage = result.getValue({name: "custrecord_bsp_compress_msg", join: "CUSTENTITY_BSP_LB_TRADING_PARTN_SETTINGS"});
-            let encryptMessage = result.getValue({name: "custrecord_bsp_encrypt_msg", join: "CUSTENTITY_BSP_LB_TRADING_PARTN_SETTINGS"});
-            let encryptionAlgorithm = result.getValue({name: "custrecord_bsp_encryption_algorithm", join: "CUSTENTITY_BSP_LB_TRADING_PARTN_SETTINGS"});
-            let mdnTo = result.getValue({name: "custrecord_bsp_mdn_to", join: "CUSTENTITY_BSP_LB_TRADING_PARTN_SETTINGS"});
-            let signMessage = result.getValue({name: "custrecord_bsp_sign_msg", join: "CUSTENTITY_BSP_LB_TRADING_PARTN_SETTINGS"});
-            let signatureAlgorithm = result.getValue({name: "custrecord_bsp_signature_algorith", join: "CUSTENTITY_BSP_LB_TRADING_PARTN_SETTINGS"});
-            let targetURL = result.getValue({name: "custrecord_bsp_lb_target_url", join: "CUSTENTITY_BSP_LB_TRADING_PARTN_SETTINGS"});
-            let xmlTemplateFileID = result.getValue({name: "custrecord_bsp_template_xml_file", join: "CUSTENTITY_BSP_LB_TRADING_PARTN_SETTINGS"});
-            let transmissionOutputFolderID = result.getValue({name: "custrecord_bsp_transm_output_folder_id", join: "CUSTENTITY_BSP_LB_TRADING_PARTN_SETTINGS"});
-            let actionCode = result.getValue({name: "custrecord_bsp_trading_partner_act_code", join: "CUSTENTITY_BSP_LB_TRADING_PARTN_SETTINGS"});
+            let id = result.getValue({name: "internalid", join: "custentity_bsp_isg_trading_part_settings"});
+            let name = result.getValue({name: "name", join: "custentity_bsp_isg_trading_part_settings"});
+            let as2Identifier = result.getValue({name: "custrecord_bsp_lb_as2_id", join: "custentity_bsp_isg_trading_part_settings"});
+            let compressMessage = result.getValue({name: "custrecord_bsp_compress_msg", join: "custentity_bsp_isg_trading_part_settings"});
+            let encryptMessage = result.getValue({name: "custrecord_bsp_encrypt_msg", join: "custentity_bsp_isg_trading_part_settings"});
+            let encryptionAlgorithm = result.getValue({name: "custrecord_bsp_encryption_algorithm", join: "custentity_bsp_isg_trading_part_settings"});
+            let mdnTo = result.getValue({name: "custrecord_bsp_mdn_to", join: "custentity_bsp_isg_trading_part_settings"});
+            let signMessage = result.getValue({name: "custrecord_bsp_sign_msg", join: "custentity_bsp_isg_trading_part_settings"});
+            let signatureAlgorithm = result.getValue({name: "custrecord_bsp_signature_algorith", join: "custentity_bsp_isg_trading_part_settings"});
+            let targetURL = result.getValue({name: "custrecord_bsp_lb_target_url", join: "custentity_bsp_isg_trading_part_settings"});
+            let xmlTemplateFileID = result.getValue({name: "custrecord_bsp_template_xml_file", join: "custentity_bsp_isg_trading_part_settings"});
+            let transmissionOutputFolderID = result.getValue({name: "custrecord_bsp_transm_output_folder_id", join: "custentity_bsp_isg_trading_part_settings"});
+            let actionCode = result.getValue({name: "custrecord_bsp_trading_partner_act_code", join: "custentity_bsp_isg_trading_part_settings"});
             
             tradingPartnerData = {
                 id: id,
@@ -173,7 +173,7 @@
         let newBODidString = String(newBODid).padStart(5, '0'); 
 
         record.submitFields({
-            type: "customrecord_bsp_lb_trading_partner",
+            type: "customrecord_bsp_isg_trading_partner",
             id: parseInt(id),
             values: {
                 custrecord_bsp_trading_partner_bodid: newBODidString

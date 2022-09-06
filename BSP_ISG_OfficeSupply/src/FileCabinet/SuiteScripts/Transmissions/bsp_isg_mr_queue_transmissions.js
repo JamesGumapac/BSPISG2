@@ -2,11 +2,11 @@
  * @NApiVersion 2.1
  * @NScriptType MapReduceScript
  */
-define(['N/runtime', 'N/record', './lib/bsp_transmitions_util.js'],
+define(['N/runtime', './lib/bsp_transmitions_util.js'],
     /**
  * @param{runtime} runtime
  */
-    (runtime, record, BSPTransmitionsUtil) => {
+    (runtime, BSPTransmitionsUtil) => {
         /**
          * Defines the function that is executed at the beginning of the map/reduce process and generates the input data.
          * @param {Object} inputContext

@@ -30,7 +30,7 @@
             type: record.Type.PURCHASE_ORDER,
             id: parseInt(poID),
             values: {
-                custbody_bsp_po_transmission_status: status
+                custbody_bsp_isg_po_transm_status: status
             }
         });
     }
@@ -46,7 +46,7 @@
             type: record.Type.PURCHASE_ORDER,
             id: parseInt(poID),
             values: {
-                custbody_bsp_transmission_msg_id: serviceBodyResponse.Id
+                custbody_bsp_isg_transmission_msg_id: serviceBodyResponse.Id
             }
         });
     }
@@ -68,14 +68,14 @@
                "AND", 
                ["mainline","is","F"], 
                "AND", 
-               ["custbody_bsp_transm_queue_id","is",transmitionQueueID],
+               ["custbody_bsp_isg_transm_queue_id","is",transmitionQueueID],
                "AND", 
-               ["custbody_bsp_po_transmission_status","anyof",PO_TRANSMITION_STATUSES.pendingTransmission]
+               ["custbody_bsp_isg_po_transm_status","anyof",PO_TRANSMITION_STATUSES.pendingTransmission]
             ],
             columns:
             [
                search.createColumn({name: "tranid", label: "Document Number"}),
-               search.createColumn({name: "custbody_bsp_lb_route_code", label: "Route Code"}),
+               search.createColumn({name: "custbody_bsp_isg_route_code", label: "Route Code"}),
                search.createColumn({name: "line", label: "Line ID"}),
                search.createColumn({name: "item", label: "Item"}),
                search.createColumn({name: "quantity", label: "Quantity"}),
@@ -83,8 +83,8 @@
                search.createColumn({name: "unitabbreviation", label: "Units"}),
                search.createColumn({name: "trandate", label: "Date"}),
                search.createColumn({name: "createdfrom", label: "Sales Order"}),
-               search.createColumn({name: "custbody_bsp_transmission_acct_num", label: "Account Number"}),
-               search.createColumn({name: "custbody_bsp_transmission_loc", label: "Transmission Location"}),         
+               search.createColumn({name: "custbody_bsp_isg_transmission_acct_num", label: "Account Number"}),
+               search.createColumn({name: "custbody_bsp_isg_transmission_loc", label: "Transmission Location"}),         
                search.createColumn({
                   name: "entityid",
                   join: "customer",
@@ -135,13 +135,13 @@
             let purchaseOrderDate = element.getValue("trandate");
             let salesOrderID = element.getValue("createdfrom");
             let salesOrder = element.getText("createdfrom");
-            let routeCodeID = element.getValue("custbody_bsp_lb_route_code");
-            let routeCode = element.getText("custbody_bsp_lb_route_code");
+            let routeCodeID = element.getValue("custbody_bsp_isg_route_code");
+            let routeCode = element.getText("custbody_bsp_isg_route_code");
             let currency = element.getValue({name: "symbol", join: "Currency"});
-            let accountNumberID = element.getValue("custbody_bsp_transmission_acct_num");
-            let accountNumberText = element.getText("custbody_bsp_transmission_acct_num");
-            let locationID = element.getValue("custbody_bsp_transmission_loc");
-            let locationText = element.getText("custbody_bsp_transmission_loc");
+            let accountNumberID = element.getValue("custbody_bsp_isg_transmission_acct_num");
+            let accountNumberText = element.getText("custbody_bsp_isg_transmission_acct_num");
+            let locationID = element.getValue("custbody_bsp_isg_transmission_loc");
+            let locationText = element.getText("custbody_bsp_isg_transmission_loc");
             let customer = {
                 companyName: element.getValue({name: "entityid", join: "customer"}),
                 addressee: element.getValue({name: "addressee", join: "customer"}),
@@ -233,27 +233,27 @@
         });
 
         purchaseOrderRec.setValue({
-            fieldId: "custbody_bsp_autoreceived",
+            fieldId: "custbody_bsp_isg_autoreceived",
             value: poData.autoreceive,
         });
 
         purchaseOrderRec.setValue({
-            fieldId: "custbody_bsp_transmission_acct_num",
+            fieldId: "custbody_bsp_isg_transmission_acct_num",
             value: poData.account.value,
         });
 
         purchaseOrderRec.setValue({
-            fieldId: "custbody_bsp_transmission_loc",
+            fieldId: "custbody_bsp_isg_transmission_loc",
             value: poData.transmissionLocation,
         });
 
         purchaseOrderRec.setValue({
-            fieldId: "custbody_bsp_transm_queue_id",
+            fieldId: "custbody_bsp_isg_transm_queue_id",
             value: poData.transmitionQueueID,
         });
 
         purchaseOrderRec.setValue({
-            fieldId: "custbody_bsp_po_transmission_status",
+            fieldId: "custbody_bsp_isg_po_transm_status",
             value: PO_TRANSMITION_STATUSES.pendingTransmission,
         });
 

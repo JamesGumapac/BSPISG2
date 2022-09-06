@@ -14,7 +14,7 @@
     function getEDIsettings(environment){
         let ediSettingsFields = null;
         const EDISettingsSearchObj = search.create({
-            type: "customrecord_bsp_edi_settings",
+            type: "customrecord_bsp_isg_edi_settings",
             filters:
             [
                ["custrecord_bsp_edi_environment","is",environment],

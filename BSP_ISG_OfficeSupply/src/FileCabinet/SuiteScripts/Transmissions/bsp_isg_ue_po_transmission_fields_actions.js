@@ -20,30 +20,30 @@ define(['N/ui/serverWidget'],
             let functionName = "beforeLoad";
             try{
                 let purchaseOrderRec = scriptContext.newRecord;
-                let messageID = purchaseOrderRec.getValue('custbody_bsp_transmission_msg_id');
+                let messageID = purchaseOrderRec.getValue('custbody_bsp_isg_transmission_msg_id');
                 if(messageID){
                     let form = scriptContext.form;
 
                     form.getField({
-                        id : 'custbody_bsp_autoreceived'
+                        id : 'custbody_bsp_isg_autoreceived'
                     }).updateDisplayType({
                         displayType: serverWidget.FieldDisplayType.INLINE
                     });
 
                     form.getField({
-                        id : 'custbody_bsp_transmission_acct_num'
+                        id : 'custbody_bsp_isg_transmission_acct_num'
                     }).updateDisplayType({
                         displayType: serverWidget.FieldDisplayType.INLINE
                     });
 
                     form.getField({
-                        id : 'custbody_bsp_transmission_loc'
+                        id : 'custbody_bsp_isg_transmission_loc'
                     }).updateDisplayType({
                         displayType: serverWidget.FieldDisplayType.INLINE
                     });
 
                     form.getField({
-                        id : 'custbody_bsp_po_transmission_status'
+                        id : 'custbody_bsp_isg_po_transm_status'
                     }).updateDisplayType({
                         displayType: serverWidget.FieldDisplayType.INLINE
                     });

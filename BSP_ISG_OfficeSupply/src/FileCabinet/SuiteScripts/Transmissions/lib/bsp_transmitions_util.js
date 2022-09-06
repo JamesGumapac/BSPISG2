@@ -83,7 +83,7 @@
         let transmitions = [];
 
         const transmitionGroupSearchObj = search.create({
-            type: "customrecord_bsp_lb_transmition_group",
+            type: "customrecord_bsp_isg_transmission_group",
             filters:
             [
                ["custrecord_bsp_lb_transm_scheduler.custrecord_bsp_transm_schd_deployment_id","is",deploymentID]
@@ -149,7 +149,7 @@
     */
     function createTransmitionQueueRecord(data){
         let transmitionQueueRec = record.create({
-            type: "customrecord_bsp_transmition_queue",
+            type: "customrecord_bsp_isg_transmission_queue",
         });
 
         transmitionQueueRec.setValue({
@@ -179,7 +179,7 @@
     function findNextTransmitionInQueue(){
         let transmitionQueueRecID = null;
         const transmitionQueueSearchObj = search.create({
-        type: "customrecord_bsp_transmition_queue",
+        type: "customrecord_bsp_isg_transmission_queue",
         filters:[],
         columns:
         [
@@ -211,7 +211,7 @@
         let transmitionRec = null;
 
         let transmitionObj = search.lookupFields({
-            type: "customrecord_bsp_transmition_queue",
+            type: "customrecord_bsp_isg_transmission_queue",
             id: transmitionQueueRecID,
             columns: 'custrecord_bsp_transmition'
         });
@@ -224,6 +224,14 @@
     }
 
 
+    /**
+     * If the customer record has an account number override on the address sublist, use that. Otherwise,
+     * if the customer record has an account number override on the main record, use that. Otherwise, use
+     * the transmission account number.
+     * @param customer - The customer ID
+     * @param transmissionAccount - The account number that is being used for the transmission.
+     * @returns The account number.
+    */
     function getAccountNumber(customer, transmissionAccount){
         let accountNumber = null;
         let customerRec = record.load({
@@ -239,13 +247,13 @@
 
         if(addressSubRecord){
             accountNumber = addressSubRecord.getValue({
-                fieldId: 'custrecord_bsp_lb_acct_num_ovverride'
+                fieldId: 'custrecord_bsp_isg_acct_num_override'
             });
         }
   
         if(isEmpty(accountNumber)){
             accountNumber = customerRec.getValue({
-                fieldId: 'custentity_bsp_lb_acct_num_override'
+                fieldId: 'custentity_bsp_isg_acct_num_override'
             });
         }   
         if(isEmpty(accountNumber)){
@@ -263,7 +271,7 @@
     */
     function updateTransmissionQueueStatus(transmitionQueueRecID, status){
         record.submitFields({
-            type: "customrecord_bsp_transmition_queue",
+            type: "customrecord_bsp_isg_transmission_queue",
             id: transmitionQueueRecID,
             values: {
                 custrecord_bsp_transmition_status: status
@@ -283,7 +291,7 @@
         let savedSearch, vendor, location, autoreceive, accountNumber, essendantADOT = null;
 
         let transmitionFieldsObj = search.lookupFields({
-            type: "customrecord_bsp_lb_transmition",
+            type: "customrecord_bsp_isg_transmission",
             id: transmitionRecID,
             columns: [
                 'custrecord_bsp_lb_transmition_ss', 
@@ -338,7 +346,7 @@
     */
     function createErrorLog(errorSource, errorMessage, errorDetail){
         let errorLogRec = record.create({
-            type: "customrecord_bsp_transm_error_logs",
+            type: "customrecord_bsp_isg_transm_error_logs",
         });
 
         errorLogRec.setValue({
@@ -370,7 +378,7 @@
     function createServiceLog(serviceURL, method, request, respCode, respHeaders, respBody){
         let functionName = "createServiceLog";
         let serviceLogRec = record.create({
-            type: "customrecord_bsp_edi_service_logs",
+            type: "customrecord_bsp_isg_edi_service_logs",
         });
 
         serviceLogRec.setValue({

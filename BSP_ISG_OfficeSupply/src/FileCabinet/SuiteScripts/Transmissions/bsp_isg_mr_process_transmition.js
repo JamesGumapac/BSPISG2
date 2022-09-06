@@ -50,8 +50,8 @@ define(['N/runtime', 'N/search', 'N/task', './lib/bsp_transmitions_util.js', './
                 let resultSearch = BSPTransmitionsUtil.searchAll(transmitionSavedSearcObj);
                 resultSearch.forEach(element => {
                     let salesOrderID = element.id;
-                    let routeCodeID = element.getValue("custbody_bsp_lb_route_code");
-                    let location = element.getValue({name: "custrecord_bsp_lb_location", join: "CUSTBODY_BSP_LB_ROUTE_CODE"});
+                    let routeCodeID = element.getValue("custbody_bsp_isg_route_code");
+                    let location = element.getValue({name: "custrecord_bsp_lb_location", join: "custbody_bsp_isg_route_code"});
                     let itemID = element.getValue("item");
                     let itemQuantity = element.getValue("quantity");
                     let itemQuantityCommited = element.getValue("quantitycommitted");

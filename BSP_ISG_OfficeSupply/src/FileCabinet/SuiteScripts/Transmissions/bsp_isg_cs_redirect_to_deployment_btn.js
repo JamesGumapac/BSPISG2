@@ -42,7 +42,7 @@ function(url, record, search) {
             });
 
             record.submitFields({
-                type: "customrecord_bsp_lb_transmition_schedule",
+                type: "customrecord_bsp_isg_transm_schedule",
                 id: recID,
                 values: {
                     custrecord_bsp_transm_schd_deployment_id: scriptDeploymentID.scriptid.toLowerCase()

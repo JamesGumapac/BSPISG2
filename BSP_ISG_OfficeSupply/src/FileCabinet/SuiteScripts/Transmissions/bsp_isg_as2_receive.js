@@ -2,12 +2,12 @@
  * @NApiVersion 2.1
  * @NScriptType Restlet
  */
-define(['N/record', 'N/search', 'N/file', './lib/bsp_as2_service.js', './lib/bsp_trading_partners.js'],
+define(['N/record', 'N/search', './lib/bsp_as2_service.js', './lib/bsp_trading_partners.js'],
     /**
  * @param{record} record
  * @param{search} search
  */
-    (record, search, file, BSP_AS2Service, BSPTradingParnters) => {
+    (record, search, BSP_AS2Service, BSPTradingParnters) => {
 
         /**
          * Defines the function that is executed when a POST request is sent to a RESTlet.
