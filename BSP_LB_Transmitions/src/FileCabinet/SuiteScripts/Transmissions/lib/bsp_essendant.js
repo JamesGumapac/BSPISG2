@@ -8,7 +8,9 @@
     const STATUS_CODES = Object.freeze({
         processedSuccessfully : "00",
         processedPartially: "59",
-        processedWithErrors : "99"
+        processedWithErrors : "99",
+        processStatusOK: 1,
+        processStatusError: 0,
     });
 
 
@@ -28,10 +30,12 @@
             log.debug(stLogTitle, `PO ID ${poID} :: Status: ${JSON.stringify(poAcknowledgmentStatus)}`);
 
             if(poAcknowledgmentStatus.ReasonCode == STATUS_CODES.processedSuccessfully){
-                processPO(poID, jsonObjResponse);
-                BSP_POutil.updatePOtransmissionStatus(poID, BSP_POutil.transmitionPOStatus().acknowledged);
+                let processStatus = processPO(poID, jsonObjResponse);
+                if(processStatus == STATUS_CODES.processStatusOK){
+                    BSP_POutil.updatePOtransmissionStatus(poID, BSP_POutil.transmitionPOStatus().acknowledged);
+                }
             }else if(poAcknowledgmentStatus.ReasonCode == STATUS_CODES.processedWithErrors){
-                deletePO(poID);
+                BSP_POutil.deletePO(poID);
             }
         }
     }
@@ -44,6 +48,8 @@
      * @param jsonObjResponse - This is the JSON response from the API call.
     */
     function processPO(poID, jsonObjResponse){
+        let processStatus = STATUS_CODES.processStatusOK;
+
         let purchaseOrderRec = record.load({
             type: record.Type.PURCHASE_ORDER,
             id: parseInt(poID)
@@ -79,20 +85,21 @@
                     line: i
                 });
                 
-                linesPartiallyAcknowledged.push({
-                    itemID: itemID,
-                    quantitySent: parseInt(acknowledgmentItem.Quantity),
-                    quantityAcknowledged: parseInt(acknowledgmentItem.Facility.Quantity),
-                    quantityRemaining: (parseInt(acknowledgmentItem.Quantity) - parseInt(acknowledgmentItem.Facility.Quantity))
-                });
-
-                purchaseOrderRec.setSublistValue({
-                    sublistId: 'item',
-                    fieldId: 'quantity',
-                    line: i,
-                    value: parseInt(acknowledgmentItem.Facility.Quantity)
-                });
-
+                if(parseInt(acknowledgmentItem.Facility.Quantity) > 0){
+                    linesPartiallyAcknowledged.push({
+                        itemID: itemID,
+                        quantitySent: parseInt(acknowledgmentItem.Quantity),
+                        quantityAcknowledged: parseInt(acknowledgmentItem.Facility.Quantity),
+                        quantityRemaining: (parseInt(acknowledgmentItem.Quantity) - parseInt(acknowledgmentItem.Facility.Quantity))
+                    });
+    
+                    purchaseOrderRec.setSublistValue({
+                        sublistId: 'item',
+                        fieldId: 'quantity',
+                        line: i,
+                        value: parseInt(acknowledgmentItem.Facility.Quantity)
+                    });
+                }
             }else {
                 log.debug("processPOline", `Item Rejected`);
                 purchaseOrderRec.removeLine({
@@ -101,23 +108,23 @@
                });
             }
         }
-        purchaseOrderRec.save();
+        
+        itemCount = purchaseOrderRec.getLineCount({
+            sublistId: 'item'
+        });
+
+        if(itemCount > 0){
+            purchaseOrderRec.save();
+        }else{
+            processStatus = STATUS_CODES.processStatusError;
+            BSP_POutil.deletePO(poID);
+        }
 
         if(linesPartiallyAcknowledged.length > 0){
             BSP_SOUtil.updateSOLines(soID, linesPartiallyAcknowledged);
         }
-    }
 
-    /**
-     * This function deletes a PO record when the PO is rejected.
-     * @param poID - The internal ID of the PO record
-    */
-    function deletePO(poID){
-        record.delete({
-            type: record.Type.PURCHASE_ORDER,
-            id: parseInt(poID),
-        });
-        log.debug("deletePO", `PO ID ${poID} REJECTED. PO Record has been deleted`);
+        return processStatus;
     }
 
     /**

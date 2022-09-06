@@ -300,11 +300,53 @@
         return true;
     }
 
+    /**
+     * This function deletes a PO record when the PO is rejected.
+     * @param poID - The internal ID of the PO record
+    */
+    function deletePO(poID){
+        record.delete({
+            type: record.Type.PURCHASE_ORDER,
+            id: parseInt(poID),
+        });
+        log.debug("deletePO", `PO ID ${poID} REJECTED. PO Record has been deleted`);
+    }
+
+
+    /**
+     * It takes a PO number as an argument and returns the internal ID of the PO.
+     * @param poNumber - The PO number you want to find the ID for
+     * @returns The ID of the PO.
+    */
+    function findPObyNumber(poNumber){
+        let poID = null;
+        const purchaseorderSearchObj = search.create({
+            type: "purchaseorder",
+            filters:
+            [
+               ["type","anyof","PurchOrd"], 
+               "AND", 
+               ["number","equalto",poNumber], 
+               "AND", 
+               ["mainline","is","T"]
+            ],
+            columns:[]
+         });
+
+        purchaseorderSearchObj.run().each(function(result){
+            poID = result.id;
+            return true;
+        });
+        return poID; 
+    }
+
     return {
         transmitionPOStatus: transmitionPOStatus,
         createPurchaseOrders: createPurchaseOrders,
         getPurchaseOrdersForTransmission: getPurchaseOrdersForTransmission,
         updatePOtransmissionStatus: updatePOtransmissionStatus,
-        setPOMessageID: setPOMessageID
+        setPOMessageID: setPOMessageID,
+        deletePO: deletePO,
+        findPObyNumber: findPObyNumber
 	};
 });
