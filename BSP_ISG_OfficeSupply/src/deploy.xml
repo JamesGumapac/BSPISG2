@@ -3,10 +3,10 @@
         <path>~/AccountConfiguration/*</path>
     </configuration>
     <files>
-        <path>~/FileCabinet/*</path>
+        <path>~/FileCabinet/Transmissions/*</path>
     </files>
     <objects>
-        <path>~/Objects/*</path>
+        <path>~/Objects/Transmissions/*</path>
     </objects>
     <translationimports>
         <path>~/Translations/*</path>
