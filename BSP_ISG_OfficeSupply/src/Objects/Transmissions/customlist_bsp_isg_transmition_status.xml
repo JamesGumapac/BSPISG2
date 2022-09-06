@@ -1,0 +1,34 @@
+<customlist scriptid="customlist_bsp_isg_transmition_status">
+  <description></description>
+  <isinactive>F</isinactive>
+  <ismatrixoption>F</ismatrixoption>
+  <isordered>T</isordered>
+  <name>Transmission Status</name>
+  <customvalues>
+    <customvalue scriptid="val_864611_t927173_619">
+      <abbreviation>N</abbreviation>
+      <isinactive>F</isinactive>
+      <value>Not Started</value>
+    </customvalue>
+    <customvalue scriptid="val_864612_t927173_404">
+      <abbreviation>T</abbreviation>
+      <isinactive>F</isinactive>
+      <value>Transmitting</value>
+    </customvalue>
+    <customvalue scriptid="val_864613_t927173_166">
+      <abbreviation>T</abbreviation>
+      <isinactive>F</isinactive>
+      <value>Transmitted</value>
+    </customvalue>
+    <customvalue scriptid="val_864614_t927173_407">
+      <abbreviation>A</abbreviation>
+      <isinactive>F</isinactive>
+      <value>Acknowledged</value>
+    </customvalue>
+    <customvalue scriptid="val_864615_t927173_263">
+      <abbreviation>C</abbreviation>
+      <isinactive>F</isinactive>
+      <value>Complete</value>
+    </customvalue>
+  </customvalues>
+</customlist>

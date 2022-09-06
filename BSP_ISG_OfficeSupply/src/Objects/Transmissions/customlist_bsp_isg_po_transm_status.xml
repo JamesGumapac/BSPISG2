@@ -1,0 +1,29 @@
+<customlist scriptid="customlist_bsp_isg_po_transm_status">
+  <description></description>
+  <isinactive>F</isinactive>
+  <ismatrixoption>F</ismatrixoption>
+  <isordered>T</isordered>
+  <name>PO Transmission Status</name>
+  <customvalues>
+    <customvalue scriptid="val_882608_t927173_142">
+      <abbreviation>P</abbreviation>
+      <isinactive>F</isinactive>
+      <value>Pending Transmission</value>
+    </customvalue>
+    <customvalue scriptid="val_882609_t927173_403">
+      <abbreviation>P</abbreviation>
+      <isinactive>F</isinactive>
+      <value>Pending Acknowledment</value>
+    </customvalue>
+    <customvalue scriptid="val_882610_t927173_453">
+      <abbreviation>C</abbreviation>
+      <isinactive>F</isinactive>
+      <value>Acknowledged</value>
+    </customvalue>
+    <customvalue scriptid="val_882611_t927173_282">
+      <abbreviation>T</abbreviation>
+      <isinactive>F</isinactive>
+      <value>Transmission failed</value>
+    </customvalue>
+  </customvalues>
+</customlist>
