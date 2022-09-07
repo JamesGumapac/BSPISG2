@@ -28,7 +28,7 @@
       <feature required="false">WORKORDERS</feature>
     </features>
     <objects>
-      <object>custtab_bsp_item_transmission</object>
+      <object>customrole_bsp_isg_as2_service</object>
       <object>customscript_bsp_isg_mr_queue_transm_sch</object>
     </objects>
     <files>

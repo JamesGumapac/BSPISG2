@@ -1,0 +1,24 @@
+<customlist scriptid="customlist_bsp_isg_lb_operation">
+  <description></description>
+  <isinactive>F</isinactive>
+  <ismatrixoption>F</ismatrixoption>
+  <isordered>T</isordered>
+  <name>BSP | ISG | LB | Operation</name>
+  <customvalues>
+    <customvalue scriptid="val_850798_t927173_597">
+      <abbreviation>S</abbreviation>
+      <isinactive>F</isinactive>
+      <value>Ship Package</value>
+    </customvalue>
+    <customvalue scriptid="val_850799_t927173_312">
+      <abbreviation>P</abbreviation>
+      <isinactive>F</isinactive>
+      <value>Process Payment</value>
+    </customvalue>
+    <customvalue scriptid="val_850800_t927173_803">
+      <abbreviation>S</abbreviation>
+      <isinactive>F</isinactive>
+      <value>Send Invoice</value>
+    </customvalue>
+  </customvalues>
+</customlist>
