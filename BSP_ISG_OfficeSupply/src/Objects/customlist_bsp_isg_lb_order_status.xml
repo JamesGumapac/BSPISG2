@@ -1,0 +1,49 @@
+<customlist scriptid="customlist_bsp_isg_lb_order_status">
+  <description></description>
+  <isinactive>F</isinactive>
+  <ismatrixoption>F</ismatrixoption>
+  <isordered>T</isordered>
+  <name>BSP | ISG | LB | Order Status</name>
+  <customvalues>
+    <customvalue scriptid="val_847608_t927173_508">
+      <abbreviation>x</abbreviation>
+      <isinactive>F</isinactive>
+      <value>On Hold</value>
+    </customvalue>
+    <customvalue scriptid="val_847609_t927173_361">
+      <abbreviation>I</abbreviation>
+      <isinactive>F</isinactive>
+      <value>In Quotation</value>
+    </customvalue>
+    <customvalue scriptid="val_847610_t927173_372">
+      <abbreviation>I</abbreviation>
+      <isinactive>F</isinactive>
+      <value>In Process</value>
+    </customvalue>
+    <customvalue scriptid="val_847611_t927173_832">
+      <abbreviation>P</abbreviation>
+      <isinactive>F</isinactive>
+      <value>Pending Payment</value>
+    </customvalue>
+    <customvalue scriptid="val_847612_t927173_697">
+      <abbreviation>R</abbreviation>
+      <isinactive>F</isinactive>
+      <value>Ready for Shipping</value>
+    </customvalue>
+    <customvalue scriptid="val_847613_t927173_798">
+      <abbreviation>C</abbreviation>
+      <isinactive>F</isinactive>
+      <value>Complete</value>
+    </customvalue>
+    <customvalue scriptid="val_847614_t927173_412">
+      <abbreviation>N</abbreviation>
+      <isinactive>F</isinactive>
+      <value>Needs Approval</value>
+    </customvalue>
+    <customvalue scriptid="val_847615_t927173_813">
+      <abbreviation>C</abbreviation>
+      <isinactive>F</isinactive>
+      <value>CANCELED</value>
+    </customvalue>
+  </customvalues>
+</customlist>
