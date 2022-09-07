@@ -3,7 +3,7 @@
  * @NModuleScope Public
  */
 
- define(['N/record', './bsp_lb_utils.js', './bsp_lb_ordersservice_api.js'], function (record, BSPLBUtils, LBOrdersAPI) {
+ define(['N/record', './bsp_isg_lb_utils.js', './bsp_isg_lb_ordersservice_api.js'], function (record, BSPLBUtils, LBOrdersAPI) {
 
     /**
      * Create Payment Record in NetSuite

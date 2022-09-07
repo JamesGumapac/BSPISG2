@@ -3,7 +3,7 @@
  * @NModuleScope Public
  */
 
- define(['./bsp_lb_utils.js', 'N/http', 'N/xml', './xmlTojson.js'],
+ define(['./bsp_isg_lb_utils.js', 'N/http', 'N/xml', './xmlTojson.js'],
  function (BSPLBUtils, http, xml, parser){
 
     /**

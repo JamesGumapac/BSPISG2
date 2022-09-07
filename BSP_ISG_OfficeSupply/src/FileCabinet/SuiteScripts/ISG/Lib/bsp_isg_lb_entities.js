@@ -3,7 +3,7 @@
  * @NModuleScope Public
  */
 
- define(['N/record', './bsp_lb_utils.js', './bsp_lb_catalogservice_api.js'], function (record, BSPLBUtils, LBCatalogAPI) {
+ define(['N/record', './bsp_isg_lb_utils.js', './bsp_isg_lb_catalogservice_api.js'], function (record, BSPLBUtils, LBCatalogAPI) {
 
     /**
      * Create Vendor Record in NS

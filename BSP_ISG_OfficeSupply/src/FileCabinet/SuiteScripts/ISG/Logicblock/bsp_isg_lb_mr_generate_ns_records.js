@@ -2,7 +2,7 @@
  * @NApiVersion 2.1
  * @NScriptType MapReduceScript
  */
-define(['N/record', 'N/runtime', 'N/search', '../Lib/bsp_lb_utils.js', '../Lib/bsp_lb_entities.js', '../Lib/bsp_lb_items.js', '../Lib/bsp_lb_transactions.js', '../Lib/bsp_lb_login_api.js', '../Lib/bsp_lb_settings.js'],
+define(['N/record', 'N/runtime', 'N/search', '../Lib/bsp_isg_lb_utils.js', '../Lib/bsp_isg_lb_entities.js', '../Lib/bsp_isg_lb_items.js', '../Lib/bsp_isg_lb_transactions.js', '../Lib/bsp_isg_lb_login_api.js', '../Lib/bsp_isg_lb_settings.js'],
     /**
  * @param{record} record
  * @param{runtime} runtime

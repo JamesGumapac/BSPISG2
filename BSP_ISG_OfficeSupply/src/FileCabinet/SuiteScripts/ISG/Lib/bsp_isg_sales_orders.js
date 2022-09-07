@@ -3,9 +3,18 @@
  * @NModuleScope Public
  */
 
- define(['N/search', 'N/record', './bsp_transmitions_util.js'], function (search, record, BSPTransmitionsUtil) {
+ define(['N/record'], function (record) {
 
 
+    /**
+     * It takes a sales order ID and an array of objects that contain the item ID, quantity acknowledged,
+     * and quantity remaining. It then loads the sales order record, loops through the array of objects,
+     * and updates the quantity of the item line to the quantity acknowledged. It then creates a new line
+     * with the same item ID and sets the quantity to the quantity remaining. It then copies the data from
+     * the original line to the new line
+     * @param soID - The internal ID of the sales order
+     * @param linesPartiallyAcknowledged - An array of objects that contain the following properties:
+    */
     function updateSOLines(soID, linesPartiallyAcknowledged){
         log.debug("updateSOLines", `Update lines in SO ID ${soID}`);
         log.debug("updateSOLines", `Item lines ${JSON.stringify(linesPartiallyAcknowledged)}`);
@@ -61,6 +70,12 @@
     }
 
 
+    /**
+     * It takes a Sales Order record object and returns an array of objects that contain the field ID and field value
+     * of the current item line of the record object.
+     * @param soRec - The Sales Order record object
+     * @returns An array of objects.
+    */
     function getItemLineData(soRec){
         let lineData = [];
 

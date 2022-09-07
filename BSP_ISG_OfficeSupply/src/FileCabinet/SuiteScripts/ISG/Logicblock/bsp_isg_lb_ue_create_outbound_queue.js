@@ -2,7 +2,7 @@
  * @NApiVersion 2.1
  * @NScriptType UserEventScript
  */
-define(['../Lib/bsp_lb_utils.js'],
+define(['../Lib/bsp_isg_lb_utils.js'],
     
     (BSPLBUtils) => {
         /**

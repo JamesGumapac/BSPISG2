@@ -3,7 +3,7 @@
  * @NModuleScope Public
  */
 
- define(['N/https', 'N/encode', './xmlTojson.js', 'N/xml', './bsp_transmitions_util.js'],
+ define(['N/https', 'N/encode', './xmlTojson.js', 'N/xml', './bsp_isg_transmitions_util.js'],
  function (https, encode, parser, xml, BSPTransmitionsUtil){
 
     /**

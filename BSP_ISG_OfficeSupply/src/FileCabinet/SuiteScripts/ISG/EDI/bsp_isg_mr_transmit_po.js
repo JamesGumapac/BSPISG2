@@ -5,12 +5,12 @@
 define([
     'N/runtime', 
     'N/https', 
-    '../Lib/bsp_transmitions_util.js', 
-    '../Lib/bsp_edi_settings.js', 
+    '../Lib/bsp_isg_transmitions_util.js', 
+    '../Lib/bsp_isg_edi_settings.js', 
     '../Lib/xml_template_handler.js', 
-    '../Lib/bsp_as2_service.js', 
-    '../Lib/bsp_purchase_orders.js',
-    '../Lib/bsp_trading_partners.js'],
+    '../Lib/bsp_isg_as2_service.js', 
+    '../Lib/bsp_isg_purchase_orders.js',
+    '../Lib/bsp_isg_trading_partners.js'],
     /**
      * @param{runtime} runtime
      * @param{BSPTransmitionsUtil} BSPTransmitionsUtil

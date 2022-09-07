@@ -2,7 +2,7 @@
  * @NApiVersion 2.1
  * @NScriptType MapReduceScript
  */
-define(['N/runtime', '../Lib/bsp_lb_utils.js', '../Lib/bsp_lb_payments.js', '../Lib/bsp_lb_login_api.js', '../Lib/bsp_lb_settings.js'],
+define(['N/runtime', '../Lib/bsp_isg_lb_utils.js', '../Lib/bsp_isg_lb_payments.js', '../Lib/bsp_isg_lb_login_api.js', '../Lib/bsp_isg_lb_settings.js'],
     /**
  * @param{runtime} runtime
  */

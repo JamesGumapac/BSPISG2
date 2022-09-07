@@ -3,7 +3,7 @@
  * @NModuleScope Public
  */
 
- define(['N/record', 'N/search', './bsp_lb_utils.js', './bsp_lb_ordersservice_api.js'], function (record, search, BSPLBUtils, LBOrdersAPI) {
+ define(['N/record', 'N/search', './bsp_isg_lb_utils.js', './bsp_isg_lb_ordersservice_api.js'], function (record, search, BSPLBUtils, LBOrdersAPI) {
 
     /**
      * Create package in Logicblock
