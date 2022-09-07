@@ -1,7 +1,7 @@
 <usereventscript scriptid="customscript_bsp_isg_ue_create_sch_dep">
   <description></description>
   <isinactive>F</isinactive>
-  <name>BSP | ISG | Create Transm Sch Deployment</name>
+  <name>BSP | ISG | UE | Create Transm Sch Dep.</name>
   <notifyadmins>F</notifyadmins>
   <notifyemails></notifyemails>
   <notifyowner>T</notifyowner>
