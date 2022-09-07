@@ -5,10 +5,10 @@
 
  define([
     'N/search', 
-    './bsp_lb_utils.js', 
-    './bsp_lb_ordersservice_api.js', 
-    './bsp_lb_cc_payments.js',
-    './bsp_lb_po_payments.js'
+    './bsp_isg_lb_utils.js', 
+    './bsp_isg_lb_ordersservice_api.js', 
+    './bsp_isg_lb_cc_payments.js',
+    './bsp_isg_lb_po_payments.js'
  ], 
  function (search, BSPLBUtils, LBOrdersAPI, BSPLBCCPayments, BSPLBPOPayments) {
 

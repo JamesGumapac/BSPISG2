@@ -2,7 +2,7 @@
  * @NApiVersion 2.1
  * @NScriptType Restlet
  */
-define(['N/record', 'N/search', '../Lib/bsp_as2_service.js', '../Lib/bsp_trading_partners.js', '../Lib/bsp_transmitions_util.js'],
+define(['N/record', 'N/search', '../Lib/bsp_isg_as2_service.js', '../Lib/bsp_isg_trading_partners.js', '../Lib/bsp_isg_transmitions_util.js'],
     /**
  * @param{record} record
  * @param{search} search

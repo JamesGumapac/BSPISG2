@@ -3,7 +3,7 @@
  * @NModuleScope Public
  */
 
- define(['N/record','./bsp_purchase_orders.js', './bsp_sales_orders.js'], function (record, BSP_POutil, BSP_SOUtil) {
+ define(['N/record','./bsp_isg_purchase_orders.js', './bsp_isg_sales_orders.js'], function (record, BSP_POutil, BSP_SOUtil) {
 
     /**
      *  'A' = accepted

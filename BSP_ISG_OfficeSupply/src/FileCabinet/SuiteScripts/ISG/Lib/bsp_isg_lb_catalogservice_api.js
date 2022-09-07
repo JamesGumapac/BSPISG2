@@ -3,7 +3,7 @@
  * @NModuleScope Public
  */
 
- define(['./bsp_lb_utils.js', './bsp_lb_service_api.js'], function (BSPLBUtils, BSPLBServiceAPI) {
+ define(['./bsp_isg_lb_utils.js', './bsp_isg_lb_service_api.js'], function (BSPLBUtils, BSPLBServiceAPI) {
 
     /**
      * Get Vendors from Logicblock API

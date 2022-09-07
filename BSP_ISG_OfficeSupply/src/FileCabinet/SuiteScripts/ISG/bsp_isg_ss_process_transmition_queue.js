@@ -2,7 +2,7 @@
  * @NApiVersion 2.1
  * @NScriptType ScheduledScript
  */
-define(['N/runtime', 'N/task', './Lib/bsp_transmitions_util.js'],
+define(['N/runtime', 'N/task', './Lib/bsp_isg_transmitions_util.js'],
     /**
  * @param{render} render
  */

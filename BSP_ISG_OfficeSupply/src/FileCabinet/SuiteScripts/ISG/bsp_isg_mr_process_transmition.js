@@ -2,7 +2,7 @@
  * @NApiVersion 2.1
  * @NScriptType MapReduceScript
  */
-define(['N/runtime', 'N/search', 'N/task', './Lib/bsp_transmitions_util.js', './Lib/bsp_edi_settings.js', './Lib/bsp_purchase_orders.js'],
+define(['N/runtime', 'N/search', 'N/task', './Lib/bsp_isg_transmitions_util.js', './Lib/bsp_isg_edi_settings.js', './Lib/bsp_isg_purchase_orders.js'],
     /**
     * @param{runtime} runtime
     * @param{search} search

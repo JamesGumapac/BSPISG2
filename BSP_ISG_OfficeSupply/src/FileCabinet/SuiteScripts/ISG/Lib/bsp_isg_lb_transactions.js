@@ -3,7 +3,7 @@
  * @NModuleScope Public
  */
 
- define(['N/record', './bsp_lb_utils.js', './bsp_lb_items.js', './bsp_lb_ordersservice_api.js', './bsp_lb_entities.js'], function (record, BSPLBUtils, BSPLBItems, LBOrdersAPI, BSPLBEntities) {
+ define(['N/record', './bsp_isg_lb_utils.js', './bsp_isg_lb_items.js', './bsp_isg_lb_ordersservice_api.js', './bsp_isg_lb_entities.js'], function (record, BSPLBUtils, BSPLBItems, LBOrdersAPI, BSPLBEntities) {
 
     /**
      * Create Transaction Record in NS

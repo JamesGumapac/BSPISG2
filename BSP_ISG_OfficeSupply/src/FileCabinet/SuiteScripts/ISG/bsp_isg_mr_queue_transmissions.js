@@ -2,7 +2,7 @@
  * @NApiVersion 2.1
  * @NScriptType MapReduceScript
  */
-define(['N/runtime', './Lib/bsp_transmitions_util.js'],
+define(['N/runtime', './Lib/bsp_isg_transmitions_util.js'],
     /**
  * @param{runtime} runtime
  */

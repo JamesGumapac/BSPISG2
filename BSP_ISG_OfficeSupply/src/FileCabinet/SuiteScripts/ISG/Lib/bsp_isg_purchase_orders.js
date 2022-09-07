@@ -3,7 +3,7 @@
  * @NModuleScope Public
  */
 
- define(['N/search', 'N/record', './bsp_transmitions_util.js'], function (search, record, BSPTransmitionsUtil) {
+ define(['N/search', 'N/record', './bsp_isg_transmitions_util.js'], function (search, record, BSPTransmitionsUtil) {
 
     const PO_TRANSMITION_STATUSES = Object.freeze({
         pendingTransmission: 1,
