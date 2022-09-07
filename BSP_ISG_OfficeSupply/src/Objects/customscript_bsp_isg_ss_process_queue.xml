@@ -1,7 +1,7 @@
 <scheduledscript scriptid="customscript_bsp_isg_ss_process_queue">
   <description></description>
   <isinactive>F</isinactive>
-  <name>BSP | ISG | Process Transmission Queue</name>
+  <name>BSP | ISG | SS |  Process Transm Queue</name>
   <notifyadmins>F</notifyadmins>
   <notifyemails></notifyemails>
   <notifyowner>T</notifyowner>

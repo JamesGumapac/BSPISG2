@@ -1,7 +1,7 @@
 <restlet scriptid="customscript_bsp_isg_as2_tran_ack">
   <description></description>
   <isinactive>F</isinactive>
-  <name>BSP | ISG | EDI | AS2 | Receive</name>
+  <name>BSP | ISG | EDI | RL | AS2 | Receive</name>
   <notifyadmins>F</notifyadmins>
   <notifyemails></notifyemails>
   <notifyowner>T</notifyowner>

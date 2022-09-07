@@ -1,7 +1,7 @@
 <mapreducescript scriptid="customscript_bsp_isg_mr_queue_transm_sch">
   <description></description>
   <isinactive>F</isinactive>
-  <name>BSP | ISG | Queue Transmission Scheduler</name>
+  <name>BSP | ISG | MR | Queue Transm Scheduler</name>
   <notifyadmins>F</notifyadmins>
   <notifyemails></notifyemails>
   <notifyowner>T</notifyowner>

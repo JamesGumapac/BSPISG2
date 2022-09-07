@@ -1,7 +1,7 @@
 <usereventscript scriptid="customscript_bsp_isg_ue_fields_action">
   <description></description>
   <isinactive>F</isinactive>
-  <name>BSP | ISG | PO Transm. fields actions</name>
+  <name>BSP | ISG | UE | PO Transm. fields act.</name>
   <notifyadmins>F</notifyadmins>
   <notifyemails></notifyemails>
   <notifyowner>T</notifyowner>
