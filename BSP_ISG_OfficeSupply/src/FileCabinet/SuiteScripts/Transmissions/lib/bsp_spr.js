@@ -28,13 +28,25 @@
     });
 
 
+    /**
+     * The function takes a JSON object as an argument, and if the object contains a key called "poNumber",
+     * it will use that value to find a PO in NetSuite, and if it finds one, it will update the PO's with
+     * the data returned in the Acknowledgment.
+     * @param jsonObjResponse - The JSON object that is returned from the RESTlet.
+    */
     function processPOAck(jsonObjResponse){
         let stLogTitle = "Trading Partner: SPR";
         log.debug(stLogTitle, `Processing PO Acknowledmgnet`);
 
+        let result = {};
+
         let poNumber = getAcknowledgmentPOHeaderData(jsonObjResponse,"poNumber");
         let poID = BSP_POutil.findPObyNumber(poNumber);
         if(poID){
+            let queueID = BSP_POutil.getQueueOfPO(poID);
+            result.queueID = queueID;
+            result.poID = poID;
+            
             let poAcknowledgmentStatus = getAcknowledgmentPOHeaderData(jsonObjResponse,"Status");
 
             log.debug(stLogTitle, `PO ID ${poID} :: Status: ${JSON.stringify(poAcknowledgmentStatus)}`);
@@ -48,6 +60,7 @@
                 BSP_POutil.deletePO(poID);
             }
         }
+        return result;
     }
 
     /**

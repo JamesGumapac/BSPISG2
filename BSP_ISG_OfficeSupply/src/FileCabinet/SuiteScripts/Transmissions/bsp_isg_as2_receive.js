@@ -2,12 +2,12 @@
  * @NApiVersion 2.1
  * @NScriptType Restlet
  */
-define(['N/record', 'N/search', './lib/bsp_as2_service.js', './lib/bsp_trading_partners.js'],
+define(['N/record', 'N/search', './lib/bsp_as2_service.js', './lib/bsp_trading_partners.js', './lib/bsp_transmitions_util.js'],
     /**
  * @param{record} record
  * @param{search} search
  */
-    (record, search, BSP_AS2Service, BSPTradingParnters) => {
+    (record, search, BSP_AS2Service, BSPTradingParnters, BSPTransmitionsUtil) => {
 
         /**
          * Defines the function that is executed when a POST request is sent to a RESTlet.
@@ -31,12 +31,17 @@ define(['N/record', 'N/search', './lib/bsp_as2_service.js', './lib/bsp_trading_p
                 /**
                  * Check Trading partner Origin
                 */
+                let result = null;
                 if(BSPTradingParnters.isAcknowledgmentSPR(jsonObjResponse)){
-                    BSPTradingParnters.processPOAck(jsonObjResponse, BSPTradingParnters.constants().spr);
+                    result = BSPTradingParnters.processPOAck(jsonObjResponse, BSPTradingParnters.constants().spr);
                 }else{
-                    BSPTradingParnters.processPOAck(jsonObjResponse, BSPTradingParnters.constants().essendant);
+                    result = BSPTradingParnters.processPOAck(jsonObjResponse, BSPTradingParnters.constants().essendant);
                 }
-              
+                
+                if(result && result.queueID){
+                    BSPTransmitionsUtil.checkTransmissionQueue(result.queueID);
+                }
+
                 response = {
                     "operation_code": "200",
                     "operation_message": "OK",

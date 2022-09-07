@@ -471,6 +471,41 @@
         return date.toISOString().slice(0, 19);
     }
 
+    function checkTransmissionQueue(queueID){
+        const purchaseOrderSearchObj = search.create({
+            type: "purchaseorder",
+            filters:
+            [
+               ["type","anyof","PurchOrd"], 
+               "AND", 
+               ["mainline","is","T"], 
+               "AND", 
+               ["custbody_bsp_isg_transm_queue_id","is",queueID], 
+               "AND", 
+               ["custbody_bsp_isg_po_transm_status","anyof","1","2"]
+            ],
+            columns:[]
+        });
+        let searchResultCount = purchaseOrderSearchObj.runPaged().count;
+        log.debug("checkTransmissionQueue", "SearchObj result Count: " + searchResultCount);
+
+        if(searchResultCount == 0){
+            deleteQueue(queueID);
+        }
+    }
+
+    /**
+     * This function deletes a Queue record when all the POs related to it have been processed.
+     * @param queueID - The internal ID of the Queue record
+    */
+    function deleteQueue(queueID){
+        record.delete({
+            type: "customrecord_bsp_isg_transmission_queue",
+            id: parseInt(queueID),
+        });
+        log.debug("deleteQueue", `Queue ID ${queueID} has been deleted`);
+    }
+
     return {
         constants: constants,
         transmitionQueueStatus: transmitionQueueStatus,
@@ -487,6 +522,7 @@
         createServiceLog: createServiceLog,
         buildFileName: buildFileName,
         getXMLDate: getXMLDate,
-        getAccountNumber: getAccountNumber
+        getAccountNumber: getAccountNumber,
+        checkTransmissionQueue: checkTransmissionQueue
 	};
 });

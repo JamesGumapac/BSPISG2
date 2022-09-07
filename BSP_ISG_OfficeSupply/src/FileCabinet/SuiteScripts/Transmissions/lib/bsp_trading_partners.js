@@ -206,12 +206,14 @@
      * @param tradingPartner - This is the trading partner that the PO Ack is coming from.
      */
     function processPOAck(jsonObjResponse, tradingPartner){
+        let result = {};
         if(tradingPartner == CONTANTS.essendant){
-            ESSENDANT.processPOAck(jsonObjResponse)
+            result = ESSENDANT.processPOAck(jsonObjResponse);
         }
         if(tradingPartner == CONTANTS.spr){
-            SPR.processPOAck(jsonObjResponse)
+            result = SPR.processPOAck(jsonObjResponse);
         }
+        return result;
     }
 
     /**

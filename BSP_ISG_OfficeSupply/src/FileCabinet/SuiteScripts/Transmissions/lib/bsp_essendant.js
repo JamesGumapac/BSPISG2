@@ -23,8 +23,13 @@
         let stLogTitle = "Trading Partner: Essendant";
         log.debug(stLogTitle, `Processing PO Acknowledmgnet`);
 
+        let result = {};
+
         let poID = getAcknowledgmentPOHeaderData(jsonObjResponse,"ID");
         if(poID){
+            let queueID = BSP_POutil.getQueueOfPO(poID);
+            result.queueID = queueID;
+            result.poID = poID;
             let poAcknowledgmentStatus = getAcknowledgmentPOHeaderData(jsonObjResponse,"Status");
 
             log.debug(stLogTitle, `PO ID ${poID} :: Status: ${JSON.stringify(poAcknowledgmentStatus)}`);
@@ -37,7 +42,9 @@
             }else if(poAcknowledgmentStatus.ReasonCode == STATUS_CODES.processedWithErrors){
                 BSP_POutil.deletePO(poID);
             }
+            log.debug(stLogTitle, `PO ID ${poID} has ben processed`);
         }
+        return result;
     }
 
     /**
