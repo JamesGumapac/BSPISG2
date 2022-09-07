@@ -340,6 +340,28 @@
         return poID; 
     }
 
+
+    /**
+     * It takes a PO ID and returns the ID of the queue that the PO is assigned to.
+     * @param poID - The internal ID of the PO
+     * @returns The queue ID of the PO.
+    */
+    function getQueueOfPO(poID){
+        let queueID = null;
+
+        let poFields = search.lookupFields({
+            type: record.Type.PURCHASE_ORDER,
+            id: parseInt(poID),
+            columns: 'custbody_bsp_isg_transm_queue_id'
+        });
+        if(poFields && poFields.custbody_bsp_isg_transm_queue_id){
+            queueID = poFields.custbody_bsp_isg_transm_queue_id;
+        }
+
+        return queueID;
+    }
+
+
     return {
         transmitionPOStatus: transmitionPOStatus,
         createPurchaseOrders: createPurchaseOrders,
@@ -347,6 +369,7 @@
         updatePOtransmissionStatus: updatePOtransmissionStatus,
         setPOMessageID: setPOMessageID,
         deletePO: deletePO,
-        findPObyNumber: findPObyNumber
+        findPObyNumber: findPObyNumber,
+        getQueueOfPO: getQueueOfPO
 	};
 });
