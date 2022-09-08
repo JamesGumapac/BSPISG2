@@ -18,6 +18,21 @@
         return CONTANTS;
     }
 
+    function isTradingPartner(vendor){
+        let result = false;
+
+        let vendorFieldsObj = search.lookupFields({
+            type: record.Type.VENDOR,
+            id: vendor,
+            columns: 'custentity_bsp_isg_trading_part_settings'
+        });
+        if(vendorFieldsObj && vendorFieldsObj.custentity_bsp_isg_trading_part_settings && vendorFieldsObj.custentity_bsp_isg_trading_part_settings.length > 0){
+            result = true;
+        }
+        return result;
+    }
+
+
     /**
      * It takes a trading partner ID and returns the BOD ID associated with that trading partner.
      * @param id - The internal ID of the record you want to look up.
@@ -243,6 +258,7 @@
         getTradingPartnerBODId: getTradingPartnerBODId,
         updateTradingPartnerBODId: updateTradingPartnerBODId,
         isAcknowledgmentSPR: isAcknowledgmentSPR,
-        processPOAck: processPOAck
+        processPOAck: processPOAck,
+        isTradingPartner: isTradingPartner
 	};
 });
