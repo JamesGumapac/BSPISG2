@@ -1,5 +1,5 @@
 <manifest projecttype="ACCOUNTCUSTOMIZATION">
-  <projectname>BSP_ISG_OfficeSupply</projectname>
+  <projectname>Office Supplies</projectname>
   <frameworkversion>1.0</frameworkversion>
   <dependencies>
     <features>
