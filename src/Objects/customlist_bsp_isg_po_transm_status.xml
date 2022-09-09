@@ -10,6 +10,11 @@
       <isinactive>F</isinactive>
       <value>Pending Transmission</value>
     </customvalue>
+    <customvalue scriptid="val_892520_t927173_927">
+      <abbreviation>T</abbreviation>
+      <isinactive>F</isinactive>
+      <value>Transmitting</value>
+    </customvalue>
     <customvalue scriptid="val_882609_t927173_403">
       <abbreviation>P</abbreviation>
       <isinactive>F</isinactive>

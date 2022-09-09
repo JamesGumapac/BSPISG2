@@ -197,7 +197,8 @@ define(['N/runtime', 'N/search', 'N/task', './Lib/bsp_isg_transmitions_util.js',
                     deploymentId: paramsObj.mr_script_dep_id,
                     params: {
                         custscript_bsp_mr_transm_queue: transmitionQueueID,
-                        custscript_bsp_mr_transm_rec: transmitionRecID
+                        custscript_bsp_mr_transm_rec: transmitionRecID,
+                        custscript_bsp_mr_po_rec_id: null
                     }
                 });
                 let intTaskID = objMRTask.submit();

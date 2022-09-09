@@ -61,12 +61,61 @@
       <setting></setting>
       <storevalue>T</storevalue>
     </scriptcustomfield>
+    <scriptcustomfield scriptid="custscript_bsp_mr_po_rec_id">
+      <accesslevel>2</accesslevel>
+      <applyformatting>F</applyformatting>
+      <checkspelling>F</checkspelling>
+      <defaultchecked>F</defaultchecked>
+      <defaultselection></defaultselection>
+      <defaultvalue></defaultvalue>
+      <description></description>
+      <displayheight></displayheight>
+      <displaytype>NORMAL</displaytype>
+      <displaywidth></displaywidth>
+      <dynamicdefault></dynamicdefault>
+      <fieldtype>TEXT</fieldtype>
+      <help></help>
+      <isformula>F</isformula>
+      <ismandatory>F</ismandatory>
+      <label>PO rec (Manual transmission)</label>
+      <linktext></linktext>
+      <maxlength></maxlength>
+      <maxvalue></maxvalue>
+      <minvalue></minvalue>
+      <onparentdelete></onparentdelete>
+      <searchlevel>2</searchlevel>
+      <selectrecordtype></selectrecordtype>
+      <setting></setting>
+      <storevalue>T</storevalue>
+    </scriptcustomfield>
   </scriptcustomfields>
   <scriptdeployments>
+    <scriptdeployment scriptid="customdeploy_bsp_mr_transmit_pos_manual">
+      <buffersize>1</buffersize>
+      <concurrencylimit>1</concurrencylimit>
+      <custscript_bsp_mr_po_rec_id></custscript_bsp_mr_po_rec_id>
+      <custscript_bsp_mr_transm_queue></custscript_bsp_mr_transm_queue>
+      <custscript_bsp_mr_transm_rec></custscript_bsp_mr_transm_rec>
+      <isdeployed>T</isdeployed>
+      <loglevel>DEBUG</loglevel>
+      <queueallstagesatonce>T</queueallstagesatonce>
+      <runasrole>ADMINISTRATOR</runasrole>
+      <status>NOTSCHEDULED</status>
+      <title>BSP | ISG | EDI | MR | Transmit POs (Manual)</title>
+      <yieldaftermins>60</yieldaftermins>
+      <recurrence>
+        <single>
+          <repeat></repeat>
+          <startdate>2022-09-10</startdate>
+          <starttime>01:00:00Z</starttime>
+        </single>
+      </recurrence>
+    </scriptdeployment>
     <scriptdeployment scriptid="customdeploy_bsp_mr_transmit_pos">
       <buffersize>1</buffersize>
       <concurrencylimit>1</concurrencylimit>
-      <custscript_bsp_mr_transm_queue>402</custscript_bsp_mr_transm_queue>
+      <custscript_bsp_mr_po_rec_id></custscript_bsp_mr_po_rec_id>
+      <custscript_bsp_mr_transm_queue>1201</custscript_bsp_mr_transm_queue>
       <custscript_bsp_mr_transm_rec>2</custscript_bsp_mr_transm_rec>
       <isdeployed>T</isdeployed>
       <loglevel>DEBUG</loglevel>
