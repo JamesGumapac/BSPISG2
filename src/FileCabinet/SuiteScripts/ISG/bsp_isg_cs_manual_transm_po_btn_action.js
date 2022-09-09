@@ -26,9 +26,31 @@ function(message, url) {
         let stLogTitle = "transmitPO";
         try{
             console.log(stLogTitle, JSON.stringify(purchaseOrderRecID));
-            /**
-             * TODO - Transmit PO
-             */
+
+            let msg = message.create({
+                title: "Confirmation",
+                message: "Purchase Order sent for Transmission",
+                type: message.Type.CONFIRMATION
+            });     
+            msg.show({
+                duration: 10000
+            });   
+            setTimeout(10000);
+
+            let parameters = {
+                purchaseOrderRecID: purchaseOrderRecID
+            };
+
+            let stSuiteletUrl = url.resolveScript({
+                scriptId: 'customscript_bsp_isg_sl_manual_transm',
+                deploymentId: 'customdeploy_bsp_isg_sl_manual_transm',
+                returnExternalUrl: false,
+            });
+      
+            let suiteletUrl = url.format(stSuiteletUrl, parameters);
+            window.ischanged = false;
+            window.open(suiteletUrl, '_self');            
+            return true;
         }catch (error) {
             console.log(stLogTitle, JSON.stringify(error));
         }

@@ -15,58 +15,60 @@
      * @param soID - The internal ID of the sales order
      * @param linesPartiallyAcknowledged - An array of objects that contain the following properties:
     */
-    function updateSOLines(soID, linesPartiallyAcknowledged){
-        log.debug("updateSOLines", `Update lines in SO ID ${soID}`);
-        log.debug("updateSOLines", `Item lines ${JSON.stringify(linesPartiallyAcknowledged)}`);
+    function updateSOLines(soID, linesPartiallyAcknowledged){      
+        if(soID){
+            log.debug("updateSOLines", `Update lines in SO ID ${soID}`);
+            log.debug("updateSOLines", `Item lines ${JSON.stringify(linesPartiallyAcknowledged)}`);
 
-        let salesOrderRec = record.load({
-            type: record.Type.SALES_ORDER,
-            id: parseInt(soID),
-            isDynamic: true
-        });
-
-        for(let i = 0; i < linesPartiallyAcknowledged.length; i++){
-            let item = linesPartiallyAcknowledged[i];
-            let itemID = item.itemID;
-            let quantityAcknowledged = item.quantityAcknowledged;
-            let quantityRemaining = item.quantityRemaining;
-
-            let lineNum = salesOrderRec.findSublistLineWithValue({
-                sublistId: 'item',
-                fieldId: 'item',
-                value: itemID
+            let salesOrderRec = record.load({
+                type: record.Type.SALES_ORDER,
+                id: parseInt(soID),
+                isDynamic: true
             });
-
-            salesOrderRec.selectLine({
-                sublistId: 'item',
-                line: lineNum
-            });
-
-            let copyData = getItemLineData(salesOrderRec);
-            
-            salesOrderRec.setCurrentSublistValue({
-                sublistId: 'item',
-                fieldId: 'quantity',
-                value: quantityAcknowledged
-            });
-            salesOrderRec.commitLine({
-                sublistId: "item",
-            });
-
-            salesOrderRec.selectNewLine({ sublistId: "item" });  
-            salesOrderRec.setCurrentSublistValue({sublistId: "item", fieldId: "item", value: itemID });
-            salesOrderRec.setCurrentSublistValue({sublistId: "item", fieldId: "quantity", value: quantityRemaining });
-            for (let index = 0; index < copyData.length; index++) {
-                let element = copyData[index];
-                salesOrderRec.setCurrentSublistValue({sublistId: "item", fieldId: element.fieldID, value: element.fieldValue });
+    
+            for(let i = 0; i < linesPartiallyAcknowledged.length; i++){
+                let item = linesPartiallyAcknowledged[i];
+                let itemID = item.itemID;
+                let quantityAcknowledged = item.quantityAcknowledged;
+                let quantityRemaining = item.quantityRemaining;
+    
+                let lineNum = salesOrderRec.findSublistLineWithValue({
+                    sublistId: 'item',
+                    fieldId: 'item',
+                    value: itemID
+                });
+    
+                salesOrderRec.selectLine({
+                    sublistId: 'item',
+                    line: lineNum
+                });
+    
+                let copyData = getItemLineData(salesOrderRec);
+                
+                salesOrderRec.setCurrentSublistValue({
+                    sublistId: 'item',
+                    fieldId: 'quantity',
+                    value: quantityAcknowledged
+                });
+                salesOrderRec.commitLine({
+                    sublistId: "item",
+                });
+    
+                salesOrderRec.selectNewLine({ sublistId: "item" });  
+                salesOrderRec.setCurrentSublistValue({sublistId: "item", fieldId: "item", value: itemID });
+                salesOrderRec.setCurrentSublistValue({sublistId: "item", fieldId: "quantity", value: quantityRemaining });
+                for (let index = 0; index < copyData.length; index++) {
+                    let element = copyData[index];
+                    salesOrderRec.setCurrentSublistValue({sublistId: "item", fieldId: element.fieldID, value: element.fieldValue });
+                }
+                
+                salesOrderRec.commitLine({
+                    sublistId: "item",
+                });
             }
-            
-            salesOrderRec.commitLine({
-                sublistId: "item",
-            });
+            salesOrderRec.save();
+            log.debug("updateSOLines", `Sales Order updated`);
         }
-        salesOrderRec.save();
-        log.debug("updateSOLines", `Sales Order updated`);
     }
 
 

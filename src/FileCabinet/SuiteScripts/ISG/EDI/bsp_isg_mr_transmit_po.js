@@ -39,29 +39,53 @@ define([
                 let paramsObj = getParameters();
                 let transmitionRecID = paramsObj.transmitionRecID;
                 let transmitionQueueID = paramsObj.transmitionQueueID;
-                log.debug(functionName, `Searching POs created from Transmission Queue: ${transmitionQueueID}`);
+                let poRecID = paramsObj.poRecID;
 
-                let puchaseOrderList = BSP_POutil.getPurchaseOrdersForTransmission(transmitionQueueID);
-                log.debug(functionName, `Encountered: ${puchaseOrderList.length} POs`);
+                let ediSettings = BSP_EDISettingsUtil.getEDIsettings(paramsObj.environment);
 
-                if(puchaseOrderList.length > 0){
-                    let ediSettings = BSP_EDISettingsUtil.getEDIsettings(paramsObj.environment);
-                
-                    let transmitionRecFields = BSPTransmitionsUtil.getFieldsFromTransmitionRecord(transmitionRecID);
-                    let vendor = transmitionRecFields.vendor;
-                    let tradingParnterInfo = BSPTradingParnters.getTradingPartnerInfo(vendor);
-                    
-                    puchaseOrderList.forEach(po => {
-                        transmitionDataList.push({
-                            data: {
-                                ediSettings: ediSettings,
-                                transmissionData: transmitionRecFields,
-                                tradingPartner: tradingParnterInfo,
-                                purchaseOrder: po
-                            }
-                        })
-                    });
-                }         
+                if(!BSPTransmitionsUtil.isEmpty(poRecID)){
+                    log.debug(functionName, `PO transmission - Manual Process for PO ID: ${poRecID}`);
+
+                    let puchaseOrderList = BSP_POutil.getPurchaseOrdersForTransmission(null, poRecID);
+                    if(puchaseOrderList.length > 0){
+                        let vendor = BSP_POutil.getVendor(poRecID);
+                        let tranmsissionFields = BSP_POutil.getTransmissionFields(poRecID);
+                        let tradingParnterInfo = BSPTradingParnters.getTradingPartnerInfo(vendor);
+
+                        puchaseOrderList.forEach(po => {
+                            transmitionDataList.push({
+                                data: {
+                                    ediSettings: ediSettings,
+                                    transmissionData: tranmsissionFields,
+                                    tradingPartner: tradingParnterInfo,
+                                    purchaseOrder: po
+                                }
+                            })
+                        });
+                    }
+                }else{
+                    log.debug(functionName, `Searching POs created from Transmission Queue: ${transmitionQueueID}`);
+
+                    let puchaseOrderList = BSP_POutil.getPurchaseOrdersForTransmission(transmitionQueueID, null);
+                    log.debug(functionName, `Encountered: ${puchaseOrderList.length} POs`);
+    
+                    if(puchaseOrderList.length > 0){
+                        let transmitionRecFields = BSPTransmitionsUtil.getFieldsFromTransmitionRecord(transmitionRecID);
+                        let vendor = transmitionRecFields.vendor;
+                        let tradingParnterInfo = BSPTradingParnters.getTradingPartnerInfo(vendor);
+                        
+                        puchaseOrderList.forEach(po => {
+                            transmitionDataList.push({
+                                data: {
+                                    ediSettings: ediSettings,
+                                    transmissionData: transmitionRecFields,
+                                    tradingPartner: tradingParnterInfo,
+                                    purchaseOrder: po
+                                }
+                            })
+                        });
+                    }      
+                }            
             } catch (error)
             {
                 log.error(functionName, {error: error.toString()});
@@ -168,7 +192,7 @@ define([
             {
                 log.error(functionName, `Error Transmitting PO: ${error.toString()}`);
 
-                //BSP_POutil.updatePOtransmissionStatus(poID, BSP_POutil.transmitionPOStatus().transmissionFailed);
+                BSP_POutil.updatePOtransmissionStatus(poID, BSP_POutil.transmitionPOStatus().transmissionFailed);
 
                 let errorSource = "BSP | MR | Transmit POs - " + functionName;
                 BSPTransmitionsUtil.createErrorLog(
@@ -225,6 +249,7 @@ define([
             objParams = {
                 transmitionQueueID : objScript.getParameter({name: "custscript_bsp_mr_transm_queue"}),
                 transmitionRecID : objScript.getParameter({name: "custscript_bsp_mr_transm_rec"}),
+                poRecID : objScript.getParameter({name: "custscript_bsp_mr_po_rec_id"}),
                 environment: environment
             }
     

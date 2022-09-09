@@ -10,6 +10,7 @@
         pendingAcknowledment: 2,
         acknowledged: 3,
         transmissionFailed: 4,
+        transmitting: 5
     });
 
     /**
@@ -58,76 +59,145 @@
      * @param transmitionQueueID - The ID of the transmission queue record.
      * @returns An array of objects.
     */
-    function getPurchaseOrdersForTransmission(transmitionQueueID){
+    function getPurchaseOrdersForTransmission(transmitionQueueID, poRecID){
         let purchaseOrderList = [];
-        let purchaseOrderSearchObj = search.create({
-            type: "purchaseorder",
-            filters:
-            [
-               ["type","anyof","PurchOrd"], 
-               "AND", 
-               ["mainline","is","F"], 
-               "AND", 
-               ["custbody_bsp_isg_transm_queue_id","is",transmitionQueueID],
-               "AND", 
-               ["custbody_bsp_isg_po_transm_status","anyof",PO_TRANSMITION_STATUSES.pendingTransmission]
-            ],
-            columns:
-            [
-               search.createColumn({name: "tranid", label: "Document Number"}),
-               search.createColumn({name: "custbody_bsp_isg_route_code", label: "Route Code"}),
-               search.createColumn({name: "line", label: "Line ID"}),
-               search.createColumn({name: "item", label: "Item"}),
-               search.createColumn({name: "quantity", label: "Quantity"}),
-               search.createColumn({name: "rate", label: "Item Rate"}),
-               search.createColumn({name: "unitabbreviation", label: "Units"}),
-               search.createColumn({name: "trandate", label: "Date"}),
-               search.createColumn({name: "createdfrom", label: "Sales Order"}),
-               search.createColumn({name: "custbody_bsp_isg_transmission_acct_num", label: "Account Number"}),
-               search.createColumn({name: "custbody_bsp_isg_transmission_loc", label: "Transmission Location"}),         
-               search.createColumn({
-                  name: "entityid",
-                  join: "customer",
-                  label: "Name"
-               }),
-               search.createColumn({
-                  name: "addressee",
-                  join: "customer",
-                  label: "Addressee"
-               }),
-               search.createColumn({
-                  name: "address1",
-                  join: "customer",
-                  label: "Address 1"
-               }),
-               search.createColumn({
-                  name: "city",
-                  join: "customer",
-                  label: "City"
-               }),
-               search.createColumn({
-                  name: "state",
-                  join: "customer",
-                  label: "State/Province"
-               }),
-               search.createColumn({
-                  name: "zipcode",
-                  join: "customer",
-                  label: "Zip Code"
-               }),
-               search.createColumn({
-                  name: "countrycode",
-                  join: "customer",
-                  label: "Country Code"
-               }),
-               search.createColumn({
-                  name: "symbol",
-                  join: "Currency",
-                  label: "Symbol"
-               })
-            ]
-        });
-
+        let purchaseOrderSearchObj = null;
+        if(transmitionQueueID){
+            purchaseOrderSearchObj = search.create({
+                type: "purchaseorder",
+                filters:
+                [
+                   ["type","anyof","PurchOrd"], 
+                   "AND", 
+                   ["mainline","is","F"], 
+                   "AND", 
+                   ["custbody_bsp_isg_transm_queue_id","is",transmitionQueueID],
+                   "AND", 
+                   ["custbody_bsp_isg_po_transm_status","anyof",PO_TRANSMITION_STATUSES.pendingTransmission]
+                ],
+                columns:
+                [
+                   search.createColumn({name: "tranid", label: "Document Number"}),
+                   search.createColumn({name: "custbody_bsp_isg_route_code", label: "Route Code"}),
+                   search.createColumn({name: "line", label: "Line ID"}),
+                   search.createColumn({name: "item", label: "Item"}),
+                   search.createColumn({name: "quantity", label: "Quantity"}),
+                   search.createColumn({name: "rate", label: "Item Rate"}),
+                   search.createColumn({name: "unitabbreviation", label: "Units"}),
+                   search.createColumn({name: "trandate", label: "Date"}),
+                   search.createColumn({name: "createdfrom", label: "Sales Order"}),
+                   search.createColumn({name: "custbody_bsp_isg_transmission_acct_num", label: "Account Number"}),
+                   search.createColumn({name: "custbody_bsp_isg_transmission_loc", label: "Transmission Location"}),         
+                   search.createColumn({
+                      name: "entityid",
+                      join: "customer",
+                      label: "Name"
+                   }),
+                   search.createColumn({
+                      name: "addressee",
+                      join: "customer",
+                      label: "Addressee"
+                   }),
+                   search.createColumn({
+                      name: "address1",
+                      join: "customer",
+                      label: "Address 1"
+                   }),
+                   search.createColumn({
+                      name: "city",
+                      join: "customer",
+                      label: "City"
+                   }),
+                   search.createColumn({
+                      name: "state",
+                      join: "customer",
+                      label: "State/Province"
+                   }),
+                   search.createColumn({
+                      name: "zipcode",
+                      join: "customer",
+                      label: "Zip Code"
+                   }),
+                   search.createColumn({
+                      name: "countrycode",
+                      join: "customer",
+                      label: "Country Code"
+                   }),
+                   search.createColumn({
+                      name: "symbol",
+                      join: "Currency",
+                      label: "Symbol"
+                   })
+                ]
+            });
+        }else if(poRecID){
+            purchaseOrderSearchObj = search.create({
+                type: "purchaseorder",
+                filters:
+                [
+                   ["type","anyof","PurchOrd"], 
+                   "AND", 
+                   ["mainline","is","F"], 
+                   "AND", 
+                   ["internalid","anyof",poRecID]
+                ],
+                columns:
+                [
+                   search.createColumn({name: "tranid", label: "Document Number"}),
+                   search.createColumn({name: "custbody_bsp_isg_route_code", label: "Route Code"}),
+                   search.createColumn({name: "line", label: "Line ID"}),
+                   search.createColumn({name: "item", label: "Item"}),
+                   search.createColumn({name: "quantity", label: "Quantity"}),
+                   search.createColumn({name: "rate", label: "Item Rate"}),
+                   search.createColumn({name: "unitabbreviation", label: "Units"}),
+                   search.createColumn({name: "trandate", label: "Date"}),
+                   search.createColumn({name: "createdfrom", label: "Sales Order"}),
+                   search.createColumn({name: "custbody_bsp_isg_transmission_acct_num", label: "Account Number"}),
+                   search.createColumn({name: "custbody_bsp_isg_transmission_loc", label: "Transmission Location"}),         
+                   search.createColumn({
+                      name: "entityid",
+                      join: "customer",
+                      label: "Name"
+                   }),
+                   search.createColumn({
+                      name: "addressee",
+                      join: "customer",
+                      label: "Addressee"
+                   }),
+                   search.createColumn({
+                      name: "address1",
+                      join: "customer",
+                      label: "Address 1"
+                   }),
+                   search.createColumn({
+                      name: "city",
+                      join: "customer",
+                      label: "City"
+                   }),
+                   search.createColumn({
+                      name: "state",
+                      join: "customer",
+                      label: "State/Province"
+                   }),
+                   search.createColumn({
+                      name: "zipcode",
+                      join: "customer",
+                      label: "Zip Code"
+                   }),
+                   search.createColumn({
+                      name: "countrycode",
+                      join: "customer",
+                      label: "Country Code"
+                   }),
+                   search.createColumn({
+                      name: "symbol",
+                      join: "Currency",
+                      label: "Symbol"
+                   })
+                ]
+            });
+        }
+       
         let poResultList = BSPTransmitionsUtil.searchAll(purchaseOrderSearchObj);
         poResultList.forEach(element => {
             let purchaseOrderID = element.id;
@@ -361,6 +431,47 @@
         return queueID;
     }
 
+    /**
+     * It takes a PO ID and returns the vendor ID.
+     * @param poID - The internal ID of the purchase order.
+     * @returns The vendor ID.
+     */
+    function getVendor(poID){
+        let vendor = null;
+
+        let poFields = search.lookupFields({
+            type: record.Type.PURCHASE_ORDER,
+            id: parseInt(poID),
+            columns: 'entity'
+        });
+        if(poFields && poFields.entity){
+            vendor = poFields.entity[0].value;
+        }
+        return vendor;
+    }
+
+    /**
+     * It takes a PO ID, looks up the PO record, and returns an object with the PO's Essendant ADOT and
+     * Account Number.
+     * @param poID - The internal ID of the Purchase Order
+     * @returns an object with two properties: essendantADOT and accountNumber.
+    */
+    function getTransmissionFields(poID){
+        let fields = {};
+
+        let poFields = search.lookupFields({
+            type: record.Type.PURCHASE_ORDER,
+            id: parseInt(poID),
+            columns: ['custbody_bsp_isg_essendant_adot', 'custbody_bsp_isg_transmission_acct_num']
+        });
+        if(poFields && poFields.custbody_bsp_isg_essendant_adot){
+            fields.essendantADOT = poFields.custbody_bsp_isg_essendant_adot;
+        }
+        if(poFields && poFields.custbody_bsp_isg_transmission_acct_num){
+            fields.accountNumber = poFields.custbody_bsp_isg_transmission_acct_num[0];
+        }
+        return fields;
+    }
 
     return {
         transmitionPOStatus: transmitionPOStatus,
@@ -370,6 +481,8 @@
         setPOMessageID: setPOMessageID,
         deletePO: deletePO,
         findPObyNumber: findPObyNumber,
-        getQueueOfPO: getQueueOfPO
+        getQueueOfPO: getQueueOfPO,
+        getVendor: getVendor,
+        getTransmissionFields: getTransmissionFields
 	};
 });
