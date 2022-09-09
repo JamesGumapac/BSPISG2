@@ -23,7 +23,12 @@ function(message, url) {
 
 
     function transmitPO(purchaseOrderRecID){
-
+        let stLogTitle = "transmitPO";
+        try{
+            console.log(stLogTitle, JSON.stringify(purchaseOrderRecID));
+        }catch (error) {
+            console.log(stLogTitle, JSON.stringify(error));
+        }
     }
 
     return {
