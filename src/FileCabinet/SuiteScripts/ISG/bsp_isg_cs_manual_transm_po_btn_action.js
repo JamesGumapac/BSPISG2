@@ -26,6 +26,9 @@ function(message, url) {
         let stLogTitle = "transmitPO";
         try{
             console.log(stLogTitle, JSON.stringify(purchaseOrderRecID));
+            /**
+             * TODO - Transmit PO
+             */
         }catch (error) {
             console.log(stLogTitle, JSON.stringify(error));
         }
