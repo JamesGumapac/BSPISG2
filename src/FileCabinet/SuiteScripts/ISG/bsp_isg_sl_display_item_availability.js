@@ -19,7 +19,6 @@ define(['N/ui/serverWidget', 'N/search', 'N', './Lib/xmlTojson.js', 'N/xml'],
          */
 
 
-
         function onRequest(context) {
             try {
 
@@ -459,8 +458,9 @@ define(['N/ui/serverWidget', 'N/search', 'N', './Lib/xmlTojson.js', 'N/xml'],
 
                 const endPointURL = "http://sprws.sprich.com/sprws/StockCheck.php"
                 const headers = {}
+                //headers
                 headers["Content-Type"] = "text/xml;charset=UTF-8"
-                headers['User-Agent-x'] = 'bsp'
+                headers['User-Agent-x'] = 'bspny'
                 headers["SOAPAction"] = "http://sprws.sprich.com/sprws/StockCheck.php?wsdl"
                 headers["Connection"] = "keep-alive"
 
@@ -469,24 +469,24 @@ define(['N/ui/serverWidget', 'N/search', 'N', './Lib/xmlTojson.js', 'N/xml'],
                                 xmlns:stoc="http://sprws.sprich.com/sprws/StockCheck.php?wsdl">
                                 <soapenv:Header/>
                                 <soapenv:Body>
-                                    <stoc:StockCheck>
-                                    <input>
-                                    <GroupCode>bspny</GroupCode>
-                                    <UserID>webserv</UserID>
-                                    <Password>business12!</Password>
-                                    <Action>F</Action>
-                                    <CustNumber>your CustNumber goes here</CustNumber>
-                                    <DcNumber></DcNumber>
-                                    <ItemNumber>SPR15500</ItemNumber>
-                                    <SortBy>N</SortBy>
-                                    <MinInFullPacks></MinInFullPacks>
-                                    <AvailableOnly>Y</AvailableOnly>
-                                    </input>
-                                    </stoc:StockCheck>
-                                    </soapenv:Body>
-                                 </soapenv:Envelope>`
+                                <stoc:StockCheck>
+                                <input>
+                                <GroupCode>bspny</GroupCode>
+                                <UserID>webserv</UserID>
+                                <Password>business12!</Password>
+                                <Action>F</Action>
+                                <CustNumber></CustNumber>
+                                <DcNumber></DcNumber>
+                                <ItemNumber>SPR314</ItemNumber>
+                                <SortBy>N</SortBy>
+                                <MinInFullPacks></MinInFullPacks>
+                                <AvailableOnly>Y</AvailableOnly>
+                                </input>
+                                </stoc:StockCheck>
+                                </soapenv:Body>
+                                </soapenv:Envelope>`
 
-                log.debug('xmlStr', xmlStr)
+
                 try {
                     const res = N.http.post({
                         url: endPointURL,
@@ -497,24 +497,20 @@ define(['N/ui/serverWidget', 'N/search', 'N', './Lib/xmlTojson.js', 'N/xml'],
                     let xmlDocument = N.xml.Parser.fromString({
                         text: res.body
                     });
+                    log.debug('xml document', xmlDocument)
+                    var resBody = xmlToJson.xmlToJson(xmlDocument.documentElement)
+                    // log.debug('res.body JSON', resBody['SOAP-ENV:Body']['ns1:StockCheckResponse']['return']['ResultsRows']);
 
-                    //convert XML document to JSON
-                    let resBody = xmlToJson.xmlToJson(xmlDocument.documentElement)
-                    log.debug('res.body JSON',resBody);
-                    // let resBodySample = xmlToJson.xmlToJson(xmlSampleDocument.documentElement)
-                    // log.debug('resBodySample JSON',resBodySample);
-                    let returnStatus = resBody['SOAP-ENV:Body']['ns1:StockCheckResponse']['return']
-                    let statusEntries = Object.entries(returnStatus)
-                    //check the return Status and Code
-                    let rtnStatusCode = statusEntries[1][1]
-                    let rtnMessage = statusEntries[2][1]
+                    let returnStatus = resBody['SOAP-ENV:Body']['ns1:StockCheckResponse']['return'].RtnStatus;
+                    let rtnMessage = resBody['SOAP-ENV:Body']['ns1:StockCheckResponse']['return'].RtnMessage;
 
-                    log.debug('status',`Status Code: ${rtnStatusCode}, Message: ${rtnMessage}`);
+                    log.debug('status', `Status Code: ${returnStatus}, Message: ${rtnMessage}`);
 
-                    objRec.Envelope.Body.StockCheckResponse.return.ResultsRows.item.forEach((item)=>
+                    resBody['SOAP-ENV:Body']['ns1:StockCheckResponse']['return']['ResultsRows'].item.forEach((item) =>
                         itemAvaibilityObj.push(item)
                     )
-                    log.debug('Test JSON object',itemAvaibilityObj )
+                    log.debug('itemAvaibilityObj', itemAvaibilityObj)
+
 
                 } catch (e) {
                     log.error(e.message)
@@ -525,19 +521,13 @@ define(['N/ui/serverWidget', 'N/search', 'N', './Lib/xmlTojson.js', 'N/xml'],
                     title: 'Item Stock Availability',
                     hideNavBar: true
                 });
-                const xmlRequestBody = form.addField({
-                    id: 'custpage_xml_request',
-                    label: 'XML Body Request',
-                    type: serverWidget.FieldType.TEXTAREA
-                })
 
-                xmlRequestBody.defaultValue = xmlStr
+
                 const sublist = form.addSublist({
                     id: 'sublistid',
                     type: serverWidget.SublistType.STATICLIST,
                     label: 'Result'
                 });
-
 
                 sublist.addRefreshButton();
 
@@ -597,7 +587,6 @@ define(['N/ui/serverWidget', 'N/search', 'N', './Lib/xmlTojson.js', 'N/xml'],
                 log.error(e.message)
             }
         }
-
 
 
         return {
