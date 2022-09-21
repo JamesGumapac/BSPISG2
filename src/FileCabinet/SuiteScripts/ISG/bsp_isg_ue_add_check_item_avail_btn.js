@@ -2,6 +2,7 @@
  * @NApiVersion 2.1
  * @NScriptType UserEventScript
  */
+const bsp_isg_cs_item_avail_function = 3076139
 define(['N/https', 'N/ui/message', 'N/ui/serverWidget', 'N/url'],
     /**
      * @param{https} https
@@ -19,14 +20,17 @@ define(['N/https', 'N/ui/message', 'N/ui/serverWidget', 'N/url'],
          * @param {ServletRequest} scriptContext.request - HTTP request information sent from the browser for a client action only.
          * @since 2015.2
          */
+
         const beforeLoad = (context) => {
             let stLogTitle = 'beforeLoad';
+            context.form.clientScriptFileId = bsp_isg_cs_item_avail_function;
             try {
                 let itemRec = context.newRecord;
                 if(context.type == 'view'){
                     context.form.addButton({
                         id: 'custpage_check_item_availability',
-                        label:'SPR Check Item Availability'
+                        label:'SPR Check Item Availability',
+                        functionName: 'openSuitelet()'
 
                     })
                 }
