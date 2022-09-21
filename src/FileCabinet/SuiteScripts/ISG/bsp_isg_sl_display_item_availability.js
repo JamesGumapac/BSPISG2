@@ -271,7 +271,8 @@ define(['N/ui/serverWidget', 'N/search', 'N', './Lib/xmlTojson.js', 'N/xml'],
 
 
                 const form = serverWidget.createForm({
-                    title: 'Item Stock Availability'
+                    title: 'Item Stock Availability',
+                    hideNavBar: true
                 });
                 const xmlRequestBody = form.addField({
                     id: 'custpage_xml_request',
