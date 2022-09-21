@@ -218,26 +218,26 @@ define(['N/ui/serverWidget', 'N/search', 'N', './Lib/xmlTojson.js', 'N/xml'],
                 headers["Connection"] = "keep-alive"
 
                 //body Request
-                const xmlStr = '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"\n' +
-                    '                                xmlns:stoc="http://sprws.sprich.com/sprws/StockCheck.php?wsdl">\n' +
-                    '                                <soapenv:Header/>\n' +
-                    '                                <soapenv:Body>\n' +
-                    '                                <stoc:StockCheck>\n' +
-                    '                                <input>\n' +
-                    '                                <GroupCode>bspny</GroupCode>\n' +
-                    '                                 <UserID>webserv</UserID>\n' +
-                    '                                <Password>business12!</Password>\n' +
-                    '                                <Action>F</Action>\n' +
-                    '                               <CustNumber>your CustNumber goes here</CustNumber>\n' +
-                    '                               <DcNumber></DcNumber>\n' +
-                    '                               <ItemNumber>SPR15500</ItemNumber>\n' +
-                    '                               <SortBy>N</SortBy>\n' +
-                    '                               <MinInFullPacks></MinInFullPacks>\n' +
-                    '                               <AvailableOnly>Y</AvailableOnly>\n' +
-                    '                               </input>\n' +
-                    '                               </stoc:StockCheck>\n' +
-                    '                               </soapenv:Body>\n' +
-                    '                               </soapenv:Envelope>'
+                const xmlStr = `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
+                                xmlns:stoc="http://sprws.sprich.com/sprws/StockCheck.php?wsdl">
+                                <soapenv:Header/>
+                                <soapenv:Body>
+                                    <stoc:StockCheck>
+                                    <input>
+                                    <GroupCode>bspny</GroupCode>
+                                    <UserID>webserv</UserID>
+                                    <Password>business12!</Password>
+                                    <Action>F</Action>
+                                    <CustNumber>your CustNumber goes here</CustNumber>
+                                    <DcNumber></DcNumber>
+                                    <ItemNumber>SPR15500</ItemNumber>
+                                    <SortBy>N</SortBy>
+                                    <MinInFullPacks></MinInFullPacks>
+                                    <AvailableOnly>Y</AvailableOnly>
+                                    </input>
+                                    </stoc:StockCheck>
+                                    </soapenv:Body>
+                                 </soapenv:Envelope>`
 
                 log.debug('xmlStr', xmlStr)
                 try {
