@@ -8,7 +8,8 @@ define([
   "N/http",
   "./Lib/xmlTojson.js",
   "N/xml",
-], function (serverWidget, search, http, xmlToJson, xml) {
+  "N/record",
+], function (serverWidget, search, http, xmlToJson, xml, record) {
   /**
    * Definition of the Suitelet script trigger point.
    *
@@ -27,31 +28,32 @@ define([
       let tpItemAvailabilityInfo = [];
       const tradingPartnerId = context.request.parameters["tradingParnerId"];
       if (tradingPartnerId) {
-        const tradingPartnerLookup = search.lookupFields({
+        const tradingPartnerRec = record.load({
           type: "customrecord_bsp_isg_trading_partner",
           id: tradingPartnerId,
-          columns: [
-            "custrecord_bsp_isg_tp_group_code",
-            "custrecord_bsp_isg_tp_user",
-            "custrecord_bsp_isg_tb_password",
-          ],
+          isDynamic: true,
         });
 
 
         tpItemAvailabilityInfo.push({
-          tpGroupCode: tradingPartnerLookup["custrecord_bsp_isg_tp_group_code"],
-          tpUser: tradingPartnerLookup["custrecord_bsp_isg_tp_user"],
-          tpPassword: tradingPartnerLookup["custrecord_bsp_isg_tb_password"]
+          tpGroupCode: tradingPartnerRec.getValue(
+            "custrecord_bsp_isg_tp_group_code"
+          ),
+          tpUser: tradingPartnerRec.getValue("custrecord_bsp_isg_tp_user"),
+          tpPassword: tradingPartnerRec.getValue(
+            "custrecord_bsp_isg_tb_password"
+          ),
+          tpEndpoint: tradingPartnerRec.getValue(
+            "custrecord_bsp_isg_ia_enpoint_url"
+          )
         });
 
-        // TP = trading Partner
         log.debug(
           "TP Item Availability Info ",
           JSON.stringify(tpItemAvailabilityInfo)
         );
       }
 
-      const endPointURL = "http://sprws.sprich.com/sprws/StockCheck.php";
       const headers = {};
       //headers
       headers["Content-Type"] = "text/xml;charset=UTF-8";
@@ -83,11 +85,11 @@ define([
                                 </soapenv:Envelope>`;
 
       const res = http.post({
-        url: endPointURL,
+        url: tpItemAvailabilityInfo[0].tpEndpoint,
         headers: headers,
         body: xmlStr,
       });
-
+      if (res.code == !200) return;
       let xmlDocument = xml.Parser.fromString({
         text: res.body,
       });
@@ -167,7 +169,13 @@ define([
       }
 
       sublist.label = "Result(" + sublist.lineCount + ")";
-      context.response.writePage(form);
+      if (res.code == 200) {
+        context.response.writePage(form);
+      } else {
+        context.response.writePage(
+          `<html> <H1>Connection Unsuccesful</H1></html>`
+        );
+      }
     } catch (e) {
       log.error(e.message);
     }
