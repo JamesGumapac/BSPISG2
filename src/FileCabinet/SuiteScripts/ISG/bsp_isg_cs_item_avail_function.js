@@ -135,7 +135,7 @@ define(["N/https", "N/url"], /**
   function openSuitelet(itemId, tradingPartNerId) {
     const SPR = 2;
     log.debug("Params Info", { itemId, tradingPartNerId });
-    //pass as query parameters = trading partner internal ID || itemname || item
+    //pass as query parameters = trading partner internal ID and itemId
     //load the trading parter and get the group and make the call
     if (tradingPartNerId == SPR) {
       var stSuiteletUrl = url.resolveScript({
