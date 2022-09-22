@@ -1,0 +1,31 @@
+<centercategory scriptid="custcentercategory_bsp_isg_settings">
+  <center>BASIC</center>
+  <centertab>[scriptid=custcentertab_bsp_isg]</centertab>
+  <label>Settings</label>
+  <links>
+    <link>
+      <linklabel>EDI Settings</linklabel>
+      <linkobject>[scriptid=customrecord_bsp_isg_edi_settings]</linkobject>
+      <linktasktype>LIST</linktasktype>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linklabel>Trading Partner Settings</linklabel>
+      <linkobject>[scriptid=customrecord_bsp_isg_trading_partner]</linkobject>
+      <linktasktype>LIST</linktasktype>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linklabel>Organization Settings</linklabel>
+      <linkobject>[scriptid=customrecord_bsp_isg_edi_org_setup]</linkobject>
+      <linktasktype>LIST</linktasktype>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linklabel>Account Numbers</linklabel>
+      <linkobject>[scriptid=customlist_bsp_isg_account_numbers]</linkobject>
+      <linktasktype>LIST</linktasktype>
+      <shortlist>F</shortlist>
+    </link>
+  </links>
+</centercategory>

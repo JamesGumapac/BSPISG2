@@ -2,9 +2,9 @@
  * @NApiVersion 2.1
  * @NScriptType Suitelet
  */
-define([],
+define(['N/runtime', 'N/ui/serverWidget', 'N/redirect', 'N/search', './Lib/xml_template_handler.js', './Lib/bsp_isg_edi_settings.js'],
     
-    () => {
+    (runtime, serverWidget, redirect, search, BSP_XMLTemplateHandler, BSP_EDISettingsUtil) => {
         /**
          * Defines the Suitelet script trigger point.
          * @param {Object} scriptContext
@@ -13,7 +13,466 @@ define([],
          * @since 2015.2
          */
         const onRequest = (scriptContext) => {
+            let functionName = "onRequest";
+            try{         
+                if (scriptContext.request.method === 'GET') {
+                    log.debug(functionName, 'GET');
+                    let paramsObj = getParameters();
+                    let objParameters = scriptContext.request.parameters;   
+                    let ediCartonBuyFields = BSP_EDISettingsUtil.getCartonBuyFields(paramsObj.environment);
+                    let vendorsData = getVendors();
 
+                    let params = {
+                        ediCartonBuyFields : ediCartonBuyFields,
+                        selectedVendor : {
+                            selectedVendorID: objParameters.custparam_selected_vendor,
+                            selectedVendorName: objParameters.custparam_selected_vendor_name
+                        },
+                        vendorsData : vendorsData,
+                        checkboxes : {
+                            chkAll : objParameters.custparam_chk_all,
+                            chkItemsReachedMinQty : objParameters.custparam_chk_items_reached_min_qty,
+                            chkItemsCloseToMinQty : objParameters.custparam_chk_items_closeto_min_qty
+                        }
+                    }
+                    log.debug(functionName, "Params: " + JSON.stringify(params));
+
+                    let form = serverWidget.createForm({
+                        title: "Items pending transmission"
+                    });
+                    form.clientScriptFileId = paramsObj.clientScript_id;
+
+                    form = completeForm(form, params);
+
+                    let data = getData(params);
+                    log.debug(functionName, JSON.stringify(data));
+
+                    form.addFieldGroup({
+                        id : 'fieldgroup_item_list',
+                        label : 'Data'
+                    });
+
+                    if(data.data.length > 0){
+                        
+                        let templateId = paramsObj.fileTemplate;
+                        let xmlFileObj = BSP_XMLTemplateHandler.buildFileFromTemplate(templateId, data, null, null);
+    
+                        let htmlField = form.addField({
+                            id: "custom_inline_html",
+                            type: serverWidget.FieldType.INLINEHTML,
+                            label: "Form",
+                            container: 'fieldgroup_item_list'
+                        });
+    
+                        htmlField.defaultValue = xmlFileObj.fileContent;
+                    }else{
+                        form.addField({
+                            id: "custom_empty_list_txt",
+                            type: serverWidget.FieldType.LABEL,
+                            label: "No items to be displayed at the moment",
+                            container: 'fieldgroup_item_list'
+                        });
+                    }               
+                    scriptContext.response.writePage(form);
+                }
+            }catch (error) {
+                log.error(functionName, {error: error.toString()});
+            }
+        }
+
+        /**
+         * It takes a form, an array of vendors, and a selected vendor, and adds a select field to the form
+         * with the vendors as options
+         * @param form - The form object that you're adding the field to.
+         * @param vendorsData - This is the data that will be used to populate the select field.
+         * @param selectedVendor - The vendor that was selected in the previous form.
+         * @returns The form is being returned.
+        */
+        const completeForm = (form, params) => {
+            let vendorsData = params.vendorsData;
+            let selectedVendor = params.selectedVendor;
+
+            form.addFieldGroup({
+                id : 'fieldgroup_vendor_info',
+                label : 'Show for Vendor'
+            });
+
+            let objVendorField = form.addField({
+                id: 'custpage_trading_partner',
+                label: 'Vendors',
+                type: serverWidget.FieldType.SELECT,
+                container: 'fieldgroup_vendor_info'
+            });
+            
+            for (let index = 0; index < vendorsData.length; index++) {
+                let element = vendorsData[index];
+                if(index == 0 || (selectedVendor && element.id == selectedVendor.selectedVendorID)){
+                    objVendorField.addSelectOption({
+                        value: element.id,
+                        text: element.name,
+                        isSelected: true
+                    });
+                }else{
+                    objVendorField.addSelectOption({
+                        value: element.id,
+                        text: element.name,
+                        isSelected: false
+                    });
+                }           
+            }
+
+            form.addFieldGroup({
+                id : 'fieldgroup_filter_info',
+                label : 'Filter by'
+            });
+      
+            let checkboxes = params.checkboxes;
+
+            let fieldChkItemsReachedMinQty = form.addField({
+                id: "custom_chk_reached_min_qty",
+                type: serverWidget.FieldType.CHECKBOX,
+                label: "Items reached Carton buy Min Quantity",
+                container: 'fieldgroup_filter_info'
+            });
+            if(isChecked(checkboxes, "chkItemsReachedMinQty")){
+                fieldChkItemsReachedMinQty.defaultValue = 'T';
+            }
+
+            let fieldChkItemsCloseToMinQty = form.addField({
+                id: "custom_chk_close_min_qty",
+                type: serverWidget.FieldType.CHECKBOX,
+                label: "Items Close to Carton buy Min Quantity",
+                container: 'fieldgroup_filter_info'
+            });
+            if(isChecked(checkboxes, "chkItemsCloseToMinQty")){
+                fieldChkItemsCloseToMinQty.defaultValue = 'T';
+            }
+
+            return form;
+        }
+
+        /**
+         * It gets the Item data to show in the Suitelet
+         * @returns An object with a property of data that is an array of objects.
+         */
+        const getData = (params) => {
+            let itemData = [];
+            let resultItemsData = getItems(params);
+            itemData = getSalesOrdersFromItems(resultItemsData);
+            return {data:itemData, totalItems: itemData.length};
+        }
+
+        /**
+         * It creates a search object that returns all sales orders that have a specific item and vendor
+         * @returns An object with two properties: itemData and itemParams.
+        */
+        const getItems = (params) => {
+            let selectedVendor = params.selectedVendor;
+            let vendorsData = params.vendorsData;
+            let minQuantityPercentage = params.ediCartonBuyFields.minQuantityPercentage;
+            let checkboxes = params.checkboxes;
+
+            let vendor = null;
+            if(selectedVendor && selectedVendor.selectedVendorID){
+                vendor = {id: selectedVendor.selectedVendorID, name: selectedVendor.selectedVendorName};
+            }else{
+                vendor = {id:  vendorsData[0].id, name:  vendorsData[0].name}
+            }
+
+            const salesOrderSearchObj = search.create({
+                type: "salesorder",
+                filters:
+                [
+                    ["type","anyof","SalesOrd"], 
+                    "AND", 
+                    ["mainline","is","F"], 
+                    "AND", 
+                    ["purchaseorder","anyof","@NONE@"], 
+                    "AND", 
+                    ["custcol_bsp_isg_exclude_auto_transm","anyof","1"],
+                    "AND", 
+                    ["formulanumeric: {quantity} - NVL({quantitycommitted}, 0)","greaterthan","0"]
+                ],
+                columns:
+                [
+                    search.createColumn({
+                        name: "item",
+                        summary: "GROUP",
+                        label: "Item"
+                    }),
+                    search.createColumn({
+                        name: "quantity",
+                        summary: "SUM",
+                        label: "Quantity"
+                    }),
+                    search.createColumn({
+                       name: "formulanumeric",
+                       summary: "SUM",
+                       formula: "{quantity} - NVL({quantitycommitted}, 0)",
+                       label: "Formula (Numeric)"
+                    })
+                ]
+            });
+            let itemData = [];
+            let itemParams = [];
+            let columns = salesOrderSearchObj.columns;
+            salesOrderSearchObj.run().each(function(result){
+                let itemID = result.getValue(columns[0]);
+                let itemRowID = "#"+itemID;
+                let itemName = result.getText(columns[0]);
+                let itemQuantity = result.getValue(columns[1]);
+                let itemBackOrderQuantity = result.getValue(columns[2]);
+         
+                itemData.push({
+                    itemRowID: itemRowID,
+                    itemID: itemID,
+                    itemName: itemName,
+                    itemQuantity: itemQuantity,
+                    itemBackOrderQuantity: itemBackOrderQuantity,
+                    itemMinQuantity: "Not defined",
+                    vendor: vendor.name,
+                    rowColor: null,
+                    salesOrderLines: []
+                });
+                itemParams.push(itemID);
+                return true;
+            });
+
+            const itemSearchObj = search.create({
+                type: "item",
+                filters:
+                [
+                   ["internalid","anyof",itemParams], 
+                   "AND", 
+                   ["custrecord_bsp_isg_parent_item.custrecord_bsp_isg_min_quantity","isnotempty",""]
+                ],
+                columns:
+                [
+                   search.createColumn({
+                      name: "custrecord_bsp_isg_item_supplier",
+                      join: "CUSTRECORD_BSP_ISG_PARENT_ITEM",
+                      label: "Supplier"
+                   }),
+                   search.createColumn({
+                      name: "custrecord_bsp_isg_item_acct_number",
+                      join: "CUSTRECORD_BSP_ISG_PARENT_ITEM",
+                      label: "Account Number"
+                   }),
+                   search.createColumn({
+                      name: "custrecord_bsp_isg_min_quantity",
+                      join: "CUSTRECORD_BSP_ISG_PARENT_ITEM",
+                      label: "Minimum Quantity"
+                   })
+                ]
+             });
+
+            itemSearchObj.run().each(function(result){
+                let itemID = result.id;
+                let vendorID = result.getValue({name: 'custrecord_bsp_isg_item_supplier', join: 'CUSTRECORD_BSP_ISG_PARENT_ITEM'});
+                let vendorName = result.getText({name: 'custrecord_bsp_isg_item_supplier', join: 'CUSTRECORD_BSP_ISG_PARENT_ITEM'});
+                let acctNumber = result.getValue({name: 'custrecord_bsp_isg_item_acct_number', join: 'CUSTRECORD_BSP_ISG_PARENT_ITEM'});
+                let itemMinQuantity = result.getValue({name: 'custrecord_bsp_isg_min_quantity', join: 'CUSTRECORD_BSP_ISG_PARENT_ITEM'});
+                let itemIndex = findItemIndex(itemData, itemID);
+                if(itemIndex >= 0){
+                    if(vendorID == vendor.id){
+                        let itemMinQuantityPercent = ((itemData[itemIndex].itemBackOrderQuantity * 100) / itemMinQuantity);
+                        let closeToMinQty = (itemMinQuantityPercent >= parseFloat(minQuantityPercentage) && itemMinQuantityPercent < 100);
+                        let equalToMinQty = (parseInt(itemData[itemIndex].itemBackOrderQuantity) >= parseInt(itemMinQuantity));
+                        let rowColor = (equalToMinQty ? "background-color:#b5e7a0" : (closeToMinQty ? "background-color:yellow" : null));
+                        
+                        if(!isChecked(checkboxes, "chkItemsReachedMinQty") && !isChecked(checkboxes, "chkItemsCloseToMinQty")){
+                            itemData[itemIndex].itemMinQuantity = itemMinQuantity;
+                            itemData[itemIndex].vendor = vendorName;
+                            itemData[itemIndex].rowColor = rowColor;
+                        }else if(isChecked(checkboxes, "chkItemsReachedMinQty") && isChecked(checkboxes, "chkItemsCloseToMinQty")){
+                            if(equalToMinQty || closeToMinQty){
+                                itemData[itemIndex].itemMinQuantity = itemMinQuantity;
+                                itemData[itemIndex].vendor = vendorName;
+                                itemData[itemIndex].rowColor = rowColor;
+                            }else{
+                                itemData.splice(itemIndex, 1)
+                            }              
+                        }else if(isChecked(checkboxes, "chkItemsReachedMinQty") && !isChecked(checkboxes, "chkItemsCloseToMinQty")){
+                            if(equalToMinQty){
+                                itemData[itemIndex].itemMinQuantity = itemMinQuantity;
+                                itemData[itemIndex].vendor = vendorName;
+                                itemData[itemIndex].rowColor = rowColor;
+                            }else{
+                                itemData.splice(itemIndex, 1)
+                            }
+                        }else if(!isChecked(checkboxes, "chkItemsReachedMinQty") && isChecked(checkboxes, "chkItemsCloseToMinQty")){
+                            if(closeToMinQty){
+                                itemData[itemIndex].itemMinQuantity = itemMinQuantity;
+                                itemData[itemIndex].vendor = vendorName;
+                                itemData[itemIndex].rowColor = rowColor;
+                            }else{
+                                itemData.splice(itemIndex, 1)
+                            } 
+                        }
+                    }
+                }
+                return true;
+            });
+
+            let resultObj = {
+                itemData: itemData,
+                itemParams: itemParams
+            }
+            return resultObj;
+        }
+
+        /**
+         * This function takes the result of the search for items and returns an array of objects with the
+         * sales order lines for each item
+         * @param resultItemsData - This is the result of the getItemsFromSearch function.
+         * @returns An array of objects.
+        */
+        const getSalesOrdersFromItems = (resultItemsData) => {
+            let itemData = resultItemsData.itemData;
+            let itemsParam = resultItemsData.itemParams;
+            if(itemsParam.length > 0){
+                const salesOrderLinesSearchObj = search.create({
+                    type: "salesorder",
+                    filters:
+                    [
+                       ["type","anyof","SalesOrd"], 
+                       "AND", 
+                       ["mainline","is","F"], 
+                       "AND", 
+                       ["purchaseorder","anyof","@NONE@"], 
+                       "AND", 
+                       ["custcol_bsp_isg_exclude_auto_transm","anyof","1"], 
+                       "AND",
+                       ["formulanumeric: {quantity} - NVL({quantitycommitted}, 0)","greaterthan","0"],
+                       "AND", 
+                       ["item","anyof",itemsParam]
+                    ],
+                    columns:
+                    [
+                        search.createColumn({name: "tranid", label: "Document Number"}),
+                        search.createColumn({name: "entity", label: "Name"}),
+                        search.createColumn({name: "custbody_bsp_isg_route_code", label: "Route Code"}),
+                        search.createColumn({
+                            name: "custrecord_bsp_lb_route_code_desc",
+                            join: "CUSTBODY_BSP_ISG_ROUTE_CODE",
+                            label: "Description"
+                        }),
+                        search.createColumn({name: "item", label: "Item"}),
+                        search.createColumn({name: "quantity", label: "Quantity"}),
+                        search.createColumn({
+                            name: "formulanumeric",
+                            formula: "{quantity} - NVL({quantitycommitted}, 0)",
+                            label: "Formula (Numeric)"
+                         })
+                    ]
+                });
+                let columns = salesOrderLinesSearchObj.columns;
+                salesOrderLinesSearchObj.run().each(function(result){
+                    let salesOrderID = result.id;
+                    let salesOrderNumber = result.getValue("tranid");
+                    let customer = result.getText("entity");
+                    let routeCode = result.getText("custbody_bsp_isg_route_code");
+                    let routeCodeDesc = result.getValue({name: "custrecord_bsp_lb_route_code_desc", join: "CUSTBODY_BSP_ISG_ROUTE_CODE"});
+                    let itemID = result.getValue("item");
+                    let itemLineQuantity = result.getValue("quantity");
+                    let itemLineBackOrderQuantity = result.getValue(columns[6]);
+                    let itemIndex = findItemIndex(itemData, itemID);
+                    if(itemIndex >= 0){
+                        itemData[itemIndex].salesOrderLines.push({
+                            salesOrderID: salesOrderID,
+                            salesOrderNumber: salesOrderNumber,
+                            customer: customer,
+                            routeCode: routeCode,
+                            routeCodeDesc: routeCodeDesc,
+                            itemLineQuantity: itemLineQuantity,
+                            itemLineBackOrderQuantity: itemLineBackOrderQuantity,
+                            rowValue:  salesOrderID + "|" + itemID + "|" + itemLineQuantity + "|" + itemData[itemIndex].itemMinQuantity,
+                            chkID: salesOrderID + "|" + itemID + "|" + itemData[itemIndex].itemName + "|" + salesOrderNumber
+                        })
+                    }
+                    return true;
+                });  
+            }
+     
+            return itemData;
+        }
+
+        /**
+         * Find the index of an item in an array of items, given the item's ID
+         * @param itemData - The array of objects that you want to search through.
+         * @param itemID - The ID of the item you want to find.
+         * @returns The index of the itemID in the itemData array.
+        */
+        const findItemIndex = (itemData, itemID) => {
+            for (let index = 0; index < itemData.length; index++) {
+                const element = itemData[index];   
+                if(element.itemID == itemID){
+                    return index;
+                }
+            }
+            return -1;
+        }
+
+        /**
+         * It creates and runs a vendor search object, then loops through the results, pushing each result
+         * into an array containing the vendor info
+         * @returns An array of vendors.
+        */
+        const getVendors = () => {
+            let vendors = [];
+            const vendorSearchObj = search.create({
+                type: "vendor",
+                filters:
+                [
+                   ["custentity_bsp_isg_trading_part_settings","noneof","@NONE@"]
+                ],
+                columns:
+                [
+                   search.createColumn({
+                      name: "entityid",
+                      sort: search.Sort.ASC,
+                      label: "Name"
+                   }),
+                   search.createColumn({
+                      name: "custrecord_bsp_isg_carton_buy_acct_num",
+                      join: "CUSTENTITY_BSP_ISG_TRADING_PART_SETTINGS",
+                      label: "Carton buy Account Number"
+                   })
+                ]
+            });
+
+            vendorSearchObj.run().each(function(result){
+                let id = result.id;
+                let name = result.getValue("entityid");
+                let cartonBuyAccountNumber = result.getText({name: "custrecord_bsp_isg_carton_buy_acct_num", join: "CUSTENTITY_BSP_ISG_TRADING_PART_SETTINGS"});
+                vendors.push({
+                    id: id,
+                    name: name,
+                    cartonBuyAccountNumber: cartonBuyAccountNumber
+                })
+                return true;
+            });
+            return vendors;
+        }
+
+        const isChecked = (checkboxes, field) => {
+            return checkboxes[field] == "true";
+        }
+
+        /**
+         * Retieves Script parameters set up in the Deployment Record
+         * @returns {Object} Script parameters
+        */
+         const getParameters = () => {
+            let objParams = {};
+            let environment = runtime.envType;
+            let objScript = runtime.getCurrentScript();
+            objParams = {
+                fileTemplate : objScript.getParameter({name: "custscript_bsp_isg_carton_buy_template"}),
+                clientScript_id : objScript.getParameter({name: "custscript_bsp_isg_carton_buy_cs"}),
+                environment: environment
+            }   
+            return objParams;
         }
 
         return {onRequest}
