@@ -2,45 +2,74 @@
  * @NApiVersion 2.1
  * @NScriptType Suitelet
  */
-define(['N/ui/serverWidget', 'N/search', 'N', './Lib/xmlTojson.js', 'N/xml'],
+define([
+  "N/ui/serverWidget",
+  "N/search",
+  "N/http",
+  "./Lib/xmlTojson.js",
+  "N/xml",
+], function (serverWidget, search, http, xmlToJson, xml) {
+  /**
+   * Definition of the Suitelet script trigger point.
+   *
+   * @param {Object}
+   *                context
+   * @param {ServerRequest}
+   *                context.request - Encapsulation of the incoming request
+   * @param {ServerResponse}
+   *                context.response - Encapsulation of the Suitelet response
+   * @Since 2015.2
+   */
 
-    function (serverWidget, search, N, xmlToJson, xml) {
+  function onRequest(context) {
+    try {
+      // TP = trading Partner
+      let tpItemAvailabilityInfo = [];
+      const tradingPartnerId = context.request.parameters["tradingParnerId"];
+      if (tradingPartnerId) {
+        const tradingPartnerLookup = search.lookupFields({
+          type: "customrecord_bsp_isg_trading_partner",
+          id: tradingPartnerId,
+          columns: [
+            "custrecord_bsp_isg_tp_group_code",
+            "custrecord_bsp_isg_tp_user",
+            "custrecord_bsp_isg_tb_password",
+          ],
+        });
 
-        /**
-         * Definition of the Suitelet script trigger point.
-         *
-         * @param {Object}
-         *                context
-         * @param {ServerRequest}
-         *                context.request - Encapsulation of the incoming request
-         * @param {ServerResponse}
-         *                context.response - Encapsulation of the Suitelet response
-         * @Since 2015.2
-         */
 
+        tpItemAvailabilityInfo.push({
+          tpGroupCode: tradingPartnerLookup["custrecord_bsp_isg_tp_group_code"],
+          tpUser: tradingPartnerLookup["custrecord_bsp_isg_tp_user"],
+          tpPassword: tradingPartnerLookup["custrecord_bsp_isg_tb_password"]
+        });
 
-        function onRequest(context) {
-            try {
-                let itemAvaibilityObj = []
-                //sample object
-                const endPointURL = "http://sprws.sprich.com/sprws/StockCheck.php"
-                const headers = {}
-                //headers
-                headers["Content-Type"] = "text/xml;charset=UTF-8"
-                headers['User-Agent-x'] = 'bspny'
-                headers["SOAPAction"] = "http://sprws.sprich.com/sprws/StockCheck.php?wsdl"
-                headers["Connection"] = "keep-alive"
+        // TP = trading Partner
+        log.debug(
+          "TP Item Availability Info ",
+          JSON.stringify(tpItemAvailabilityInfo)
+        );
+      }
 
-                //body Request
-                const xmlStr = `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
+      const endPointURL = "http://sprws.sprich.com/sprws/StockCheck.php";
+      const headers = {};
+      //headers
+      headers["Content-Type"] = "text/xml;charset=UTF-8";
+      headers["User-Agent-x"] = "bspny";
+      headers["SOAPAction"] =
+        "http://sprws.sprich.com/sprws/StockCheck.php?wsdl";
+      headers["Connection"] = "keep-alive";
+
+      //body Request
+      const xmlStr = `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
                                 xmlns:stoc="http://sprws.sprich.com/sprws/StockCheck.php?wsdl">
                                 <soapenv:Header/>
                                 <soapenv:Body>
                                 <stoc:StockCheck>
                                 <input>
-                                <GroupCode>bspny</GroupCode>
-                                <UserID>webserv</UserID>
-                                <Password>business12!</Password>
+                                <GroupCode>${tpItemAvailabilityInfo[0].tpGroupCode}</GroupCode>
+                                <UserID>${tpItemAvailabilityInfo[0].tpUser}</UserID>
+                                <Password>${tpItemAvailabilityInfo[0].tpPassword}</Password>
                                 <Action>F</Action>
                                 <CustNumber></CustNumber>
                                 <DcNumber></DcNumber>
@@ -51,113 +80,100 @@ define(['N/ui/serverWidget', 'N/search', 'N', './Lib/xmlTojson.js', 'N/xml'],
                                 </input>
                                 </stoc:StockCheck>
                                 </soapenv:Body>
-                                </soapenv:Envelope>`
+                                </soapenv:Envelope>`;
 
+      const res = http.post({
+        url: endPointURL,
+        headers: headers,
+        body: xmlStr,
+      });
 
-                try {
-                    const res = N.http.post({
-                        url: endPointURL,
-                        headers: headers,
-                        body: xmlStr
-                    });
+      let xmlDocument = xml.Parser.fromString({
+        text: res.body,
+      });
 
-                    let xmlDocument = N.xml.Parser.fromString({
-                        text: res.body
-                    });
-                    log.debug('xml document', xmlDocument)
-                    var resBody = xmlToJson.xmlToJson(xmlDocument.documentElement)
-                    // log.debug('res.body JSON', resBody['SOAP-ENV:Body']['ns1:StockCheckResponse']['return']['ResultsRows']);
+      let resBody = xmlToJson.xmlToJson(xmlDocument.documentElement);
 
-                    let returnStatus = resBody['SOAP-ENV:Body']['ns1:StockCheckResponse']['return'].RtnStatus;
-                    let rtnMessage = resBody['SOAP-ENV:Body']['ns1:StockCheckResponse']['return'].RtnMessage;
+      let returnStatus =
+        resBody["SOAP-ENV:Body"]["ns1:StockCheckResponse"]["return"].RtnStatus;
+      let rtnMessage =
+        resBody["SOAP-ENV:Body"]["ns1:StockCheckResponse"]["return"].RtnMessage;
 
-                    log.debug('status', `Status Code: ${returnStatus}, Message: ${rtnMessage}`);
+      log.debug("status", {
+        returnStatus,
+        rtnMessage,
+      });
+      const itemAvaibilityList = [];
+      resBody["SOAP-ENV:Body"]["ns1:StockCheckResponse"]["return"][
+        "ResultsRows"
+      ].item.forEach((item) => itemAvaibilityList.push(item));
+      log.debug("itemAvaibilityList", itemAvaibilityList);
 
-                    resBody['SOAP-ENV:Body']['ns1:StockCheckResponse']['return']['ResultsRows'].item.forEach((item) =>
-                        itemAvaibilityObj.push(item)
-                    )
-                    log.debug('itemAvaibilityObj', itemAvaibilityObj)
+      const form = serverWidget.createForm({
+        title: "Item Stock Availability",
+        hideNavBar: true,
+      });
 
+      const sublist = form.addSublist({
+        id: "sublistid",
+        type: serverWidget.SublistType.STATICLIST,
+        label: "Result",
+      });
 
-                } catch (e) {
-                    log.error(e.message)
-                }
+      sublist.addRefreshButton();
 
+      sublist.addField({
+        id: "custpage_dcnum",
+        label: "DC Number",
+        type: serverWidget.FieldType.TEXT,
+      });
+      sublist.addField({
+        id: "custpage_dcname",
+        label: "DC NAME",
+        type: serverWidget.FieldType.TEXT,
+      });
+      sublist.addField({
+        id: "custpage_available",
+        label: "Available Quantity",
+        type: serverWidget.FieldType.INTEGER,
+      });
+      sublist.addField({
+        id: "custpage_oum",
+        label: "UOM",
+        type: serverWidget.FieldType.TEXT,
+      });
 
-                const form = serverWidget.createForm({
-                    title: 'Item Stock Availability',
-                    hideNavBar: true
-                });
+      for (let i = 0; i < itemAvaibilityList.length; i++) {
+        sublist.setSublistValue({
+          id: "custpage_dcnum",
+          value: itemAvaibilityList[i].DcNum,
+          line: i,
+        });
+        sublist.setSublistValue({
+          id: "custpage_dcname",
+          value: itemAvaibilityList[i].DcName,
+          line: i,
+        });
+        sublist.setSublistValue({
+          id: "custpage_available",
+          value: itemAvaibilityList[i].Available,
+          line: i,
+        });
+        sublist.setSublistValue({
+          id: "custpage_oum",
+          value: itemAvaibilityList[i].Uom,
+          line: i,
+        });
+      }
 
+      sublist.label = "Result(" + sublist.lineCount + ")";
+      context.response.writePage(form);
+    } catch (e) {
+      log.error(e.message);
+    }
+  }
 
-                const sublist = form.addSublist({
-                    id: 'sublistid',
-                    type: serverWidget.SublistType.STATICLIST,
-                    label: 'Result'
-                });
-
-                sublist.addRefreshButton();
-
-
-                sublist.addField({
-                    id: 'custpage_dcnum',
-                    label: 'DC Number',
-                    type: serverWidget.FieldType.TEXT
-                })
-                sublist.addField({
-                    id: 'custpage_dcname',
-                    label: 'DC NAME',
-                    type: serverWidget.FieldType.TEXT
-                })
-                sublist.addField({
-                    id: 'custpage_available',
-                    label: 'Available Quantity',
-                    type: serverWidget.FieldType.INTEGER
-                })
-                sublist.addField({
-                    id: 'custpage_oum',
-                    label: 'UOM',
-                    type: serverWidget.FieldType.TEXT
-                })
-
-
-                for (let i = 0; i < itemAvaibilityObj.length; i++) {
-
-                    sublist.setSublistValue({
-                        id: 'custpage_dcnum',
-                        value: itemAvaibilityObj[i].DcNum,
-                        line: i
-                    });
-                    sublist.setSublistValue({
-                        id: 'custpage_dcname',
-                        value: itemAvaibilityObj[i].DcName,
-                        line: i
-                    });
-                    sublist.setSublistValue({
-                        id: 'custpage_available',
-                        value: itemAvaibilityObj[i].Available,
-                        line: i
-                    });
-                    sublist.setSublistValue({
-                        id: 'custpage_oum',
-                        value: itemAvaibilityObj[i].Uom,
-                        line: i
-                    });
-
-
-                }
-
-
-                sublist.label = 'Result(' + sublist.lineCount + ')';
-                context.response.writePage(form);
-            } catch (e) {
-                log.error(e.message)
-            }
-        }
-
-
-        return {
-            onRequest: onRequest
-        };
-
-    });
+  return {
+    onRequest: onRequest,
+  };
+});
