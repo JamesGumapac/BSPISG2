@@ -29,7 +29,11 @@
     </features>
     <objects>
       <object>customrole_bsp_isg_as2_service</object>
+      <object>customsearch_bsp_isg_lb_so_imported</object>
+      <object>customlist_bsp_isg_carton_buy_status</object>
       <object>customscript_bsp_isg_mr_queue_transm_sch</object>
+      <object>custtab_bsp_isg_item_information</object>
+      <object>custlink_bsp_isg_carton_buy_suitelet</object>
     </objects>
     <files>
       <file></file>

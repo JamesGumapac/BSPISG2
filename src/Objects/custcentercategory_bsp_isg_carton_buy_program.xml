@@ -5,7 +5,7 @@
   <links>
     <link>
       <linklabel>Create PO</linklabel>
-      <linkobject>[scriptid=custlink_2_t927173_248]</linkobject>
+      <linkobject>[scriptid=custlink_bsp_isg_carton_buy_create_po]</linkobject>
       <linktasktype>LINK</linktasktype>
       <shortlist>F</shortlist>
     </link>
