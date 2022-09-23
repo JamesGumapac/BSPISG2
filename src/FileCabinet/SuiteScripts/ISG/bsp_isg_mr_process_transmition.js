@@ -46,8 +46,9 @@ define(['N/runtime', 'N/search', 'N/task', './Lib/bsp_isg_transmitions_util.js',
 
                 let ediSettings = BSP_EDISettingsUtil.getEDIsettings(paramsObj.environment);
 
-                let transmitionSavedSearcObj = search.load({id: transmitionSavedSearchID});
-                let resultSearch = BSPTransmitionsUtil.searchAll(transmitionSavedSearcObj);
+                let paramTransmissionSavedSearchObj = search.load({id: transmitionSavedSearchID});
+                let transmissionSearchObj = BSPTransmitionsUtil.buildTransmissionSavedSearch(paramTransmissionSavedSearchObj);
+                let resultSearch = BSPTransmitionsUtil.searchAll(transmissionSearchObj);
                 resultSearch.forEach(element => {
                     let salesOrderID = element.id;
                     let routeCodeID = element.getValue("custbody_bsp_isg_route_code");
@@ -234,4 +235,3 @@ define(['N/runtime', 'N/search', 'N/task', './Lib/bsp_isg_transmitions_util.js',
         return {getInputData, map, reduce, summarize}
 
     });
-/*  */

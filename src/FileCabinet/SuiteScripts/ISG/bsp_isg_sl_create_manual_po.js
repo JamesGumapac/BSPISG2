@@ -64,8 +64,6 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
         }
 
         const displayForm = (params) => {
-            let functionName = "displayForm";
-
             let form = serverWidget.createForm({
                 title: params.txtSuiteletTitle
             });
