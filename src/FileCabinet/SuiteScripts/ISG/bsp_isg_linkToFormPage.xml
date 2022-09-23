@@ -10,7 +10,9 @@
 		<div class="container">
 			<section class="form-horizontal">
 				<button type="button" class="btn btn-primary" style="margin-bottom: 10px; margin-top: 10px;" data-toggle="modal" data-target="#itemsSelectedModal" id="previewItems">Exclude from automatic transmission</button>
-				<label style="margin-left: 40%;"><b>Total of Items:</b> ${data.totalItems}</label>
+				<span style="height: 10px; width: 20px; background-color:#b5e7a0; margin-left: 10px;">&nbsp</span><label style="margin-left: 5px;">Reached Carton Buy Min Quantity</label>
+				<span style="height: 10px; width: 20px; background-color:yellow; margin-left: 10px;">&nbsp</span><label style="margin-left: 5px;">Close to Carton Buy Min Quantity</label>
+				<label style="margin-left: 10%;"><b>Total of Items:</b> ${data.totalItems}</label>
 				<input class="form-check-input-all" type="checkbox" style="margin-left: 10%;" id="chkAll" /><label style="margin-left: 5px;" for="chkAll">SELECT ALL</label>
 				<div class="col-md-12">
 					<div class="panel panel-default">
@@ -119,7 +121,7 @@
 						
 						var itemsSelected = JSON.parse(localStorage['CBState'] || '{}');
 						console.log(JSON.stringify(itemsSelected));
-						let objItemsSelected = processItemsSelected(itemsSelected);
+						let objItemsSelected = processItemsSelectedToSend(itemsSelected);
 						console.log(JSON.stringify(objItemsSelected));
 						if(!isEmpty(objItemsSelected.objItemsSelected)){  
 							let record = nlapiCreateRecord( 'customrecord_bsp_isg_cartonbuy_items_req');
@@ -169,6 +171,25 @@
 							item: item,
 							itemName: itemName,
 							salesOrderName: salesOrderName
+						}
+					);
+				} 
+				return {objItemsSelected};
+			}
+
+			function processItemsSelectedToSend(itemsSelected){
+				let objItemsSelected = [];
+
+				for(var i in itemsSelected) { 
+					let data = i.split("|");
+					let salesOrder = parseInt(data[0]);
+					let item = parseInt(data[1]);
+					let itemLineId = parseInt(data[4]);
+					objItemsSelected.push(
+						{
+							salesOrder: salesOrder,
+							item: item,
+							itemLineId: itemLineId
 						}
 					);
 				} 

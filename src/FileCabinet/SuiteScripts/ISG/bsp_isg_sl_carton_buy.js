@@ -2,9 +2,9 @@
  * @NApiVersion 2.1
  * @NScriptType Suitelet
  */
-define(['N/runtime', 'N/ui/serverWidget', 'N/redirect', 'N/search', './Lib/xml_template_handler.js', './Lib/bsp_isg_edi_settings.js'],
+define(['N/runtime', 'N/ui/serverWidget', 'N/search', './Lib/xml_template_handler.js', './Lib/bsp_isg_edi_settings.js'],
     
-    (runtime, serverWidget, redirect, search, BSP_XMLTemplateHandler, BSP_EDISettingsUtil) => {
+    (runtime, serverWidget, search, BSP_XMLTemplateHandler, BSP_EDISettingsUtil) => {
         /**
          * Defines the Suitelet script trigger point.
          * @param {Object} scriptContext
@@ -238,81 +238,83 @@ define(['N/runtime', 'N/ui/serverWidget', 'N/redirect', 'N/search', './Lib/xml_t
                 return true;
             });
 
-            const itemSearchObj = search.create({
-                type: "item",
-                filters:
-                [
-                   ["internalid","anyof",itemParams], 
-                   "AND", 
-                   ["custrecord_bsp_isg_parent_item.custrecord_bsp_isg_min_quantity","isnotempty",""]
-                ],
-                columns:
-                [
-                   search.createColumn({
-                      name: "custrecord_bsp_isg_item_supplier",
-                      join: "CUSTRECORD_BSP_ISG_PARENT_ITEM",
-                      label: "Supplier"
-                   }),
-                   search.createColumn({
-                      name: "custrecord_bsp_isg_item_acct_number",
-                      join: "CUSTRECORD_BSP_ISG_PARENT_ITEM",
-                      label: "Account Number"
-                   }),
-                   search.createColumn({
-                      name: "custrecord_bsp_isg_min_quantity",
-                      join: "CUSTRECORD_BSP_ISG_PARENT_ITEM",
-                      label: "Minimum Quantity"
-                   })
-                ]
-             });
-
-            itemSearchObj.run().each(function(result){
-                let itemID = result.id;
-                let vendorID = result.getValue({name: 'custrecord_bsp_isg_item_supplier', join: 'CUSTRECORD_BSP_ISG_PARENT_ITEM'});
-                let vendorName = result.getText({name: 'custrecord_bsp_isg_item_supplier', join: 'CUSTRECORD_BSP_ISG_PARENT_ITEM'});
-                let acctNumber = result.getValue({name: 'custrecord_bsp_isg_item_acct_number', join: 'CUSTRECORD_BSP_ISG_PARENT_ITEM'});
-                let itemMinQuantity = result.getValue({name: 'custrecord_bsp_isg_min_quantity', join: 'CUSTRECORD_BSP_ISG_PARENT_ITEM'});
-                let itemIndex = findItemIndex(itemData, itemID);
-                if(itemIndex >= 0){
-                    if(vendorID == vendor.id){
-                        let itemMinQuantityPercent = ((itemData[itemIndex].itemBackOrderQuantity * 100) / itemMinQuantity);
-                        let closeToMinQty = (itemMinQuantityPercent >= parseFloat(minQuantityPercentage) && itemMinQuantityPercent < 100);
-                        let equalToMinQty = (parseInt(itemData[itemIndex].itemBackOrderQuantity) >= parseInt(itemMinQuantity));
-                        let rowColor = (equalToMinQty ? "background-color:#b5e7a0" : (closeToMinQty ? "background-color:yellow" : null));
-                        
-                        if(!isChecked(checkboxes, "chkItemsReachedMinQty") && !isChecked(checkboxes, "chkItemsCloseToMinQty")){
-                            itemData[itemIndex].itemMinQuantity = itemMinQuantity;
-                            itemData[itemIndex].vendor = vendorName;
-                            itemData[itemIndex].rowColor = rowColor;
-                        }else if(isChecked(checkboxes, "chkItemsReachedMinQty") && isChecked(checkboxes, "chkItemsCloseToMinQty")){
-                            if(equalToMinQty || closeToMinQty){
+            if(itemParams.length > 0) {
+                const itemSearchObj = search.create({
+                    type: "item",
+                    filters:
+                    [
+                       ["internalid","anyof",itemParams], 
+                       "AND", 
+                       ["custrecord_bsp_isg_parent_item.custrecord_bsp_isg_min_quantity","isnotempty",""]
+                    ],
+                    columns:
+                    [
+                       search.createColumn({
+                          name: "custrecord_bsp_isg_item_supplier",
+                          join: "CUSTRECORD_BSP_ISG_PARENT_ITEM",
+                          label: "Supplier"
+                       }),
+                       search.createColumn({
+                          name: "custrecord_bsp_isg_item_acct_number",
+                          join: "CUSTRECORD_BSP_ISG_PARENT_ITEM",
+                          label: "Account Number"
+                       }),
+                       search.createColumn({
+                          name: "custrecord_bsp_isg_min_quantity",
+                          join: "CUSTRECORD_BSP_ISG_PARENT_ITEM",
+                          label: "Minimum Quantity"
+                       })
+                    ]
+                 });
+    
+                itemSearchObj.run().each(function(result){
+                    let itemID = result.id;
+                    let vendorID = result.getValue({name: 'custrecord_bsp_isg_item_supplier', join: 'CUSTRECORD_BSP_ISG_PARENT_ITEM'});
+                    let vendorName = result.getText({name: 'custrecord_bsp_isg_item_supplier', join: 'CUSTRECORD_BSP_ISG_PARENT_ITEM'});
+                    let acctNumber = result.getValue({name: 'custrecord_bsp_isg_item_acct_number', join: 'CUSTRECORD_BSP_ISG_PARENT_ITEM'});
+                    let itemMinQuantity = result.getValue({name: 'custrecord_bsp_isg_min_quantity', join: 'CUSTRECORD_BSP_ISG_PARENT_ITEM'});
+                    let itemIndex = findItemIndex(itemData, itemID);
+                    if(itemIndex >= 0){
+                        if(vendorID == vendor.id){
+                            let itemMinQuantityPercent = ((itemData[itemIndex].itemBackOrderQuantity * 100) / itemMinQuantity);
+                            let closeToMinQty = (itemMinQuantityPercent >= parseFloat(minQuantityPercentage) && itemMinQuantityPercent < 100);
+                            let equalToMinQty = (parseInt(itemData[itemIndex].itemBackOrderQuantity) >= parseInt(itemMinQuantity));
+                            let rowColor = (equalToMinQty ? "background-color:#b5e7a0" : (closeToMinQty ? "background-color:yellow" : null));
+                            
+                            if(!isChecked(checkboxes, "chkItemsReachedMinQty") && !isChecked(checkboxes, "chkItemsCloseToMinQty")){
                                 itemData[itemIndex].itemMinQuantity = itemMinQuantity;
                                 itemData[itemIndex].vendor = vendorName;
                                 itemData[itemIndex].rowColor = rowColor;
-                            }else{
-                                itemData.splice(itemIndex, 1)
-                            }              
-                        }else if(isChecked(checkboxes, "chkItemsReachedMinQty") && !isChecked(checkboxes, "chkItemsCloseToMinQty")){
-                            if(equalToMinQty){
-                                itemData[itemIndex].itemMinQuantity = itemMinQuantity;
-                                itemData[itemIndex].vendor = vendorName;
-                                itemData[itemIndex].rowColor = rowColor;
-                            }else{
-                                itemData.splice(itemIndex, 1)
+                            }else if(isChecked(checkboxes, "chkItemsReachedMinQty") && isChecked(checkboxes, "chkItemsCloseToMinQty")){
+                                if(equalToMinQty || closeToMinQty){
+                                    itemData[itemIndex].itemMinQuantity = itemMinQuantity;
+                                    itemData[itemIndex].vendor = vendorName;
+                                    itemData[itemIndex].rowColor = rowColor;
+                                }else{
+                                    itemData.splice(itemIndex, 1)
+                                }              
+                            }else if(isChecked(checkboxes, "chkItemsReachedMinQty") && !isChecked(checkboxes, "chkItemsCloseToMinQty")){
+                                if(equalToMinQty){
+                                    itemData[itemIndex].itemMinQuantity = itemMinQuantity;
+                                    itemData[itemIndex].vendor = vendorName;
+                                    itemData[itemIndex].rowColor = rowColor;
+                                }else{
+                                    itemData.splice(itemIndex, 1)
+                                }
+                            }else if(!isChecked(checkboxes, "chkItemsReachedMinQty") && isChecked(checkboxes, "chkItemsCloseToMinQty")){
+                                if(closeToMinQty){
+                                    itemData[itemIndex].itemMinQuantity = itemMinQuantity;
+                                    itemData[itemIndex].vendor = vendorName;
+                                    itemData[itemIndex].rowColor = rowColor;
+                                }else{
+                                    itemData.splice(itemIndex, 1)
+                                } 
                             }
-                        }else if(!isChecked(checkboxes, "chkItemsReachedMinQty") && isChecked(checkboxes, "chkItemsCloseToMinQty")){
-                            if(closeToMinQty){
-                                itemData[itemIndex].itemMinQuantity = itemMinQuantity;
-                                itemData[itemIndex].vendor = vendorName;
-                                itemData[itemIndex].rowColor = rowColor;
-                            }else{
-                                itemData.splice(itemIndex, 1)
-                            } 
                         }
                     }
-                }
-                return true;
-            });
+                    return true;
+                });
+            }
 
             let resultObj = {
                 itemData: itemData,
@@ -363,7 +365,11 @@ define(['N/runtime', 'N/ui/serverWidget', 'N/redirect', 'N/search', './Lib/xml_t
                             name: "formulanumeric",
                             formula: "{quantity} - NVL({quantitycommitted}, 0)",
                             label: "Formula (Numeric)"
-                         })
+                        }),
+                        search.createColumn({
+                           name: "lineuniquekey",
+                           label: "Line Unique Key"
+                        })
                     ]
                 });
                 let columns = salesOrderLinesSearchObj.columns;
@@ -376,6 +382,7 @@ define(['N/runtime', 'N/ui/serverWidget', 'N/redirect', 'N/search', './Lib/xml_t
                     let itemID = result.getValue("item");
                     let itemLineQuantity = result.getValue("quantity");
                     let itemLineBackOrderQuantity = result.getValue(columns[6]);
+                    let soLineUniqueID = parseInt(result.getValue(columns[7]));
                     let itemIndex = findItemIndex(itemData, itemID);
                     if(itemIndex >= 0){
                         itemData[itemIndex].salesOrderLines.push({
@@ -387,7 +394,7 @@ define(['N/runtime', 'N/ui/serverWidget', 'N/redirect', 'N/search', './Lib/xml_t
                             itemLineQuantity: itemLineQuantity,
                             itemLineBackOrderQuantity: itemLineBackOrderQuantity,
                             rowValue:  salesOrderID + "|" + itemID + "|" + itemLineQuantity + "|" + itemData[itemIndex].itemMinQuantity,
-                            chkID: salesOrderID + "|" + itemID + "|" + itemData[itemIndex].itemName + "|" + salesOrderNumber
+                            chkID: salesOrderID + "|" + itemID + "|" + itemData[itemIndex].itemName + "|" + salesOrderNumber + "|" + soLineUniqueID
                         })
                     }
                     return true;

@@ -124,8 +124,8 @@ define(['N/record', 'N/search', 'N/runtime'],
 
                     let lineNum = salesOrderRec.findSublistLineWithValue({
                         sublistId: 'item',
-                        fieldId: 'item',
-                        value: itemObj.item
+                        fieldId: 'lineuniquekey',
+                        value: itemObj.itemLineId
                     });
                     salesOrderRec.selectLine({
                         sublistId: 'item',
