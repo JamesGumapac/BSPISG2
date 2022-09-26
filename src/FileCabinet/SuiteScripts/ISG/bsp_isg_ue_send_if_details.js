@@ -20,7 +20,7 @@ define(['N/encode', 'N/http', 'N/record', 'N/xml'],
          * @since 2015.2
          */
         const beforeLoad = (scriptContext) => {
-
+            //test commit
         }
 
         /**
