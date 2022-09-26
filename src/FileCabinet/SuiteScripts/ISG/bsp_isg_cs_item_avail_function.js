@@ -3,10 +3,10 @@
  * @NScriptType ClientScript
  * @NModuleScope SameAccount
  */
-define(["N/https", "N/url"], /**
+define(["N/https", "N/url", "N/search"], /**
  * @param{https} https
  * @param{url} url
- */ function (https, url) {
+ */ function (https, url, search) {
   /**
    * Function to be executed after page is initialized.
    *
@@ -133,16 +133,39 @@ define(["N/https", "N/url"], /**
   function saveRecord(scriptContext) {}
 
   function openSuitelet(itemId, tradingPartNerId) {
-    const SPR = 2;
-    log.debug("Params Info", { itemId, tradingPartNerId });
+    let tradingPartnerObjList = [];
+    const tradingPartnerSearch = search.create({
+      type: "customrecord_bsp_isg_trading_partner",
+      filters: [],
+      columns: [
+        search.createColumn({ name: "internalid", label: "Internal ID" }),
+        search.createColumn({
+          name: "name",
+          sort: search.Sort.ASC,
+          label: "Name",
+        }),
+      ],
+    });
+    tradingPartnerSearch.run().each(function (result) {
+      tradingPartnerObjList.push({
+        tradingPartnerId: result.id,
+        tradingPartnerName: result.getValue("name")
+      });
+      return true;
+    });
+
+    tradingPartnerObjList = tradingPartnerObjList.filter(
+      (f) => f.tradingPartnerId == tradingPartNerId
+    );
+    const tradingPartnerName = tradingPartnerObjList[0].tradingPartnerName;
     //pass as query parameters = trading partner internal ID and itemId
     //load the trading parter and get the group and make the call
-    if (tradingPartNerId == SPR) {
+    if (tradingPartnerObjList[0].tradingPartnerId) {
       var stSuiteletUrl = url.resolveScript({
         scriptId: "customscript_bsp_sl_display_item_avail",
         deploymentId: "customdeploy_bsp_sl_display_item_avail",
       });
-      stSuiteletUrl += `&tradingParnerId=${tradingPartNerId}&itemId=${itemId}`;
+      stSuiteletUrl += `&tradingParnerId=${tradingPartNerId}&itemId=${itemId}&tpName=${tradingPartnerName}`;
       window.open(
         stSuiteletUrl,
         "Check Item Available Stock",

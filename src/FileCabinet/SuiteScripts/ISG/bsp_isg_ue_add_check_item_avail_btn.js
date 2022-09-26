@@ -21,7 +21,6 @@ define(["N/record", "N/search"], /**
     let stLogTitle = "beforeLoad";
 
     try {
-
       let clientScriptFileId = search
         .create({
           type: "file",
@@ -29,10 +28,11 @@ define(["N/record", "N/search"], /**
         })
         .run()
         .getRange({ start: 0, end: 1 });
-      log.debug("Client Script Id: ", clientScriptFileId[0].id);
+
       context.form.clientScriptFileId = clientScriptFileId[0].id;
       const itemRec = context.newRecord;
       const itemId = itemRec.id;
+
       const activeTradingPartnerList = [];
       //search trading parter record that are active and have a value in the availability section{groupCode, user, password, endpointURL}
       let activeTradingPartnerSearch = search.create({
@@ -57,23 +57,17 @@ define(["N/record", "N/search"], /**
           }),
         ],
       });
-      var activeTradingPartnerSearchResultCount =
+      const activeTradingPartnerSearchResultCount =
         activeTradingPartnerSearch.runPaged().count;
-      log.debug(
-        "activeTradingPartnerSearchResultCount",
-        activeTradingPartnerSearchResultCount
-      );
-      activeTradingPartnerSearch.run().each(function (result) {
-        activeTradingPartnerList.push({
-          tradingPartnerId: result.id,
-          tradingPartnerName: result.getValue("name"),
+      if (activeTradingPartnerSearchResultCount > 0) {
+        activeTradingPartnerSearch.run().each(function (result) {
+          activeTradingPartnerList.push({
+            tradingPartnerId: result.id,
+            tradingPartnerName: result.getValue("name"),
+          });
+          return true;
         });
-        return true;
-      });
-      log.debug(
-        "Trading partner list: " + JSON.stringify(activeTradingPartnerList)
-      );
-
+      }
       if (context.type == "view") {
         activeTradingPartnerList.forEach(function (partner) {
           context.form.addButton({

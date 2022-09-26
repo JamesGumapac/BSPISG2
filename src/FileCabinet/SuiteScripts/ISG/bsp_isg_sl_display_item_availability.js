@@ -23,18 +23,28 @@ define([
    */
 
   function onRequest(context) {
+    let rtnMessage = "";
+    let itemName = "";
+    let tradingPartnerName = "";
     try {
       // TP = trading Partner
       let tpItemAvailabilityInfo = [];
       const tradingPartnerId = context.request.parameters["tradingParnerId"];
+      tradingPartnerName = context.request.parameters["tpName"];
+      log.debug("tradingPartnerName", tradingPartnerName);
+      const itemId = context.request.parameters["itemId"];
       if (tradingPartnerId) {
         const tradingPartnerRec = record.load({
           type: "customrecord_bsp_isg_trading_partner",
           id: tradingPartnerId,
           isDynamic: true,
         });
-
-
+        const itemNameSearch = search.lookupFields({
+          type: search.Type.ITEM,
+          id: itemId,
+          columns: ["itemid"],
+        });
+        itemName = itemNameSearch["itemid"];
         tpItemAvailabilityInfo.push({
           tpGroupCode: tradingPartnerRec.getValue(
             "custrecord_bsp_isg_tp_group_code"
@@ -47,11 +57,6 @@ define([
             "custrecord_bsp_isg_ia_enpoint_url"
           )
         });
-
-        log.debug(
-          "TP Item Availability Info ",
-          JSON.stringify(tpItemAvailabilityInfo)
-        );
       }
 
       const headers = {};
@@ -75,7 +80,7 @@ define([
                                 <Action>F</Action>
                                 <CustNumber></CustNumber>
                                 <DcNumber></DcNumber>
-                                <ItemNumber>SPR314</ItemNumber>
+                                <ItemNumber>${itemName}</ItemNumber>
                                 <SortBy>N</SortBy>
                                 <MinInFullPacks></MinInFullPacks>
                                 <AvailableOnly>Y</AvailableOnly>
@@ -98,86 +103,91 @@ define([
 
       let returnStatus =
         resBody["SOAP-ENV:Body"]["ns1:StockCheckResponse"]["return"].RtnStatus;
-      let rtnMessage =
+      rtnMessage =
         resBody["SOAP-ENV:Body"]["ns1:StockCheckResponse"]["return"].RtnMessage;
 
       log.debug("status", {
         returnStatus,
         rtnMessage,
       });
-      const itemAvaibilityList = [];
-      resBody["SOAP-ENV:Body"]["ns1:StockCheckResponse"]["return"][
-        "ResultsRows"
-      ].item.forEach((item) => itemAvaibilityList.push(item));
-      log.debug("itemAvaibilityList", itemAvaibilityList);
 
-      const form = serverWidget.createForm({
-        title: "Item Stock Availability",
-        hideNavBar: true,
-      });
+      let itemLength =
+        resBody["SOAP-ENV:Body"]["ns1:StockCheckResponse"]["return"][
+          "ResultsRows"
+        ].item.length;
+      if (itemLength > 0) {
+        const itemAvaibilityList = [];
+        resBody["SOAP-ENV:Body"]["ns1:StockCheckResponse"]["return"][
+          "ResultsRows"
+        ].item.forEach((item) => itemAvaibilityList.push(item));
 
-      const sublist = form.addSublist({
-        id: "sublistid",
-        type: serverWidget.SublistType.STATICLIST,
-        label: "Result",
-      });
+        const form = serverWidget.createForm({
+          title: `${tradingPartnerName} Stock Availability`,
+          hideNavBar: true,
+        });
+        const item = form.addField({
+          id: "custpage_itemname",
+          label: "Item",
+          type: serverWidget.FieldType.INLINEHTML,
+        }).defaultValue = `<html><h1>Item Name: ${itemName}</h1></html>`;
+        const sublist = form.addSublist({
+          id: "sublistid",
+          type: serverWidget.SublistType.STATICLIST,
+          label: "Result",
+        });
 
-      sublist.addRefreshButton();
+        sublist.addRefreshButton();
 
-      sublist.addField({
-        id: "custpage_dcnum",
-        label: "DC Number",
-        type: serverWidget.FieldType.TEXT,
-      });
-      sublist.addField({
-        id: "custpage_dcname",
-        label: "DC NAME",
-        type: serverWidget.FieldType.TEXT,
-      });
-      sublist.addField({
-        id: "custpage_available",
-        label: "Available Quantity",
-        type: serverWidget.FieldType.INTEGER,
-      });
-      sublist.addField({
-        id: "custpage_oum",
-        label: "UOM",
-        type: serverWidget.FieldType.TEXT,
-      });
-
-      for (let i = 0; i < itemAvaibilityList.length; i++) {
-        sublist.setSublistValue({
+        sublist.addField({
           id: "custpage_dcnum",
-          value: itemAvaibilityList[i].DcNum,
-          line: i,
+          label: "DC Number",
+          type: serverWidget.FieldType.TEXT,
         });
-        sublist.setSublistValue({
+        sublist.addField({
           id: "custpage_dcname",
-          value: itemAvaibilityList[i].DcName,
-          line: i,
+          label: "DC NAME",
+          type: serverWidget.FieldType.TEXT,
         });
-        sublist.setSublistValue({
+        sublist.addField({
           id: "custpage_available",
-          value: itemAvaibilityList[i].Available,
-          line: i,
+          label: "Available Quantity",
+          type: serverWidget.FieldType.INTEGER,
         });
-        sublist.setSublistValue({
+        sublist.addField({
           id: "custpage_oum",
-          value: itemAvaibilityList[i].Uom,
-          line: i,
+          label: "UOM",
+          type: serverWidget.FieldType.TEXT,
         });
-      }
 
-      sublist.label = "Result(" + sublist.lineCount + ")";
-      if (res.code == 200) {
+        for (let i = 0; i < itemAvaibilityList.length; i++) {
+          sublist.setSublistValue({
+            id: "custpage_dcnum",
+            value: itemAvaibilityList[i].DcNum,
+            line: i,
+          });
+          sublist.setSublistValue({
+            id: "custpage_dcname",
+            value: itemAvaibilityList[i].DcName,
+            line: i,
+          });
+          sublist.setSublistValue({
+            id: "custpage_available",
+            value: itemAvaibilityList[i].Available,
+            line: i,
+          });
+          sublist.setSublistValue({
+            id: "custpage_oum",
+            value: itemAvaibilityList[i].Uom,
+            line: i,
+          });
+        }
+
+        sublist.label = ` Total: ${sublist.lineCount} `;
         context.response.writePage(form);
-      } else {
-        context.response.writePage(
-          `<html> <H1>Connection Unsuccesful</H1></html>`
-        );
       }
     } catch (e) {
       log.error(e.message);
+      context.response.write(`<html><h3>${rtnMessage}</h3></html>`);
     }
   }
 
