@@ -2,7 +2,7 @@
  * @NApiVersion 2.1
  * @NScriptType Suitelet
  */
-define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N/search'],
+define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N/search', 'N/task', './Lib/bsp_isg_transmitions_util.js'],
     /**
      * @param{http} http
      * @param{runtime} runtime
@@ -10,8 +10,9 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
      * @param{redirect} redirect
      * @param{serverWidget} serverWidget
      * @param{search} search
+     * @param{task} task
     */
-    (http, runtime, record, redirect, serverWidget, search) => {
+    (http, runtime, record, redirect, serverWidget, search, task, BSPUtil) => {
         /**
          * Defines the Suitelet script trigger point.
          * @param {Object} scriptContext
@@ -41,6 +42,17 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                     try{
                         let poRecID = createPO(vendorSelected, itemsSelected);
                         createCartonBuyRecords(poRecID, itemsSelected);
+                        let objMRTask = task.create({
+                            taskType: task.TaskType.MAP_REDUCE,
+                            scriptId: "customscript_bsp_isg_mr_update_manual_so",
+                            deploymentId: "customdeploy_bsp_isg_mr_update_manual_so",
+                            params: {
+                                custscript_bsp_mr_cb_po_rec_id: poRecID
+                            }
+                        });
+                        let intTaskID = objMRTask.submit();
+                        log.debug(functionName, `MR Task submitted with ID: ${intTaskID}`);
+
                         redirect.toRecord({
                             type: record.Type.PURCHASE_ORDER,
                             id: poRecID,
@@ -225,7 +237,7 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
             });
             sublist.addField({
                 id: 'custpage_min_item_qty',
-                type: serverWidget.FieldType.INTEGER,
+                type: serverWidget.FieldType.TEXT,
                 label: 'Minimum Quantity'
             });
             sublist.addField({
@@ -258,7 +270,6 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                     let backOrderQuantity = element.backOrderQuantity;
                     let minQuantity = element.minQuantity;
                     let poQuantity = element.poQuantity;
-                    let soLineUniqueID = element.soLineUniqueID;
                     let salesOrders = element.salesOrders;
                     sublist.setSublistValue({
                         id: "custpage_item_selected",
@@ -269,11 +280,6 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                         id: "custpage_item_id",
                         line: lineCount,
                         value: itemID
-                    });
-                    sublist.setSublistValue({
-                        id: "custpage_so_item_line_id",
-                        line: lineCount,
-                        value: soLineUniqueID
                     });
                     sublist.setSublistValue({
                         id: "custpage_item_name",
@@ -325,6 +331,8 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                 ["purchaseorder","anyof","@NONE@"], 
                 "AND", 
                 ["custcol_bsp_isg_exclude_auto_transm","anyof","2"],
+                "AND", 
+                ["custcol_bsp_isg_manual_po_id","isempty",""]
             ];
             
             const salesOrderSearchObj = search.create({
@@ -382,7 +390,13 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                     itemList[itemIndex].quantity += quantity;
                     itemList[itemIndex].backOrderQuantity += backOrderQuantity;
                     itemList[itemIndex].poQuantity += backOrderQuantity;
-                    itemList[itemIndex].salesOrders.push(salesOrderID);
+                    itemList[itemIndex].salesOrders.push(
+                        {
+                            salesOrderID: salesOrderID, 
+                            soLineUniqueID: soLineUniqueID,
+                            lineQuantity: quantity,
+                            lineBackOrderQty: backOrderQuantity
+                        });
                 }else{
                     itemParams.push(itemID);
                     itemList.push({
@@ -393,14 +407,20 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                         backOrderQuantity: backOrderQuantity,
                         minQuantity: "Not defined",
                         poQuantity: backOrderQuantity,
-                        soLineUniqueID: soLineUniqueID,
-                        salesOrders: [salesOrderID]
+                        salesOrders: [
+                            {
+                                salesOrderID: salesOrderID, 
+                                soLineUniqueID: soLineUniqueID,
+                                lineQuantity: quantity,
+                                lineBackOrderQty: backOrderQuantity
+                            }
+                        ]
                     });
                 }         
                 return true;
             });
+            
             if(itemList.length > 0){
-
                 const carton_buy_item_soSearchObj = search.create({
                     type: "customrecord_bsp_isg_carton_buy_item_so",
                     filters:
@@ -412,14 +432,11 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                        search.createColumn({name: "custrecord_bsp_isg_item_line_unique_id", label: "Item line Unique ID"})
                     ]
                 });
-                carton_buy_item_soSearchObj.run().each(function(result){
-                    let itemLineUniqueID = result.getValue({name: "custrecord_bsp_isg_item_line_unique_id"});
-                    let itemIndex = getItemIndexUniqueID(itemList, itemLineUniqueID);
-                    if(itemIndex >= 0){
-                        itemList.splice(itemIndex, 1);
-                        itemParams.splice(itemIndex, 1);
-                    }
-                    return true;
+
+                let resultSearch = BSPUtil.searchAll(carton_buy_item_soSearchObj);
+                resultSearch.forEach(element => {
+                    let itemLineUniqueID = element.getValue("custrecord_bsp_isg_item_line_unique_id");
+                    itemList = processItemsByUniqueID(itemList, itemLineUniqueID);
                 });
                  
                 if(itemParams.length > 0){
@@ -469,14 +486,28 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
             return -1;
         }
 
-        const getItemIndexUniqueID = (items, itemLineUniqueID) =>{
+        const processItemsByUniqueID = (items, itemLineUniqueID) =>{
             for (let index = 0; index < items.length; index++) {
                 const element = items[index];
-                if(element.soLineUniqueID == itemLineUniqueID){
-                    return index;
-                }
-            }     
-            return -1;
+                for (let i = 0; i < element.salesOrders.length; i++) {
+                    const so = element.salesOrders[i];
+                    let lineQty = so.lineQuantity;
+                    let lineBackorderQty = so.lineBackOrderQty;
+                    if(so.soLineUniqueID == itemLineUniqueID){
+                        element.quantity -= lineQty;
+                        element.backOrderQuantity -= lineBackorderQty;
+                        element.poQuantity -= lineBackorderQty;
+                        element.salesOrders.splice(i, 1);
+                    }
+                }      
+            }
+            for (let index = 0; index < items.length; index++) {
+                const element = items[index];   
+                if(element.salesOrders.length == 0){
+                    items.splice(index, 1);
+                }  
+            }  
+            return items;   
         }
 
         const createPO = (vendorSelected, itemsSelected) => {
@@ -520,12 +551,16 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                 let salesOrders = JSON.parse(element.salesOrders);
                 if(salesOrders.constructor === Array){
                     for (let index = 0; index < salesOrders.length; index++) {
-                        let salesorderID = salesOrders[index];
-                        createCartonBuyRecord(salesorderID, element.itemID, element.selectedLineItemID, poRecID, element.poQty);
+                        let salesorderObj = salesOrders[index];
+                        let salesorderID = salesorderObj.salesOrderID;
+                        let selectedLineItemID = salesorderObj.soLineUniqueID;
+                        createCartonBuyRecord(salesorderID, element.itemID, selectedLineItemID, poRecID, element.poQty);
                     }
                 }else{
-                    let salesorderID = salesOrders;
-                    createCartonBuyRecord(salesorderID, element.itemID, element.selectedLineItemID, poRecID, element.poQty);
+                    let salesorderObj = salesOrders;
+                    let salesorderID = salesorderObj.salesOrderID;
+                    let selectedLineItemID = salesorderObj.soLineUniqueID;
+                    createCartonBuyRecord(salesorderID, element.itemID, selectedLineItemID, poRecID, element.poQty);
                 }       
             });
             
