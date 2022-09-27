@@ -2,7 +2,7 @@
  * @NApiVersion 2.1
  * @NScriptType Suitelet
  */
-define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N/search', 'N/task', './Lib/bsp_isg_transmitions_util.js'],
+define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N/search', 'N/task', './Lib/bsp_isg_transmitions_util.js', './Lib/bsp_isg_trading_partners.js'],
     /**
      * @param{http} http
      * @param{runtime} runtime
@@ -12,7 +12,7 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
      * @param{search} search
      * @param{task} task
     */
-    (http, runtime, record, redirect, serverWidget, search, task, BSPUtil) => {
+    (http, runtime, record, redirect, serverWidget, search, task, BSPUtil, BSPTradingPartnersUtil) => {
         /**
          * Defines the Suitelet script trigger point.
          * @param {Object} scriptContext
@@ -75,6 +75,12 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
             }
         }
 
+        /**
+         * It creates a form, adds a client script to it, creates header fields, and then creates a sublist of
+         * items
+         * @param params - 
+         * @returns The form object is being returned.
+        */
         const displayForm = (params) => {
             let form = serverWidget.createForm({
                 title: params.txtSuiteletTitle
@@ -88,6 +94,13 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
             return form;
         }
 
+        /**
+         * It creates the header fields for the form
+         * @param form - The form object that we are going to add fields to.
+         * @param params - This is an object that contains the following properties:
+         * @param vendors - An array of vendor objects.
+         * @returns The form object is being returned.
+        */
         const createHeaderFields = (form, params, vendors) => {
             form.addFieldGroup({
                 id : 'fieldgroup_vendor_info',
@@ -139,6 +152,12 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
             return form;
         }
 
+        /**
+         * It creates a search for vendors that have a value in the custom field
+         * "custentity_bsp_isg_trading_part_settings" and returns an array of objects with the vendor id and
+         * name
+         * @returns An array of objects.
+        */
         const getVendors = () => {
             let vendors = [];
             const vendorSearchObj = search.create({
@@ -168,6 +187,14 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
             return vendors;
         }
 
+        /**
+         * It takes a select field, and a list of vendors, and populates the select field
+         * with the list of vendors
+         * @param vendorField - The field object that you want to populate.
+         * @param params - This is the parameters that are passed to the client script.
+         * @param vendors - This is the array of vendors that we got from the server.
+         * @returns The vendorField is being returned.
+        */
         const populateVendorField = (vendorField, params, vendors) => {
             vendors.forEach(element => {
                 let id = element.id;
@@ -190,6 +217,12 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
             return vendorField;
         }
 
+        /**
+         * It creates a sublist on the form and populates it with the items that are passed in
+         * @param form - The form object that we are adding the sublist to.
+         * @param items - An array of objects that contain the item information.
+         * @returns The form is being returned.
+        */
         const createItemSublist = (form, items) => {
             let sublist = form.addSublist({
                 id: 'custpage_items_sublist',
@@ -259,6 +292,11 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
             return form;
         }
 
+        /**
+         * It takes a sublist and an array of items, and populates the sublist with the items
+         * @param sublist - The sublist object
+         * @param items - This is the array of items that you want to populate the sublist with.
+        */
         const pupulateItemSublist = (sublist, items) => {
             if(items.length > 0){
                 let lineCount = 0;
@@ -321,6 +359,12 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
             }
         }
 
+        /**
+         * This function will get all the items that are not in a purchase order and are set for manual transmission
+         * @param params - 
+         * @param vendors - This is an array of objects that contain the vendor ID and name.
+         * @returns An array of objects.
+        */
         const getItems = (params, vendors) => {
             let itemList = [];
             let filters = [
@@ -476,6 +520,13 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
             return itemList;
         }
 
+        /**
+         * It returns the index of the item in the array of items that has the itemID that matches the itemID
+         * passed in as a parameter
+         * @param items - The array of items to search through.
+         * @param itemID - The ID of the item you want to remove.
+         * @returns The index of the itemID in the items array.
+        */
         const getItemIndex = (items, itemID) => {
             for (let index = 0; index < items.length; index++) {
                 const element = items[index];
@@ -486,6 +537,14 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
             return -1;
         }
 
+        /**
+         * It takes an array of items, and a unique ID of a sales order line, and then it removes the sales
+         * order line from the item's salesOrders array if the Unique ID exists in a Carton Buy Custom rec, and then it removes the item from the items array if
+         * it has no salesOrders
+         * @param items - the array of items that you want to process
+         * @param itemLineUniqueID - The unique ID of the line item that is being deleted.
+         * @returns itemList
+        */
         const processItemsByUniqueID = (items, itemLineUniqueID) =>{
             for (let index = 0; index < items.length; index++) {
                 const element = items[index];
@@ -510,7 +569,17 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
             return items;   
         }
 
+        /**
+         * This function creates a purchase order record and returns the internal ID of the newly created
+         * record
+         * @param vendorSelected - The vendor ID that was selected from the dropdown
+         * @param itemsSelected - An array of objects that contain the item ID and the quantity to be ordered.
+         * @returns The record ID of the newly created PO.
+        */
         const createPO = (vendorSelected, itemsSelected) => {
+
+            let cartonBuyAccount = BSPTradingPartnersUtil.getCartonBuyAccountNumber(vendorSelected);
+
             let purchaseOrderRec = record.create({
                 type: record.Type.PURCHASE_ORDER,
                 isDynamic: true,
@@ -519,6 +588,16 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
             purchaseOrderRec.setValue({
                 fieldId: "entity",
                 value: parseInt(vendorSelected),
+            });
+
+            purchaseOrderRec.setValue({
+                fieldId: "custbody_bsp_isg_transmission_acct_num",
+                value: parseInt(cartonBuyAccount),
+            });
+
+            purchaseOrderRec.setValue({
+                fieldId: "custbody_bsp_isg_po_transm_status",
+                value: 1,
             });
 
             itemsSelected.forEach(element => {
@@ -546,6 +625,12 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
             return poRecordId;
         }
 
+        /**
+         * It takes in a PO record ID, and an array of items selected, and for each item selected, it creates a
+         * carton buy record
+         * @param poRecID - The internal ID of the Purchase Order record
+         * @param itemsSelected - This is an array of objects that contain the itemID, poQty, and salesOrders.
+        */
         const createCartonBuyRecords = (poRecID, itemsSelected) => {
             itemsSelected.forEach(element => {
                 let salesOrders = JSON.parse(element.salesOrders);
@@ -566,6 +651,17 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
             
         }
 
+        /**
+         * This function creates a record in the custom record "Carton Buy Item SO" and sets the values of the
+         * fields "Carton Buy Item", "Carton Buy SO", "Item Line Unique ID", "Carton Buy Qty", and "Carton Buy
+         * PO" to the values of the parameters "itemID", "soID", "lineItemID", "poQty", and "poRecID"
+         * respectively
+         * @param soID - The internal ID of the sales order
+         * @param itemID - The internal ID of the item that is being purchased.
+         * @param lineItemID - This is the unique ID of the line item on the sales order.
+         * @param poRecID - The internal ID of the Purchase Order record
+         * @param poQty - The quantity of the item that was purchased.
+        */
         const createCartonBuyRecord = (soID, itemID, lineItemID, poRecID, poQty) =>{
             let cartonBuyRecord = record.create({
                 type: "customrecord_bsp_isg_carton_buy_item_so",
@@ -594,6 +690,10 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
             cartonBuyRecord.save();
         }
 
+        /**
+         * It returns an object with the script parameters
+         * @returns An object with two properties: script_client and suitelet_title
+        */
         const getParameters = () => {
             let script = runtime.getCurrentScript();
             let objParams = {
