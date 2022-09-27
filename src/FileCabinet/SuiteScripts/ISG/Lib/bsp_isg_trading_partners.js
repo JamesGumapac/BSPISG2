@@ -252,6 +252,36 @@
 		);
 	}
 
+
+    /**
+     * It takes a vendor ID and returns the carton buy account number for that vendor.
+     * @param vendorID - The internal ID of the vendor record
+     * @returns the carton buy account number.
+    */
+    function getCartonBuyAccountNumber(vendorID){
+        let cartonBuyAccountNumber = null;
+        const vendorSearchObj = search.create({
+            type: "vendor",
+            filters:
+            [
+               ["internalid","anyof",vendorID]
+            ],
+            columns:
+            [
+               search.createColumn({
+                  name: "custrecord_bsp_isg_carton_buy_acct_num",
+                  join: "CUSTENTITY_BSP_ISG_TRADING_PART_SETTINGS",
+                  label: "Carton buy Account Number"
+               })
+            ]
+         });
+         vendorSearchObj.run().each(function(result){
+            cartonBuyAccountNumber = result.getValue({name: 'custrecord_bsp_isg_carton_buy_acct_num', join: 'CUSTENTITY_BSP_ISG_TRADING_PART_SETTINGS'});
+            return true;
+         });
+         return cartonBuyAccountNumber;
+    }
+
     return {
         constants: constants,
         getTradingPartnerInfo: getTradingPartnerInfo,
@@ -259,6 +289,7 @@
         updateTradingPartnerBODId: updateTradingPartnerBODId,
         isAcknowledgmentSPR: isAcknowledgmentSPR,
         processPOAck: processPOAck,
-        isTradingPartner: isTradingPartner
+        isTradingPartner: isTradingPartner,
+        getCartonBuyAccountNumber: getCartonBuyAccountNumber
 	};
 });

@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width,initial-scale=1">
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+	</head>
+	<body>
+		<div class="container">
+			<section class="form-horizontal">
+				<button type="button" class="btn btn-primary" style="margin-bottom: 10px; margin-top: 10px;" data-toggle="modal" data-target="#itemsSelectedModal" id="previewItems">Exclude from automatic transmission</button>
+				<span style="height: 10px; width: 20px; background-color:#b5e7a0; margin-left: 10px;">&nbsp</span><label style="margin-left: 5px;">Reached Carton Buy Min Quantity</label>
+				<span style="height: 10px; width: 20px; background-color:yellow; margin-left: 10px;">&nbsp</span><label style="margin-left: 5px;">Close to Carton Buy Min Quantity</label>
+				<label style="margin-left: 10%;"><b>Total of Items:</b> ${data.totalItems}</label>
+				<input class="form-check-input-all" type="checkbox" style="margin-left: 10%;" id="chkAll" /><label style="margin-left: 5px;" for="chkAll">SELECT ALL</label>
+				<div class="col-md-12">
+					<div class="panel panel-default">
+						<div class="panel-heading">Items</div>
+						<div class="panel-body" id="itemDetails" style="height:500px;overflow:auto;">
+							<table class="table table-condensed table-striped">
+								<thead>
+									<tr>
+										<th></th>
+										<th>Item</th>
+										<th>Vendor</th>
+										<th>Quantity (total)</th>
+										<th>Backorder Quantity (total)</th>
+										<th>Minimum Quantity</th>
+									</tr>
+								</thead>
+								<tbody>
+									<#list data.data as item>
+										<tr style=${item.rowColor}>
+											<td>
+												<button type="button" class="btn btn-default btn-xs" data-toggle="collapse" data-target=${item.itemRowID}>
+													<span class="glyphicon glyphicon-eye-open"></span>
+												</button>
+											</td>
+											<td>${item.itemName}</td>
+											<td>${item.vendor}</td>
+											<td>${item.itemQuantity}</td>
+											<td>${item.itemBackOrderQuantity}</td>
+											<td>${item.itemMinQuantity}</td>
+										</tr>
+										<tr>
+											<td colspan="12" class="hiddenRow">
+												<div class="accordian-body collapse" id=${item.itemID}>
+													<table class="table table-striped">
+														<thead>
+															<tr class="info">
+																<th>Sales Order Number</th>
+																<th>Customer</th>
+																<th>Route Code</th>
+																<th>Route Code Desc</th>
+																<th>Quantity</th>
+																<th>Backorder Quantity</th>
+																<th>Select</th>
+															</tr>
+														</thead>
+														<tbody>
+															<#list item.salesOrderLines as itemLine>
+																<tr>
+																	<td>${itemLine.salesOrderNumber}</td>
+																	<td>${itemLine.customer}</td>
+																	<td>${itemLine.routeCode}</td>
+																	<td>${itemLine.routeCodeDesc}</td>
+																	<td>${itemLine.itemLineQuantity}</td>
+																	<td>${itemLine.itemLineBackOrderQuantity}</td>
+																	<td><input class="form-check-input" type="checkbox" value=${itemLine.rowValue} id=${itemLine.chkID} /></td>
+																</tr>
+															</#list>
+														</tbody>
+													</table>
+												</div>
+											</td>
+										</tr>
+									</#list>                              
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>      
+			</section>
+			<div class="modal fade" id="itemsSelectedModal" tabindex="-1" aria-labelledby="itemModalLabel" aria-hidden="true">
+				<div class="modal-dialog">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h3 class="modal-title" id="itemModalLabel">Items selected</h3>
+						</div>
+						<div class="modal-body" style="height:200px;overflow:auto;">
+							<table class="table table-condensed table-striped">
+								<thead>
+									<tr>
+										<th>Item</th>
+										<th>Sales Order Number</th>
+									</tr>
+								</thead>
+								<tbody id="modal-table-body">
+									<tr>
+										<td></td>
+										<td></td>
+									</tr>                            
+								</tbody>
+							</table>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+							<button type="button" class="btn btn-primary" id="submitBtn">Save changes</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<script type="text/javascript">
+			$(document).ready(function () { 
+				$('#submitBtn').on('click',
+					function (e) {
+						e.stopPropagation(); 
+						e.preventDefault();  
+						
+						var itemsSelected = JSON.parse(localStorage['CBState'] || '{}');
+						console.log(JSON.stringify(itemsSelected));
+						let objItemsSelected = processItemsSelectedToSend(itemsSelected);
+						console.log(JSON.stringify(objItemsSelected));
+						if(!isEmpty(objItemsSelected.objItemsSelected)){  
+							let record = nlapiCreateRecord( 'customrecord_bsp_isg_cartonbuy_items_req');
+							record.setFieldValue( 'custrecord_bsp_isg_carton_buy_status', 1);
+							record.setFieldValue( 'custrecord_bsp_isg_carton_buy_json', JSON.stringify(objItemsSelected));
+							let id = nlapiSubmitRecord(record, true);
+
+							var url = nlapiResolveURL('SUITELET', 'customscript_bsp_isg_sl_exclude_so_lines', 'customdeploy_bsp_isg_sl_exclude_so_lines');
+							url = url + '&recID='+id
+
+							localStorage.removeItem('CBState'); 
+
+							document.location=url;
+						}else{
+							alert("Please select at least one item from the List to proceed");
+						}
+					}  
+				);
+
+				$("#previewItems").click(function () {  
+					let itemsSelected = JSON.parse(localStorage['CBState'] || '{}');
+					console.log(JSON.stringify(itemsSelected));
+					let objItemsSelected = processItemsSelected(itemsSelected); 
+					let str = "";
+					for (let index = 0; index < objItemsSelected.objItemsSelected.length; index++) {
+						let element = objItemsSelected.objItemsSelected[index];
+						let itemName = element.itemName;
+						let salesOrderName = element.salesOrderName;
+						str += "<tr><td>"+itemName+"</td><td>"+salesOrderName+"</td></tr>";  
+					}
+					$("#modal-table-body").html(str);  
+				});  
+			});
+
+			function processItemsSelected(itemsSelected){
+				let objItemsSelected = [];
+
+				for(var i in itemsSelected) { 
+					let data = i.split("|");
+					let salesOrder = parseInt(data[0]);
+					let item = parseInt(data[1]);
+					let itemName = data[2];
+					let salesOrderName = data[3];
+					objItemsSelected.push(
+						{
+							salesOrder: salesOrder,
+							item: item,
+							itemName: itemName,
+							salesOrderName: salesOrderName
+						}
+					);
+				} 
+				return {objItemsSelected};
+			}
+
+			function processItemsSelectedToSend(itemsSelected){
+				let objItemsSelected = [];
+
+				for(var i in itemsSelected) { 
+					let data = i.split("|");
+					let salesOrder = parseInt(data[0]);
+					let item = parseInt(data[1]);
+					let itemLineId = parseInt(data[4]);
+					objItemsSelected.push(
+						{
+							salesOrder: salesOrder,
+							item: item,
+							itemLineId: itemLineId
+						}
+					);
+				} 
+				return {objItemsSelected};
+			}
+
+			(function() { 
+				var cbstate; 
+				window.addEventListener('load', function() { 
+					cbstate = JSON.parse(localStorage['CBState'] || '{}'); 		
+					for(var i in cbstate) { 
+						var el = document.querySelector('input[id="' + i + '"]'); 
+						if (el) el.checked = true; 
+					} 	
+
+					var cb = document.getElementsByClassName('form-check-input'); 
+
+					for(var i = 0; i < cb.length; i++) {  
+						cb[i].addEventListener('click', function(evt) { 
+							if (this.checked) { 
+								cbstate[this.id] = true; 
+							} else if (cbstate[this.id]) { 
+								delete cbstate[this.id]; 
+							} 						
+							localStorage.CBState = JSON.stringify(cbstate); 
+						}); 
+					}
+
+					$("#chkAll").click(function () {  
+						let cb = document.getElementsByClassName('form-check-input'); 
+						if (this.checked) { 	
+							for(var i = 0; i < cb.length; i++) { 
+								cb[i].checked = true;
+								cbstate[cb[i].id] = true;
+							}  
+						} else { 
+							for(var i = 0; i < cb.length; i++) { 
+								cb[i].checked = false;
+								delete cbstate[cb[i].id]; 
+							}  
+						} 						
+						localStorage.CBState = JSON.stringify(cbstate); 
+					});
+
+				}); 
+			})(); 
+
+			function isEmpty(value) {
+				return (
+					value === "" ||
+					value == null ||
+					value == undefined ||
+					value == "null" ||
+					value == "undefined" ||
+					(value.constructor === Array && value.length == 0) ||
+					(value.constructor === Object &&
+						(function (v) {
+							for (let k in v) return false;
+							return true;
+						})(value))
+				);
+			}
+
+		</script>
+	</body>
+</html>

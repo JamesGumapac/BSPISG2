@@ -1,0 +1,31 @@
+<centercategory scriptid="custcentercategory_bsp_isg_transmissions_setup">
+  <center>BASIC</center>
+  <centertab>[scriptid=custcentertab_bsp_isg]</centertab>
+  <label>Transmssions Setup</label>
+  <links>
+    <link>
+      <linklabel>Transmission Scheduler</linklabel>
+      <linkobject>[scriptid=customrecord_bsp_isg_transm_schedule]</linkobject>
+      <linktasktype>LIST</linktasktype>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linklabel>Transmission Group</linklabel>
+      <linkobject>[scriptid=customrecord_bsp_isg_transmission_group]</linkobject>
+      <linktasktype>LIST</linktasktype>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linklabel>Transmission</linklabel>
+      <linkobject>[scriptid=customrecord_bsp_isg_transmission]</linkobject>
+      <linktasktype>LIST</linktasktype>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linklabel>Transmissions Queue</linklabel>
+      <linkobject>[scriptid=customrecord_bsp_isg_transmission_queue]</linkobject>
+      <linktasktype>LIST</linktasktype>
+      <shortlist>F</shortlist>
+    </link>
+  </links>
+</centercategory>

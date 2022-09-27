@@ -120,8 +120,8 @@
     <scriptdeployment scriptid="customdeploy_bsp_mr_process_transmition">
       <buffersize>1</buffersize>
       <concurrencylimit>1</concurrencylimit>
-      <custscript_bsp_mr_transm_queue_id>402</custscript_bsp_mr_transm_queue_id>
-      <custscript_bsp_mr_transm_rec_id>2</custscript_bsp_mr_transm_rec_id>
+      <custscript_bsp_mr_transm_queue_id></custscript_bsp_mr_transm_queue_id>
+      <custscript_bsp_mr_transm_rec_id></custscript_bsp_mr_transm_rec_id>
       <custscript_bsp_mr_transmit_po_dep>customdeploy_bsp_mr_transmit_pos</custscript_bsp_mr_transmit_po_dep>
       <custscript_bsp_mr_transmit_po_script>customscript_bsp_isg_mr_transmit_pos</custscript_bsp_mr_transmit_po_script>
       <isdeployed>T</isdeployed>

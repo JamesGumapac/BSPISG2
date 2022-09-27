@@ -463,7 +463,6 @@
         return arrReturnSearchResults;
     }
 
-
     /**
      * It takes a JavaScript Date object and returns a string in the format of an XML dateTime.
      * @param date - The date to be converted to XML format.
@@ -473,6 +472,10 @@
         return date.toISOString().slice(0, 19);
     }
 
+    /**
+     * If there are no PO records in the queue to be processed, delete the queue.
+     * @param queueID - The internal ID of the queue record.
+    */
     function checkTransmissionQueue(queueID){
         const purchaseOrderSearchObj = search.create({
             type: "purchaseorder",
@@ -508,6 +511,121 @@
         log.debug("deleteQueue", `Queue ID ${queueID} has been deleted`);
     }
 
+    function buildTransmissionSavedSearch(transmitionSavedSearcObj){
+        let fixedFilters = [
+            {
+               name: "type",
+               operator: "anyof",
+               values: [
+                  "SalesOrd"
+               ],
+               isor: false,
+               isnot: false,
+               leftparens: 0,
+               rightparens: 0
+            },
+            {
+               name: "mainline",
+               operator: "is",
+               values: [
+                  "F"
+               ],
+               isor: false,
+               isnot: false,
+               leftparens: 0,
+               rightparens: 0
+            },
+            {
+               name: "custbody_bsp_isg_route_code",
+               operator: "noneof",
+               values: [
+                  "@NONE@"
+               ],
+               isor: false,
+               isnot: false,
+               leftparens: 0,
+               rightparens: 0
+            },
+            {
+               name: "purchaseorder",
+               operator: "anyof",
+               values: [
+                  "@NONE@"
+               ],
+               isor: false,
+               isnot: false,
+               leftparens: 0,
+               rightparens: 0
+            },
+            {
+               name: "taxline",
+               operator: "is",
+               values: [
+                  "F"
+               ],
+               isor: false,
+               isnot: false,
+               leftparens: 0,
+               rightparens: 0
+            },
+            {
+               name: "custcol_bsp_isg_exclude_auto_transm",
+               operator: "anyof",
+               values: [
+                  "1"
+               ],
+               isor: false,
+               isnot: false,
+               leftparens: 0,
+               rightparens: 0
+            },
+            {
+               name: "formulanumeric",
+               operator: "greaterthan",
+               values: [
+                  "0"
+               ],
+               formula: "{quantity} - NVL({quantitycommitted}, 0)",
+               isor: false,
+               isnot: false,
+               leftparens: 0,
+               rightparens: 0
+            }
+         ];
+
+        let fixedColumns = [
+            search.createColumn({name: "custbody_bsp_isg_route_code", label: "Route Code"}),
+            search.createColumn({
+               name: "custrecord_bsp_lb_route_code_desc",
+               join: "CUSTBODY_BSP_ISG_ROUTE_CODE",
+               label: "Route Code Description"
+            }),
+            search.createColumn({
+               name: "custrecord_bsp_lb_location",
+               join: "CUSTBODY_BSP_ISG_ROUTE_CODE",
+               label: "Location"
+            }),
+            search.createColumn({name: "item", label: "Item"}),
+            search.createColumn({name: "line", label: "Item Line Number"}),
+            search.createColumn({name: "rate", label: "Item Rate"}),
+            search.createColumn({name: "quantity", label: "Quantity"}),
+            search.createColumn({name: "quantitycommitted", label: "Quantity Committed"}),
+            search.createColumn({name: "internalid", label: "Sales Order ID"}),
+            search.createColumn({name: "tranid", label: "Sales Order Number"}),
+            search.createColumn({name: "datecreated", label: "Sales Order Date"}),
+            search.createColumn({name: "entity", label: "Customer"})
+        ];
+
+        let searchFilters = transmitionSavedSearcObj.filters;
+        let combinedFilters = fixedFilters.concat(searchFilters);
+        let searchObj = search.create({
+            type: "salesorder",
+            filters: combinedFilters,
+            columns: fixedColumns
+        });
+        return searchObj;
+    }
+
     return {
         constants: constants,
         transmitionQueueStatus: transmitionQueueStatus,
@@ -525,6 +643,7 @@
         buildFileName: buildFileName,
         getXMLDate: getXMLDate,
         getAccountNumber: getAccountNumber,
-        checkTransmissionQueue: checkTransmissionQueue
+        checkTransmissionQueue: checkTransmissionQueue,
+        buildTransmissionSavedSearch: buildTransmissionSavedSearch
 	};
 });

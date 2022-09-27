@@ -2,13 +2,16 @@
  * @NApiVersion 2.1
  * @NScriptType MapReduceScript
  */
-define(['N/runtime', 'N/search', 'N/task', './Lib/bsp_isg_transmitions_util.js', './Lib/bsp_isg_edi_settings.js', './Lib/bsp_isg_purchase_orders.js'],
+define(['N/record', 'N/search', 'N/runtime'],
     /**
-    * @param{runtime} runtime
-    * @param{search} search
-    * @param{BSPTransmitionsUtil} BSPTransmitionsUtil
+     * @param{record} record
+     * @param{runtime} runtime
+     * @param{search} search
     */
-    (runtime, search, task, BSPTransmitionsUtil, BSP_EDISettingsUtil, BSP_POutil) => {
+    (record, search, runtime) => {
+        
+        const TRANSMISSION_OPTIONS_MANUAL = 2;
+
         /**
          * Defines the function that is executed at the beginning of the map/reduce process and generates the input data.
          * @param {Object} inputContext
@@ -24,61 +27,39 @@ define(['N/runtime', 'N/search', 'N/task', './Lib/bsp_isg_transmitions_util.js',
 
         const getInputData = (inputContext) => {
             let functionName = "getInputData";
-            let transmitionData = [];
+            let salesOrdersToProcess = [];
             try
             {
                 log.debug(functionName, "************ EXECUTION STARTED ************");
 
                 let paramsObj = getParameters();
-                let transmitionRecID = paramsObj.transmitionRecID;
-                let transmitionQueueID = paramsObj.transmitionQueueID;
+                let cartonBuyItemsRecID = paramsObj.cartonBuyItemsRecID;
 
-                log.debug(functionName, `Work with transmition ${transmitionRecID} of Queue: ${transmitionQueueID}`);
+                record.submitFields({
+                    type: "customrecord_bsp_isg_cartonbuy_items_req",
+                    id: parseInt(cartonBuyItemsRecID),
+                    values: {
+                        custrecord_bsp_isg_carton_buy_status: 2
+                    },
+                     options: {        
+                         enableSourcing: false,        
+                         ignoreMandatoryFields : true    
+                    }           
+                });
 
-                BSPTransmitionsUtil.updateTransmissionQueueStatus(transmitionQueueID, BSPTransmitionsUtil.transmitionQueueStatus().transmitting);
-                
-                let transmitionRecFields = BSPTransmitionsUtil.getFieldsFromTransmitionRecord(transmitionRecID);
-                let transmitionSavedSearchID = transmitionRecFields.savedSearch;  
-                let vendor = transmitionRecFields.vendor;
-                let autoreceive = transmitionRecFields.autoreceive;
-                let account = transmitionRecFields.accountNumber;
-                let transmissionLocation = transmitionRecFields.location;
-
-                let ediSettings = BSP_EDISettingsUtil.getEDIsettings(paramsObj.environment);
-
-                let paramTransmissionSavedSearchObj = search.load({id: transmitionSavedSearchID});
-                let transmissionSearchObj = BSPTransmitionsUtil.buildTransmissionSavedSearch(paramTransmissionSavedSearchObj);
-                let resultSearch = BSPTransmitionsUtil.searchAll(transmissionSearchObj);
-                resultSearch.forEach(element => {
-                    let salesOrderID = element.id;
-                    let routeCodeID = element.getValue("custbody_bsp_isg_route_code");
-                    let location = element.getValue({name: "custrecord_bsp_lb_location", join: "custbody_bsp_isg_route_code"});
-                    let itemID = element.getValue("item");
-                    let itemQuantity = element.getValue("quantity");
-                    let itemQuantityCommited = element.getValue("quantitycommitted");
-                    let resultQuantity = (itemQuantity - itemQuantityCommited);
-                    let customer = element.getValue("entity");
-
-                    transmitionData.push({
-                        transactionForm: ediSettings.transactionForm,
-                        transmitionRecID: transmitionRecID,
-                        transmitionQueueID: transmitionQueueID,
-                        salesOrderID: salesOrderID,
-                        routeCode: {routeCodeID: routeCodeID, location: location},
-                        itemID: itemID,
-                        vendor: vendor,
-                        itemQuantity: resultQuantity,
-                        customer: customer,
-                        autoreceive: autoreceive,
-                        account: account,
-                        transmissionLocation: transmissionLocation
-                    });           
-                });  
+                let requestField = search.lookupFields({
+                    type: "customrecord_bsp_isg_cartonbuy_items_req",
+                    id: parseInt(cartonBuyItemsRecID),
+                    columns: 'custrecord_bsp_isg_carton_buy_json'
+                });
+                let request = requestField.custrecord_bsp_isg_carton_buy_json;
+                let objSalesOrdersToProcess = JSON.parse(request); 
+                salesOrdersToProcess = objSalesOrdersToProcess.objItemsSelected;
             } catch (error)
             {
                 log.error(functionName, {error: error.toString()});
             }
-            return transmitionData;
+            return salesOrdersToProcess;
         }
 
         /**
@@ -97,12 +78,13 @@ define(['N/runtime', 'N/search', 'N/task', './Lib/bsp_isg_transmitions_util.js',
          * @param {string} mapContext.value - Value to be processed during the map stage
          * @since 2015.2
          */
-         const map = (mapContext) => {
+
+        const map = (mapContext) => {
             let functionName = "map";
             try{
                 let mapValue = JSON.parse(mapContext.value);
-                let salesOrderID = mapValue.salesOrderID;
-                mapContext.write({key: salesOrderID, value: mapValue});
+                let salesOrder = mapValue.salesOrder;
+                mapContext.write({key: salesOrder, value: mapValue});
             }catch (error)
             {
                 log.error(functionName, {error: error.toString()});
@@ -129,43 +111,42 @@ define(['N/runtime', 'N/search', 'N/task', './Lib/bsp_isg_transmitions_util.js',
             try{
                 let salesOrderID = reduceContext.key;
                 let itemData = reduceContext.values;
-                let commonData = JSON.parse(reduceContext.values[0]);
-                let transmitionQueueID = commonData.transmitionQueueID;
-                let customer =  commonData.customer;
-                let account = BSPTransmitionsUtil.getAccountNumber(customer, commonData.account);
-                let vendor = commonData.vendor;
-                let routeCode = commonData.routeCode;
-                let autoreceive = commonData.autoreceive;
-                let transmissionLocation = commonData.transmissionLocation;
-                let transactionForm = commonData.transactionForm;
-                let poData = {
-                    transactionForm: transactionForm,
-                    transmitionQueueID: transmitionQueueID, 
-                    salesOrderID:salesOrderID, 
-                    customer:customer, 
-                    vendor:vendor, 
-                    routeCode: routeCode,
-                    autoreceive: autoreceive, 
-                    account: account,
-                    transmissionLocation: transmissionLocation,
-                    itemData: itemData
-                };
-                log.debug(functionName, `Working with SO data: ${JSON.stringify(poData)}`);
 
-                let purchaseOrder = BSP_POutil.createPurchaseOrders(poData);
-                log.debug(functionName, `PO Created: ${purchaseOrder}`);
+                let salesOrderRec = record.load({
+                    type: record.Type.SALES_ORDER,
+                    id: parseInt(salesOrderID),
+                    isDynamic: true
+                });
 
+                for (let index = 0; index < itemData.length; index++) {
+                    let element = itemData[index];
+                    let itemObj = JSON.parse(element);
+
+                    let lineNum = salesOrderRec.findSublistLineWithValue({
+                        sublistId: 'item',
+                        fieldId: 'lineuniquekey',
+                        value: itemObj.itemLineId
+                    });
+                    salesOrderRec.selectLine({
+                        sublistId: 'item',
+                        line: lineNum
+                    });
+                    salesOrderRec.setCurrentSublistValue({
+                        sublistId: 'item',
+                        fieldId: 'custcol_bsp_isg_exclude_auto_transm',
+                        value: TRANSMISSION_OPTIONS_MANUAL
+                    });
+                    salesOrderRec.commitLine({
+                        sublistId: "item",
+                    });
+                }      
+                salesOrderRec.save();
             }catch (error)
             {
-                log.error(functionName, `Error Creating PO: ${error.toString()}`);
-                let errorSource = "BSP | MR | Process Transmission - " + functionName;
-                BSPTransmitionsUtil.createErrorLog(
-                    errorSource,
-                    error.message,
-                    error.toString()
-                );
+                log.error(functionName, `Error: ${error.toString()}`);
             }
         }
+
 
         /**
          * Defines the function that is executed when the summarize entry point is triggered. This entry point is triggered
@@ -190,21 +171,19 @@ define(['N/runtime', 'N/search', 'N/task', './Lib/bsp_isg_transmitions_util.js',
             let functionName = 'Summarize';
             try{
                 let paramsObj = getParameters();
-                let transmitionRecID = paramsObj.transmitionRecID;
-                let transmitionQueueID = paramsObj.transmitionQueueID;
-                let objMRTask = task.create({
-                    taskType: task.TaskType.MAP_REDUCE,
-                    scriptId: paramsObj.mr_script_id,
-                    deploymentId: paramsObj.mr_script_dep_id,
-                    params: {
-                        custscript_bsp_mr_transm_queue: transmitionQueueID,
-                        custscript_bsp_mr_transm_rec: transmitionRecID,
-                        custscript_bsp_mr_po_rec_id: null
-                    }
+                let cartonBuyItemsRecID = paramsObj.cartonBuyItemsRecID;
+                record.submitFields({
+                    type: "customrecord_bsp_isg_cartonbuy_items_req",
+                    id: parseInt(cartonBuyItemsRecID),
+                    values: {
+                        custrecord_bsp_isg_carton_buy_status: 3
+                    },
+                     options: {        
+                         enableSourcing: false,        
+                         ignoreMandatoryFields : true    
+                    }           
                 });
-                let intTaskID = objMRTask.submit();
-                log.debug(functionName, `MR Task submitted with ID: ${intTaskID} for Transmition Queue: ${transmitionQueueID}`);
-            }catch (error)
+           }catch (error)
             {
                 log.error(functionName, {error: error.toString()});
             }
@@ -213,22 +192,15 @@ define(['N/runtime', 'N/search', 'N/task', './Lib/bsp_isg_transmitions_util.js',
         }
 
         /**
-         * Retieves Script parameters set up in the Deployment Record
-         * @returns {Object} Script parameters
+        * Retieves Script parameters set up in the Deployment Record
+        * @returns {Object} Script parameters
         */
-          const getParameters = () => {
+        const getParameters = () => {
             let objParams = {};
-
-            let environment = runtime.envType;
             let objScript = runtime.getCurrentScript();
             objParams = {
-                transmitionRecID : objScript.getParameter({name: "custscript_bsp_mr_transm_rec_id"}),
-                transmitionQueueID : objScript.getParameter({name: "custscript_bsp_mr_transm_queue_id"}),
-                mr_script_id : objScript.getParameter({name: "custscript_bsp_mr_transmit_po_script"}),
-                mr_script_dep_id : objScript.getParameter({name: "custscript_bsp_mr_transmit_po_dep"}),
-                environment: environment
+                cartonBuyItemsRecID : objScript.getParameter({name: "custscript_bsp_mr_cartonbuy_rec_id"})
             }
-    
             return objParams;
         }
 
