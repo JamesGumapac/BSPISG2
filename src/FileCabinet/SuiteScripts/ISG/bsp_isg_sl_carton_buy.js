@@ -45,7 +45,6 @@ define(['N/runtime', 'N/ui/serverWidget', 'N/search', './Lib/xml_template_handle
                     form = completeForm(form, params);
 
                     let data = getData(params);
-                    log.debug(functionName, JSON.stringify(data));
 
                     form.addFieldGroup({
                         id : 'fieldgroup_item_list',
@@ -174,9 +173,10 @@ define(['N/runtime', 'N/ui/serverWidget', 'N/search', './Lib/xml_template_handle
 
             let vendor = null;
             if(selectedVendor && selectedVendor.selectedVendorID){
-                vendor = {id: selectedVendor.selectedVendorID, name: selectedVendor.selectedVendorName};
+                let vendorIndex = findVendorIndex(vendorsData, selectedVendor.selectedVendorID)
+                vendor = {id: selectedVendor.selectedVendorID, name: selectedVendor.selectedVendorName, contractCodes: vendorsData[vendorIndex].contractCodes};
             }else{
-                vendor = {id:  vendorsData[0].id, name:  vendorsData[0].name}
+                vendor = {id:  vendorsData[0].id, name:  vendorsData[0].name, contractCodes: vendorsData[0].contractCodes}
             }
 
             const salesOrderSearchObj = search.create({
@@ -214,7 +214,6 @@ define(['N/runtime', 'N/ui/serverWidget', 'N/search', './Lib/xml_template_handle
                 ]
             });
             let itemData = [];
-            let itemParams = [];
             let columns = salesOrderSearchObj.columns;
             salesOrderSearchObj.run().each(function(result){
                 let itemID = result.getValue(columns[0]);
@@ -222,105 +221,184 @@ define(['N/runtime', 'N/ui/serverWidget', 'N/search', './Lib/xml_template_handle
                 let itemName = result.getText(columns[0]);
                 let itemQuantity = result.getValue(columns[1]);
                 let itemBackOrderQuantity = result.getValue(columns[2]);
-         
+
                 itemData.push({
                     itemRowID: itemRowID,
                     itemID: itemID,
                     itemName: itemName,
                     itemQuantity: itemQuantity,
                     itemBackOrderQuantity: itemBackOrderQuantity,
+                    itemRegularCost: "Not defined",
+                    itemCartonCost: "Not defined",
                     itemMinQuantity: "Not defined",
                     vendor: vendor.name,
                     rowColor: null,
                     salesOrderLines: []
                 });
-                itemParams.push(itemID);
                 return true;
             });
 
-            if(itemParams.length > 0) {
-                const itemSearchObj = search.create({
-                    type: "item",
+            if(itemData.length > 0) {
+
+                const item_acct_dataSearchObj = search.create({
+                    type: "customrecord_bsp_isg_item_acct_data",
                     filters:
                     [
-                       ["internalid","anyof",itemParams], 
+                       ["custrecord_bsp_isg_parent_item","anyof", itemData.map(i => i.itemID)],
                        "AND", 
-                       ["custrecord_bsp_isg_parent_item.custrecord_bsp_isg_min_quantity","isnotempty",""]
+                       ["custrecord_bsp_isg_item_supplier","anyof",vendor.id]
                     ],
                     columns:
                     [
-                       search.createColumn({
-                          name: "custrecord_bsp_isg_item_supplier",
-                          join: "CUSTRECORD_BSP_ISG_PARENT_ITEM",
-                          label: "Supplier"
-                       }),
-                       search.createColumn({
-                          name: "custrecord_bsp_isg_item_acct_number",
-                          join: "CUSTRECORD_BSP_ISG_PARENT_ITEM",
-                          label: "Account Number"
-                       }),
-                       search.createColumn({
-                          name: "custrecord_bsp_isg_min_quantity",
-                          join: "CUSTRECORD_BSP_ISG_PARENT_ITEM",
-                          label: "Minimum Quantity"
-                       })
+                       search.createColumn({name: "custrecord_bsp_isg_parent_item", label: "Item"}),
+                       search.createColumn({name: "custrecord_bsp_isg_item_supplier", label: "Supplier"}),
+                       search.createColumn({name: "custrecord_bsp_isg_item_contract_code", label: "Contract Code"}),
+                       search.createColumn({name: "custrecord_bsp_isg_min_quantity", label: "Minimum Quantity"}),
+                       search.createColumn({name: "custrecord_bsp_isg_item_cost", label: "Cost"})
                     ]
-                 });
-    
-                itemSearchObj.run().each(function(result){
-                    let itemID = result.id;
-                    let vendorID = result.getValue({name: 'custrecord_bsp_isg_item_supplier', join: 'CUSTRECORD_BSP_ISG_PARENT_ITEM'});
-                    let vendorName = result.getText({name: 'custrecord_bsp_isg_item_supplier', join: 'CUSTRECORD_BSP_ISG_PARENT_ITEM'});
-                    let acctNumber = result.getValue({name: 'custrecord_bsp_isg_item_acct_number', join: 'CUSTRECORD_BSP_ISG_PARENT_ITEM'});
-                    let itemMinQuantity = result.getValue({name: 'custrecord_bsp_isg_min_quantity', join: 'CUSTRECORD_BSP_ISG_PARENT_ITEM'});
-                    let itemIndex = findItemIndex(itemData, itemID);
-                    if(itemIndex >= 0){
-                        if(vendorID == vendor.id){
-                            let itemMinQuantityPercent = ((itemData[itemIndex].itemBackOrderQuantity * 100) / itemMinQuantity);
-                            let closeToMinQty = (itemMinQuantityPercent >= parseFloat(minQuantityPercentage) && itemMinQuantityPercent < 100);
-                            let equalToMinQty = (parseInt(itemData[itemIndex].itemBackOrderQuantity) >= parseInt(itemMinQuantity));
-                            let rowColor = (equalToMinQty ? "background-color:#b5e7a0" : (closeToMinQty ? "background-color:yellow" : null));
-                            
-                            if(!isChecked(checkboxes, "chkItemsReachedMinQty") && !isChecked(checkboxes, "chkItemsCloseToMinQty")){
-                                itemData[itemIndex].itemMinQuantity = itemMinQuantity;
-                                itemData[itemIndex].vendor = vendorName;
-                                itemData[itemIndex].rowColor = rowColor;
-                            }else if(isChecked(checkboxes, "chkItemsReachedMinQty") && isChecked(checkboxes, "chkItemsCloseToMinQty")){
-                                if(equalToMinQty || closeToMinQty){
-                                    itemData[itemIndex].itemMinQuantity = itemMinQuantity;
-                                    itemData[itemIndex].vendor = vendorName;
-                                    itemData[itemIndex].rowColor = rowColor;
-                                }else{
-                                    itemData.splice(itemIndex, 1)
-                                }              
-                            }else if(isChecked(checkboxes, "chkItemsReachedMinQty") && !isChecked(checkboxes, "chkItemsCloseToMinQty")){
-                                if(equalToMinQty){
-                                    itemData[itemIndex].itemMinQuantity = itemMinQuantity;
-                                    itemData[itemIndex].vendor = vendorName;
-                                    itemData[itemIndex].rowColor = rowColor;
-                                }else{
-                                    itemData.splice(itemIndex, 1)
+                });
+
+                let itemsPricingData = [];
+
+                item_acct_dataSearchObj.run().each(function(result){
+                    log.debug("item_acct_dataSearchObj", JSON.stringify(result));
+                    let itemID = result.getValue({name: 'custrecord_bsp_isg_parent_item'});
+                    let vendorID = result.getValue({name: 'custrecord_bsp_isg_item_supplier'});
+                    let vendorName = result.getText({name: 'custrecord_bsp_isg_item_supplier'});
+                    let contractCode = result.getText({name: 'custrecord_bsp_isg_item_contract_code'});
+                    let minQuantity = result.getValue({name: 'custrecord_bsp_isg_min_quantity'});
+                    let itemCost = result.getValue({name: 'custrecord_bsp_isg_item_cost'});
+                    let itemIndex = findItemIndex(itemsPricingData, itemID);
+                    if(itemIndex == -1){
+                        if(isCartonBuy(vendor.contractCodes,contractCode)){
+                            itemsPricingData.push({
+                                itemID: itemID,
+                                vendorID: vendorID,
+                                vendorName: vendorName,
+                                contractCodes: {
+                                    cartonBuy: 
+                                        {
+                                            contractCode: contractCode, 
+                                            minQuantity: minQuantity,
+                                            itemCost: itemCost
+                                        }
+                                    ,
+                                    regularAccount: {}
                                 }
-                            }else if(!isChecked(checkboxes, "chkItemsReachedMinQty") && isChecked(checkboxes, "chkItemsCloseToMinQty")){
-                                if(closeToMinQty){
-                                    itemData[itemIndex].itemMinQuantity = itemMinQuantity;
-                                    itemData[itemIndex].vendor = vendorName;
-                                    itemData[itemIndex].rowColor = rowColor;
-                                }else{
-                                    itemData.splice(itemIndex, 1)
-                                } 
+                            })
+                        }else{
+                            itemsPricingData.push({
+                                itemID: itemID,
+                                vendorID: vendorID,
+                                vendorName: vendorName,
+                                contractCodes: {
+                                    cartonBuy: {},
+                                    regularAccount: 
+                                        {
+                                            contractCode: contractCode, 
+                                            minQuantity: minQuantity,
+                                            itemCost: itemCost
+                                        }
+                                    
+                                }
+                            })
+                        }
+                    }else{
+                        if(isCartonBuy(vendor.contractCodes,contractCode)){
+                            if(!isEmpty(itemsPricingData[itemIndex].contractCodes.cartonBuy)){
+                                if(isBetterPrice(itemsPricingData[itemIndex].contractCodes.cartonBuy.itemCost, itemCost)){
+                                    itemsPricingData[itemIndex].contractCodes.cartonBuy = {
+                                        contractCode: contractCode, 
+                                        minQuantity: minQuantity,
+                                        itemCost: itemCost
+                                    };
+                                }
+                            }else{
+                                itemsPricingData[itemIndex].contractCodes.cartonBuy = {
+                                    contractCode: contractCode, 
+                                    minQuantity: minQuantity,
+                                    itemCost: itemCost
+                                };
+                            }
+                        }else{ 
+                            if(!isEmpty(itemsPricingData[itemIndex].contractCodes.regularAccount)){
+                                if(isBetterPrice(itemsPricingData[itemIndex].contractCodes.regularAccount.itemCost, itemCost)){
+                                    itemsPricingData[itemIndex].contractCodes.regularAccount = {
+                                        contractCode: contractCode, 
+                                        minQuantity: minQuantity,
+                                        itemCost: itemCost
+                                    };
+                                }
+                            }else{
+                                itemsPricingData[itemIndex].contractCodes.regularAccount = {
+                                    contractCode: contractCode, 
+                                    minQuantity: minQuantity,
+                                    itemCost: itemCost
+                                };
                             }
                         }
                     }
                     return true;
                 });
-            }
 
-            let resultObj = {
-                itemData: itemData,
-                itemParams: itemParams
+                log.debug("itemsPricingData", JSON.stringify(itemsPricingData));
+
+                itemsPricingData.forEach(item => {
+                    let itemID = item.itemID;
+                    let vendorName = item.vendorName;
+                    let itemMinQuantity = item.contractCodes.cartonBuy.minQuantity || "Not Defined";
+                    let itemCartonCost = item.contractCodes.cartonBuy.itemCost || "Not Defined";
+                    let itemRegularCost = item.contractCodes.regularAccount.itemCost || "Not Defined";
+                     
+                    let itemIndex = findItemIndex(itemData, itemID);
+                    if(itemIndex >= 0){
+                        let itemMinQuantityPercent = ((itemData[itemIndex].itemBackOrderQuantity * 100) / itemMinQuantity);
+                        let closeToMinQty = (itemMinQuantityPercent >= parseFloat(minQuantityPercentage) && itemMinQuantityPercent < 100);
+                        let equalToMinQty = (parseInt(itemData[itemIndex].itemBackOrderQuantity) >= parseInt(itemMinQuantity));
+                        let rowColor = (equalToMinQty ? "background-color:#b5e7a0" : (closeToMinQty ? "background-color:yellow" : null));
+                        
+                        if(!isChecked(checkboxes, "chkItemsReachedMinQty") && !isChecked(checkboxes, "chkItemsCloseToMinQty")){
+                            itemData[itemIndex].itemMinQuantity = itemMinQuantity;
+                            itemData[itemIndex].itemCartonCost = itemCartonCost;
+                            itemData[itemIndex].itemRegularCost = itemRegularCost;
+                            itemData[itemIndex].vendor = vendorName;
+                            itemData[itemIndex].rowColor = rowColor;
+                        }else if(isChecked(checkboxes, "chkItemsReachedMinQty") && isChecked(checkboxes, "chkItemsCloseToMinQty")){
+                            if(equalToMinQty || closeToMinQty){
+                                itemData[itemIndex].itemMinQuantity = itemMinQuantity;
+                                itemData[itemIndex].itemCartonCost = itemCartonCost;
+                                itemData[itemIndex].itemRegularCost = itemRegularCost;
+                                itemData[itemIndex].vendor = vendorName;
+                                itemData[itemIndex].rowColor = rowColor;
+                            }else{
+                                itemData.splice(itemIndex, 1)
+                            }              
+                        }else if(isChecked(checkboxes, "chkItemsReachedMinQty") && !isChecked(checkboxes, "chkItemsCloseToMinQty")){
+                            if(equalToMinQty){
+                                itemData[itemIndex].itemMinQuantity = itemMinQuantity;
+                                itemData[itemIndex].itemCartonCost = itemCartonCost;
+                                itemData[itemIndex].itemRegularCost = itemRegularCost;
+                                itemData[itemIndex].vendor = vendorName;
+                                itemData[itemIndex].rowColor = rowColor;
+                            }else{
+                                itemData.splice(itemIndex, 1)
+                            }
+                        }else if(!isChecked(checkboxes, "chkItemsReachedMinQty") && isChecked(checkboxes, "chkItemsCloseToMinQty")){
+                            if(closeToMinQty){
+                                itemData[itemIndex].itemMinQuantity = itemMinQuantity;
+                                itemData[itemIndex].itemCartonCost = itemCartonCost;
+                                itemData[itemIndex].itemRegularCost = itemRegularCost;
+                                itemData[itemIndex].vendor = vendorName;
+                                itemData[itemIndex].rowColor = rowColor;
+                            }else{
+                                itemData.splice(itemIndex, 1)
+                            } 
+                        }
+                    }
+                });
             }
-            return resultObj;
+            log.debug("itemData", JSON.stringify(itemData));
+            return itemData;
         }
 
         /**
@@ -330,9 +408,8 @@ define(['N/runtime', 'N/ui/serverWidget', 'N/search', './Lib/xml_template_handle
          * @returns An array of objects.
         */
         const getSalesOrdersFromItems = (resultItemsData) => {
-            let itemData = resultItemsData.itemData;
-            let itemsParam = resultItemsData.itemParams;
-            if(itemsParam.length > 0){
+            let itemData = resultItemsData;
+            if(itemData.length > 0){
                 const salesOrderLinesSearchObj = search.create({
                     type: "salesorder",
                     filters:
@@ -347,7 +424,7 @@ define(['N/runtime', 'N/ui/serverWidget', 'N/search', './Lib/xml_template_handle
                        "AND",
                        ["formulanumeric: {quantity} - NVL({quantitycommitted}, 0)","greaterthan","0"],
                        "AND", 
-                       ["item","anyof",itemsParam]
+                       ["item","anyof", itemData.map(i => i.itemID)]
                     ],
                     columns:
                     [
@@ -427,11 +504,12 @@ define(['N/runtime', 'N/ui/serverWidget', 'N/search', './Lib/xml_template_handle
         */
         const getVendors = () => {
             let vendors = [];
+
             const vendorSearchObj = search.create({
                 type: "vendor",
                 filters:
                 [
-                   ["custentity_bsp_isg_trading_part_settings","noneof","@NONE@"]
+                    ["custrecord_bsp_isg_parent_vendor.internalid","noneof","@NONE@"]
                 ],
                 columns:
                 [
@@ -439,11 +517,6 @@ define(['N/runtime', 'N/ui/serverWidget', 'N/search', './Lib/xml_template_handle
                       name: "entityid",
                       sort: search.Sort.ASC,
                       label: "Name"
-                   }),
-                   search.createColumn({
-                      name: "custrecord_bsp_isg_carton_buy_acct_num",
-                      join: "CUSTENTITY_BSP_ISG_TRADING_PART_SETTINGS",
-                      label: "Carton buy Account Number"
                    })
                 ]
             });
@@ -451,15 +524,83 @@ define(['N/runtime', 'N/ui/serverWidget', 'N/search', './Lib/xml_template_handle
             vendorSearchObj.run().each(function(result){
                 let id = result.id;
                 let name = result.getValue("entityid");
-                let cartonBuyAccountNumber = result.getText({name: "custrecord_bsp_isg_carton_buy_acct_num", join: "CUSTENTITY_BSP_ISG_TRADING_PART_SETTINGS"});
                 vendors.push({
                     id: id,
                     name: name,
-                    cartonBuyAccountNumber: cartonBuyAccountNumber
+                    contractCodes: {cartonBuy: [], regularAccount: []}
                 })
                 return true;
             });
+
+            const accountNumberSearchObj = search.create({
+                type: "customrecord_bsp_isg_account_number",
+                filters:
+                [
+                   ["custrecord_bsp_isg_parent_trading_partn.custrecord_bsp_isg_parent_vendor","anyof", vendors.map(v => v.id)]
+                ],
+                columns:
+                [
+                   search.createColumn({
+                      name: "name",
+                      join: "CUSTRECORD_BSP_ISG_PARENT_ACCT_NUMBER",
+                      label: "Name"
+                   }),
+                   search.createColumn({name: "custrecord_bsp_isg_carton_buy_acct", label: "Carton Buy"}),
+                   search.createColumn({
+                      name: "custrecord_bsp_isg_parent_vendor",
+                      join: "CUSTRECORD_BSP_ISG_PARENT_TRADING_PARTN",
+                      label: "Vendor"
+                   })
+                ]
+             });
+
+            accountNumberSearchObj.run().each(function(result){               
+                let contractCodeName = result.getValue({name: 'name', join: 'CUSTRECORD_BSP_ISG_PARENT_ACCT_NUMBER'});
+                let isCartonBuy = result.getValue({name: 'custrecord_bsp_isg_carton_buy_acct'});
+                
+                let vendorID = result.getValue({name: 'custrecord_bsp_isg_parent_vendor', join: 'CUSTRECORD_BSP_ISG_PARENT_TRADING_PARTN'});
+                let vendorIndex = findVendorIndex(vendors, vendorID);
+                if(vendorIndex >= 0){
+                    if(isCartonBuy){
+                        vendors[vendorIndex].contractCodes.cartonBuy.push(contractCodeName);
+                    }else{
+                        vendors[vendorIndex].contractCodes.regularAccount.push(contractCodeName);
+                    }
+                }
+                return true;
+            });
+
             return vendors;
+        }
+
+        /**
+         * Find the index of an item in an array of items, given the item's ID
+         * @param itemData - The array of objects that you want to search through.
+         * @param itemID - The ID of the item you want to find.
+         * @returns The index of the itemID in the itemData array.
+        */
+         const findVendorIndex = (vendors, vendorID) => {
+            for (let index = 0; index < vendors.length; index++) {
+                const element = vendors[index];   
+                if(element.id == vendorID){
+                    return index;
+                }
+            }
+            return -1;
+        }
+
+        const isCartonBuy = (contractCodes, contractCode) => {
+            for (let index = 0; index < contractCodes.cartonBuy.length; index++) {
+                const element = contractCodes.cartonBuy[index];   
+                if(element == contractCode){
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        const isBetterPrice = (currentCost, itemCost) => {
+            return parseFloat(itemCost) < parseFloat(currentCost);
         }
 
         const isChecked = (checkboxes, field) => {
@@ -480,6 +621,27 @@ define(['N/runtime', 'N/ui/serverWidget', 'N/search', './Lib/xml_template_handle
                 environment: environment
             }   
             return objParams;
+        }
+
+        /**
+         * Check for Empty value
+         * @param {*} value 
+         * @returns 
+        */
+        function isEmpty(value) {
+            return (
+                value === "" ||
+                value == null ||
+                value == undefined ||
+                value == "null" ||
+                value == "undefined" ||
+                (value.constructor === Array && value.length == 0) ||
+                (value.constructor === Object &&
+                    (function (v) {
+                        for (let k in v) return false;
+                        return true;
+                    })(value))
+            );
         }
 
         return {onRequest}

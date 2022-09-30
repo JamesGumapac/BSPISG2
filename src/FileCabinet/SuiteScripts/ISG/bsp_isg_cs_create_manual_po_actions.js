@@ -68,18 +68,26 @@ function(url, message) {
                 let selectedItemID = suitelet.getCurrentSublistValue({
                     sublistId: 'custpage_items_sublist',
                     fieldId: 'custpage_item_id'
-                });
-                let selectedLineItemID = suitelet.getCurrentSublistValue({
-                    sublistId: 'custpage_items_sublist',
-                    fieldId: 'custpage_so_item_line_id'
                 }); 
+                let itemPrice = suitelet.getSublistValue({
+                    sublistId: 'custpage_items_sublist',
+                    fieldId: 'custpage_so_item_price',
+                    line: scriptContext.line
+                });  
+                itemPrice = parseFloat(itemPrice.substring(1));
+
                 let poQty = suitelet.getCurrentSublistValue({
                     sublistId: 'custpage_items_sublist',
                     fieldId: 'custpage_po_item_qty'
-                });          
+                });
                 let salesOrders = suitelet.getCurrentSublistValue({
                     sublistId: 'custpage_items_sublist',
                     fieldId: 'custpage_po_sales_orders'
+                });
+
+                let amount = suitelet.getCurrentSublistValue({
+                    sublistId: 'custpage_items_sublist',
+                    fieldId: 'custpage_item_sum_cost'
                 });
 
                 let selectedItemsArrayString = suitelet.getValue({
@@ -89,12 +97,22 @@ function(url, message) {
                 if(!isEmpty(selectedItemsArrayString)){
                     selectedItemsArray = JSON.parse(selectedItemsArrayString);
                 }
+
+                let currentAmount = suitelet.getValue({
+                    fieldId: 'custpage_total_po_amount'
+                });
+                currentAmount = parseFloat(currentAmount.substring(1));
                 
                 if(selectedItem){
-                    selectedItemsArray.push({itemID: selectedItemID, selectedLineItemID: selectedLineItemID, poQty: poQty, salesOrders: salesOrders});
+                    selectedItemsArray.push({itemID: selectedItemID, poQty: poQty, itemPrice: itemPrice, salesOrders: salesOrders});
                     suitelet.setValue({
                         fieldId: 'custpage_item_queue',
                         value: JSON.stringify(selectedItemsArray)
+                    });
+                    let newAmount = parseFloat(currentAmount) + parseFloat(amount);
+                    suitelet.setValue({
+                        fieldId: 'custpage_total_po_amount',
+                        value: `$ ${newAmount.toFixed(2)}`
                     });
                 }else{
                     let indexOfItem = getItemIndex(selectedItemsArray,selectedItemID);
@@ -103,6 +121,12 @@ function(url, message) {
                         suitelet.setValue({
                             fieldId: 'custpage_item_queue',
                             value: JSON.stringify(selectedItemsArray)
+                        });
+
+                        let newAmount = parseFloat(currentAmount) - parseFloat(amount);
+                        suitelet.setValue({
+                            fieldId: 'custpage_total_po_amount',
+                            value: `$ ${newAmount.toFixed(2)}`
                         });
                     }
                 }
@@ -114,7 +138,8 @@ function(url, message) {
                 let itemCount = suitelet.getLineCount({
                     sublistId: 'custpage_items_sublist'
                 });
-                let selectedItemsArray = [];  
+                let selectedItemsArray = []; 
+                let totalAmount = 0.00; 
                 if(fieldSelecteAll){      
                     for (let index = 0; index < itemCount; index++) {
                         let currentLine = suitelet.selectLine({
@@ -132,19 +157,27 @@ function(url, message) {
                             fieldId: 'custpage_item_id',
                             line: index
                         });
-                        let selectedLineItemID = suitelet.getCurrentSublistValue({
-                            sublistId: 'custpage_items_sublist',
-                            fieldId: 'custpage_so_item_line_id'
-                        }); 
                         let poQty = suitelet.getCurrentSublistValue({
                             sublistId: 'custpage_items_sublist',
                             fieldId: 'custpage_po_item_qty'
-                        });  
+                        }); 
+                        let itemPrice = suitelet.getSublistValue({
+                            sublistId: 'custpage_items_sublist',
+                            fieldId: 'custpage_so_item_price',
+                            line: index
+                        });
+                        itemPrice = parseFloat(itemPrice.substring(1));
+
+                        let amount = suitelet.getCurrentSublistValue({
+                            sublistId: 'custpage_items_sublist',
+                            fieldId: 'custpage_item_sum_cost'
+                        }); 
+                        totalAmount += parseFloat(amount);
                         let salesOrders = suitelet.getCurrentSublistValue({
                             sublistId: 'custpage_items_sublist',
                             fieldId: 'custpage_po_sales_orders'
                         });
-                        selectedItemsArray.push({itemID: selectedItemID, selectedLineItemID: selectedLineItemID, poQty: poQty, salesOrders: salesOrders});
+                        selectedItemsArray.push({itemID: selectedItemID, poQty: poQty, itemPrice: itemPrice, salesOrders: salesOrders});
                     }
                 }else{
                     for (let index = 0; index < itemCount; index++) {
@@ -163,6 +196,10 @@ function(url, message) {
                     fieldId: 'custpage_item_queue',
                     value: JSON.stringify(selectedItemsArray)
                 });
+                suitelet.setValue({
+                    fieldId: 'custpage_total_po_amount',
+                    value: `$ ${totalAmount.toFixed(2)}`
+                });
             }
             if (scriptContext.fieldId == 'custpage_po_item_qty') {
 
@@ -170,11 +207,34 @@ function(url, message) {
                     sublistId: 'custpage_items_sublist',
                     fieldId: 'custpage_po_item_qty'
                 });
+
+                let cartonCost = suitelet.getSublistValue({
+                    sublistId: 'custpage_items_sublist',
+                    fieldId: 'custpage_so_item_price',
+                    line: scriptContext.line
+                });
+                cartonCost = parseFloat(cartonCost.substring(1));
+
+                let currentLine = suitelet.selectLine({
+                    sublistId: 'custpage_items_sublist',
+                    line: scriptContext.line
+                });
+                currentLine.setCurrentSublistValue({
+                    sublistId: 'custpage_items_sublist',
+                    fieldId: 'custpage_item_sum_cost',
+                    value: (cartonCost * poQty).toFixed(2)
+                });
+
                 let selectedItemID = suitelet.getCurrentSublistValue({
                     sublistId: 'custpage_items_sublist',
                     fieldId: 'custpage_item_id'
                 });
-                
+                console.log({
+                    poQty: poQty,
+                    cartonCost: cartonCost,
+                    selectedItemID: selectedItemID
+                })
+
                 let selectedItemsArrayString = suitelet.getValue({
                     fieldId: 'custpage_item_queue'
                 });
@@ -191,7 +251,19 @@ function(url, message) {
                         value: JSON.stringify(selectedItemsArray)
                     });
                 }
-                
+
+                console.log(JSON.stringify(selectedItemsArray));
+
+                let amount = 0.00;
+                selectedItemsArray.forEach(element => {
+                    let poQty = parseInt(element.poQty);
+                    let cartonCost = (element.itemPrice);
+                    amount += (poQty*cartonCost)
+                });
+                suitelet.setValue({
+                    fieldId: 'custpage_total_po_amount',
+                    value: `$ ${amount.toFixed(2)}`
+                });
             }
         } catch (error) {
             console.log(logTitle, error.message);
@@ -208,13 +280,40 @@ function(url, message) {
         return -1;
     }
 
+
+    /**
+     *
+     * Executes when a field is about to be changed by a user or client side call.
+     * This event executes on fields added in beforeLoad user event scripts.
+     * The following sample tasks can be performed:
+     *  - Validate field lengths.
+     *  - Restrict field entries to a predefined format.
+     *  - Restrict submitted values to a specified range
+     *  - Validate the submission against entries made in an associated field.
+     *
+     * @param context = { currentRecord: currentRecord.CurrentRecord, sublistId: string, fieldId: string, line: string, column: string }
+     * @returns {boolean}
+    */
+    /*function validateField(scriptContext) {
+        if(scriptContext.fieldId == 'custpage_item_sum_cost'){
+            console.log("Validate field");
+            return false;
+        }
+    }*/
+
     function saveRecord(scriptContext) {
         let logTitle = 'saveRecord';
         try{
 
-            let selectedVendor = suitelet.getValue({
-                fieldId: 'custpage_vendors'
+            let amount = suitelet.getValue({
+                fieldId: 'custpage_total_po_amount'
             });
+            amount = parseFloat(amount.substring(1));
+
+            let minAmount = suitelet.getValue({
+                fieldId: 'custpage_min_total_po_amount'
+            });
+            minAmount = parseFloat(minAmount.substring(1));
 
             let selectedItemsArrayString = suitelet.getValue({
                 fieldId: 'custpage_item_queue'
@@ -224,14 +323,22 @@ function(url, message) {
                 selectedItemsArray = JSON.parse(selectedItemsArrayString);
             }
 
-            if(!isEmpty(selectedVendor) && selectedVendor != "custpage_empty_vendor"){
-                if(selectedItemsArray.length > 0){
-                    return true;
+            if(selectedItemsArray.length > 0){
+                if(amount && amount < minAmount){   
+                    if (confirm(`Current amount $${amount} has not reached the minimum amount of $ ${minAmount}. Do you want to proceed?`)) {
+                        return true;
+                    } else {
+                        return false;
+                    }
                 }else{
-                    alert("Please select at least on item from the list");
+                    if (confirm(`Current amount for the Carton PO $${amount}. Do you want to proceed?`)) {
+                        return true;
+                    }else{
+                        return false;
+                    }
                 }
             }else{
-                alert("Please select a Vendor to proceed");
+                alert("Please select at least on item from the list");
             }
         } catch (error) {
             console.log(logTitle, error.message);

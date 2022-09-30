@@ -282,6 +282,28 @@
          return cartonBuyAccountNumber;
     }
 
+
+    function getMinAmountCartonPO(vendorID){
+        let minAmount = 0.00;
+        const tradingPartnerSearchObj = search.create({
+            type: "customrecord_bsp_isg_trading_partner",
+            filters:
+            [
+               ["custrecord_bsp_isg_parent_vendor","anyof",vendorID]
+            ],
+            columns:
+            [
+               search.createColumn({name: "custrecord_bsp_isg_min_amount_carton_po", label: "Minimum Amount Purchase Order"})
+            ]
+         });
+
+        tradingPartnerSearchObj.run().each(function(result){
+            minAmount = result.getValue({name: 'custrecord_bsp_isg_min_amount_carton_po'});
+            return true;
+        });
+        return minAmount;
+    }
+
     return {
         constants: constants,
         getTradingPartnerInfo: getTradingPartnerInfo,
@@ -290,6 +312,7 @@
         isAcknowledgmentSPR: isAcknowledgmentSPR,
         processPOAck: processPOAck,
         isTradingPartner: isTradingPartner,
-        getCartonBuyAccountNumber: getCartonBuyAccountNumber
+        getCartonBuyAccountNumber: getCartonBuyAccountNumber,
+        getMinAmountCartonPO: getMinAmountCartonPO
 	};
 });

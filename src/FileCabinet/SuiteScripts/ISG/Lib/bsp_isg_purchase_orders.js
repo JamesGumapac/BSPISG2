@@ -375,13 +375,15 @@
      * @param poID - The internal ID of the PO record
     */
     function deletePO(poID){
-        record.delete({
-            type: record.Type.PURCHASE_ORDER,
-            id: parseInt(poID),
-        });
-        log.debug("deletePO", `PO ID ${poID} REJECTED. PO Record has been deleted`);
+        let queueID = getQueueOfPO(poID);
+        if(queueID){
+            record.delete({
+                type: record.Type.PURCHASE_ORDER,
+                id: parseInt(poID),
+            });
+            log.debug("deletePO", `PO ID ${poID} REJECTED. PO Record has been deleted`);
+        }  
     }
-
 
     /**
      * It takes a PO number as an argument and returns the internal ID of the PO.

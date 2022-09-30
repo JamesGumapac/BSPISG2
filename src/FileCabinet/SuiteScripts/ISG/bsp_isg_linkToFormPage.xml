@@ -24,6 +24,8 @@
 										<th></th>
 										<th>Item</th>
 										<th>Vendor</th>
+										<th>Regular Cost</th>
+										<th>Carton Cost</th>
 										<th>Quantity (total)</th>
 										<th>Backorder Quantity (total)</th>
 										<th>Minimum Quantity</th>
@@ -39,6 +41,8 @@
 											</td>
 											<td>${item.itemName}</td>
 											<td>${item.vendor}</td>
+											<td>$ ${item.itemRegularCost}</td>
+											<td>$ ${item.itemCartonCost}</td>
 											<td>${item.itemQuantity}</td>
 											<td>${item.itemBackOrderQuantity}</td>
 											<td>${item.itemMinQuantity}</td>
