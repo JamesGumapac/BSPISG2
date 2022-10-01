@@ -3,7 +3,7 @@
  * @NModuleScope Public
  */
 
- define(['N/search', 'N/record'], function (search, record) {
+ define(['N/search', 'N/record', './bsp_isg_trading_partners.js'], function (search, record, BSPTradingParnters) {
     
     const CONTANTS = Object.freeze({
         essendant : "Essendant Inc"
@@ -226,41 +226,54 @@
     }
 
 
-    /**
-     * If the customer record has an account number override on the address sublist, use that. Otherwise,
-     * if the customer record has an account number override on the main record, use that. Otherwise, use
-     * the transmission account number.
-     * @param customer - The customer ID
-     * @param transmissionAccount - The account number that is being used for the transmission.
-     * @returns The account number.
-    */
-    function getAccountNumber(customer, transmissionAccount){
+    function getAccountNumber(customer, vendor, shipaddress1, transmissionAccount){
         let accountNumber = null;
-        let customerRec = record.load({
-            type: record.Type.CUSTOMER,
-            id: customer
+        log.debug("getAccountNumber", "ShipAddress: " + shipaddress1);
+        log.debug("getAccountNumber", "TransmissionAccount: " + JSON.stringify(transmissionAccount));
+        
+        let tradingPartnerID = BSPTradingParnters.getTradingPartnerID(vendor);
+
+        const acctOverrideSearchObj = search.create({
+            type: "customrecord_bsp_isg_cust_acct_override",
+            filters:
+            [
+               ["custrecord_bsp_isg_customer","anyof",customer], 
+               "AND", 
+               ["custrecord_bsp_isg_acct_trading_partner","anyof",tradingPartnerID]
+            ],
+            columns:
+            [
+               search.createColumn({name: "custrecord_bsp_isg_acct_number", label: "Account Number"}),
+               search.createColumn({name: "custrecord_bsp_isg_acct_address", label: "Address"})
+            ]
         });
 
-        let addressSubRecord = customerRec.getSublistSubrecord({
-            sublistId: 'addressbook',
-            fieldId: 'addressbookaddress',
-            line: 0
+        let accountOverrideDefault = null;
+        acctOverrideSearchObj.run().each(function(result){
+            let overrideAccountNumberValue = result.getValue({name: "custrecord_bsp_isg_acct_number"});
+            let overrideAccountNumberText = result.getText({name: "custrecord_bsp_isg_acct_number"});
+            let address = result.getText({name: "custrecord_bsp_isg_acct_address"});
+            if(address == shipaddress1){
+                accountNumber = {
+                    value: overrideAccountNumberValue,
+                    text: overrideAccountNumberText
+                };
+            }else if(isEmpty(address)){
+                accountOverrideDefault = {
+                    value: overrideAccountNumberValue,
+                    text: overrideAccountNumberText
+                };
+            }
+            return true;
         });
 
-        if(addressSubRecord){
-            accountNumber = addressSubRecord.getValue({
-                fieldId: 'custrecord_bsp_isg_acct_num_override'
-            });
+        if(!accountNumber){
+            accountNumber = overrideAccountNumber;
         }
-  
-        if(isEmpty(accountNumber)){
-            accountNumber = customerRec.getValue({
-                fieldId: 'custentity_bsp_isg_acct_num_override'
-            });
-        }   
-        if(isEmpty(accountNumber)){
+
+        if(!accountNumber){
             accountNumber = transmissionAccount;
-        }    
+        }
 
         return accountNumber;
     }
@@ -613,7 +626,8 @@
             search.createColumn({name: "internalid", label: "Sales Order ID"}),
             search.createColumn({name: "tranid", label: "Sales Order Number"}),
             search.createColumn({name: "datecreated", label: "Sales Order Date"}),
-            search.createColumn({name: "entity", label: "Customer"})
+            search.createColumn({name: "entity", label: "Customer"}),
+            search.createColumn({name: "shipaddress1", label: "Shipping Address 1"})
         ];
 
         let searchFilters = transmitionSavedSearcObj.filters;

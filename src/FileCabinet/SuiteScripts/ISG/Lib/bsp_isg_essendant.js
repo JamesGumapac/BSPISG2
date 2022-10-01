@@ -69,7 +69,7 @@
         });
 
         let linesPartiallyAcknowledged = [];
-        for(let i = 0; i < itemCount; i++){
+        for(let i = (itemCount - 1); i >= 0; i--){
             let item = purchaseOrderRec.getSublistText({
                 sublistId: 'item',
                 fieldId: 'item',

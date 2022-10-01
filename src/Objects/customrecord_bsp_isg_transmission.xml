@@ -149,11 +149,11 @@
       <searchcomparefield></searchcomparefield>
       <searchdefault></searchdefault>
       <searchlevel>2</searchlevel>
-      <selectrecordtype>[scriptid=customlist_bsp_isg_account_numbers]</selectrecordtype>
+      <selectrecordtype>[scriptid=customrecord_bsp_isg_account_number]</selectrecordtype>
       <showinlist>F</showinlist>
-      <sourcefilterby></sourcefilterby>
-      <sourcefrom></sourcefrom>
-      <sourcelist></sourcelist>
+      <sourcefilterby>[scriptid=customrecord_bsp_isg_account_number.custrecord_bsp_isg_parent_trading_partn]</sourcefilterby>
+      <sourcefrom>[scriptid=custentity_bsp_isg_trading_part_settings]</sourcefrom>
+      <sourcelist>[scriptid=customrecord_bsp_isg_transmission.custrecord_bsp_lb_vendor_account]</sourcelist>
       <storevalue>T</storevalue>
       <subtab></subtab>
     </customrecordcustomfield>

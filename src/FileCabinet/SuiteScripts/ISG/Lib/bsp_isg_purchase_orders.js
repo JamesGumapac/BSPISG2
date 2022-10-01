@@ -3,7 +3,7 @@
  * @NModuleScope Public
  */
 
- define(['N/search', 'N/record', './bsp_isg_transmitions_util.js'], function (search, record, BSPTransmitionsUtil) {
+ define(['N/search', 'N/record'], function (search, record) {
 
     const PO_TRANSMITION_STATUSES = Object.freeze({
         pendingTransmission: 1,
@@ -62,6 +62,7 @@
     function getPurchaseOrdersForTransmission(transmitionQueueID, poRecID){
         let purchaseOrderList = [];
         let purchaseOrderSearchObj = null;
+
         if(transmitionQueueID){
             purchaseOrderSearchObj = search.create({
                 type: "purchaseorder",
@@ -197,8 +198,9 @@
                 ]
             });
         }
-       
-        let poResultList = BSPTransmitionsUtil.searchAll(purchaseOrderSearchObj);
+
+        let poResultList = searchAll(purchaseOrderSearchObj);
+
         poResultList.forEach(element => {
             let purchaseOrderID = element.id;
             let purchaseOrderNumber = element.getValue("tranid");
@@ -237,7 +239,7 @@
                 purchaseOrderList.push({
                     purchaseOrderID: purchaseOrderID,
                     purchaseOrderNumber: purchaseOrderNumber,
-                    purchaseOrderDate: BSPTransmitionsUtil.getXMLDate(new Date(purchaseOrderDate)),
+                    purchaseOrderDate: getXMLDate(new Date(purchaseOrderDate)),
                     salesOrderID: salesOrderID,
                     salesOrder: salesOrder,
                     routeCodeID: routeCodeID,
@@ -473,6 +475,56 @@
             fields.accountNumber = poFields.custbody_bsp_isg_transmission_acct_num[0];
         }
         return fields;
+    }
+
+    /**
+     * Get all results from a saved search
+     * @param {*} objSavedSearch 
+     * @returns 
+    */
+    function searchAll(objSavedSearch) {
+        let title = "searchAll";
+        let arrReturnSearchResults = [];
+        try {
+            let objResultset = objSavedSearch.run();
+            let intSearchIndex = 0;
+            let objResultSlice = null;
+            let maxSearchReturn = 1000;
+
+            let maxResults = 0;
+
+            do {
+                let start = intSearchIndex;
+                let end = intSearchIndex + maxSearchReturn;
+                if (maxResults && maxResults <= end) {
+                    end = maxResults;
+                }
+                objResultSlice = objResultset.getRange(start, end);
+
+                if (!objResultSlice) {
+                    break;
+                }
+
+                arrReturnSearchResults = arrReturnSearchResults.concat(objResultSlice);
+                intSearchIndex = intSearchIndex + objResultSlice.length;
+
+                if (maxResults && maxResults == intSearchIndex) {
+                    break;
+                }
+            } while (objResultSlice.length >= maxSearchReturn);
+        } catch (error) {
+            log.error(title, error.toString());
+        }
+        return arrReturnSearchResults;
+    }
+
+    /**
+     * It takes a JavaScript Date object and returns a string in the format of an XML dateTime.
+     * @param date - The date to be converted to XML format.
+     * @returns The date in ISO format.
+    */
+    function getXMLDate(date){
+        return date.toISOString().slice(0, 19);
     }
 
     return {

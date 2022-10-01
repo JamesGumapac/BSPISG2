@@ -58,7 +58,7 @@ define(['N/runtime', 'N/search', 'N/task', './Lib/bsp_isg_transmitions_util.js',
                     let itemQuantityCommited = element.getValue("quantitycommitted");
                     let resultQuantity = (itemQuantity - itemQuantityCommited);
                     let customer = element.getValue("entity");
-
+                    let shipaddress1 = element.getValue("shipaddress1");
                     transmitionData.push({
                         transactionForm: ediSettings.transactionForm,
                         transmitionRecID: transmitionRecID,
@@ -69,6 +69,7 @@ define(['N/runtime', 'N/search', 'N/task', './Lib/bsp_isg_transmitions_util.js',
                         vendor: vendor,
                         itemQuantity: resultQuantity,
                         customer: customer,
+                        shipaddress1: shipaddress1,
                         autoreceive: autoreceive,
                         account: account,
                         transmissionLocation: transmissionLocation
@@ -132,8 +133,9 @@ define(['N/runtime', 'N/search', 'N/task', './Lib/bsp_isg_transmitions_util.js',
                 let commonData = JSON.parse(reduceContext.values[0]);
                 let transmitionQueueID = commonData.transmitionQueueID;
                 let customer =  commonData.customer;
-                let account = BSPTransmitionsUtil.getAccountNumber(customer, commonData.account);
+                let shipaddress1 = commonData.shipaddress1;
                 let vendor = commonData.vendor;
+                let account = BSPTransmitionsUtil.getAccountNumber(customer, vendor, shipaddress1, commonData.account);
                 let routeCode = commonData.routeCode;
                 let autoreceive = commonData.autoreceive;
                 let transmissionLocation = commonData.transmissionLocation;

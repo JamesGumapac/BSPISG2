@@ -33,6 +33,21 @@
     }
 
 
+    function getTradingPartnerID(vendor){
+        let tradingPartnerID = null;
+        log.debug("getTradingPartnerID", "Vendor: " + vendor);
+        let vendorObjFields = search.lookupFields({
+            type: "vendor",
+            id: parseInt(vendor),
+            columns: 'custentity_bsp_isg_trading_part_settings'
+        });
+        log.debug("getTradingPartnerID", "vendorObjFields: " + JSON.stringify(vendorObjFields));
+        if(vendorObjFields && vendorObjFields.custentity_bsp_isg_trading_part_settings){
+            tradingPartnerID = vendorObjFields.custentity_bsp_isg_trading_part_settings[0].value;
+        }
+		return tradingPartnerID;
+    }
+
     /**
      * It takes a trading partner ID and returns the BOD ID associated with that trading partner.
      * @param id - The internal ID of the record you want to look up.
@@ -283,29 +298,23 @@
     }
 
 
-    function getMinAmountCartonPO(vendorID){
+    function getMinAmountCartonPO(tradingPartnerID){
         let minAmount = 0.00;
-        const tradingPartnerSearchObj = search.create({
-            type: "customrecord_bsp_isg_trading_partner",
-            filters:
-            [
-               ["custrecord_bsp_isg_parent_vendor","anyof",vendorID]
-            ],
-            columns:
-            [
-               search.createColumn({name: "custrecord_bsp_isg_min_amount_carton_po", label: "Minimum Amount Purchase Order"})
-            ]
-         });
 
-        tradingPartnerSearchObj.run().each(function(result){
-            minAmount = result.getValue({name: 'custrecord_bsp_isg_min_amount_carton_po'});
-            return true;
+        let tpFieldsObj = search.lookupFields({
+            type: "customrecord_bsp_isg_trading_partner",
+            id: tradingPartnerID,
+            columns: 'custrecord_bsp_isg_min_amount_carton_po'
         });
+        if(tpFieldsObj && tpFieldsObj.custrecord_bsp_isg_min_amount_carton_po){
+            minAmount = tpFieldsObj.custrecord_bsp_isg_min_amount_carton_po;
+        }
         return minAmount;
     }
 
     return {
         constants: constants,
+        getTradingPartnerID: getTradingPartnerID,
         getTradingPartnerInfo: getTradingPartnerInfo,
         getTradingPartnerBODId: getTradingPartnerBODId,
         updateTradingPartnerBODId: updateTradingPartnerBODId,

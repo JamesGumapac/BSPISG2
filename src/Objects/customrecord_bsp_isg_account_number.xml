@@ -1,4 +1,4 @@
-<customrecordtype scriptid="customrecord_bsp_isg_route_code">
+<customrecordtype scriptid="customrecord_bsp_isg_account_number">
   <accesstype>CUSTRECORDENTRYPERM</accesstype>
   <allowattachments>T</allowattachments>
   <allowinlinedeleting>F</allowinlinedeleting>
@@ -29,18 +29,18 @@
   <numberingmindigits></numberingmindigits>
   <numberingprefix></numberingprefix>
   <numberingsuffix></numberingsuffix>
-  <recordname>Route Code</recordname>
-  <showcreationdate>T</showcreationdate>
+  <recordname>Account Number</recordname>
+  <showcreationdate>F</showcreationdate>
   <showcreationdateonlist>F</showcreationdateonlist>
   <showid>F</showid>
-  <showlastmodified>T</showlastmodified>
+  <showlastmodified>F</showlastmodified>
   <showlastmodifiedonlist>F</showlastmodifiedonlist>
   <shownotes>T</shownotes>
-  <showowner>T</showowner>
+  <showowner>F</showowner>
   <showownerallowchange>F</showownerallowchange>
   <showowneronlist>F</showowneronlist>
   <customrecordcustomfields>
-    <customrecordcustomfield scriptid="custrecord_bsp_lb_route_code_desc">
+    <customrecordcustomfield scriptid="custrecord_bsp_isg_carton_buy_acct">
       <accesslevel>2</accesslevel>
       <allowquickadd>F</allowquickadd>
       <applyformatting>F</applyformatting>
@@ -54,13 +54,52 @@
       <displaywidth></displaywidth>
       <dynamicdefault></dynamicdefault>
       <encryptatrest>F</encryptatrest>
-      <fieldtype>TEXT</fieldtype>
+      <fieldtype>CHECKBOX</fieldtype>
       <globalsearch>F</globalsearch>
       <help></help>
       <isformula>F</isformula>
       <ismandatory>F</ismandatory>
       <isparent>F</isparent>
-      <label>Description</label>
+      <label>Carton Buy</label>
+      <linktext></linktext>
+      <maxlength></maxlength>
+      <maxvalue></maxvalue>
+      <minvalue></minvalue>
+      <onparentdelete></onparentdelete>
+      <parentsubtab></parentsubtab>
+      <rolerestrict>F</rolerestrict>
+      <searchcomparefield></searchcomparefield>
+      <searchdefault></searchdefault>
+      <searchlevel>2</searchlevel>
+      <selectrecordtype></selectrecordtype>
+      <showinlist>T</showinlist>
+      <sourcefilterby></sourcefilterby>
+      <sourcefrom></sourcefrom>
+      <sourcelist></sourcelist>
+      <storevalue>T</storevalue>
+      <subtab></subtab>
+    </customrecordcustomfield>
+    <customrecordcustomfield scriptid="custrecord_bsp_isg_min_po_amount">
+      <accesslevel>2</accesslevel>
+      <allowquickadd>F</allowquickadd>
+      <applyformatting>T</applyformatting>
+      <checkspelling>F</checkspelling>
+      <defaultchecked>F</defaultchecked>
+      <defaultselection></defaultselection>
+      <defaultvalue></defaultvalue>
+      <description></description>
+      <displayheight></displayheight>
+      <displaytype>NORMAL</displaytype>
+      <displaywidth></displaywidth>
+      <dynamicdefault></dynamicdefault>
+      <encryptatrest>F</encryptatrest>
+      <fieldtype>FLOAT</fieldtype>
+      <globalsearch>F</globalsearch>
+      <help></help>
+      <isformula>F</isformula>
+      <ismandatory>F</ismandatory>
+      <isparent>F</isparent>
+      <label>Minimum Purchase Order Amount</label>
       <linktext></linktext>
       <maxlength></maxlength>
       <maxvalue></maxvalue>
@@ -79,7 +118,7 @@
       <storevalue>T</storevalue>
       <subtab></subtab>
     </customrecordcustomfield>
-    <customrecordcustomfield scriptid="custrecord_bsp_lb_location">
+    <customrecordcustomfield scriptid="custrecord_bsp_isg_parent_trading_partn">
       <accesslevel>2</accesslevel>
       <allowquickadd>F</allowquickadd>
       <applyformatting>F</applyformatting>
@@ -98,19 +137,19 @@
       <help></help>
       <isformula>F</isformula>
       <ismandatory>F</ismandatory>
-      <isparent>F</isparent>
-      <label>Location</label>
+      <isparent>T</isparent>
+      <label>Trading Partner</label>
       <linktext></linktext>
       <maxlength></maxlength>
       <maxvalue></maxvalue>
       <minvalue></minvalue>
       <onparentdelete>NO_ACTION</onparentdelete>
-      <parentsubtab></parentsubtab>
+      <parentsubtab>[scriptid=customrecord_bsp_isg_trading_partner.tab_158_t927173_650]</parentsubtab>
       <rolerestrict>F</rolerestrict>
       <searchcomparefield></searchcomparefield>
       <searchdefault></searchdefault>
       <searchlevel>2</searchlevel>
-      <selectrecordtype>-103</selectrecordtype>
+      <selectrecordtype>[scriptid=customrecord_bsp_isg_trading_partner]</selectrecordtype>
       <showinlist>F</showinlist>
       <sourcefilterby></sourcefilterby>
       <sourcefrom></sourcefrom>
@@ -119,4 +158,10 @@
       <subtab></subtab>
     </customrecordcustomfield>
   </customrecordcustomfields>
+  <subtabs>
+    <subtab scriptid="tab_157_t927173_942">
+      <tabparent></tabparent>
+      <tabtitle>Contract Codes</tabtitle>
+    </subtab>
+  </subtabs>
 </customrecordtype>

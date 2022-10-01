@@ -157,12 +157,12 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
 
             let vendorSelected = null;
             if(params.vendorSelected){
-                let vendorIndex = findVendorIndex(vendors, params.vendorSelected);
-                vendorSelected = {id: params.vendorSelected, name: vendors[vendorIndex].name, contractCodes: vendors[vendorIndex].contractCodes};
+                let vendorIndex = findVendorInListBy(vendors, params.vendorSelected, "id");
+                vendorSelected = {id: params.vendorSelected, name: vendors[vendorIndex].name, tradingPartnerID: vendors[vendorIndex].tradingPartnerID, contractCodes: vendors[vendorIndex].contractCodes};
             }else{
-                vendorSelected = {id:  vendors[0].id, name:  vendors[0].name, contractCodes: vendors[0].contractCodes}
+                vendorSelected = {id:  vendors[0].id, name:  vendors[0].name,  tradingPartnerID: vendors[0].tradingPartnerID, contractCodes: vendors[0].contractCodes}
             }
-            let minAmountPO = BSPTradingPartnersUtil.getMinAmountCartonPO(vendorSelected.id);
+            let minAmountPO = BSPTradingPartnersUtil.getMinAmountCartonPO(vendorSelected.tradingPartnerID);
             
             form.addField({
                 id: 'custpage_min_total_po_amount',
@@ -180,19 +180,19 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
             return form;
         }
 
-       /**
+        /**
          * It creates and runs a vendor search object, then loops through the results, pushing each result
          * into an array containing the vendor info
          * @returns An array of vendors.
         */
-        const getVendors = () => {
+         const getVendors = () => {
             let vendors = [];
 
             const vendorSearchObj = search.create({
                 type: "vendor",
                 filters:
                 [
-                    ["custrecord_bsp_isg_parent_vendor.internalid","noneof","@NONE@"]
+                    ["custentity_bsp_isg_trading_part_settings","noneof","@NONE@"]
                 ],
                 columns:
                 [
@@ -200,16 +200,19 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                       name: "entityid",
                       sort: search.Sort.ASC,
                       label: "Name"
-                   })
+                   }),
+                   search.createColumn({name: "custentity_bsp_isg_trading_part_settings", label: "Trading Partner Settings"})
                 ]
             });
 
             vendorSearchObj.run().each(function(result){
                 let id = result.id;
                 let name = result.getValue("entityid");
+                let tradingPartnerID = result.getValue("custentity_bsp_isg_trading_part_settings");
                 vendors.push({
                     id: id,
                     name: name,
+                    tradingPartnerID: tradingPartnerID,
                     contractCodes: {cartonBuy: [], regularAccount: []}
                 })
                 return true;
@@ -219,7 +222,7 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                 type: "customrecord_bsp_isg_account_number",
                 filters:
                 [
-                   ["custrecord_bsp_isg_parent_trading_partn.custrecord_bsp_isg_parent_vendor","anyof", vendors.map(v => v.id)]
+                   ["custrecord_bsp_isg_parent_trading_partn","anyof", vendors.map(v => v.tradingPartnerID)]
                 ],
                 columns:
                 [
@@ -229,20 +232,16 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                       label: "Name"
                    }),
                    search.createColumn({name: "custrecord_bsp_isg_carton_buy_acct", label: "Carton Buy"}),
-                   search.createColumn({
-                      name: "custrecord_bsp_isg_parent_vendor",
-                      join: "CUSTRECORD_BSP_ISG_PARENT_TRADING_PARTN",
-                      label: "Vendor"
-                   })
+                   search.createColumn({name: "custrecord_bsp_isg_parent_trading_partn", label: "Trading Partner"})
                 ]
              });
 
-            accountNumberSearchObj.run().each(function(result){               
+             accountNumberSearchObj.run().each(function(result){
                 let contractCodeName = result.getValue({name: 'name', join: 'CUSTRECORD_BSP_ISG_PARENT_ACCT_NUMBER'});
                 let isCartonBuy = result.getValue({name: 'custrecord_bsp_isg_carton_buy_acct'});
                 
-                let vendorID = result.getValue({name: 'custrecord_bsp_isg_parent_vendor', join: 'CUSTRECORD_BSP_ISG_PARENT_TRADING_PARTN'});
-                let vendorIndex = findVendorIndex(vendors, vendorID);
+                let tradingPartnerID = result.getValue({name: 'custrecord_bsp_isg_parent_trading_partn'});
+                let vendorIndex = findVendorInListBy(vendors, tradingPartnerID, "tradingPartnerID");
                 if(vendorIndex >= 0){
                     if(isCartonBuy){
                         vendors[vendorIndex].contractCodes.cartonBuy.push(contractCodeName);
@@ -257,15 +256,19 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
         }
 
         /**
-         * Find the index of an item in an array of items, given the item's ID
-         * @param itemData - The array of objects that you want to search through.
-         * @param itemID - The ID of the item you want to find.
-         * @returns The index of the itemID in the itemData array.
+         * It takes a list of vendors, an attribute value, and an attribute name, and returns the index of the
+         * vendor in the list that has the given attribute value for the given attribute name.
+         * 
+         * If no vendor is found, it returns -1.
+         * @param vendors - the array of objects that you want to search through
+         * @param atributteValue - The value of the attribute you want to find.
+         * @param atributteName - The name of the attribute you want to search for.
+         * @returns The index of the vendor in the list.
         */
-        const findVendorIndex = (vendors, vendorID) => {
+         const findVendorInListBy = (vendors, atributteValue, atributteName) => {
             for (let index = 0; index < vendors.length; index++) {
                 const element = vendors[index];   
-                if(element.id == vendorID){
+                if(element[atributteName] == atributteValue){
                     return index;
                 }
             }
@@ -398,7 +401,6 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
             if(items.length > 0){
                 let lineCount = 0;
                 items.forEach(element => {
-                    log.debug("pupulateItemSublist", JSON.stringify(element));
                     let itemID = element.itemID;
                     let itemName = element.itemName;
                     let itemDescription = element.itemDesc;
@@ -597,7 +599,7 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                 if(itemList.length > 0){
                     let vendorSelected = null;
                     if(params.vendorSelected){
-                        let vendorIndex = findVendorIndex(vendors, params.vendorSelected);
+                        let vendorIndex = findVendorInListBy(vendors, params.vendorSelected, "id");
                         vendorSelected = {id: params.vendorSelected, name: vendors[vendorIndex].name, contractCodes: vendors[vendorIndex].contractCodes};
                     }else{
                         vendorSelected = {id:  vendors[0].id, name:  vendors[0].name, contractCodes: vendors[0].contractCodes}
@@ -624,7 +626,6 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                     let itemsPricingData = [];
     
                     item_acct_dataSearchObj.run().each(function(result){
-                        log.debug("item_acct_dataSearchObj", JSON.stringify(result));
                         let itemID = result.getValue({name: 'custrecord_bsp_isg_parent_item'});
                         let vendorID = result.getValue({name: 'custrecord_bsp_isg_item_supplier'});
                         let vendorName = result.getText({name: 'custrecord_bsp_isg_item_supplier'});
@@ -703,8 +704,6 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                         }
                         return true;
                     });
-
-                    log.debug("itemsPricingData", JSON.stringify(itemsPricingData));
 
                     itemsPricingData.forEach(item => {
                         let itemID = item.itemID;

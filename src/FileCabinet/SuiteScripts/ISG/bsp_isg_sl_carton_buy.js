@@ -173,7 +173,7 @@ define(['N/runtime', 'N/ui/serverWidget', 'N/search', './Lib/xml_template_handle
 
             let vendor = null;
             if(selectedVendor && selectedVendor.selectedVendorID){
-                let vendorIndex = findVendorIndex(vendorsData, selectedVendor.selectedVendorID)
+                let vendorIndex = findVendorInListBy(vendorsData, selectedVendor.selectedVendorID, "id");
                 vendor = {id: selectedVendor.selectedVendorID, name: selectedVendor.selectedVendorName, contractCodes: vendorsData[vendorIndex].contractCodes};
             }else{
                 vendor = {id:  vendorsData[0].id, name:  vendorsData[0].name, contractCodes: vendorsData[0].contractCodes}
@@ -509,7 +509,7 @@ define(['N/runtime', 'N/ui/serverWidget', 'N/search', './Lib/xml_template_handle
                 type: "vendor",
                 filters:
                 [
-                    ["custrecord_bsp_isg_parent_vendor.internalid","noneof","@NONE@"]
+                    ["custentity_bsp_isg_trading_part_settings","noneof","@NONE@"]
                 ],
                 columns:
                 [
@@ -517,16 +517,19 @@ define(['N/runtime', 'N/ui/serverWidget', 'N/search', './Lib/xml_template_handle
                       name: "entityid",
                       sort: search.Sort.ASC,
                       label: "Name"
-                   })
+                   }),
+                   search.createColumn({name: "custentity_bsp_isg_trading_part_settings", label: "Trading Partner Settings"})
                 ]
             });
 
             vendorSearchObj.run().each(function(result){
                 let id = result.id;
                 let name = result.getValue("entityid");
+                let tradingPartnerID = result.getValue("custentity_bsp_isg_trading_part_settings");
                 vendors.push({
                     id: id,
                     name: name,
+                    tradingPartnerID: tradingPartnerID,
                     contractCodes: {cartonBuy: [], regularAccount: []}
                 })
                 return true;
@@ -536,7 +539,7 @@ define(['N/runtime', 'N/ui/serverWidget', 'N/search', './Lib/xml_template_handle
                 type: "customrecord_bsp_isg_account_number",
                 filters:
                 [
-                   ["custrecord_bsp_isg_parent_trading_partn.custrecord_bsp_isg_parent_vendor","anyof", vendors.map(v => v.id)]
+                   ["custrecord_bsp_isg_parent_trading_partn","anyof", vendors.map(v => v.tradingPartnerID)]
                 ],
                 columns:
                 [
@@ -546,20 +549,16 @@ define(['N/runtime', 'N/ui/serverWidget', 'N/search', './Lib/xml_template_handle
                       label: "Name"
                    }),
                    search.createColumn({name: "custrecord_bsp_isg_carton_buy_acct", label: "Carton Buy"}),
-                   search.createColumn({
-                      name: "custrecord_bsp_isg_parent_vendor",
-                      join: "CUSTRECORD_BSP_ISG_PARENT_TRADING_PARTN",
-                      label: "Vendor"
-                   })
+                   search.createColumn({name: "custrecord_bsp_isg_parent_trading_partn", label: "Trading Partner"})
                 ]
              });
 
-            accountNumberSearchObj.run().each(function(result){               
+             accountNumberSearchObj.run().each(function(result){
                 let contractCodeName = result.getValue({name: 'name', join: 'CUSTRECORD_BSP_ISG_PARENT_ACCT_NUMBER'});
                 let isCartonBuy = result.getValue({name: 'custrecord_bsp_isg_carton_buy_acct'});
                 
-                let vendorID = result.getValue({name: 'custrecord_bsp_isg_parent_vendor', join: 'CUSTRECORD_BSP_ISG_PARENT_TRADING_PARTN'});
-                let vendorIndex = findVendorIndex(vendors, vendorID);
+                let tradingPartnerID = result.getValue({name: 'custrecord_bsp_isg_parent_trading_partn'});
+                let vendorIndex = findVendorInListBy(vendors, tradingPartnerID, "tradingPartnerID");
                 if(vendorIndex >= 0){
                     if(isCartonBuy){
                         vendors[vendorIndex].contractCodes.cartonBuy.push(contractCodeName);
@@ -574,15 +573,19 @@ define(['N/runtime', 'N/ui/serverWidget', 'N/search', './Lib/xml_template_handle
         }
 
         /**
-         * Find the index of an item in an array of items, given the item's ID
-         * @param itemData - The array of objects that you want to search through.
-         * @param itemID - The ID of the item you want to find.
-         * @returns The index of the itemID in the itemData array.
+         * It takes a list of vendors, an attribute value, and an attribute name, and returns the index of the
+         * vendor in the list that has the given attribute value for the given attribute name.
+         * 
+         * If no vendor is found, it returns -1.
+         * @param vendors - the array of objects that you want to search through
+         * @param atributteValue - The value of the attribute you want to find.
+         * @param atributteName - The name of the attribute you want to search for.
+         * @returns The index of the vendor in the list.
         */
-         const findVendorIndex = (vendors, vendorID) => {
+        const findVendorInListBy = (vendors, atributteValue, atributteName) => {
             for (let index = 0; index < vendors.length; index++) {
                 const element = vendors[index];   
-                if(element.id == vendorID){
+                if(element[atributteName] == atributteValue){
                     return index;
                 }
             }
