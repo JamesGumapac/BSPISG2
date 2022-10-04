@@ -24,7 +24,9 @@
          try{
              log.debug(functionName, `Request Body:  ${JSON.stringify(requestBody)}`);
              let decodedXMLresponse = BSP_AS2Service.decodeStringContent(requestBody.Payload.Content);
-             
+
+             log.debug(functionName, `Request Body:  ${decodedXMLresponse}`);
+
              let jsonObjResponse = BSP_AS2Service.parseResponseXml(decodedXMLresponse);  
              log.debug(functionName, `${JSON.stringify(jsonObjResponse)}`);  
                     

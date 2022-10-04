@@ -147,9 +147,14 @@
                     label: "Template XML file"
                 }),
                 search.createColumn({
-                name: "custrecord_bsp_trading_partner_act_code",
-                join: "custentity_bsp_isg_trading_part_settings",
-                label: "Action Code"
+                    name: "custrecord_bsp_trading_partner_act_code",
+                    join: "custentity_bsp_isg_trading_part_settings",
+                    label: "Action Code"
+                }),
+                search.createColumn({
+                    name: "custrecord_bsp_edi_organization",
+                    join: "custentity_bsp_isg_trading_part_settings",
+                    label: "Org AS2 Identifier"
                 })
             ]
         });
@@ -167,10 +172,12 @@
             let xmlTemplateFileID = result.getValue({name: "custrecord_bsp_template_xml_file", join: "custentity_bsp_isg_trading_part_settings"});
             let transmissionOutputFolderID = result.getValue({name: "custrecord_bsp_transm_output_folder_id", join: "custentity_bsp_isg_trading_part_settings"});
             let actionCode = result.getValue({name: "custrecord_bsp_trading_partner_act_code", join: "custentity_bsp_isg_trading_part_settings"});
-            
+            let orgAS2Identifier = result.getValue({name: "custrecord_bsp_edi_organization", join: "custentity_bsp_isg_trading_part_settings"});
+
             tradingPartnerData = {
                 id: id,
                 name: name,
+                orgAS2Identifier: orgAS2Identifier,
                 as2Identifier: as2Identifier,
                 compressMessage: compressMessage,
                 encryptMessage: encryptMessage,

@@ -229,11 +229,6 @@ function(url, message) {
                     sublistId: 'custpage_items_sublist',
                     fieldId: 'custpage_item_id'
                 });
-                console.log({
-                    poQty: poQty,
-                    cartonCost: cartonCost,
-                    selectedItemID: selectedItemID
-                })
 
                 let selectedItemsArrayString = suitelet.getValue({
                     fieldId: 'custpage_item_queue'
@@ -252,8 +247,6 @@ function(url, message) {
                     });
                 }
 
-                console.log(JSON.stringify(selectedItemsArray));
-
                 let amount = 0.00;
                 selectedItemsArray.forEach(element => {
                     let poQty = parseInt(element.poQty);
@@ -262,9 +255,114 @@ function(url, message) {
                 });
                 suitelet.setValue({
                     fieldId: 'custpage_total_po_amount',
-                    value: `$ ${amount.toFixed(2)}`
+                    value: `$${amount.toFixed(2)}`
                 });
             }
+            if (scriptContext.fieldId == 'custpage_account_number') {
+                let selectedItemID = suitelet.getCurrentSublistValue({
+                    sublistId: 'custpage_items_sublist',
+                    fieldId: 'custpage_item_id'
+                });
+                let selectedAccountID = suitelet.getCurrentSublistValue({
+                    sublistId: 'custpage_items_sublist',
+                    fieldId: 'custpage_account_number'
+                });
+
+                let accountsData = suitelet.getSublistValue({
+                    sublistId: 'custpage_items_sublist',
+                    fieldId: 'custpage_item_accounts',
+                    line: scriptContext.line
+                });
+                let accountsDataArray = [];
+                if(!isEmpty(accountsData)){
+                    accountsDataArray = JSON.parse(accountsData);
+                }
+                let newAccountData = findAccount(accountsDataArray, selectedAccountID);
+                if(newAccountData){
+                    let boQty = suitelet.getSublistValue({
+                        sublistId: 'custpage_items_sublist',
+                        fieldId: 'custpage_bo_item_qty',
+                        line: scriptContext.line
+                    });
+
+                    let currentLine = suitelet.selectLine({
+                        sublistId: 'custpage_items_sublist',
+                        line: scriptContext.line
+                    });
+                    currentLine.setCurrentSublistValue({
+                        sublistId: 'custpage_items_sublist',
+                        fieldId: 'custpage_so_item_price',
+                        value: `$${newAccountData.itemCost}`
+                    });
+                    currentLine.setCurrentSublistValue({
+                        sublistId: 'custpage_items_sublist',
+                        fieldId: 'custpage_min_item_qty',
+                        value: newAccountData.minQuantity
+                    });
+                    let poQty = suitelet.getSublistValue({
+                        sublistId: 'custpage_items_sublist',
+                        fieldId: 'custpage_po_item_qty',
+                        line: scriptContext.line
+                    });
+
+                    poQty = parseInt(newAccountData.minQuantity);
+
+                    if(poQty < parseInt(boQty))
+                        poQty = parseInt(boQty);   
+
+                    currentLine.setCurrentSublistValue({
+                        sublistId: 'custpage_items_sublist',
+                        fieldId: 'custpage_po_item_qty',
+                        value: poQty
+                    });
+                    poQty = suitelet.getSublistValue({
+                        sublistId: 'custpage_items_sublist',
+                        fieldId: 'custpage_po_item_qty',
+                        line: scriptContext.line
+                    });
+                    currentLine.setCurrentSublistValue({
+                        sublistId: 'custpage_items_sublist',
+                        fieldId: 'custpage_item_sum_cost',
+                        value: (parseFloat(newAccountData.itemCost) * parseInt(poQty)).toFixed(2)
+                    });
+
+                    let selectedItemsArrayString = suitelet.getValue({
+                        fieldId: 'custpage_item_queue'
+                    });
+                    let selectedItemsArray = [];
+                    if(!isEmpty(selectedItemsArrayString)){
+                        selectedItemsArray = JSON.parse(selectedItemsArrayString);
+                    }
+                    let indexOfItem = getItemIndex(selectedItemsArray,selectedItemID);
+                    if (indexOfItem > -1) {
+
+                        let poQty = suitelet.getSublistValue({
+                            sublistId: 'custpage_items_sublist',
+                            fieldId: 'custpage_po_item_qty',
+                            line: scriptContext.line
+                        });
+
+                        selectedItemsArray[indexOfItem].poQty = poQty;
+                        selectedItemsArray[indexOfItem].itemPrice = newAccountData.itemCost;
+                        suitelet.setValue({
+                            fieldId: 'custpage_item_queue',
+                            value: JSON.stringify(selectedItemsArray)
+                        });
+                    }
+
+                    let amount = 0.00;
+                    selectedItemsArray.forEach(element => {
+                        let poQty = parseInt(element.poQty);
+                        let cartonCost = (element.itemPrice);
+                        amount += (poQty*cartonCost)
+                    });
+                    suitelet.setValue({
+                        fieldId: 'custpage_total_po_amount',
+                        value: `$${amount.toFixed(2)}`
+                    });
+                }      
+            }
+
         } catch (error) {
             console.log(logTitle, error.message);
         }   
@@ -355,6 +453,16 @@ function(url, message) {
         } catch (error) {
             console.log(stLogTitle, error);
         }
+    }
+
+    function findAccount(accounts, accountID){
+        for (let index = 0; index < accounts.length; index++) {
+            const element = accounts[index];
+            if(element.id == accountID){
+                return element;
+            }
+        }
+        return null;
     }
 
     return {

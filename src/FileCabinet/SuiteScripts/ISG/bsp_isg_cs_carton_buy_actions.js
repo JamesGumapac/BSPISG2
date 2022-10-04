@@ -25,7 +25,6 @@ function(url) {
         let functionName = "fieldChanged";
         try{
             let suitelet = scriptContext.currentRecord;
-            console.log(functionName, scriptContext.fieldId);
             
             let selectedVendorID = suitelet.getValue({
                 fieldId: 'custpage_trading_partner'
