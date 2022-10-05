@@ -35,7 +35,6 @@ define(['N/runtime', 'N/ui/serverWidget', 'N/search', './Lib/xml_template_handle
                             chkItemsCloseToMinQty : objParameters.custparam_chk_items_closeto_min_qty
                         }
                     }
-                    log.debug(functionName, "Params: " + JSON.stringify(params));
 
                     let form = serverWidget.createForm({
                         title: "Items pending transmission"
@@ -261,7 +260,6 @@ define(['N/runtime', 'N/ui/serverWidget', 'N/search', './Lib/xml_template_handle
                 let itemsPricingData = [];
 
                 item_acct_dataSearchObj.run().each(function(result){
-                    log.debug("item_acct_dataSearchObj", JSON.stringify(result));
                     let itemID = result.getValue({name: 'custrecord_bsp_isg_parent_item'});
                     let vendorID = result.getValue({name: 'custrecord_bsp_isg_item_supplier'});
                     let vendorName = result.getText({name: 'custrecord_bsp_isg_item_supplier'});
@@ -341,8 +339,6 @@ define(['N/runtime', 'N/ui/serverWidget', 'N/search', './Lib/xml_template_handle
                     return true;
                 });
 
-                log.debug("itemsPricingData", JSON.stringify(itemsPricingData));
-
                 itemsPricingData.forEach(item => {
                     let itemID = item.itemID;
                     let vendorName = item.vendorName;
@@ -397,7 +393,6 @@ define(['N/runtime', 'N/ui/serverWidget', 'N/search', './Lib/xml_template_handle
                     }
                 });
             }
-            log.debug("itemData", JSON.stringify(itemData));
             return itemData;
         }
 
