@@ -505,27 +505,23 @@ define(['N/runtime', 'N/ui/serverWidget', 'N/search', './Lib/xml_template_handle
         const getVendors = () => {
             let vendors = [];
 
+
             const vendorSearchObj = search.create({
-                type: "vendor",
+                type: "customrecord_bsp_isg_trading_partner",
                 filters:
                 [
-                    ["custentity_bsp_isg_trading_part_settings","noneof","@NONE@"]
+                   ["isinactive","is","F"]
                 ],
                 columns:
                 [
-                   search.createColumn({
-                      name: "entityid",
-                      sort: search.Sort.ASC,
-                      label: "Name"
-                   }),
-                   search.createColumn({name: "custentity_bsp_isg_trading_part_settings", label: "Trading Partner Settings"})
+                   search.createColumn({name: "custrecord_bsp_isg_tp_vendor", label: "Vendor"})
                 ]
-            });
+             });
 
-            vendorSearchObj.run().each(function(result){
-                let id = result.id;
-                let name = result.getValue("entityid");
-                let tradingPartnerID = result.getValue("custentity_bsp_isg_trading_part_settings");
+             vendorSearchObj.run().each(function(result){
+                let tradingPartnerID = result.id;
+                let id = result.getValue("custrecord_bsp_isg_tp_vendor");
+                let name = result.getText("custrecord_bsp_isg_tp_vendor");
                 vendors.push({
                     id: id,
                     name: name,

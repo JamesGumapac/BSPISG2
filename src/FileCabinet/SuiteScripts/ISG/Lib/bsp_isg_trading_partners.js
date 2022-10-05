@@ -19,32 +19,41 @@
     }
 
     function isTradingPartner(vendor){
-        let result = false;
-
-        let vendorFieldsObj = search.lookupFields({
-            type: record.Type.VENDOR,
-            id: vendor,
-            columns: 'custentity_bsp_isg_trading_part_settings'
+        const trading_partnerSearchObj = search.create({
+            type: "customrecord_bsp_isg_trading_partner",
+            filters:
+            [
+               ["custrecord_bsp_isg_tp_vendor","anyof",vendor], 
+               "AND", 
+               ["isinactive","is","F"]
+            ],
+            columns:[]
         });
-        if(vendorFieldsObj && vendorFieldsObj.custentity_bsp_isg_trading_part_settings && vendorFieldsObj.custentity_bsp_isg_trading_part_settings.length > 0){
-            result = true;
-        }
-        return result;
+        var searchResultCount = trading_partnerSearchObj.runPaged().count;
+        return (searchResultCount > 0);
     }
 
 
     function getTradingPartnerID(vendor){
         let tradingPartnerID = null;
         log.debug("getTradingPartnerID", "Vendor: " + vendor);
-        let vendorObjFields = search.lookupFields({
-            type: "vendor",
-            id: parseInt(vendor),
-            columns: 'custentity_bsp_isg_trading_part_settings'
-        });
-        log.debug("getTradingPartnerID", "vendorObjFields: " + JSON.stringify(vendorObjFields));
-        if(vendorObjFields && vendorObjFields.custentity_bsp_isg_trading_part_settings){
-            tradingPartnerID = vendorObjFields.custentity_bsp_isg_trading_part_settings[0].value;
-        }
+
+        const trading_partnerSearchObj = search.create({
+            type: "customrecord_bsp_isg_trading_partner",
+            filters:
+            [
+               ["custrecord_bsp_isg_tp_vendor","anyof",vendor], 
+               "AND", 
+               ["isinactive","is","F"]
+            ],
+            columns:[]
+         });
+
+         trading_partnerSearchObj.run().each(function(result){
+            tradingPartnerID = result.id;
+            return true;
+         });
+
 		return tradingPartnerID;
     }
 
@@ -76,7 +85,74 @@
     */
     function getTradingPartnerInfo(vendor){
         let tradingPartnerData = null;
+
         const tradingPartnerSearchObj = search.create({
+            type: "customrecord_bsp_isg_trading_partner",
+            filters:
+            [
+               ["custrecord_bsp_isg_tp_vendor","anyof",vendor], 
+               "AND", 
+               ["isinactive","is","F"]
+            ],
+            columns:
+            [
+               search.createColumn({name: "internalid", label: "Internal ID"}),
+               search.createColumn({
+                  name: "name",
+                  sort: search.Sort.ASC,
+                  label: "Name"
+               }),
+               search.createColumn({name: "custrecord_bsp_lb_as2_id", label: "AS2 Identifier"}),
+               search.createColumn({name: "custrecord_bsp_compress_msg", label: "Compress Message"}),
+               search.createColumn({name: "custrecord_bsp_encrypt_msg", label: "Encrypt Message"}),
+               search.createColumn({name: "custrecord_bsp_encryption_algorithm", label: "Encryption Algorithm"}),
+               search.createColumn({name: "custrecord_bsp_mdn_to", label: "MDN to"}),
+               search.createColumn({name: "custrecord_bsp_sign_msg", label: "Sign Message"}),
+               search.createColumn({name: "custrecord_bsp_signature_algorith", label: "Signature Algorithm"}),
+               search.createColumn({name: "custrecord_bsp_lb_target_url", label: "Target URL"}),
+               search.createColumn({name: "custrecord_bsp_template_xml_file", label: "Template XML file"}),
+               search.createColumn({name: "custrecord_bsp_trading_partner_act_code", label: "Action Code"}),
+               search.createColumn({name: "custrecord_bsp_edi_organization", label: "Organization AS2 Identifier"})
+            ]
+        });
+
+        tradingPartnerSearchObj.run().each(function(result){
+            let id = result.getValue({name: "internalid"});
+            let name = result.getValue({name: "name"});
+            let as2Identifier = result.getValue({name: "custrecord_bsp_lb_as2_id"});
+            let compressMessage = result.getValue({name: "custrecord_bsp_compress_msg"});
+            let encryptMessage = result.getValue({name: "custrecord_bsp_encrypt_msg"});
+            let encryptionAlgorithm = result.getValue({name: "custrecord_bsp_encryption_algorithm"});
+            let mdnTo = result.getValue({name: "custrecord_bsp_mdn_to"});
+            let signMessage = result.getValue({name: "custrecord_bsp_sign_msg"});
+            let signatureAlgorithm = result.getValue({name: "custrecord_bsp_signature_algorith"});
+            let targetURL = result.getValue({name: "custrecord_bsp_lb_target_url"});
+            let xmlTemplateFileID = result.getValue({name: "custrecord_bsp_template_xml_file"});
+            let transmissionOutputFolderID = result.getValue({name: "custrecord_bsp_transm_output_folder_id"});
+            let actionCode = result.getValue({name: "custrecord_bsp_trading_partner_act_code"});
+            let orgAS2Identifier = result.getValue({name: "custrecord_bsp_edi_organization"});
+
+            tradingPartnerData = {
+                id: id,
+                name: name,
+                orgAS2Identifier: orgAS2Identifier,
+                as2Identifier: as2Identifier,
+                compressMessage: compressMessage,
+                encryptMessage: encryptMessage,
+                encryptionAlgorithm: encryptionAlgorithm,
+                mdnTo: mdnTo,
+                signMessage: signMessage,
+                signatureAlgorithm: signatureAlgorithm,
+                targetURL: targetURL,
+                xmlTemplateFileID: xmlTemplateFileID,
+                transmissionOutputFolderID: transmissionOutputFolderID,
+                actionCode: actionCode
+            }
+            return true;
+        });
+
+
+        /*const tradingPartnerSearchObj = search.create({
             type: "vendor",
             filters:
             [
@@ -191,7 +267,7 @@
                 actionCode: actionCode
             }
             return true;
-        });
+        });*/
         return tradingPartnerData;
     }
     
@@ -273,37 +349,6 @@
 				})(value))
 		);
 	}
-
-
-    /**
-     * It takes a vendor ID and returns the carton buy account number for that vendor.
-     * @param vendorID - The internal ID of the vendor record
-     * @returns the carton buy account number.
-    */
-    function getCartonBuyAccountNumber(vendorID){
-        let cartonBuyAccountNumber = null;
-        const vendorSearchObj = search.create({
-            type: "vendor",
-            filters:
-            [
-               ["internalid","anyof",vendorID]
-            ],
-            columns:
-            [
-               search.createColumn({
-                  name: "custrecord_bsp_isg_carton_buy_acct_num",
-                  join: "CUSTENTITY_BSP_ISG_TRADING_PART_SETTINGS",
-                  label: "Carton buy Account Number"
-               })
-            ]
-         });
-         vendorSearchObj.run().each(function(result){
-            cartonBuyAccountNumber = result.getValue({name: 'custrecord_bsp_isg_carton_buy_acct_num', join: 'CUSTENTITY_BSP_ISG_TRADING_PART_SETTINGS'});
-            return true;
-         });
-         return cartonBuyAccountNumber;
-    }
-
 
     function getMinAmountCartonPO(tradingPartnerID){
         let minAmount = 0.00;

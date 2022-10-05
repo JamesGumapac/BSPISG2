@@ -40,8 +40,22 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                     let vendorSelected = objClientParams.custpage_vendors;
                     
                     try{
-                        let poRecID = createPO(vendorSelected, itemsSelected);
-                        createCartonBuyRecords(poRecID, itemsSelected);
+                        let listPOsCreatedObj = createPOs(vendorSelected, itemsSelected);
+                        createCartonBuyRecords(listPOsCreatedObj.itemData);
+                        
+                        if(listPOsCreatedObj.listPOsCreated.length > 1){
+                            redirect.toSavedSearchResult({
+                                id: createPOSearchObj(listPOsCreatedObj.listPOsCreated)
+                            });
+                        }else{
+                            redirect.toRecord({
+                                type: record.Type.PURCHASE_ORDER,
+                                id: listPOsCreatedObj.listPOsCreated[0],
+                                isEditMode: true
+                            });
+                        }
+
+
                         /*let objMRTask = task.create({
                             taskType: task.TaskType.MAP_REDUCE,
                             scriptId: "customscript_bsp_isg_mr_update_manual_so",
@@ -52,12 +66,6 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                         });
                         let intTaskID = objMRTask.submit();
                         log.debug(functionName, `MR Task submitted with ID: ${intTaskID}`);*/
-
-                        redirect.toRecord({
-                            type: record.Type.PURCHASE_ORDER,
-                            id: poRecID,
-                            isEditMode: true
-                        });
                     }catch(error){
                         log.error(functionName, "Error: " + JSON.stringify(error.message));
                         redirect.toSuitelet({
@@ -189,26 +197,21 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
             let vendors = [];
 
             const vendorSearchObj = search.create({
-                type: "vendor",
+                type: "customrecord_bsp_isg_trading_partner",
                 filters:
                 [
-                    ["custentity_bsp_isg_trading_part_settings","noneof","@NONE@"]
+                   ["isinactive","is","F"]
                 ],
                 columns:
                 [
-                   search.createColumn({
-                      name: "entityid",
-                      sort: search.Sort.ASC,
-                      label: "Name"
-                   }),
-                   search.createColumn({name: "custentity_bsp_isg_trading_part_settings", label: "Trading Partner Settings"})
+                   search.createColumn({name: "custrecord_bsp_isg_tp_vendor", label: "Vendor"})
                 ]
-            });
+             });
 
-            vendorSearchObj.run().each(function(result){
-                let id = result.id;
-                let name = result.getValue("entityid");
-                let tradingPartnerID = result.getValue("custentity_bsp_isg_trading_part_settings");
+             vendorSearchObj.run().each(function(result){
+                let tradingPartnerID = result.id;
+                let id = result.getValue("custrecord_bsp_isg_tp_vendor");
+                let name = result.getText("custrecord_bsp_isg_tp_vendor");
                 vendors.push({
                     id: id,
                     name: name,
@@ -332,7 +335,7 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
         const createItemSublist = (form, items, params, vendors) => {
             let sublist = form.addSublist({
                 id: 'custpage_items_sublist',
-                type: serverWidget.SublistType.LIST,
+                type: serverWidget.SublistType.INLINEEDITOR,
                 label: 'Items'
             });
             sublist.addField({
@@ -358,21 +361,29 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                 id: 'custpage_item_name',
                 type: serverWidget.FieldType.TEXT,
                 label: 'Item Name'
+            }).updateDisplayType({
+                displayType: serverWidget.FieldDisplayType.DISABLED
             });
             sublist.addField({
                 id: 'custpage_item_desc',
                 type: serverWidget.FieldType.TEXT,
                 label: 'Item Description'
+            }).updateDisplayType({
+                displayType: serverWidget.FieldDisplayType.DISABLED
             });
             sublist.addField({
                 id: 'custpage_item_qty',
                 type: serverWidget.FieldType.INTEGER,
                 label: 'Quantity'
+            }).updateDisplayType({
+                displayType: serverWidget.FieldDisplayType.DISABLED
             });
             sublist.addField({
                 id: 'custpage_bo_item_qty',
                 type: serverWidget.FieldType.INTEGER,
                 label: 'Backorder Quantity'
+            }).updateDisplayType({
+                displayType: serverWidget.FieldDisplayType.DISABLED
             });
             let accountsField = sublist.addField({
                 id: 'custpage_account_number',
@@ -386,14 +397,14 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                 type: serverWidget.FieldType.TEXT,
                 label: 'Carton Cost'
             }).updateDisplayType({
-                displayType: serverWidget.FieldDisplayType.ENTRY
+                displayType: serverWidget.FieldDisplayType.DISABLED
             });
             sublist.addField({
                 id: 'custpage_min_item_qty',
                 type: serverWidget.FieldType.TEXT,
                 label: 'Minimum Quantity'
             }).updateDisplayType({
-                displayType: serverWidget.FieldDisplayType.ENTRY
+                displayType: serverWidget.FieldDisplayType.DISABLED
             });
             sublist.addField({
                 id: 'custpage_po_item_qty',
@@ -407,7 +418,7 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                 type: serverWidget.FieldType.TEXT,
                 label: 'Amount'
             }).updateDisplayType({
-                displayType: serverWidget.FieldDisplayType.HIDDEN
+                displayType: serverWidget.FieldDisplayType.DISABLED
             });           
             sublist.addField({
                 id: 'custpage_po_sales_orders',
@@ -527,7 +538,7 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                     sublist.setSublistValue({
                         id: "custpage_item_sum_cost",
                         line: lineCount,
-                        value:  itemSumCost
+                        value:  `$${itemSumCost}`
                     });
                     sublist.setSublistValue({
                         id: "custpage_so_item_price",
@@ -780,7 +791,6 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                             itemList[itemIndex].poQuantity = (itemList[itemIndex].poQuantity > (itemMinQuantity == "Not Defined" ? 0 : itemMinQuantity) ? itemList[itemIndex].poQuantity : itemMinQuantity);            
                             itemList[itemIndex].itemPrice = itemCartonCost; 
                             itemList[itemIndex].itemSumCost = isNaN((itemCartonCost * itemList[itemIndex].poQuantity).toFixed(2)) ? "Not Defined" : (itemCartonCost * itemList[itemIndex].poQuantity).toFixed(2); 
-                            log.debug("itemList", JSON.stringify(itemList[itemIndex]));
                         }
                     });
                 }       
@@ -848,55 +858,87 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
          * @param itemsSelected - An array of objects that contain the item ID and the quantity to be ordered.
          * @returns The record ID of the newly created PO.
         */
-        const createPO = (vendorSelected, itemsSelected) => {
+        const createPOs = (vendorSelected, itemsSelected) => {
+            let itemData = []
+            let listPOsCreated = [];
+            let itemsGroupedByAccount = groupBy(itemsSelected, (i) => i.accountSelected);
+            log.debug("createPOs", JSON.stringify(itemsGroupedByAccount));
 
-            let purchaseOrderRec = record.create({
-                type: record.Type.PURCHASE_ORDER,
-                isDynamic: true,
-            });
-
-            purchaseOrderRec.setValue({
-                fieldId: "entity",
-                value: parseInt(vendorSelected),
-            });
-
-            purchaseOrderRec.setValue({
-                fieldId: "custbody_bsp_isg_po_transm_status",
-                value: 1,
-            });
-
-            itemsSelected.forEach(element => {
-                let itemID = element.itemID;
-                let itemQty = element.poQty;
-                let itemPrice = element.itemPrice;
-                purchaseOrderRec.setCurrentSublistValue(
-                    { 
-                        sublistId: "item", 
-                        fieldId: "item", 
-                        value: itemID
-                    }
-                );
-                purchaseOrderRec.setCurrentSublistValue(
-                    { 
-                        sublistId: "item", 
-                        fieldId: "quantity", 
-                        value: itemQty
-                    }
-                );
-                purchaseOrderRec.setCurrentSublistValue(
-                    { 
-                        sublistId: "item", 
-                        fieldId: "rate", 
-                        value: itemPrice
-                    }
-                );
-                purchaseOrderRec.commitLine({
-                    sublistId: "item",
+            for(let accountID in itemsGroupedByAccount) { 
+                let data = itemsGroupedByAccount[accountID];
+                
+                let purchaseOrderRec = record.create({
+                    type: record.Type.PURCHASE_ORDER,
+                    isDynamic: true,
                 });
-            });
-            let poRecordId = purchaseOrderRec.save();
-            return poRecordId;
+
+                purchaseOrderRec.setValue({
+                    fieldId: "custbody_bsp_isg_is_carton_buy",
+                    value: true,
+                });
+
+                purchaseOrderRec.setValue({
+                    fieldId: "entity",
+                    value: parseInt(vendorSelected),
+                });
+
+                purchaseOrderRec.setValue({
+                    fieldId: "custbody_bsp_isg_transmission_acct_num",
+                    value: parseInt(accountID),
+                });
+
+                purchaseOrderRec.setValue({
+                    fieldId: "custbody_bsp_isg_po_transm_status",
+                    value: 1,
+                });
+
+                data.forEach(element => {   
+                    let itemID = element.itemID;
+                    let itemQty = element.poQty;
+                    let itemPrice = element.itemPrice;
+
+                    purchaseOrderRec.setCurrentSublistValue(
+                        { 
+                            sublistId: "item", 
+                            fieldId: "item", 
+                            value: itemID
+                        }
+                    );
+                    purchaseOrderRec.setCurrentSublistValue(
+                        { 
+                            sublistId: "item", 
+                            fieldId: "quantity", 
+                            value: itemQty
+                        }
+                    );
+                    purchaseOrderRec.setCurrentSublistValue(
+                        { 
+                            sublistId: "item", 
+                            fieldId: "rate", 
+                            value: itemPrice
+                        }
+                    );
+                    purchaseOrderRec.commitLine({
+                        sublistId: "item",
+                    });
+                });
+                let poRecordId = purchaseOrderRec.save();
+
+                itemData.push({
+                    data: data,
+                    po: poRecordId
+                });
+                listPOsCreated.push(poRecordId)
+            } 	
+            return {
+                itemData: itemData,
+                listPOsCreated: listPOsCreated
+            };
         }
+
+        function groupBy(xs, f) {
+            return xs.reduce((r, v, i, a, k = f(v)) => ((r[k] || (r[k] = [])).push(v), r), {});
+          }
 
         /**
          * It takes in a PO record ID, and an array of items selected, and for each item selected, it creates a
@@ -904,24 +946,29 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
          * @param poRecID - The internal ID of the Purchase Order record
          * @param itemsSelected - This is an array of objects that contain the itemID, poQty, and salesOrders.
         */
-        const createCartonBuyRecords = (poRecID, itemsSelected) => {
-            itemsSelected.forEach(element => {
-                let salesOrders = JSON.parse(element.salesOrders);
-                if(salesOrders.constructor === Array){
-                    for (let index = 0; index < salesOrders.length; index++) {
-                        let salesorderObj = salesOrders[index];
+        const createCartonBuyRecords = (itemData) => {
+
+            log.debug("createCartonBuyRecords", itemData);
+            itemData.forEach(dataObj => {
+                let data = dataObj.data;
+                let po = dataObj.po;
+                data.forEach(element => {
+                    let salesOrders = JSON.parse(element.salesOrders);
+                    if(salesOrders.constructor === Array){
+                        for (let index = 0; index < salesOrders.length; index++) {
+                            let salesorderObj = salesOrders[index];
+                            let salesorderID = salesorderObj.salesOrderID;
+                            let selectedLineItemID = salesorderObj.soLineUniqueID;
+                            createCartonBuyRecord(salesorderID, element.itemID, selectedLineItemID, po, element.poQty);
+                        }
+                    }else{
+                        let salesorderObj = salesOrders;
                         let salesorderID = salesorderObj.salesOrderID;
                         let selectedLineItemID = salesorderObj.soLineUniqueID;
-                        createCartonBuyRecord(salesorderID, element.itemID, selectedLineItemID, poRecID, element.poQty);
-                    }
-                }else{
-                    let salesorderObj = salesOrders;
-                    let salesorderID = salesorderObj.salesOrderID;
-                    let selectedLineItemID = salesorderObj.soLineUniqueID;
-                    createCartonBuyRecord(salesorderID, element.itemID, selectedLineItemID, poRecID, element.poQty);
-                }       
-            });
-            
+                        createCartonBuyRecord(salesorderID, element.itemID, selectedLineItemID, po, element.poQty);
+                    } 
+                });                         
+            });          
         }
 
         /**
@@ -963,6 +1010,46 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
             cartonBuyRecord.save();
         }
 
+
+        const createPOSearchObj = (listPOsCreated) => {
+
+            let purchaseorderSearchObj = search.load({
+                id: "customsearch_bsp_isg_cb_pos"
+            });
+            purchaseorderSearchObj.filters = [
+                {
+                    name: "type",
+                    operator: "anyof",
+                    values: "PurchOrd",
+                    isor: false,
+                    isnot: false,
+                    leftparens: 0,
+                    rightparens: 0
+                },    
+                {
+                    name: "mainline",
+                    operator: "is",
+                    values: "T",
+                    isor: false,
+                    isnot: false,
+                    leftparens: 0,
+                    rightparens: 0
+                },  
+                {
+                    name: "internalid",
+                    operator: "anyof",
+                    values: listPOsCreated,
+                    isor: false,
+                    isnot: false,
+                    leftparens: 0,
+                    rightparens: 0
+                }
+            ];
+            log.debug("createPOSearchObj", JSON.stringify(purchaseorderSearchObj.filters));
+
+            return purchaseorderSearchObj.save();
+        }
+
         /**
          * It returns an object with the script parameters
          * @returns An object with two properties: script_client and suitelet_title
@@ -976,27 +1063,6 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
 
             
             return objParams;
-        }
-
-        /**
-         * Check for Empty value
-         * @param {*} value 
-         * @returns 
-        */
-        function isEmpty(value) {
-            return (
-                value === "" ||
-                value == null ||
-                value == undefined ||
-                value == "null" ||
-                value == "undefined" ||
-                (value.constructor === Array && value.length == 0) ||
-                (value.constructor === Object &&
-                    (function (v) {
-                        for (let k in v) return false;
-                        return true;
-                    })(value))
-            );
         }
 
         return {onRequest}

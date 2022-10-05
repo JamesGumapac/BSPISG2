@@ -76,6 +76,12 @@ function(url, message) {
                 });  
                 itemPrice = parseFloat(itemPrice.substring(1));
 
+                let accountSelected = suitelet.getSublistValue({
+                    sublistId: 'custpage_items_sublist',
+                    fieldId: 'custpage_account_number',
+                    line: scriptContext.line
+                })
+
                 let poQty = suitelet.getCurrentSublistValue({
                     sublistId: 'custpage_items_sublist',
                     fieldId: 'custpage_po_item_qty'
@@ -89,6 +95,7 @@ function(url, message) {
                     sublistId: 'custpage_items_sublist',
                     fieldId: 'custpage_item_sum_cost'
                 });
+                amount = parseFloat(amount.substring(1));
 
                 let selectedItemsArrayString = suitelet.getValue({
                     fieldId: 'custpage_item_queue'
@@ -104,7 +111,7 @@ function(url, message) {
                 currentAmount = parseFloat(currentAmount.substring(1));
                 
                 if(selectedItem){
-                    selectedItemsArray.push({itemID: selectedItemID, poQty: poQty, itemPrice: itemPrice, salesOrders: salesOrders});
+                    selectedItemsArray.push({itemID: selectedItemID, accountSelected: accountSelected, poQty: poQty, itemPrice: itemPrice, salesOrders: salesOrders});
                     suitelet.setValue({
                         fieldId: 'custpage_item_queue',
                         value: JSON.stringify(selectedItemsArray)
@@ -112,7 +119,7 @@ function(url, message) {
                     let newAmount = parseFloat(currentAmount) + parseFloat(amount);
                     suitelet.setValue({
                         fieldId: 'custpage_total_po_amount',
-                        value: `$ ${newAmount.toFixed(2)}`
+                        value: `$${newAmount.toFixed(2)}`
                     });
                 }else{
                     let indexOfItem = getItemIndex(selectedItemsArray,selectedItemID);
@@ -126,7 +133,7 @@ function(url, message) {
                         let newAmount = parseFloat(currentAmount) - parseFloat(amount);
                         suitelet.setValue({
                             fieldId: 'custpage_total_po_amount',
-                            value: `$ ${newAmount.toFixed(2)}`
+                            value: `$${newAmount.toFixed(2)}`
                         });
                     }
                 }
@@ -168,16 +175,24 @@ function(url, message) {
                         });
                         itemPrice = parseFloat(itemPrice.substring(1));
 
+                        let accountSelected = suitelet.getSublistValue({
+                            sublistId: 'custpage_items_sublist',
+                            fieldId: 'custpage_account_number',
+                            line: index
+                        })
+
                         let amount = suitelet.getCurrentSublistValue({
                             sublistId: 'custpage_items_sublist',
                             fieldId: 'custpage_item_sum_cost'
                         }); 
+                        amount = parseFloat(amount.substring(1));
+
                         totalAmount += parseFloat(amount);
                         let salesOrders = suitelet.getCurrentSublistValue({
                             sublistId: 'custpage_items_sublist',
                             fieldId: 'custpage_po_sales_orders'
                         });
-                        selectedItemsArray.push({itemID: selectedItemID, poQty: poQty, itemPrice: itemPrice, salesOrders: salesOrders});
+                        selectedItemsArray.push({itemID: selectedItemID, accountSelected: accountSelected, poQty: poQty, itemPrice: itemPrice, salesOrders: salesOrders});
                     }
                 }else{
                     for (let index = 0; index < itemCount; index++) {
@@ -198,7 +213,7 @@ function(url, message) {
                 });
                 suitelet.setValue({
                     fieldId: 'custpage_total_po_amount',
-                    value: `$ ${totalAmount.toFixed(2)}`
+                    value: `$${totalAmount.toFixed(2)}`
                 });
             }
             if (scriptContext.fieldId == 'custpage_po_item_qty') {
@@ -222,7 +237,7 @@ function(url, message) {
                 currentLine.setCurrentSublistValue({
                     sublistId: 'custpage_items_sublist',
                     fieldId: 'custpage_item_sum_cost',
-                    value: (cartonCost * poQty).toFixed(2)
+                    value: `$${(cartonCost * poQty).toFixed(2)}`
                 });
 
                 let selectedItemID = suitelet.getCurrentSublistValue({
@@ -323,7 +338,7 @@ function(url, message) {
                     currentLine.setCurrentSublistValue({
                         sublistId: 'custpage_items_sublist',
                         fieldId: 'custpage_item_sum_cost',
-                        value: (parseFloat(newAccountData.itemCost) * parseInt(poQty)).toFixed(2)
+                        value: `$${(parseFloat(newAccountData.itemCost) * parseInt(poQty)).toFixed(2)}`
                     });
 
                     let selectedItemsArrayString = suitelet.getValue({
@@ -344,6 +359,8 @@ function(url, message) {
 
                         selectedItemsArray[indexOfItem].poQty = poQty;
                         selectedItemsArray[indexOfItem].itemPrice = newAccountData.itemCost;
+                        selectedItemsArray[indexOfItem].accountSelected = selectedAccountID;
+
                         suitelet.setValue({
                             fieldId: 'custpage_item_queue',
                             value: JSON.stringify(selectedItemsArray)
@@ -378,26 +395,6 @@ function(url, message) {
         return -1;
     }
 
-
-    /**
-     *
-     * Executes when a field is about to be changed by a user or client side call.
-     * This event executes on fields added in beforeLoad user event scripts.
-     * The following sample tasks can be performed:
-     *  - Validate field lengths.
-     *  - Restrict field entries to a predefined format.
-     *  - Restrict submitted values to a specified range
-     *  - Validate the submission against entries made in an associated field.
-     *
-     * @param context = { currentRecord: currentRecord.CurrentRecord, sublistId: string, fieldId: string, line: string, column: string }
-     * @returns {boolean}
-    */
-    /*function validateField(scriptContext) {
-        if(scriptContext.fieldId == 'custpage_item_sum_cost'){
-            console.log("Validate field");
-            return false;
-        }
-    }*/
 
     function saveRecord(scriptContext) {
         let logTitle = 'saveRecord';
