@@ -862,7 +862,6 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
             let itemData = []
             let listPOsCreated = [];
             let itemsGroupedByAccount = groupBy(itemsSelected, (i) => i.accountSelected);
-            log.debug("createPOs", JSON.stringify(itemsGroupedByAccount));
 
             for(let accountID in itemsGroupedByAccount) { 
                 let data = itemsGroupedByAccount[accountID];
@@ -948,7 +947,6 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
         */
         const createCartonBuyRecords = (itemData) => {
 
-            log.debug("createCartonBuyRecords", itemData);
             itemData.forEach(dataObj => {
                 let data = dataObj.data;
                 let po = dataObj.po;
@@ -1045,7 +1043,6 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                     rightparens: 0
                 }
             ];
-            log.debug("createPOSearchObj", JSON.stringify(purchaseorderSearchObj.filters));
 
             return purchaseorderSearchObj.save();
         }
