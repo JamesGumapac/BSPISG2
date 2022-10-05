@@ -500,7 +500,6 @@ define(['N/runtime', 'N/ui/serverWidget', 'N/search', './Lib/xml_template_handle
         const getVendors = () => {
             let vendors = [];
 
-
             const vendorSearchObj = search.create({
                 type: "customrecord_bsp_isg_trading_partner",
                 filters:
@@ -583,6 +582,12 @@ define(['N/runtime', 'N/ui/serverWidget', 'N/search', './Lib/xml_template_handle
             return -1;
         }
 
+        /**
+         * If the contractCode is in the cartonBuy array, return true, otherwise return false.
+         * @param contractCodes - {
+         * @param contractCode - "CARTON_BUY"
+         * @returns A boolean value.
+         */
         const isCartonBuy = (contractCodes, contractCode) => {
             for (let index = 0; index < contractCodes.cartonBuy.length; index++) {
                 const element = contractCodes.cartonBuy[index];   
@@ -593,6 +598,12 @@ define(['N/runtime', 'N/ui/serverWidget', 'N/search', './Lib/xml_template_handle
             return false;
         }
 
+        /**
+         * If the itemCost is less than the currentCost, return true, otherwise return false.
+         * @param currentCost - The current cost of the item in the cart.
+         * @param itemCost - The cost of the item you're currently looking at.
+         * @returns The function isBetterPrice is being returned.
+        */
         const isBetterPrice = (currentCost, itemCost) => {
             return parseFloat(itemCost) < parseFloat(currentCost);
         }

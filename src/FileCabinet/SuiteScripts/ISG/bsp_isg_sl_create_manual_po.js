@@ -55,7 +55,6 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                             });
                         }
 
-
                         /*let objMRTask = task.create({
                             taskType: task.TaskType.MAP_REDUCE,
                             scriptId: "customscript_bsp_isg_mr_update_manual_so",
@@ -286,6 +285,13 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
             return -1;
         }
 
+        /**
+         * It takes an array of account Numbers and an id and returns the index of the object in the array that has the
+         * matching accountID.
+         * @param accountNumbers - an array of objects that contain account numbers and their corresponding IDs
+         * @param accountID - The account ID of the account you want to find.
+         * @returns The index of the account number in the array.
+         */
         const findAccountInList = (accountNumbers, accountID) => {
             for (let index = 0; index < accountNumbers.length; index++) {
                 const element = accountNumbers[index];   
@@ -439,7 +445,17 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
             return form;
         }
 
-
+        /**
+         * It takes a list of vendors, a list of accounts, and a vendor id, and populates the account field
+         * with the accounts for the vendor.
+         * 
+         * The function is called from the following function:
+         * @param accountsField - The field that will be populated with the account numbers.
+         * @param params - This is the object that contains the values of the fields that are passed to the
+         * client script.
+         * @param vendors - this is the list of vendors that I'm getting from the server.
+         * @returns The accountsField is being returned.
+        */
         const populateAccountField = (accountsField, params, vendors) => {
 
             let vendorSelected = null;
@@ -815,6 +831,12 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
             return -1;
         }
 
+        /**
+         * If the itemCost is less than the currentCost, return true, otherwise return false.
+         * @param currentCost - The current cost of the item in the cart.
+         * @param itemCost - The cost of the item you're currently looking at
+         * @returns a boolean value.
+        */
         const isBetterPrice = (currentCost, itemCost) => {
             return parseFloat(itemCost) < parseFloat(currentCost);
         }
@@ -937,7 +959,7 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
 
         function groupBy(xs, f) {
             return xs.reduce((r, v, i, a, k = f(v)) => ((r[k] || (r[k] = [])).push(v), r), {});
-          }
+        }
 
         /**
          * It takes in a PO record ID, and an array of items selected, and for each item selected, it creates a
@@ -1008,7 +1030,12 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
             cartonBuyRecord.save();
         }
 
-
+        /**
+         * It creates a search object for the Purchase Order record type, and filters the search by the
+         * internal ID of the Purchase Order records that were created in the previous function.
+         * @param listPOsCreated 
+         * @returns A search object.
+         */
         const createPOSearchObj = (listPOsCreated) => {
 
             let purchaseorderSearchObj = search.load({
