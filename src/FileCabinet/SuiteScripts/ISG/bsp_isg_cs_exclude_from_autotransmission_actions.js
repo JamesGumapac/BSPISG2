@@ -46,8 +46,8 @@ function(url) {
                 custparam_chk_items_closeto_min_qty: chkItemsCloseToMinQty
             };
             let stSuiteletUrl = url.resolveScript({
-                scriptId: 'customscript_bsp_isg_sl_carton_buy',
-                deploymentId: 'customdeploy_bsp_isg_sl_carton_buy',
+                scriptId: 'customscript_bsp_isg_sl_excl_from_autotr',
+                deploymentId: 'customdeploy_bsp_isg_sl_excl_from_autotr',
                 returnExternalUrl: false,
                 params: parameters
             });

@@ -17,7 +17,13 @@
     </link>
     <link>
       <linklabel>Account Numbers</linklabel>
-      <linkobject>[scriptid=customlist_bsp_isg_account_numbers]</linkobject>
+      <linkobject>[scriptid=customrecord_bsp_isg_account_number]</linkobject>
+      <linktasktype>LIST</linktasktype>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linklabel>Elite Extra Settings</linklabel>
+      <linkobject>[scriptid=customrecord_elite_extra_setting]</linkobject>
       <linktasktype>LIST</linktasktype>
       <shortlist>F</shortlist>
     </link>
