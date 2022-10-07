@@ -65,6 +65,7 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                         });
                         let intTaskID = objMRTask.submit();
                         log.debug(functionName, `MR Task submitted with ID: ${intTaskID}`);*/
+
                     }catch(error){
                         log.error(functionName, "Error: " + JSON.stringify(error.message));
                         redirect.toSuitelet({
@@ -109,6 +110,11 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
          * @returns The form object is being returned.
         */
         const createHeaderFields = (form, params, vendors) => {
+
+            /**
+             * Field Group Vendors
+            */
+
             form.addFieldGroup({
                 id : 'fieldgroup_vendor_info',
                 label : 'Select the vendor to which the PO will be referenced to'
@@ -133,7 +139,8 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
             let showMsg = form.addField({
                 id: 'custpage_show_msg',
                 type: serverWidget.FieldType.TEXT,
-                label: 'Show Msg'
+                label: 'Show Msg',
+                container: 'fieldgroup_vendor_info'
             }).updateDisplayType({
                 displayType: serverWidget.FieldDisplayType.HIDDEN
             });
@@ -141,20 +148,72 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                 showMsg.defaultValue = params.errorMsg;
             }
 
+            /**
+             * Field Group Purchase Order(s) Information
+            */
+
+            form.addFieldGroup({
+                id : 'fieldgroup_po_info',
+                label : 'Purchase Order(s) Information'
+            });
+
+            form.addField({
+                id: 'custpage_total_po_amount',
+                type: serverWidget.FieldType.TEXT,
+                label: 'Total',
+                container: 'fieldgroup_po_info'
+            }).updateDisplayType({
+                displayType: serverWidget.FieldDisplayType.INLINE
+            }).defaultValue = `$${0.00}`;
+
+            let vendorSelected = null;
+            if(params.vendorSelected){
+                let vendorIndex = findVendorInListBy(vendors, params.vendorSelected, "id");
+                vendorSelected = {id: params.vendorSelected, name: vendors[vendorIndex].name, tradingPartnerID: vendors[vendorIndex].tradingPartnerID, accountNumbers: vendors[vendorIndex].accountNumbers};
+            }else{
+                vendorSelected = {id:  vendors[0].id, name:  vendors[0].name,  tradingPartnerID: vendors[0].tradingPartnerID, accountNumbers: vendors[0].accountNumbers}
+            }
+            let minAmountPO = BSPTradingPartnersUtil.getMinAmountCartonPO(vendorSelected.tradingPartnerID);
+            
+            let accountFieldIDs = [];
+            vendorSelected.accountNumbers.forEach(account => {
+                form.addField({
+                    id: 'custpage_total_acct_'+account.id,
+                    type: serverWidget.FieldType.TEXT,
+                    label: 'Total for Account: ' + account.name,
+                    container: 'fieldgroup_po_info'
+                }).updateDisplayType({
+                    displayType: serverWidget.FieldDisplayType.INLINE
+                }).defaultValue = `$${0.00}`;
+                accountFieldIDs.push({acctID: account.id, fieldID: `custpage_total_acct_${account.id}`});
+            });
+
+            form.addField({
+                id: 'custpage_min_total_po_amount',
+                type: serverWidget.FieldType.TEXT,
+                label: 'Minimum Amount for Purchase Order',
+                container: 'fieldgroup_po_info'
+            }).updateDisplayType({
+                displayType: serverWidget.FieldDisplayType.INLINE
+            }).defaultValue = `$${minAmountPO}`;
+
+            form.addField({
+                id: 'custpage_acct_field_ids',
+                type: serverWidget.FieldType.LONGTEXT,
+                label: 'Account field IDs',
+                container: 'fieldgroup_po_info'
+            }).updateDisplayType({
+                displayType: serverWidget.FieldDisplayType.HIDDEN
+            }).defaultValue = `${JSON.stringify(accountFieldIDs)}`;
+
+            /**
+             * Field Group Item List
+            */
             form.addFieldGroup({
                 id : 'fieldgroup_items_info',
                 label : 'Item list'
             });
             
-            form.addField({
-                id: 'custpage_total_po_amount',
-                type: serverWidget.FieldType.TEXT,
-                label: 'Total',
-                container: 'fieldgroup_items_info'
-            }).updateDisplayType({
-                displayType: serverWidget.FieldDisplayType.INLINE
-            }).defaultValue = `$${0.00}`;
-
             form.addField({
                 id: 'custpage_select_all',
                 type: serverWidget.FieldType.CHECKBOX,
@@ -162,23 +221,7 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                 container: 'fieldgroup_items_info'
             });
 
-            let vendorSelected = null;
-            if(params.vendorSelected){
-                let vendorIndex = findVendorInListBy(vendors, params.vendorSelected, "id");
-                vendorSelected = {id: params.vendorSelected, name: vendors[vendorIndex].name, tradingPartnerID: vendors[vendorIndex].tradingPartnerID, contractCodes: vendors[vendorIndex].contractCodes};
-            }else{
-                vendorSelected = {id:  vendors[0].id, name:  vendors[0].name,  tradingPartnerID: vendors[0].tradingPartnerID, contractCodes: vendors[0].contractCodes}
-            }
-            let minAmountPO = BSPTradingPartnersUtil.getMinAmountCartonPO(vendorSelected.tradingPartnerID);
             
-            form.addField({
-                id: 'custpage_min_total_po_amount',
-                type: serverWidget.FieldType.TEXT,
-                label: 'Minimum Amount for Purchase Order',
-                container: 'fieldgroup_items_info'
-            }).updateDisplayType({
-                displayType: serverWidget.FieldDisplayType.INLINE
-            }).defaultValue = `$${minAmountPO}`;
 
             form.addSubmitButton({
                 label: 'Create PO'
@@ -192,7 +235,7 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
          * into an array containing the vendor info
          * @returns An array of vendors.
         */
-         const getVendors = () => {
+        const getVendors = () => {
             let vendors = [];
 
             const vendorSearchObj = search.create({
