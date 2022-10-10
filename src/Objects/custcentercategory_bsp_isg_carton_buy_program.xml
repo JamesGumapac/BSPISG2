@@ -11,7 +11,7 @@
     </link>
     <link>
       <linklabel>Purchase Orders</linklabel>
-      <linkobject>[scriptid=customsearch_bsp_isg_carton_buy_po]</linkobject>
+      <linkobject>[scriptid=customsearch_bsp_isg_cb_po_created]</linkobject>
       <linktasktype>SRCH_RSLT</linktasktype>
       <shortlist>F</shortlist>
     </link>

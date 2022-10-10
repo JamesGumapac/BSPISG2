@@ -18,20 +18,23 @@
 					<div class="panel panel-default">
 						<div class="panel-heading">Items</div>
 						<div class="panel-body" id="itemDetails" style="height:500px;overflow:auto;">
-							<table class="table table-condensed table-striped">
+							<table class="table table-condensed table-striped data-container">
 								<thead>
 									<tr>
 										<th></th>
 										<th>Item</th>
 										<th>Vendor</th>
+										<th>Cost</th>
+										<th>Carton Cost</th>
 										<th>Quantity (total)</th>
 										<th>Backorder Quantity (total)</th>
 										<th>Minimum Quantity</th>
+										<th>Select all lines</th>
 									</tr>
 								</thead>
 								<tbody>
 									<#list data.data as item>
-										<tr style=${item.rowColor}>
+										<tr class="item-parent" style=${item.rowColor}>
 											<td>
 												<button type="button" class="btn btn-default btn-xs" data-toggle="collapse" data-target=${item.itemRowID}>
 													<span class="glyphicon glyphicon-eye-open"></span>
@@ -39,9 +42,12 @@
 											</td>
 											<td>${item.itemName}</td>
 											<td>${item.vendor}</td>
+											<td>$${item.itemRegularCost}</td>
+											<td>$${item.itemCartonCost}</td>
 											<td>${item.itemQuantity}</td>
 											<td>${item.itemBackOrderQuantity}</td>
 											<td>${item.itemMinQuantity}</td>
+											<td><input class="form-check-input" type="checkbox" /></td>
 										</tr>
 										<tr>
 											<td colspan="12" class="hiddenRow">
@@ -120,9 +126,7 @@
 						e.preventDefault();  
 						
 						var itemsSelected = JSON.parse(localStorage['CBState'] || '{}');
-						console.log(JSON.stringify(itemsSelected));
 						let objItemsSelected = processItemsSelectedToSend(itemsSelected);
-						console.log(JSON.stringify(objItemsSelected));
 						if(!isEmpty(objItemsSelected.objItemsSelected)){  
 							let record = nlapiCreateRecord( 'customrecord_bsp_isg_cartonbuy_items_req');
 							record.setFieldValue( 'custrecord_bsp_isg_carton_buy_status', 1);
@@ -143,7 +147,6 @@
 
 				$("#previewItems").click(function () {  
 					let itemsSelected = JSON.parse(localStorage['CBState'] || '{}');
-					console.log(JSON.stringify(itemsSelected));
 					let objItemsSelected = processItemsSelected(itemsSelected); 
 					let str = "";
 					for (let index = 0; index < objItemsSelected.objItemsSelected.length; index++) {
@@ -209,12 +212,14 @@
 
 					for(var i = 0; i < cb.length; i++) {  
 						cb[i].addEventListener('click', function(evt) { 
-							if (this.checked) { 
-								cbstate[this.id] = true; 
-							} else if (cbstate[this.id]) { 
-								delete cbstate[this.id]; 
-							} 						
-							localStorage.CBState = JSON.stringify(cbstate); 
+							if(this.id != ""){
+								if (this.checked) { 
+									cbstate[this.id] = true; 
+								} else if (cbstate[this.id]) { 
+									delete cbstate[this.id]; 
+								} 						
+								localStorage.CBState = JSON.stringify(cbstate); 
+							}	
 						}); 
 					}
 
@@ -223,17 +228,38 @@
 						if (this.checked) { 	
 							for(var i = 0; i < cb.length; i++) { 
 								cb[i].checked = true;
-								cbstate[cb[i].id] = true;
+								if(cb[i].id != ""){
+									cbstate[cb[i].id] = true;
+								}
 							}  
 						} else { 
-							for(var i = 0; i < cb.length; i++) { 
+							for(var i = 0; i < cb.length; i++) {
 								cb[i].checked = false;
-								delete cbstate[cb[i].id]; 
+								if(cb[i].id != ""){
+									delete cbstate[cb[i].id]; 
+								} 
 							}  
 						} 						
 						localStorage.CBState = JSON.stringify(cbstate); 
 					});
 
+					const $parents =
+						$('.data-container .item-parent input[type=checkbox]');
+
+					$parents.on('change', function() {
+						let $childes = $(this).closest('tr').next('tr').find('input[type=checkbox]');
+						$childes.prop('checked', $(this).is(':checked'));
+						if ($(this).is(':checked')) { 	
+								for(var i = 0; i < $childes.length; i++) { 									
+									cbstate[$childes[i].id] = true;
+								}  
+						} else { 
+							for(var i = 0; i < $childes.length; i++) { 
+								delete cbstate[$childes[i].id]; 
+							}  
+						} 
+						localStorage.CBState = JSON.stringify(cbstate);
+					});
 				}); 
 			})(); 
 

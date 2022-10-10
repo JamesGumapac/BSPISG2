@@ -40,9 +40,22 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                     let vendorSelected = objClientParams.custpage_vendors;
                     
                     try{
-                        let poRecID = createPO(vendorSelected, itemsSelected);
-                        createCartonBuyRecords(poRecID, itemsSelected);
-                        let objMRTask = task.create({
+                        let listPOsCreatedObj = createPOs(vendorSelected, itemsSelected);
+                        createCartonBuyRecords(listPOsCreatedObj.itemData);
+                        
+                        if(listPOsCreatedObj.listPOsCreated.length > 1){
+                            redirect.toSavedSearchResult({
+                                id: createPOSearchObj(listPOsCreatedObj.listPOsCreated)
+                            });
+                        }else{
+                            redirect.toRecord({
+                                type: record.Type.PURCHASE_ORDER,
+                                id: listPOsCreatedObj.listPOsCreated[0],
+                                isEditMode: true
+                            });
+                        }
+
+                        /*let objMRTask = task.create({
                             taskType: task.TaskType.MAP_REDUCE,
                             scriptId: "customscript_bsp_isg_mr_update_manual_so",
                             deploymentId: "customdeploy_bsp_isg_mr_update_manual_so",
@@ -51,13 +64,8 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                             }
                         });
                         let intTaskID = objMRTask.submit();
-                        log.debug(functionName, `MR Task submitted with ID: ${intTaskID}`);
+                        log.debug(functionName, `MR Task submitted with ID: ${intTaskID}`);*/
 
-                        redirect.toRecord({
-                            type: record.Type.PURCHASE_ORDER,
-                            id: poRecID,
-                            isEditMode: true
-                        });
                     }catch(error){
                         log.error(functionName, "Error: " + JSON.stringify(error.message));
                         redirect.toSuitelet({
@@ -90,7 +98,7 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
             let vendors = getVendors();
             form = createHeaderFields(form, params, vendors);   
             let items = getItems(params, vendors);
-            form = createItemSublist(form, items);
+            form = createItemSublist(form, items, params, vendors);
             return form;
         }
 
@@ -102,6 +110,11 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
          * @returns The form object is being returned.
         */
         const createHeaderFields = (form, params, vendors) => {
+
+            /**
+             * Field Group Vendors
+            */
+
             form.addFieldGroup({
                 id : 'fieldgroup_vendor_info',
                 label : 'Select the vendor to which the PO will be referenced to'
@@ -126,7 +139,8 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
             let showMsg = form.addField({
                 id: 'custpage_show_msg',
                 type: serverWidget.FieldType.TEXT,
-                label: 'Show Msg'
+                label: 'Show Msg',
+                container: 'fieldgroup_vendor_info'
             }).updateDisplayType({
                 displayType: serverWidget.FieldDisplayType.HIDDEN
             });
@@ -134,16 +148,80 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                 showMsg.defaultValue = params.errorMsg;
             }
 
+            /**
+             * Field Group Purchase Order(s) Information
+            */
+
+            form.addFieldGroup({
+                id : 'fieldgroup_po_info',
+                label : 'Purchase Order(s) Information'
+            });
+
+            form.addField({
+                id: 'custpage_total_po_amount',
+                type: serverWidget.FieldType.TEXT,
+                label: 'Total',
+                container: 'fieldgroup_po_info'
+            }).updateDisplayType({
+                displayType: serverWidget.FieldDisplayType.INLINE
+            }).defaultValue = `$${0.00}`;
+
+            let vendorSelected = null;
+            if(params.vendorSelected){
+                let vendorIndex = findVendorInListBy(vendors, params.vendorSelected, "id");
+                vendorSelected = {id: params.vendorSelected, name: vendors[vendorIndex].name, tradingPartnerID: vendors[vendorIndex].tradingPartnerID, accountNumbers: vendors[vendorIndex].accountNumbers};
+            }else{
+                vendorSelected = {id:  vendors[0].id, name:  vendors[0].name,  tradingPartnerID: vendors[0].tradingPartnerID, accountNumbers: vendors[0].accountNumbers}
+            }
+            let minAmountPO = BSPTradingPartnersUtil.getMinAmountCartonPO(vendorSelected.tradingPartnerID);
+            
+            let accountFieldIDs = [];
+            vendorSelected.accountNumbers.forEach(account => {
+                form.addField({
+                    id: 'custpage_total_acct_'+account.id,
+                    type: serverWidget.FieldType.TEXT,
+                    label: 'Total for Account: ' + account.name,
+                    container: 'fieldgroup_po_info'
+                }).updateDisplayType({
+                    displayType: serverWidget.FieldDisplayType.INLINE
+                }).defaultValue = `$${0.00}`;
+                accountFieldIDs.push({acctID: account.id, fieldID: `custpage_total_acct_${account.id}`});
+            });
+
+            form.addField({
+                id: 'custpage_min_total_po_amount',
+                type: serverWidget.FieldType.TEXT,
+                label: 'Minimum Amount for Purchase Order',
+                container: 'fieldgroup_po_info'
+            }).updateDisplayType({
+                displayType: serverWidget.FieldDisplayType.INLINE
+            }).defaultValue = `$${minAmountPO}`;
+
+            form.addField({
+                id: 'custpage_acct_field_ids',
+                type: serverWidget.FieldType.LONGTEXT,
+                label: 'Account field IDs',
+                container: 'fieldgroup_po_info'
+            }).updateDisplayType({
+                displayType: serverWidget.FieldDisplayType.HIDDEN
+            }).defaultValue = `${JSON.stringify(accountFieldIDs)}`;
+
+            /**
+             * Field Group Item List
+            */
             form.addFieldGroup({
                 id : 'fieldgroup_items_info',
                 label : 'Item list'
             });
+            
             form.addField({
                 id: 'custpage_select_all',
                 type: serverWidget.FieldType.CHECKBOX,
                 label: 'Select/Unselect all items from list',
                 container: 'fieldgroup_items_info'
             });
+
+            
 
             form.addSubmitButton({
                 label: 'Create PO'
@@ -153,38 +231,118 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
         }
 
         /**
-         * It creates a search for vendors that have a value in the custom field
-         * "custentity_bsp_isg_trading_part_settings" and returns an array of objects with the vendor id and
-         * name
-         * @returns An array of objects.
+         * It creates and runs a vendor search object, then loops through the results, pushing each result
+         * into an array containing the vendor info
+         * @returns An array of vendors.
         */
         const getVendors = () => {
             let vendors = [];
+
             const vendorSearchObj = search.create({
-                type: "vendor",
+                type: "customrecord_bsp_isg_trading_partner",
                 filters:
                 [
-                   ["custentity_bsp_isg_trading_part_settings","noneof","@NONE@"]
+                   ["isinactive","is","F"]
+                ],
+                columns:
+                [
+                   search.createColumn({name: "custrecord_bsp_isg_tp_vendor", label: "Vendor"})
+                ]
+             });
+
+             vendorSearchObj.run().each(function(result){
+                let tradingPartnerID = result.id;
+                let id = result.getValue("custrecord_bsp_isg_tp_vendor");
+                let name = result.getText("custrecord_bsp_isg_tp_vendor");
+                vendors.push({
+                    id: id,
+                    name: name,
+                    tradingPartnerID: tradingPartnerID,
+                    accountNumbers: []
+                })
+                return true;
+            });
+
+            const accountNumberSearchObj = search.create({
+                type: "customrecord_bsp_isg_account_number",
+                filters:
+                [
+                   ["custrecord_bsp_isg_parent_trading_partn","anyof", vendors.map(v => v.tradingPartnerID)],
+                   "AND", 
+                   ["custrecord_bsp_isg_carton_buy_acct","is","T"]
                 ],
                 columns:
                 [
                    search.createColumn({
-                      name: "entityid",
-                      sort: search.Sort.ASC,
+                        name: "name",
+                        sort: search.Sort.ASC,
+                        label: "Name"
+                   }), 
+                   search.createColumn({name: "custrecord_bsp_isg_parent_trading_partn", label: "Trading Partner"}),
+                   search.createColumn({
+                      name: "name",
+                      join: "CUSTRECORD_BSP_ISG_PARENT_ACCT_NUMBER",
                       label: "Name"
                    })
                 ]
-            });
-            vendorSearchObj.run().each(function(result){
-                let id = result.id;
-                let name = result.getValue("entityid");
-                vendors.push({
-                    id: id,
-                    name: name
-                })
+             });
+
+             accountNumberSearchObj.run().each(function(result){
+                let accountID = result.id;
+                let accountName = result.getValue({name: 'name'});
+                let contractCodeName = result.getValue({name: 'name', join: 'CUSTRECORD_BSP_ISG_PARENT_ACCT_NUMBER'});
+         
+                let tradingPartnerID = result.getValue({name: 'custrecord_bsp_isg_parent_trading_partn'});
+                let vendorIndex = findVendorInListBy(vendors, tradingPartnerID, "tradingPartnerID");
+                if(vendorIndex >= 0){
+                    let accountNumberIndex = findAccountInList(vendors[vendorIndex].accountNumbers, tradingPartnerID,accountID);
+                    if(accountNumberIndex >= 0){
+                        vendors[vendorIndex].accountNumbers[accountNumberIndex].contractCodes.push(contractCodeName);
+                    }else{
+                        vendors[vendorIndex].accountNumbers.push({id: accountID, name: accountName, contractCodes: [contractCodeName]});
+                    }               
+                }
                 return true;
             });
+
             return vendors;
+        }
+
+        /**
+         * It takes a list of vendors, an attribute value, and an attribute name, and returns the index of the
+         * vendor in the list that has the given attribute value for the given attribute name.
+         * 
+         * If no vendor is found, it returns -1.
+         * @param vendors - the array of objects that you want to search through
+         * @param atributteValue - The value of the attribute you want to find.
+         * @param atributteName - The name of the attribute you want to search for.
+         * @returns The index of the vendor in the list.
+        */
+         const findVendorInListBy = (vendors, atributteValue, atributteName) => {
+            for (let index = 0; index < vendors.length; index++) {
+                const element = vendors[index];   
+                if(element[atributteName] == atributteValue){
+                    return index;
+                }
+            }
+            return -1;
+        }
+
+        /**
+         * It takes an array of account Numbers and an id and returns the index of the object in the array that has the
+         * matching accountID.
+         * @param accountNumbers - an array of objects that contain account numbers and their corresponding IDs
+         * @param accountID - The account ID of the account you want to find.
+         * @returns The index of the account number in the array.
+         */
+        const findAccountInList = (accountNumbers, accountID) => {
+            for (let index = 0; index < accountNumbers.length; index++) {
+                const element = accountNumbers[index];   
+                if(element.id == accountID){
+                    return index;
+                }
+            }
+            return -1;
         }
 
         /**
@@ -223,10 +381,10 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
          * @param items - An array of objects that contain the item information.
          * @returns The form is being returned.
         */
-        const createItemSublist = (form, items) => {
+        const createItemSublist = (form, items, params, vendors) => {
             let sublist = form.addSublist({
                 id: 'custpage_items_sublist',
-                type: serverWidget.SublistType.LIST,
+                type: serverWidget.SublistType.INLINEEDITOR,
                 label: 'Items'
             });
             sublist.addField({
@@ -252,34 +410,65 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                 id: 'custpage_item_name',
                 type: serverWidget.FieldType.TEXT,
                 label: 'Item Name'
+            }).updateDisplayType({
+                displayType: serverWidget.FieldDisplayType.DISABLED
             });
             sublist.addField({
                 id: 'custpage_item_desc',
                 type: serverWidget.FieldType.TEXT,
                 label: 'Item Description'
+            }).updateDisplayType({
+                displayType: serverWidget.FieldDisplayType.DISABLED
             });
             sublist.addField({
                 id: 'custpage_item_qty',
                 type: serverWidget.FieldType.INTEGER,
                 label: 'Quantity'
+            }).updateDisplayType({
+                displayType: serverWidget.FieldDisplayType.DISABLED
             });
             sublist.addField({
                 id: 'custpage_bo_item_qty',
                 type: serverWidget.FieldType.INTEGER,
                 label: 'Backorder Quantity'
+            }).updateDisplayType({
+                displayType: serverWidget.FieldDisplayType.DISABLED
+            });
+            let accountsField = sublist.addField({
+                id: 'custpage_account_number',
+                type: serverWidget.FieldType.SELECT,
+                label: 'Account Number'
+            });
+            accountsField = populateAccountField(accountsField, params, vendors);
+
+            sublist.addField({
+                id: 'custpage_so_item_price',
+                type: serverWidget.FieldType.TEXT,
+                label: 'Carton Cost'
+            }).updateDisplayType({
+                displayType: serverWidget.FieldDisplayType.DISABLED
             });
             sublist.addField({
                 id: 'custpage_min_item_qty',
                 type: serverWidget.FieldType.TEXT,
                 label: 'Minimum Quantity'
+            }).updateDisplayType({
+                displayType: serverWidget.FieldDisplayType.DISABLED
             });
             sublist.addField({
                 id: 'custpage_po_item_qty',
-                type: serverWidget.FieldType.INTEGER,
+                type: serverWidget.FieldType.TEXT,
                 label: 'PO Quantity'
             }).updateDisplayType({
                 displayType: serverWidget.FieldDisplayType.ENTRY
             });
+            sublist.addField({
+                id: 'custpage_item_sum_cost',
+                type: serverWidget.FieldType.TEXT,
+                label: 'Amount'
+            }).updateDisplayType({
+                displayType: serverWidget.FieldDisplayType.DISABLED
+            });           
             sublist.addField({
                 id: 'custpage_po_sales_orders',
                 type: serverWidget.FieldType.TEXT,
@@ -287,9 +476,55 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
             }).updateDisplayType({
                 displayType: serverWidget.FieldDisplayType.HIDDEN
             });
+            sublist.addField({
+                id: 'custpage_item_accounts',
+                type: serverWidget.FieldType.TEXT,
+                label: 'Item Account Data'
+            }).updateDisplayType({
+                displayType: serverWidget.FieldDisplayType.HIDDEN
+            });
             pupulateItemSublist(sublist, items);
 
             return form;
+        }
+
+        /**
+         * It takes a list of vendors, a list of accounts, and a vendor id, and populates the account field
+         * with the accounts for the vendor.
+         * 
+         * The function is called from the following function:
+         * @param accountsField - The field that will be populated with the account numbers.
+         * @param params - This is the object that contains the values of the fields that are passed to the
+         * client script.
+         * @param vendors - this is the list of vendors that I'm getting from the server.
+         * @returns The accountsField is being returned.
+        */
+        const populateAccountField = (accountsField, params, vendors) => {
+
+            let vendorSelected = null;
+            if(params.vendorSelected){
+                let vendorIndex = findVendorInListBy(vendors, params.vendorSelected, "id");
+                vendorSelected = {id: params.vendorSelected, name: vendors[vendorIndex].name, accountNumbers: vendors[vendorIndex].accountNumbers};
+            }else{
+                vendorSelected = {id:  vendors[0].id, name:  vendors[0].name, accountNumbers: vendors[0].accountNumbers}
+            }
+
+            vendors.forEach(element => {
+                let vendorId = element.id;
+                if(vendorSelected.id == vendorId){
+                    let accounts = element.accountNumbers;
+                    accounts.forEach(acct => {
+                        let id = acct.id;
+                        let name = acct.name;
+                        accountsField.addSelectOption({
+                            value: id,
+                            text: name,
+                            isSelected: false
+                        });
+                    });
+                }                   
+            });
+            return accountsField;
         }
 
         /**
@@ -306,9 +541,14 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                     let itemDescription = element.itemDesc;
                     let quantity = element.quantity;
                     let backOrderQuantity = element.backOrderQuantity;
+                    let itemPrice = element.itemPrice;
                     let minQuantity = element.minQuantity;
                     let poQuantity = element.poQuantity;
+                    let itemSumCost = element.itemSumCost;
                     let salesOrders = element.salesOrders;
+                    let accounts = element.accounts;
+                    let cartonAccount = element.cartonAccount;
+
                     sublist.setSublistValue({
                         id: "custpage_item_selected",
                         line: lineCount,
@@ -350,9 +590,29 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                         value: poQuantity
                     });
                     sublist.setSublistValue({
+                        id: "custpage_account_number",
+                        line: lineCount,
+                        value: cartonAccount.id
+                    });
+                    sublist.setSublistValue({
+                        id: "custpage_item_sum_cost",
+                        line: lineCount,
+                        value:  `$${itemSumCost}`
+                    });
+                    sublist.setSublistValue({
+                        id: "custpage_so_item_price",
+                        line: lineCount,
+                        value: `$${itemPrice}`
+                    });
+                    sublist.setSublistValue({
                         id: "custpage_po_sales_orders",
                         line: lineCount,
                         value: JSON.stringify(salesOrders)
+                    });
+                    sublist.setSublistValue({
+                        id: "custpage_item_accounts",
+                        line: lineCount,
+                        value: JSON.stringify(accounts)
                     });
                     lineCount++;
                 });
@@ -375,8 +635,8 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                 ["purchaseorder","anyof","@NONE@"], 
                 "AND", 
                 ["custcol_bsp_isg_exclude_auto_transm","anyof","2"],
-                "AND", 
-                ["custcol_bsp_isg_manual_po_id","isempty",""]
+                /*"AND", 
+                ["custcol_bsp_isg_manual_po_id","isempty",""]*/
             ];
             
             const salesOrderSearchObj = search.create({
@@ -418,7 +678,7 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                     })
                 ]
             });
-            let itemParams = [];
+
             let columns = salesOrderSearchObj.columns;
             salesOrderSearchObj.run().each(function(result){
                 let salesOrderID = result.getValue(columns[0]);
@@ -429,7 +689,7 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                 let backOrderQuantity = parseInt(result.getValue(columns[4]));
                 let soLineUniqueID = parseInt(result.getValue(columns[5]));
 
-                let itemIndex = getItemIndex(itemList, itemID);
+                let itemIndex = findItemIndex(itemList, itemID);
                 if(itemIndex >= 0){
                     itemList[itemIndex].quantity += quantity;
                     itemList[itemIndex].backOrderQuantity += backOrderQuantity;
@@ -442,7 +702,6 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                             lineBackOrderQty: backOrderQuantity
                         });
                 }else{
-                    itemParams.push(itemID);
                     itemList.push({
                         itemID: itemID,
                         itemName: itemName,
@@ -451,6 +710,8 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                         backOrderQuantity: backOrderQuantity,
                         minQuantity: "Not defined",
                         poQuantity: backOrderQuantity,
+                        itemPrice: "Not defined",
+                        itemSumCost: "Not defined",
                         salesOrders: [
                             {
                                 salesOrderID: salesOrderID, 
@@ -469,7 +730,7 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                     type: "customrecord_bsp_isg_carton_buy_item_so",
                     filters:
                     [
-                       ["custrecord_bsp_isg_carton_buy_item","anyof",itemParams]
+                       ["custrecord_bsp_isg_carton_buy_item","anyof", itemList.map(i => i.itemID)]
                     ],
                     columns:
                     [
@@ -483,37 +744,113 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                     itemList = processItemsByUniqueID(itemList, itemLineUniqueID);
                 });
                  
-                if(itemParams.length > 0){
-                    let vendorSelected = params.vendorSelected || vendors[0].id;
-                    const itemSearchObj = search.create({
-                        type: "item",
+                if(itemList.length > 0){
+                    let vendorSelected = null;
+                    if(params.vendorSelected){
+                        let vendorIndex = findVendorInListBy(vendors, params.vendorSelected, "id");
+                        vendorSelected = {id: params.vendorSelected, name: vendors[vendorIndex].name, accountNumbers: vendors[vendorIndex].accountNumbers};
+                    }else{
+                        vendorSelected = {id:  vendors[0].id, name:  vendors[0].name, accountNumbers: vendors[0].accountNumbers}
+                    }
+
+                    const item_acct_dataSearchObj = search.create({
+                        type: "customrecord_bsp_isg_item_acct_data",
                         filters:
                         [
-                           ["internalid","anyof",itemParams], 
-                           "AND",
-                           ["custrecord_bsp_isg_parent_item.custrecord_bsp_isg_item_supplier","anyof",vendorSelected],
+                           ["custrecord_bsp_isg_parent_item","anyof", itemList.map(i => i.itemID)],
                            "AND", 
-                           ["custrecord_bsp_isg_parent_item.custrecord_bsp_isg_min_quantity","isnotempty",""]
+                           ["custrecord_bsp_isg_item_supplier","anyof",vendorSelected.id]
                         ],
                         columns:
                         [
+                           search.createColumn({name: "custrecord_bsp_isg_parent_item", label: "Item"}),
+                           search.createColumn({name: "custrecord_bsp_isg_item_supplier", label: "Supplier"}),
                            search.createColumn({
-                              name: "custrecord_bsp_isg_min_quantity",
-                              join: "CUSTRECORD_BSP_ISG_PARENT_ITEM",
-                              label: "Minimum Quantity"
-                           })
+                                name: "custrecord_bsp_isg_parent_acct_number",
+                                join: "CUSTRECORD_BSP_ISG_ITEM_CONTRACT_CODE",
+                                label: "Account Number"
+                           }),
+                           search.createColumn({name: "custrecord_bsp_isg_item_contract_code", label: "Contract Code"}),
+                           search.createColumn({name: "custrecord_bsp_isg_min_quantity", label: "Minimum Quantity"}),
+                           search.createColumn({name: "custrecord_bsp_isg_item_cost", label: "Cost"})
                         ]
-                     });
-        
-                    itemSearchObj.run().each(function(result){
-                        let itemID = result.id;
-                        let itemMinQuantity = result.getValue({name: 'custrecord_bsp_isg_min_quantity', join: 'CUSTRECORD_BSP_ISG_PARENT_ITEM'});
-                        let itemIndex = getItemIndex(itemList, itemID);
-                        if(itemIndex >= 0){
-                            itemList[itemIndex].minQuantity = itemMinQuantity;    
-                            itemList[itemIndex].poQuantity = (itemList[itemIndex].poQuantity > itemMinQuantity ? itemList[itemIndex].poQuantity : itemMinQuantity);            
+                    });
+    
+                    let itemsPricingData = [];
+    
+                    item_acct_dataSearchObj.run().each(function(result){
+                        let itemID = result.getValue({name: 'custrecord_bsp_isg_parent_item'});
+                        let vendorID = result.getValue({name: 'custrecord_bsp_isg_item_supplier'});
+                        let vendorName = result.getText({name: 'custrecord_bsp_isg_item_supplier'});
+                        let accountID = result.getValue({name: 'custrecord_bsp_isg_parent_acct_number', join: 'CUSTRECORD_BSP_ISG_ITEM_CONTRACT_CODE'});
+                        let accountName = result.getText({name: 'custrecord_bsp_isg_parent_acct_number', join: 'CUSTRECORD_BSP_ISG_ITEM_CONTRACT_CODE'});
+                        let contractCode = result.getText({name: 'custrecord_bsp_isg_item_contract_code'});
+                        let minQuantity = result.getValue({name: 'custrecord_bsp_isg_min_quantity'});
+                        let itemCost = result.getValue({name: 'custrecord_bsp_isg_item_cost'});
+
+                        let cartonBuyAccountIndex = findAccountInList(vendorSelected.accountNumbers, accountID);
+                        if(cartonBuyAccountIndex >= 0){
+                            let itemIndex = findItemIndex(itemsPricingData, itemID);
+                            if(itemIndex == -1){
+                                itemsPricingData.push({
+                                    itemID: itemID,
+                                    vendorID: vendorID,
+                                    vendorName: vendorName,
+                                    accountNumberBestPrice: {   
+                                        id: accountID,
+                                        name: accountName,                       
+                                        contractCode: contractCode, 
+                                        minQuantity: minQuantity,
+                                        itemCost: itemCost                                        
+                                    },
+                                    accountNumbers: [{   
+                                        id: accountID,
+                                        name: accountName,                       
+                                        contractCode: contractCode, 
+                                        minQuantity: minQuantity,
+                                        itemCost: itemCost                                        
+                                    }]
+                                })        
+                            }else{
+                                if(isBetterPrice(itemsPricingData[itemIndex].accountNumberBestPrice.itemCost, itemCost)){
+                                    itemsPricingData[itemIndex].accountNumberBestPrice = {
+                                        id: accountID,
+                                        name: accountName,    
+                                        contractCode: contractCode, 
+                                        minQuantity: minQuantity,
+                                        itemCost: itemCost
+                                    };
+                                } 
+                                itemsPricingData[itemIndex].accountNumbers.push({
+                                    id: accountID,
+                                    name: accountName,    
+                                    contractCode: contractCode, 
+                                    minQuantity: minQuantity,
+                                    itemCost: itemCost
+                                }); 
+                            }
                         }
                         return true;
+                    });
+
+                    itemsPricingData.forEach(item => {
+                        let itemID = item.itemID;
+                        let accountID = item.accountNumberBestPrice.id;
+                        let accountName = item.accountNumberBestPrice.name;
+                        let cartonAccount = {id: accountID, name: accountName};
+                        let itemMinQuantity = item.accountNumberBestPrice.minQuantity || "Not Defined";
+                        let itemCartonCost = item.accountNumberBestPrice.itemCost || "Not Defined";
+                        let accounts = item.accountNumbers;
+                        let itemIndex = findItemIndex(itemList, itemID);
+
+                        if(itemIndex >= 0){
+                            itemList[itemIndex].accounts = accounts;
+                            itemList[itemIndex].cartonAccount = cartonAccount;
+                            itemList[itemIndex].minQuantity = itemMinQuantity;    
+                            itemList[itemIndex].poQuantity = (itemList[itemIndex].poQuantity > (itemMinQuantity == "Not Defined" ? 0 : itemMinQuantity) ? itemList[itemIndex].poQuantity : itemMinQuantity);            
+                            itemList[itemIndex].itemPrice = itemCartonCost; 
+                            itemList[itemIndex].itemSumCost = isNaN((itemCartonCost * itemList[itemIndex].poQuantity).toFixed(2)) ? "Not Defined" : (itemCartonCost * itemList[itemIndex].poQuantity).toFixed(2); 
+                        }
                     });
                 }       
             }
@@ -527,7 +864,7 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
          * @param itemID - The ID of the item you want to remove.
          * @returns The index of the itemID in the items array.
         */
-        const getItemIndex = (items, itemID) => {
+        const findItemIndex = (items, itemID) => {
             for (let index = 0; index < items.length; index++) {
                 const element = items[index];
                 if(element.itemID == itemID){
@@ -535,6 +872,16 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                 }
             }     
             return -1;
+        }
+
+        /**
+         * If the itemCost is less than the currentCost, return true, otherwise return false.
+         * @param currentCost - The current cost of the item in the cart.
+         * @param itemCost - The cost of the item you're currently looking at
+         * @returns a boolean value.
+        */
+        const isBetterPrice = (currentCost, itemCost) => {
+            return parseFloat(itemCost) < parseFloat(currentCost);
         }
 
         /**
@@ -576,53 +923,85 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
          * @param itemsSelected - An array of objects that contain the item ID and the quantity to be ordered.
          * @returns The record ID of the newly created PO.
         */
-        const createPO = (vendorSelected, itemsSelected) => {
+        const createPOs = (vendorSelected, itemsSelected) => {
+            let itemData = []
+            let listPOsCreated = [];
+            let itemsGroupedByAccount = groupBy(itemsSelected, (i) => i.accountSelected);
 
-            let cartonBuyAccount = BSPTradingPartnersUtil.getCartonBuyAccountNumber(vendorSelected);
-
-            let purchaseOrderRec = record.create({
-                type: record.Type.PURCHASE_ORDER,
-                isDynamic: true,
-            });
-
-            purchaseOrderRec.setValue({
-                fieldId: "entity",
-                value: parseInt(vendorSelected),
-            });
-
-            purchaseOrderRec.setValue({
-                fieldId: "custbody_bsp_isg_transmission_acct_num",
-                value: parseInt(cartonBuyAccount),
-            });
-
-            purchaseOrderRec.setValue({
-                fieldId: "custbody_bsp_isg_po_transm_status",
-                value: 1,
-            });
-
-            itemsSelected.forEach(element => {
-                let itemID = element.itemID;
-                let itemQty = element.poQty;
-                purchaseOrderRec.setCurrentSublistValue(
-                    { 
-                        sublistId: "item", 
-                        fieldId: "item", 
-                        value: itemID
-                    }
-                );
-                purchaseOrderRec.setCurrentSublistValue(
-                    { 
-                        sublistId: "item", 
-                        fieldId: "quantity", 
-                        value: itemQty
-                    }
-                );
-                purchaseOrderRec.commitLine({
-                    sublistId: "item",
+            for(let accountID in itemsGroupedByAccount) { 
+                let data = itemsGroupedByAccount[accountID];
+                
+                let purchaseOrderRec = record.create({
+                    type: record.Type.PURCHASE_ORDER,
+                    isDynamic: true,
                 });
-            });
-            let poRecordId = purchaseOrderRec.save();
-            return poRecordId;
+
+                purchaseOrderRec.setValue({
+                    fieldId: "custbody_bsp_isg_is_carton_buy",
+                    value: true,
+                });
+
+                purchaseOrderRec.setValue({
+                    fieldId: "entity",
+                    value: parseInt(vendorSelected),
+                });
+
+                purchaseOrderRec.setValue({
+                    fieldId: "custbody_bsp_isg_transmission_acct_num",
+                    value: parseInt(accountID),
+                });
+
+                purchaseOrderRec.setValue({
+                    fieldId: "custbody_bsp_isg_po_transm_status",
+                    value: 1,
+                });
+
+                data.forEach(element => {   
+                    let itemID = element.itemID;
+                    let itemQty = element.poQty;
+                    let itemPrice = element.itemPrice;
+
+                    purchaseOrderRec.setCurrentSublistValue(
+                        { 
+                            sublistId: "item", 
+                            fieldId: "item", 
+                            value: itemID
+                        }
+                    );
+                    purchaseOrderRec.setCurrentSublistValue(
+                        { 
+                            sublistId: "item", 
+                            fieldId: "quantity", 
+                            value: itemQty
+                        }
+                    );
+                    purchaseOrderRec.setCurrentSublistValue(
+                        { 
+                            sublistId: "item", 
+                            fieldId: "rate", 
+                            value: itemPrice
+                        }
+                    );
+                    purchaseOrderRec.commitLine({
+                        sublistId: "item",
+                    });
+                });
+                let poRecordId = purchaseOrderRec.save();
+
+                itemData.push({
+                    data: data,
+                    po: poRecordId
+                });
+                listPOsCreated.push(poRecordId)
+            } 	
+            return {
+                itemData: itemData,
+                listPOsCreated: listPOsCreated
+            };
+        }
+
+        function groupBy(xs, f) {
+            return xs.reduce((r, v, i, a, k = f(v)) => ((r[k] || (r[k] = [])).push(v), r), {});
         }
 
         /**
@@ -631,24 +1010,28 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
          * @param poRecID - The internal ID of the Purchase Order record
          * @param itemsSelected - This is an array of objects that contain the itemID, poQty, and salesOrders.
         */
-        const createCartonBuyRecords = (poRecID, itemsSelected) => {
-            itemsSelected.forEach(element => {
-                let salesOrders = JSON.parse(element.salesOrders);
-                if(salesOrders.constructor === Array){
-                    for (let index = 0; index < salesOrders.length; index++) {
-                        let salesorderObj = salesOrders[index];
+        const createCartonBuyRecords = (itemData) => {
+
+            itemData.forEach(dataObj => {
+                let data = dataObj.data;
+                let po = dataObj.po;
+                data.forEach(element => {
+                    let salesOrders = JSON.parse(element.salesOrders);
+                    if(salesOrders.constructor === Array){
+                        for (let index = 0; index < salesOrders.length; index++) {
+                            let salesorderObj = salesOrders[index];
+                            let salesorderID = salesorderObj.salesOrderID;
+                            let selectedLineItemID = salesorderObj.soLineUniqueID;
+                            createCartonBuyRecord(salesorderID, element.itemID, selectedLineItemID, po, element.poQty);
+                        }
+                    }else{
+                        let salesorderObj = salesOrders;
                         let salesorderID = salesorderObj.salesOrderID;
                         let selectedLineItemID = salesorderObj.soLineUniqueID;
-                        createCartonBuyRecord(salesorderID, element.itemID, selectedLineItemID, poRecID, element.poQty);
-                    }
-                }else{
-                    let salesorderObj = salesOrders;
-                    let salesorderID = salesorderObj.salesOrderID;
-                    let selectedLineItemID = salesorderObj.soLineUniqueID;
-                    createCartonBuyRecord(salesorderID, element.itemID, selectedLineItemID, poRecID, element.poQty);
-                }       
-            });
-            
+                        createCartonBuyRecord(salesorderID, element.itemID, selectedLineItemID, po, element.poQty);
+                    } 
+                });                         
+            });          
         }
 
         /**
@@ -691,6 +1074,50 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
         }
 
         /**
+         * It creates a search object for the Purchase Order record type, and filters the search by the
+         * internal ID of the Purchase Order records that were created in the previous function.
+         * @param listPOsCreated 
+         * @returns A search object.
+         */
+        const createPOSearchObj = (listPOsCreated) => {
+
+            let purchaseorderSearchObj = search.load({
+                id: "customsearch_bsp_isg_cb_pos"
+            });
+            purchaseorderSearchObj.filters = [
+                {
+                    name: "type",
+                    operator: "anyof",
+                    values: "PurchOrd",
+                    isor: false,
+                    isnot: false,
+                    leftparens: 0,
+                    rightparens: 0
+                },    
+                {
+                    name: "mainline",
+                    operator: "is",
+                    values: "T",
+                    isor: false,
+                    isnot: false,
+                    leftparens: 0,
+                    rightparens: 0
+                },  
+                {
+                    name: "internalid",
+                    operator: "anyof",
+                    values: listPOsCreated,
+                    isor: false,
+                    isnot: false,
+                    leftparens: 0,
+                    rightparens: 0
+                }
+            ];
+
+            return purchaseorderSearchObj.save();
+        }
+
+        /**
          * It returns an object with the script parameters
          * @returns An object with two properties: script_client and suitelet_title
         */
@@ -700,6 +1127,8 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                 script_client: script.getParameter('custscript_bsp_isg_script_client'),
                 suitelet_title: script.getParameter('custscript_bsp_isg_suitelet_title')
             }
+
+            
             return objParams;
         }
 

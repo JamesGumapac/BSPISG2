@@ -1,12 +1,12 @@
-<suitelet scriptid="customscript_bsp_isg_sl_carton_buy">
+<suitelet scriptid="customscript_bsp_isg_sl_excl_from_autotr">
   <description></description>
   <isinactive>F</isinactive>
-  <name>BSP | ISG | SL | Carton buy</name>
+  <name>BSP | ISG | SL | Exclude from AutoTransm</name>
   <notifyadmins>F</notifyadmins>
   <notifyemails></notifyemails>
   <notifyowner>T</notifyowner>
   <notifyuser>F</notifyuser>
-  <scriptfile>[/SuiteScripts/ISG/bsp_isg_sl_carton_buy.js]</scriptfile>
+  <scriptfile>[/SuiteScripts/ISG/bsp_isg_sl_exclude_from_autotransmission.js]</scriptfile>
   <scriptcustomfields>
     <scriptcustomfield scriptid="custscript_bsp_isg_carton_buy_template">
       <accesslevel>2</accesslevel>
@@ -64,7 +64,7 @@
     </scriptcustomfield>
   </scriptcustomfields>
   <scriptdeployments>
-    <scriptdeployment scriptid="customdeploy_bsp_isg_sl_carton_buy">
+    <scriptdeployment scriptid="customdeploy_bsp_isg_sl_excl_from_autotr">
       <allemployees>T</allemployees>
       <allpartners>T</allpartners>
       <allroles>T</allroles>

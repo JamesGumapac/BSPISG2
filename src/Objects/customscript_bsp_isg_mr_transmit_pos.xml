@@ -115,7 +115,7 @@
       <buffersize>1</buffersize>
       <concurrencylimit>1</concurrencylimit>
       <custscript_bsp_mr_po_rec_id></custscript_bsp_mr_po_rec_id>
-      <custscript_bsp_mr_transm_queue>1201</custscript_bsp_mr_transm_queue>
+      <custscript_bsp_mr_transm_queue>1501</custscript_bsp_mr_transm_queue>
       <custscript_bsp_mr_transm_rec>2</custscript_bsp_mr_transm_rec>
       <isdeployed>T</isdeployed>
       <loglevel>DEBUG</loglevel>

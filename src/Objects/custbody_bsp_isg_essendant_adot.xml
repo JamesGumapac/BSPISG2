@@ -1,4 +1,4 @@
-<transactionbodycustomfield scriptid="custbody_bsp_isg_transmission_loc">
+<transactionbodycustomfield scriptid="custbody_bsp_isg_essendant_adot">
   <accesslevel>2</accesslevel>
   <applyformatting>F</applyformatting>
   <bodyassemblybuild>F</bodyassemblybuild>
@@ -35,29 +35,29 @@
   <displaywidth></displaywidth>
   <dynamicdefault></dynamicdefault>
   <encryptatrest>F</encryptatrest>
-  <fieldtype>SELECT</fieldtype>
+  <fieldtype>TEXT</fieldtype>
   <fldsizelabel></fldsizelabel>
   <globalsearch>F</globalsearch>
   <help></help>
   <isformula>F</isformula>
   <ismandatory>F</ismandatory>
   <isparent>F</isparent>
-  <label>Transmission Location</label>
+  <label>Essendant ADOT</label>
   <linktext></linktext>
   <maxlength></maxlength>
   <maxvalue></maxvalue>
   <minvalue></minvalue>
-  <onparentdelete>NO_ACTION</onparentdelete>
+  <onparentdelete></onparentdelete>
   <parentsubtab></parentsubtab>
   <searchcomparefield></searchcomparefield>
   <searchdefault></searchdefault>
   <searchlevel>2</searchlevel>
-  <selectrecordtype>[scriptid=customrecord_bsp_isg_tp_location]</selectrecordtype>
+  <selectrecordtype></selectrecordtype>
   <showhierarchy>F</showhierarchy>
   <showinlist>F</showinlist>
-  <sourcefilterby>[scriptid=customrecord_bsp_isg_tp_location.custrecord_bsp_isg_parent_tp]</sourcefilterby>
-  <sourcefrom>[scriptid=custentity_bsp_isg_trading_part_settings]</sourcefrom>
-  <sourcelist>STDBODYVENDOR</sourcelist>
+  <sourcefilterby></sourcefilterby>
+  <sourcefrom></sourcefrom>
+  <sourcelist></sourcelist>
   <storevalue>T</storevalue>
   <subtab>[scriptid=custtab_bsp_isg_po_transmission]</subtab>
 </transactionbodycustomfield>
