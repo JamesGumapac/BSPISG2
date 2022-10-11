@@ -2,9 +2,9 @@
  * @NApiVersion 2.1
  * @NScriptType Suitelet
  */
-define(['N/runtime', 'N/ui/serverWidget', 'N/search', './Lib/xml_template_handler.js', './Lib/bsp_isg_edi_settings.js'],
+define(['N/runtime', 'N/record', 'N/url', 'N/ui/serverWidget', 'N/search', './Lib/xml_template_handler.js', './Lib/bsp_isg_edi_settings.js'],
     
-    (runtime, serverWidget, search, BSP_XMLTemplateHandler, BSP_EDISettingsUtil) => {
+    (runtime, record, url, serverWidget, search, BSP_XMLTemplateHandler, BSP_EDISettingsUtil) => {
         /**
          * Defines the Suitelet script trigger point.
          * @param {Object} scriptContext
@@ -447,6 +447,11 @@ define(['N/runtime', 'N/ui/serverWidget', 'N/search', './Lib/xml_template_handle
                 let columns = salesOrderLinesSearchObj.columns;
                 salesOrderLinesSearchObj.run().each(function(result){
                     let salesOrderID = result.id;
+                    let soURL = url.resolveRecord({
+                        recordType: record.Type.SALES_ORDER,
+                        recordId: salesOrderID,
+                        isEditMode: false
+                    });
                     let salesOrderNumber = result.getValue("tranid");
                     let customer = result.getText("entity");
                     let routeCode = result.getText("custbody_bsp_isg_route_code");
@@ -460,6 +465,7 @@ define(['N/runtime', 'N/ui/serverWidget', 'N/search', './Lib/xml_template_handle
                         itemData[itemIndex].salesOrderLines.push({
                             salesOrderID: salesOrderID,
                             salesOrderNumber: salesOrderNumber,
+                            soURL: soURL,
                             customer: customer,
                             routeCode: routeCode,
                             routeCodeDesc: routeCodeDesc,
