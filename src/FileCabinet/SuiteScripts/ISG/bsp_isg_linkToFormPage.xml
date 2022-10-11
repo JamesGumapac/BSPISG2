@@ -67,7 +67,7 @@
 														<tbody>
 															<#list item.salesOrderLines as itemLine>
 																<tr>
-																	<td>${itemLine.salesOrderNumber}</td>
+																	<td><a style="color: rgb(37,85,153)" href=${itemLine.soURL} target="_blank" rel="noopener noreferrer">${itemLine.salesOrderNumber}</a></td>
 																	<td>${itemLine.customer}</td>
 																	<td>${itemLine.routeCode}</td>
 																	<td>${itemLine.routeCodeDesc}</td>
