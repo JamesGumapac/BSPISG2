@@ -10,53 +10,61 @@ define([
   "N/http",
   "N/format",
   "N/https",
-  "N/ui/message",
+  "./bsp_isg_lb_elite_extra_api_service.js",
 ], /**
  * @param{record} record
  * @param{runtime} runtime
  * @param{search} search
  * @param{http} http
- */ function (record, runtime, search, http, format, https, message) {
+ */ function (
+  record,
+  runtime,
+  search,
+  http,
+  format,
+  https,
+  BSPEliteExtraAPIService
+) {
   // get the object from ITEM_FULFILLMENT and SALES_ORDER
   function getIfDetails(ifRecId) {
     try {
       const ifRec = record.load({
         type: record.Type.ITEM_FULFILLMENT,
         id: ifRecId,
-        isDynamic: true
+        isDynamic: true,
       });
       const soId = ifRec.getValue("createdfrom");
       const soRec = record.load({
         type: record.Type.SALES_ORDER,
         id: soId,
-        isDynamic: true
+        isDynamic: true,
       });
-      let tranAmount = 0;
+
       const salesRepId = soRec.getValue("salesrep");
       let salesRepInfo = "";
       if (!isEmpty(salesRepId)) {
         salesRepInfo = search.lookupFields({
           type: search.Type.EMPLOYEE,
           id: salesRepId,
-          columns: ["firstname", "lastname"]
+          columns: ["firstname", "lastname"],
         });
       }
 
       const billSubRecord = soRec.getSubrecord({
-        fieldId: "billingaddress"
+        fieldId: "billingaddress",
       });
 
       const shipSubRecord = soRec.getSubrecord({
-        fieldId: "shippingaddress"
+        fieldId: "shippingaddress",
       });
 
       const orderHeaderFields = [];
       orderHeaderFields.push({
         orderId: ifRec.getValue("tranid"),
-        warehouse: 1,//soRec.getValue("location"),
+        warehouse: "1", //soRec.getValue("location"),
         po: soRec.getValue("otherrefnum") || "",
         status: "",
-        price: tranAmount || 0,
+        price: "",
         tax: soRec.getValue("tax") || 0,
         deposit: soRec.getValue("custbody_bsp_aab_so_deposit") || 0,
         dateTime: formatDateTime(soRec.getValue("trandate")) || "",
@@ -83,7 +91,7 @@ define([
         shipAddressLine3: shipSubRecord.getValue("addr3") || "",
         shipCity: shipSubRecord.getValue("city") || "",
         shipState: shipSubRecord.getValue("state") || "",
-        shipZip: shipSubRecord.getValue("zip") || ""
+        shipZip: shipSubRecord.getValue("zip") || "",
       });
 
       const itemLineInfo = [];
@@ -94,31 +102,30 @@ define([
           line: i,
         });
         if (itemReceive == "T" || itemReceive == true) {
-
           const itemId = ifRec.getSublistValue({
             sublistId: "item",
             fieldId: "itemname",
-            line: i
+            line: i,
           });
 
           const rate = soRec.getSublistValue({
             sublistId: "item",
             fieldId: "rate",
-            line: i
+            line: i,
           });
           const order_quantity = ifRec.getSublistValue({
             sublistId: "item",
             fieldId: "quantity",
-            line: i
+            line: i,
           });
-            let lineAmount = 0
-            lineAmount = parseFloat(rate) * parseFloat(order_quantity)
-            tranAmount += +lineAmount
+          let lineAmount = 0;
+          lineAmount = parseFloat(rate) * parseFloat(order_quantity);
+
           itemLineInfo.push({
             order_quantity: order_quantity,
             number: itemId,
             rate: rate,
-            amount: lineAmount ,
+            amount: lineAmount,
             description: ifRec.getSublistValue({
               sublistId: "item",
               fieldId: "description",
@@ -128,29 +135,173 @@ define([
               sublistId: "item",
               fieldId: "location",
               line: i,
-            })
+            }),
           });
         }
       }
-      log.debug("orderHeaderFields", { orderHeaderFields, itemLineInfo });
+      log.debug("order obj", { orderHeaderFields, itemLineInfo });
       return { orderHeaderFields, itemLineInfo };
     } catch (e) {
       log.error(e.message);
     }
   }
 
-  function uploadOrderAPI(endpointURL, headers, orderXML, ifId) {
-    let message = [];
-    const URL = endpointURL + "/upload_order";
-    const res = https.post({
-      url: URL,
-      headers: headers,
-      body: orderXML,
-    });
+  function sendOrderDetails(ifId, eliteExtraId) {
+    try {
+      //Get SO and IF Information and store it to an object
+      const orderObj = getIfDetails(ifId);
+      console.log("orderObj " + JSON.stringify(orderObj));
+      const headerFieldsInfo = [orderObj.orderHeaderFields];
+      const lineItemInfo = orderObj.itemLineInfo;
+
+      let lineItemXml = "";
+      //Create line XML from Order Object Line info
+      lineItemInfo.forEach(function (lineItem) {
+        lineItemXml += `
+                    <line>
+                  <order_quantity>${lineItem.order_quantity}</order_quantity>
+                  <ship_quantity>${lineItem.order_quantity}</ship_quantity>
+                  <price>${lineItem.rate}</price>
+                  <cost>${lineItem.amount}</cost>
+                  <part>
+                      <number>${lineItem.number}</number>
+                      <description></description>
+                  </part>
+                  <weight></weight>
+                  <length></length>
+                  <width></width>
+                  <height></height>
+                  <integration_type></integration_type>
+                  <uom></uom>
+              </line>`;
+      });
+      //Map the Order Details into XML body
+      let orderXML = `<?xml version="1.0"?>
+<order id="${headerFieldsInfo[0][0].orderId}">
+    <warehouse id="1">
+    </warehouse>
+    <po>${headerFieldsInfo[0][0].po}</po>
+    <ecommerce_id></ecommerce_id>
+    <status>${headerFieldsInfo[0][0].status}</status>
+    <type></type>
+    <total>
+      <price>${headerFieldsInfo[0][0].price}</price>
+      <cost></cost>
+      <tax></tax>
+      <deposit></deposit>
+    </total>
+    <cash_on_delivery></cash_on_delivery>
+    <pay_type></pay_type>
+    <Held>false</Held>
+    <transfer_order>false</transfer_order>
+    <will_call></will_call>
+    <nparts></nparts>
+    <datetime>${headerFieldsInfo[0][0].dateTime}</datetime>
+    <shiptime>${headerFieldsInfo[0][0].shipTime}</shiptime>
+    <voidtime></voidtime>
+    <priority_code></priority_code>
+    <order_priority></order_priority>
+    <locked_position></locked_position>
+    <delivery_zone></delivery_zone>
+    <comment>${headerFieldsInfo[0][0].comment} test</comment>
+    <instruction></instruction>
+    <ship_via>
+      <name>${headerFieldsInfo[0][0].shipViaName}</name>
+      <description></description>
+    </ship_via>
+    <generate>
+      <datetime></datetime>
+    </generate>
+    <invoice>
+      <number></number>
+      <datetime></datetime>
+    </invoice>
+    <route>
+      <number></number>
+    </route>
+    <manifest>
+      <number></number>
+    </manifest>
+    <sales_person id="${headerFieldsInfo[0][0].salesPersonId}">
+      <name>
+        <first>${headerFieldsInfo[0][0].salesPersonName}</first>
+        <last>${headerFieldsInfo[0][0].salesPersonLastname}</last>
+      </name>
+    </sales_person>
+    <customer>
+      <bill_to id="${headerFieldsInfo[0][0].billToId}">
+        <name>${headerFieldsInfo[0][0].billToName}</name>
+        <address>
+          <line_1>${headerFieldsInfo[0][0].billAddressLine1}</line_1>
+          <line_2>${headerFieldsInfo[0][0].billAddressLine2}</line_2>
+          <line_3>${headerFieldsInfo[0][0].billAddressLine3}</line_3>
+        </address>
+        <city>${headerFieldsInfo[0][0].billCity}</city>
+        <state>${headerFieldsInfo[0][0].billState}</state>
+        <zip>${headerFieldsInfo[0][0].billZip}</zip>
+        <first_name></first_name>
+        <last_name></last_name>
+        <phone>${headerFieldsInfo[0][0].billToPhone}</phone>
+        <email></email>
+        <zone></zone>
+        <latitude></latitude>
+        <longitude></longitude>
+        <notes></notes>
+      </bill_to>
+      <ship_to id="${headerFieldsInfo[0][0].shipToId}">
+        <name>${headerFieldsInfo[0][0].shipToName}</name>
+        <address>
+          <line_1>${headerFieldsInfo[0][0].shipAddressLine1}</line_1>
+          <line_2>${headerFieldsInfo[0][0].shipAddressLine2}</line_2>
+          <line_3>${headerFieldsInfo[0][0].shipAddressLine3}</line_3>
+        </address>
+        <city>${headerFieldsInfo[0][0].shipCity}</city>
+        <state>${headerFieldsInfo[0][0].shipState}</state>
+        <zip>${headerFieldsInfo[0][0].shipZip}</zip>
+        <phone>${headerFieldsInfo[0][0].shipToPhone}</phone>
+        <email></email>
+        <zone></zone>
+        <latitude></latitude>
+        <longitude></longitude>
+        <notes></notes>
+      </ship_to>
+    </customer>
+    <detail>
+  ${lineItemXml}
+    </detail>
+    <signature>
+      <device_id></device_id>
+    </signature>
+    <integration_type></integration_type>
+    <avoid_scheduled_runs>false</avoid_scheduled_runs>
+    <avoid_saved_manifest>false</avoid_saved_manifest>
+    <RequestedStart></RequestedStart>
+    <RequestedEnd></RequestedEnd>
+    <PickupRequestedStart></PickupRequestedStart>
+    <PickupRequestedEnd></PickupRequestedEnd>
+    <load_type>Framing</load_type>
+    <phone_number></phone_number>
+    <duration></duration>
+</order>`;
+      const eliteExtraSettings = getEliteExtraSettings(eliteExtraId);
+      const uploadResponse = BSPEliteExtraAPIService.uploadOrder(
+        ifId,
+        eliteExtraId,
+        orderXML,
+        eliteExtraSettings
+      );
+
+      return updateIF(uploadResponse, ifId);
+    } catch (e) {
+      log.error(e.message);
+    }
+  }
+
+  function updateIF(res, ifId) {
     const response = res.body;
     const resString = [response];
     const resBody = JSON.parse(resString[0]);
-
+    let message = [];
     if (res.code === 200 && !isEmpty(resBody.tracking)) {
       const ifUpdateId = record.submitFields({
         type: record.Type.ITEM_FULFILLMENT,
@@ -175,8 +326,26 @@ define([
       });
     }
     log.debug("message", message);
-    log.debug("response", response);
     return message;
+  }
+
+  function getEliteExtraSettings(eliteExtraId) {
+    const eliteExtraSettingResults = {};
+    const eliteExtraSettingsSearch = search.lookupFields({
+      type: "customrecord_elite_extra_setting",
+      id: eliteExtraId,
+      columns: [
+        "custrecord_bsp_isg_based64encoding",
+        "custrecord_bsp_create_order_ep_url",
+      ],
+    });
+     eliteExtraSettingResults["endpointURL"] =
+      eliteExtraSettingsSearch["custrecord_bsp_create_order_ep_url"];
+      eliteExtraSettingResults["authorization"] =
+      eliteExtraSettingsSearch["custrecord_bsp_isg_based64encoding"];
+
+
+    return eliteExtraSettingResults;
   }
 
   function isEmpty(stValue) {
@@ -245,7 +414,8 @@ define([
 
   return {
     getIfDetails: getIfDetails,
-    uploadOrderAPI: uploadOrderAPI,
     isEmpty: isEmpty,
+    sendOrderDetails: sendOrderDetails,
+    getEliteExtraSettings: getEliteExtraSettings,
   };
 });
