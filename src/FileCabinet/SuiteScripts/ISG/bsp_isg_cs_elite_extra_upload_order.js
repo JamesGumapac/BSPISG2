@@ -20,13 +20,14 @@ define([
    */
   function pageInit(scriptContext) {}
 
-  function sendOrderDetails(ifId, eliteExtraId) {
+  function validateTrackingInformation(ifId, eliteExtraId) {
+    //check if tracking number is existing to prompt user for confirmation to re-upload order details if existing
     const trackingNumberSearch = search.lookupFields({
       type: "itemfulfillment",
       id: ifId,
       columns: ["custbody_bsp_tracking_number"],
     });
-    console.log(trackingNumberSearch);
+
     if (
       !BSPExliteExtra.isEmpty(trackingNumberSearch.custbody_bsp_tracking_number)
     ) {
@@ -36,48 +37,24 @@ define([
       };
 
       function success(result) {
-        console.log("result" + result);
-        if (result == true) {
-          uploadOrder(ifId, eliteExtraId);
+        if (result === true) {
+          alert("Uploading Order Please wait...");
+          const response = BSPExliteExtra.sendOrderDetails(ifId, eliteExtraId);
+          BSPExliteExtra.showResponseToUser(response);
         }
       }
 
-      function failure(result) {
-        console.log("result" + result);
-      }
-
-      dialog.confirm(options).then(success).catch(failure);
+      dialog.confirm(options).then(success);
     } else {
-      uploadOrder(ifId, eliteExtraId);
+      alert("Uploading Order Please wait...");
+      const response = BSPExliteExtra.sendOrderDetails(ifId, eliteExtraId);
+      BSPExliteExtra.showResponseToUser(response);
     }
   }
 
-  function uploadOrder(ifId, eliteExtraId) {
-    alert("Uploading Order Please wait...");
-    const response = BSPExliteExtra.sendOrderDetails(ifId, eliteExtraId);
-    showMessage(response);
-  }
-
-  function showMessage(response) {
-    if (response[0].failed == false) {
-      const infoMessage = message.create({
-        title: "CONFIRMATION",
-        message: "Orders has been uploaded successfully",
-        type: message.Type.CONFIRMATION,
-      });
-      infoMessage.show();
-    } else {
-      const infoMessage = message.create({
-        title: "FAILED",
-        message: "Failed to upload order",
-        type: message.Type.ERROR,
-      });
-      infoMessage.show();
-    }
-  }
 
   return {
     pageInit: pageInit,
-    sendOrderDetails: sendOrderDetails,
+    validateTrackingInformation: validateTrackingInformation,
   };
 });

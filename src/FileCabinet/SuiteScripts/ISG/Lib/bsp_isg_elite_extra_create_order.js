@@ -6,6 +6,7 @@
 define([
   "N/record",
   "N/runtime",
+  "N/message",
   "N/search",
   "N/http",
   "N/format",
@@ -19,6 +20,7 @@ define([
  */ function (
   record,
   runtime,
+  message,
   search,
   http,
   format,
@@ -150,7 +152,6 @@ define([
     try {
       //Get SO and IF Information and store it to an object
       const orderObj = getIfDetails(ifId);
-      console.log("orderObj " + JSON.stringify(orderObj));
       const headerFieldsInfo = [orderObj.orderHeaderFields];
       const lineItemInfo = orderObj.itemLineInfo;
 
@@ -290,7 +291,7 @@ define([
         orderXML,
         eliteExtraSettings
       );
-
+      //update tracking information in IF
       return updateIF(uploadResponse, ifId);
     } catch (e) {
       log.error(e.message);
@@ -329,6 +330,7 @@ define([
     return message;
   }
 
+  //Load eliteExtra Settings
   function getEliteExtraSettings(eliteExtraId) {
     const eliteExtraSettingResults = {};
     const eliteExtraSettingsSearch = search.lookupFields({
@@ -339,13 +341,30 @@ define([
         "custrecord_bsp_create_order_ep_url",
       ],
     });
-     eliteExtraSettingResults["endpointURL"] =
+    eliteExtraSettingResults["endpointURL"] =
       eliteExtraSettingsSearch["custrecord_bsp_create_order_ep_url"];
-      eliteExtraSettingResults["authorization"] =
+    eliteExtraSettingResults["authorization"] =
       eliteExtraSettingsSearch["custrecord_bsp_isg_based64encoding"];
 
-
     return eliteExtraSettingResults;
+  }
+
+  function showResponseToUser(response) {
+    if (response[0].failed == false) {
+      const infoMessage = message.create({
+        title: "CONFIRMATION",
+        message: "Orders has been uploaded successfully",
+        type: message.Type.CONFIRMATION,
+      });
+      infoMessage.show();
+    } else {
+      const infoMessage = message.create({
+        title: "FAILED",
+        message: "Failed to upload order",
+        type: message.Type.ERROR,
+      });
+      infoMessage.show();
+    }
   }
 
   function isEmpty(stValue) {
@@ -362,44 +381,6 @@ define([
     );
   }
 
-  function getSoInvoice(soId) {
-    try {
-      let invoiceId = "";
-      const fil1 = search.createFilter({
-        name: "createdfrom",
-        operator: search.Operator.IS,
-        values: soId,
-      });
-
-      const fil2 = search.createFilter({
-        name: "mainline",
-        operator: search.Operator.IS,
-        values: true,
-      });
-
-      const internalId = search.createColumn({
-        name: "internalid",
-      });
-
-      const type = search.createColumn({
-        name: "type",
-      });
-
-      const invoiceSearch = search.create({
-        type: search.Type.SALES_ORDER,
-        filters: [fil1, fil2],
-        columns: [internalId, type],
-      });
-      invoiceSearch.run().each(function (result) {
-        invoiceId = result.id;
-        return true;
-      });
-
-      return invoiceId;
-    } catch (e) {
-      log.error(e.message);
-    }
-  }
 
   function formatDateTime(date) {
     const dateTime = format.format({
@@ -417,5 +398,6 @@ define([
     isEmpty: isEmpty,
     sendOrderDetails: sendOrderDetails,
     getEliteExtraSettings: getEliteExtraSettings,
+    showResponseToUser: showResponseToUser,
   };
 });

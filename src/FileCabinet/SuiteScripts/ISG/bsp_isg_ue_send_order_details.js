@@ -52,7 +52,7 @@ define(["N/search", "N/record", "N/runtime"], /**
         context.form.addButton({
           id: "custpage_send_order_details",
           label: "Upload Order",
-          functionName: `sendOrderDetails(${ifId},${eliteExtraSettings})`,
+          functionName: `validateTrackingInformation(${ifId},${eliteExtraSettings})`,
         });
       }
     } catch (e) {
