@@ -41,6 +41,7 @@ define(['N/runtime', 'N/search', 'N/task', './Lib/bsp_isg_transmitions_util.js',
                 let transmitionSavedSearchID = transmitionRecFields.savedSearch;  
                 let vendor = transmitionRecFields.vendor;
                 let autoreceive = transmitionRecFields.autoreceive;
+                let adot = transmitionRecFields.adot;
                 let account = transmitionRecFields.accountNumber;
                 let transmissionLocation = transmitionRecFields.location;
 
@@ -71,6 +72,7 @@ define(['N/runtime', 'N/search', 'N/task', './Lib/bsp_isg_transmitions_util.js',
                         customer: customer,
                         shipaddress1: shipaddress1,
                         autoreceive: autoreceive,
+                        adot: adot,
                         account: account,
                         transmissionLocation: transmissionLocation
                     });           
@@ -138,6 +140,7 @@ define(['N/runtime', 'N/search', 'N/task', './Lib/bsp_isg_transmitions_util.js',
                 let account = BSPTransmitionsUtil.getAccountNumber(customer, vendor, shipaddress1, commonData.account);
                 let routeCode = commonData.routeCode;
                 let autoreceive = commonData.autoreceive;
+                let adot = commonData.adot;
                 let transmissionLocation = commonData.transmissionLocation;
                 let transactionForm = commonData.transactionForm;
                 let poData = {
@@ -149,6 +152,7 @@ define(['N/runtime', 'N/search', 'N/task', './Lib/bsp_isg_transmitions_util.js',
                     routeCode: routeCode,
                     autoreceive: autoreceive, 
                     account: account,
+                    adot: adot,
                     transmissionLocation: transmissionLocation,
                     itemData: itemData
                 };

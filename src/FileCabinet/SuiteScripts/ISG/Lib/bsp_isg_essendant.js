@@ -38,9 +38,13 @@
                 let processStatus = processPO(poID, jsonObjResponse);
                 if(processStatus == STATUS_CODES.processStatusOK){
                     BSP_POutil.updatePOtransmissionStatus(poID, BSP_POutil.transmitionPOStatus().acknowledged);
+                    result.status = "Ok";
+                }else{
+                    result.status = "Error";
                 }
             }else if(poAcknowledgmentStatus.ReasonCode == STATUS_CODES.processedWithErrors){
                 BSP_POutil.deletePO(poID);
+                result.status = "Error";
             }
             log.debug(stLogTitle, `PO ID ${poID} has ben processed`);
         }

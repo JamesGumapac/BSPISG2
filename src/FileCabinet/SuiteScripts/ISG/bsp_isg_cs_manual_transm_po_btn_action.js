@@ -1,14 +1,15 @@
 /**
- * @NApiVersion 2.x
+ * @NApiVersion 2.1
  * @NScriptType ClientScript
  * @NModuleScope SameAccount
  */
-define(['N/ui/message', 'N/url'],
+define(['N/ui/message', 'N/url', 'N/record'],
 /**
  * @param{message} message
  * @param{url} url
+ * @param{record} record
  */
-function(message, url) {
+function(message, url, record) {
     
     /**
      * Function to be executed after page is initialized.
@@ -21,44 +22,75 @@ function(message, url) {
      */
     function pageInit(scriptContext) {}
 
-
     function transmitPO(purchaseOrderRecID){
         let stLogTitle = "transmitPO";
         try{
-            console.log(stLogTitle, JSON.stringify(purchaseOrderRecID));
-
-            let msg = message.create({
-                title: "Confirmation",
-                message: "Purchase Order sent for Transmission",
-                type: message.Type.CONFIRMATION
-            });     
-            msg.show({
-                duration: 10000
-            });   
-            setTimeout(10000);
-
-            let parameters = {
-                purchaseOrderRecID: purchaseOrderRecID
-            };
-
-            let stSuiteletUrl = url.resolveScript({
-                scriptId: 'customscript_bsp_isg_sl_manual_transm',
-                deploymentId: 'customdeploy_bsp_isg_sl_manual_transm',
-                returnExternalUrl: false,
-            });
-      
-            let suiteletUrl = url.format(stSuiteletUrl, parameters);
-            window.ischanged = false;
-            window.open(suiteletUrl, '_self');            
-            return true;
+            if(validTransmission(purchaseOrderRecID)){
+                let msg = message.create({
+                    title: "Confirmation",
+                    message: "Purchase Order sent for Transmission",
+                    type: message.Type.CONFIRMATION
+                });     
+                msg.show({
+                    duration: 10000
+                });   
+                setTimeout(10000);
+    
+                let parameters = {
+                    purchaseOrderRecID: purchaseOrderRecID
+                };
+    
+                let stSuiteletUrl = url.resolveScript({
+                    scriptId: 'customscript_bsp_isg_sl_manual_transm',
+                    deploymentId: 'customdeploy_bsp_isg_sl_manual_transm',
+                    returnExternalUrl: false,
+                });
+          
+                let suiteletUrl = url.format(stSuiteletUrl, parameters);
+                window.ischanged = false;
+                window.open(suiteletUrl, '_self');            
+                return true;
+            }else{
+                return false;
+            }
         }catch (error) {
             console.log(stLogTitle, JSON.stringify(error));
         }
     }
 
+    function validTransmission(purchaseOrderRecID) {
+        var poRec = record.load({
+            type: record.Type.PURCHASE_ORDER,
+            id: parseInt(purchaseOrderRecID)
+        });
+        let itemCount = poRec.getLineCount({
+            sublistId: 'item'
+        });
+        for(let i = 0; i < itemCount; i++){
+            let customer = poRec.getSublistValue({
+                sublistId: 'item',
+                fieldId: 'customer',
+                line: i
+            }) 
+            if(!customer){
+                alert("Customer information is missing in one of the item lines");
+                return false;
+            }
+        }
+
+        let account = poRec.getValue('custbody_bsp_isg_transmission_acct_num');
+        if(!account){
+            alert("Please select an Account Number to transmit this PO");
+            return false;
+        }
+
+        return true;
+    }   
+
     return {
         pageInit: pageInit,
-        transmitPO: transmitPO
+        transmitPO: transmitPO,
+        validTransmission: validTransmission
     };
     
 });

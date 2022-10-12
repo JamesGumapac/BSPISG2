@@ -10,7 +10,8 @@
         pendingAcknowledment: 2,
         acknowledged: 3,
         transmissionFailed: 4,
-        transmitting: 5
+        transmitting: 5,
+        acknowledgmentFailed: 6
     });
 
     /**
@@ -79,6 +80,7 @@
                 columns:
                 [
                    search.createColumn({name: "tranid", label: "Document Number"}),
+                   search.createColumn({name: "custbody_bsp_isg_order_type", label: "Order Type"}),
                    search.createColumn({name: "custbody_bsp_isg_route_code", label: "Route Code"}),
                    search.createColumn({name: "line", label: "Line ID"}),
                    search.createColumn({name: "item", label: "Item"}),
@@ -88,7 +90,8 @@
                    search.createColumn({name: "trandate", label: "Date"}),
                    search.createColumn({name: "createdfrom", label: "Sales Order"}),
                    search.createColumn({name: "custbody_bsp_isg_transmission_acct_num", label: "Account Number"}),
-                   search.createColumn({name: "custbody_bsp_isg_transmission_loc", label: "Transmission Location"}),         
+                   search.createColumn({name: "custbody_bsp_isg_transmission_loc", label: "Transmission Location"}),
+                   search.createColumn({name: "custbody_bsp_isg_adot", label: "Adot"}),         
                    search.createColumn({
                       name: "entityid",
                       join: "customer",
@@ -145,6 +148,7 @@
                 columns:
                 [
                    search.createColumn({name: "tranid", label: "Document Number"}),
+                   search.createColumn({name: "custbody_bsp_isg_order_type", label: "Order Type"}),
                    search.createColumn({name: "custbody_bsp_isg_route_code", label: "Route Code"}),
                    search.createColumn({name: "line", label: "Line ID"}),
                    search.createColumn({name: "item", label: "Item"}),
@@ -154,7 +158,8 @@
                    search.createColumn({name: "trandate", label: "Date"}),
                    search.createColumn({name: "createdfrom", label: "Sales Order"}),
                    search.createColumn({name: "custbody_bsp_isg_transmission_acct_num", label: "Account Number"}),
-                   search.createColumn({name: "custbody_bsp_isg_transmission_loc", label: "Transmission Location"}),         
+                   search.createColumn({name: "custbody_bsp_isg_transmission_loc", label: "Transmission Location"}), 
+                   search.createColumn({name: "custbody_bsp_isg_adot", label: "Adot"}),    
                    search.createColumn({
                       name: "entityid",
                       join: "customer",
@@ -204,6 +209,7 @@
         poResultList.forEach(element => {
             let purchaseOrderID = element.id;
             let purchaseOrderNumber = element.getValue("tranid");
+            let orderType = element.getText("custbody_bsp_isg_order_type");
             let purchaseOrderDate = element.getValue("trandate");
             let salesOrderID = element.getValue("createdfrom");
             let salesOrder = element.getText("createdfrom");
@@ -214,6 +220,7 @@
             let accountNumberText = element.getText("custbody_bsp_isg_transmission_acct_num");
             let locationID = element.getValue("custbody_bsp_isg_transmission_loc");
             let locationText = element.getText("custbody_bsp_isg_transmission_loc");
+            let adot = element.getText("custbody_bsp_isg_adot");
             let customer = {
                 companyName: element.getValue({name: "entityid", join: "customer"}),
                 addressee: element.getValue({name: "addressee", join: "customer"}),
@@ -239,6 +246,7 @@
                 purchaseOrderList.push({
                     purchaseOrderID: purchaseOrderID,
                     purchaseOrderNumber: purchaseOrderNumber,
+                    orderType: orderType,
                     purchaseOrderDate: getXMLDate(new Date(purchaseOrderDate)),
                     salesOrderID: salesOrderID,
                     salesOrder: salesOrder,
@@ -248,6 +256,7 @@
                     customer: customer,
                     account: {id:accountNumberID, text: accountNumberText},
                     transmissionLocation: {id:locationID, text: locationText},
+                    adot: adot,
                     items: [item]
                 })
            }
@@ -307,6 +316,11 @@
         purchaseOrderRec.setValue({
             fieldId: "custbody_bsp_isg_autoreceived",
             value: poData.autoreceive,
+        });
+
+        purchaseOrderRec.setValue({
+            fieldId: "custbody_bsp_isg_adot",
+            value: poData.adot,
         });
 
         purchaseOrderRec.setValue({
@@ -373,7 +387,7 @@
     }
 
     /**
-     * This function deletes a PO record when the PO is rejected.
+     * This function deletes a PO record when the PO is rejected. (Only delete POs from Automatic transmissions)
      * @param poID - The internal ID of the PO record
     */
     function deletePO(poID){
@@ -466,10 +480,10 @@
         let poFields = search.lookupFields({
             type: record.Type.PURCHASE_ORDER,
             id: parseInt(poID),
-            columns: ['custbody_bsp_isg_essendant_adot', 'custbody_bsp_isg_transmission_acct_num']
+            columns: ['custbody_bsp_isg_adot', 'custbody_bsp_isg_transmission_acct_num']
         });
-        if(poFields && poFields.custbody_bsp_isg_essendant_adot){
-            fields.essendantADOT = poFields.custbody_bsp_isg_essendant_adot;
+        if(poFields && poFields.custbody_bsp_isg_adot){
+            fields.adot = poFields.custbody_bsp_isg_adot[0].text;
         }
         if(poFields && poFields.custbody_bsp_isg_transmission_acct_num){
             fields.accountNumber = poFields.custbody_bsp_isg_transmission_acct_num[0];
