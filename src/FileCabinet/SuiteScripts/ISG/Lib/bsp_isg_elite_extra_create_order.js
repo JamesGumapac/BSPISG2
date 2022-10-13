@@ -6,7 +6,6 @@
 define([
   "N/record",
   "N/runtime",
-  "N/message",
   "N/search",
   "N/http",
   "N/format",
@@ -16,18 +15,21 @@ define([
  * @param{record} record
  * @param{runtime} runtime
  * @param{search} search
+ * @param{message} message
  * @param{http} http
  */ function (
   record,
   runtime,
-  message,
   search,
   http,
   format,
   https,
   BSPEliteExtraAPIService
 ) {
-  // get the object from ITEM_FULFILLMENT and SALES_ORDER
+  /**
+   * Get the item IF and SO details and create an object with it
+   * @param {*} ifRecId
+   */
   function getIfDetails(ifRecId) {
     try {
       const ifRec = record.load({
@@ -148,9 +150,13 @@ define([
     }
   }
 
+  /**
+   * Create XML body from IF and SO and send the request using Elite Extra settings
+   * @param {*} ifId
+   * @param {*} eliteExtraId
+   */
   function sendOrderDetails(ifId, eliteExtraId) {
     try {
-      //Get SO and IF Information and store it to an object
       const orderObj = getIfDetails(ifId);
       const headerFieldsInfo = [orderObj.orderHeaderFields];
       const lineItemInfo = orderObj.itemLineInfo;
@@ -284,21 +290,29 @@ define([
     <phone_number></phone_number>
     <duration></duration>
 </order>`;
+
       const eliteExtraSettings = getEliteExtraSettings(eliteExtraId);
-      const uploadResponse = BSPEliteExtraAPIService.uploadOrder(
+      const uploadResponse = BSPEliteExtraAPIService.runService(
         ifId,
         eliteExtraId,
         orderXML,
         eliteExtraSettings
       );
-      //update tracking information in IF
-      return updateIF(uploadResponse, ifId);
+
+      //update tracking information and tracking link in IF
+      return updateIF(uploadResponse, ifId,eliteExtraSettings.trackingLink);
     } catch (e) {
       log.error(e.message);
     }
   }
 
-  function updateIF(res, ifId) {
+  /**
+   * Update IF tracking information
+   * @param {*} res
+   * @param {*} ifId
+   * @param {*} trackingLink
+   */
+  function updateIF(res, ifId,trackingLink) {
     const response = res.body;
     const resString = [response];
     const resBody = JSON.parse(resString[0]);
@@ -309,7 +323,7 @@ define([
         id: ifId,
         values: {
           custbody_bsp_tracking_number: resBody.tracking,
-          custbody_bsp_filename: resBody.filename,
+          custbody_bsp_tracking_link: trackingLink + resBody.tracking,
         },
       });
       log.debug("IF ID: " + ifUpdateId + " Updated", [
@@ -317,7 +331,7 @@ define([
         resBody.filename,
       ]);
       message.push({
-        message: "Order has been created successfully",
+        message: "Order has been created successfully. Please refresh the page",
         failed: false,
       });
     } else {
@@ -330,7 +344,10 @@ define([
     return message;
   }
 
-  //Load eliteExtra Settings
+  /**
+   * Load elite extra settings
+   * @param {*} eliteExtraId
+   */
   function getEliteExtraSettings(eliteExtraId) {
     const eliteExtraSettingResults = {};
     const eliteExtraSettingsSearch = search.lookupFields({
@@ -339,34 +356,23 @@ define([
       columns: [
         "custrecord_bsp_isg_based64encoding",
         "custrecord_bsp_create_order_ep_url",
+        "custrecord_bsp_order_tracking_link",
       ],
     });
     eliteExtraSettingResults["endpointURL"] =
       eliteExtraSettingsSearch["custrecord_bsp_create_order_ep_url"];
     eliteExtraSettingResults["authorization"] =
       eliteExtraSettingsSearch["custrecord_bsp_isg_based64encoding"];
+    eliteExtraSettingResults["trackingLink"] =
+      eliteExtraSettingsSearch["custrecord_bsp_order_tracking_link"];
 
     return eliteExtraSettingResults;
   }
 
-  function showResponseToUser(response) {
-    if (response[0].failed == false) {
-      const infoMessage = message.create({
-        title: "CONFIRMATION",
-        message: "Orders has been uploaded successfully",
-        type: message.Type.CONFIRMATION,
-      });
-      infoMessage.show();
-    } else {
-      const infoMessage = message.create({
-        title: "FAILED",
-        message: "Failed to upload order",
-        type: message.Type.ERROR,
-      });
-      infoMessage.show();
-    }
-  }
-
+  /**
+   * Check if empty string is passed
+   * @param {*} stValue
+   */
   function isEmpty(stValue) {
     return (
       stValue === "" ||
@@ -381,7 +387,10 @@ define([
     );
   }
 
-
+  /**
+   * format the date time into ISO 8601 format and set the timezone to newyork
+   * @param {*} date
+   */
   function formatDateTime(date) {
     const dateTime = format.format({
       value: new Date(date),
@@ -398,6 +407,5 @@ define([
     isEmpty: isEmpty,
     sendOrderDetails: sendOrderDetails,
     getEliteExtraSettings: getEliteExtraSettings,
-    showResponseToUser: showResponseToUser,
   };
 });

@@ -20,8 +20,12 @@ define([
    */
   function pageInit(scriptContext) {}
 
+  /**
+   * check if tracking number is existing to prompt user for confirmation to re-upload order details if it is existing
+   *@param {*}eliteExtraId
+   *@param {*} ifId
+   */
   function validateTrackingInformation(ifId, eliteExtraId) {
-    //check if tracking number is existing to prompt user for confirmation to re-upload order details if existing
     const trackingNumberSearch = search.lookupFields({
       type: "itemfulfillment",
       id: ifId,
@@ -40,7 +44,7 @@ define([
         if (result === true) {
           alert("Uploading Order Please wait...");
           const response = BSPExliteExtra.sendOrderDetails(ifId, eliteExtraId);
-          BSPExliteExtra.showResponseToUser(response);
+          showResponseToUser(response);
         }
       }
 
@@ -48,7 +52,28 @@ define([
     } else {
       alert("Uploading Order Please wait...");
       const response = BSPExliteExtra.sendOrderDetails(ifId, eliteExtraId);
-      BSPExliteExtra.showResponseToUser(response);
+      showResponseToUser(response);
+    }
+  }
+  /**
+   * Show response to the user if the was successfully uploaded or not
+   * @param {*} response
+   */
+  function showResponseToUser(response) {
+    if (response[0].failed == false) {
+      const infoMessage = message.create({
+        title: "CONFIRMATION",
+        message: response[0].message,
+        type: message.Type.CONFIRMATION,
+      });
+      infoMessage.show();
+    } else {
+      const infoMessage = message.create({
+        title: "FAILED",
+        message: response[0].message,
+        type: message.Type.ERROR,
+      });
+      infoMessage.show();
     }
   }
 
