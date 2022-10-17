@@ -122,7 +122,7 @@ define([
           vendor
         );
       } else {
-        //create item if not existing data
+      
         BSPUpdatePricing.createItem(
           pricingToUpdateDataObj.itemId,
           pricingToUpdateDataObj.purchasePrice,

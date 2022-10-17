@@ -242,7 +242,7 @@ function moveFolderToDone(fileId, folderId) {
       value: false,
     });
     log.debug("Item Record ", itemRec);
-    //item rec
+
    // return itemRec.save({ ignoreErrors: true });
   }
 
