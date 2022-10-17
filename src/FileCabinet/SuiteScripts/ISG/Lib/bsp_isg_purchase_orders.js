@@ -491,6 +491,29 @@
         return fields;
     }
 
+
+    /**
+     * This function takes a PO ID and returns a Vendor Bill record.
+     * @param poID - The internal ID of the Purchase Order record
+     * @returns A Vendor Bill Record
+    */
+    function createBillFromPO(poID) {
+        let functionName = "createBillFromPO";
+        let vendorBillRec = null;
+        try{        
+            vendorBillRec = record.transform({
+                fromType: record.Type.PURCHASE_ORDER,
+                fromId: parseInt(poID),
+                toType: record.Type.VENDOR_BILL,
+            });
+        }catch(error){
+            log.error(functionName, "Error creating Vendor Bill Record: " + JSON.stringify(error.message));
+            return null;
+        }
+
+        return vendorBillRec;
+    }
+
     /**
      * Get all results from a saved search
      * @param {*} objSavedSearch 
@@ -551,6 +574,7 @@
         findPObyNumber: findPObyNumber,
         getQueueOfPO: getQueueOfPO,
         getVendor: getVendor,
-        getTransmissionFields: getTransmissionFields
+        getTransmissionFields: getTransmissionFields,
+        createBillFromPO: createBillFromPO
 	};
 });

@@ -792,5 +792,9 @@ This is a 5-digit integer value, unique for each ProcessPurchaseOrder. You may s
       <tabparent></tabparent>
       <tabtitle>Locations</tabtitle>
     </subtab>
+    <subtab scriptid="tab_162_t927173_884">
+      <tabparent></tabparent>
+      <tabtitle>Options</tabtitle>
+    </subtab>
   </subtabs>
 </customrecordtype>

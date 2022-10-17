@@ -65,13 +65,15 @@
                 }
 
              }else if(isInvoice(jsonObjResponse)){
+                let result = null;
                 if(isInvoiceSPR(jsonObjResponse)){
                     log.debug(functionName, `This is an Invoice from SPR`);
-
+                    result = BSPTradingParnters.processInvoice(jsonObjResponse, BSPTradingParnters.constants().spr);
                 }else if(isInvoiceEssendant(jsonObjResponse)){
                     log.debug(functionName, `This is an Invoice from Essendant`);
-                    
-                }        
+                    result = BSPTradingParnters.processInvoice(jsonObjResponse, BSPTradingParnters.constants().essendant);
+                }      
+                log.debug(functionName, "Invoice processed: " + JSON.stringify(result));
              }
 
              response = {
@@ -88,6 +90,11 @@
          return response;
     }
 
+    /**
+     * Checks if the JSON object is a PO acknowledgment.
+     * @param jsonObjResponse - The JSON object that is returned from the API call.
+     * @returns A boolean value.
+    */
     const isPOAcknowledgment = (jsonObjResponse) => {
 
         /**
@@ -111,6 +118,11 @@
         return false;
     }
 
+    /**
+     * Checks if the JSON object is an Invoice.
+     * @param jsonObjResponse - The JSON object that is returned from the API call.
+     * @returns A boolean value.
+    */   
     const isInvoice = (jsonObjResponse) => {
 
         /**
@@ -133,7 +145,7 @@
     }
 
     /**
-     * It returns true if the trading partner name is equal to the constant value "spr".
+     * It returns true if the trading partner name of the Acknowledgment is equal to the constant value "spr".
      * @param jsonObjResponse - The JSON object that is returned from the API call.
      * @returns A boolean value.
     */
@@ -148,6 +160,11 @@
         return false;
     }
 
+    /**
+     * It returns true if the trading partner name of the Invoice is equal to the constant value "spr".
+     * @param jsonObjResponse - The JSON object that is returned from the API call.
+     * @returns A boolean value.
+    */
     function isInvoiceSPR(jsonObjResponse){
         let invoiceSPR = jsonObjResponse.Invoice;
         if(invoiceSPR){
@@ -157,7 +174,7 @@
     }
 
     /**
-     * It returns true if the trading partner name is equal to the constant value "spr".
+     * It returns true if the trading partner name of the Acknowledgment is equal to the constant value "Essendant Inc".
      * @param jsonObjResponse - The JSON object that is returned from the API call.
      * @returns A boolean value.
     */
@@ -169,6 +186,11 @@
         return false;
     }
 
+    /**
+     * It returns true if the trading partner name of the Invoice is equal to the constant value "Essendant Inc".
+     * @param jsonObjResponse - The JSON object that is returned from the API call.
+     * @returns A boolean value.
+    */
     function isInvoiceEssendant(jsonObjResponse){
         let invoiceEssendant = jsonObjResponse.ShowInvoice;
         if(invoiceEssendant){

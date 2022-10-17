@@ -13,6 +13,11 @@
         processStatusError: 0,
     });
 
+    /************************************************************
+     * 
+     *                   ACKNOWLEDGMENT LOGIC
+     *
+     * ***********************************************************/
 
     /**
      * If the PO is processed successfully, then process the PO. If the PO is processed with errors, then
@@ -138,12 +143,6 @@
         return processStatus;
     }
 
-    /**
-     * If the PO Lines has more than one element, return the array, otherwise return the first element of the
-     * array.
-     * @param jsonObjResponse - This is the JSON object that is returned from the API call.
-     * @returns An array of objects.
-     */
     function getPOlines(jsonObjResponse){
         let poLines = [];
         let ackPurchaseOrderLines = getAcknowledgmentPOLines(jsonObjResponse);
@@ -155,12 +154,6 @@
         return poLines;
     }
 
-    /**
-     * It returns the value of the field parameter from the jsonObjResponse parameter.
-     * @param jsonObjResponse - The JSON object that is returned from the service.
-     * @param field - ID or Status
-     * @returns property of JSON object response
-     */
     function getAcknowledgmentPOHeaderData(jsonObjResponse, field){
         switch (field) {
             case "ID": 
@@ -171,24 +164,10 @@
         return null;
     }
 
-    /**
-     * Return the PO Lines from the PO Acknoweldgment response.
-     * @param jsonObjResponse - The JSON object that is returned from the service.
-     * @returns Purchase Order Lines.
-     */
     function getAcknowledgmentPOLines(jsonObjResponse){
         return jsonObjResponse.DataArea.PurchaseOrder.PurchaseOrderLine;
     }
 
-    /**
-     * It takes an array of items returned from the acknowledgment and returns the first object in the array that has a
-     * property with a value equal to the item ID passed as a parameter.
-     * 
-     * If no object is found, it returns null.
-     * @param ackPOlines - an array of objects that contain the item information
-     * @param item - the item name
-     * @returns the element that matches the item name.
-     */
     function getAcknowledmentItem(ackPOlines, item){
         for (let index = 0; index < ackPOlines.length; index++) {
             let element = ackPOlines[index];
@@ -201,7 +180,131 @@
     }
 
 
+    /************************************************************
+     * 
+     *                     INVOICING LOGIC
+     *
+     * ***********************************************************/
+
+    /**
+     * It creates a vendor bill from a purchase order, then processes the vendor bill.
+     * @param jsonObjResponse - The JSON object that is returned from the API call.
+     * @returns The result object is being returned.
+    */
+    function processInvoice(jsonObjResponse){
+        let stLogTitle = "Trading Partner: Essendant";
+        log.debug(stLogTitle, `Processing Invoice`);
+
+        let result = {};
+
+        let poID = getInvoiceHeaderFieldValue(jsonObjResponse, "ID");
+        log.debug(stLogTitle, `PO: ${poID}`);
+        result.poID = poID;
+        let vendorBillRec = BSP_POutil.createBillFromPO(poID);
+        if(vendorBillRec){
+            result = processVendorBill(vendorBillRec, jsonObjResponse, result);
+        }else{
+            result.status = "Error";
+        }
+        return result;
+    }
+
+    /**
+     * The function takes a vendor bill record, a JSON object containing the response from the API call,
+     * and a result object. It then gets the invoice lines from the JSON object, gets the item count from
+     * the vendor bill record, loops through the items on the vendor bill record, gets the invoice item
+     * from the invoice lines, and sets the quantity on the vendor bill record. If the item is not billed,
+     * it removes the line from the vendor bill record. If there are items on the vendor bill record, it
+     * saves the record and sets the vendor bill record ID on the result object. If there are no items on
+     * the vendor bill record, it sets the status to error and returns the result object.
+     * @param vendorBillRec - The vendor bill record that was created in the previous step.
+     * @param jsonObjResponse - The JSON response from the API call
+     * @param resultObj - This is the object that will be returned to the client script.
+     * @returns The resultObj is being returned.
+    */
+    function processVendorBill(vendorBillRec, jsonObjResponse, resultObj){
+        let invoicelines = getInvoicelines(jsonObjResponse);
+
+        let itemCount = vendorBillRec.getLineCount({
+            sublistId: 'item'
+        });
+
+        for(let i = (itemCount - 1); i >= 0; i--){
+            let item = vendorBillRec.getSublistText({
+                sublistId: 'item',
+                fieldId: 'item',
+                line: i
+            });
+            let invoiceItem = getInvoiceItem(invoicelines, item);
+            log.debug("processVendorBill", `Item ${JSON.stringify(invoiceItem)}`);
+            if(invoiceItem){
+                vendorBillRec.setSublistValue({
+                    sublistId: 'item',
+                    fieldId: 'quantity',
+                    line: i,
+                    value: parseInt(invoiceItem.Quantity)
+                });
+            }else {
+                log.debug("processVendorBill", `Item not billed`);
+                vendorBillRec.removeLine({
+                    sublistId: 'item',
+                    line: i,
+               });
+            }
+        }
+        
+        itemCount = vendorBillRec.getLineCount({
+            sublistId: 'item'
+        });
+
+        if(itemCount > 0){
+            let recID = vendorBillRec.save();
+            resultObj.vendorBillRecID = recID;
+        }else{
+            resultObj.status = "Error";
+            resultObj.vendorBillRecID = null;
+            return resultObj;
+        }
+
+        return resultObj;
+    }
+
+    function getInvoiceHeaderFieldValue(jsonObjResponse, field){
+        switch (field) {
+            case "ID": 
+                return  jsonObjResponse.DataArea.Invoice.InvoiceHeader.PurchaseOrderReference.DocumentID[field];
+        }
+        return null;
+    }
+
+    function getInvoicelines(jsonObjResponse){
+        let lines = [];
+        let invoiceLines = getLines(jsonObjResponse);
+        if(invoiceLines.length > 0){
+            lines = invoiceLines;
+        }else{
+            lines.push(invoiceLines);
+        }
+        return lines;
+    }
+
+    function getLines(jsonObjResponse){
+        return jsonObjResponse.DataArea.Invoice.InvoiceLine;
+    }
+
+    function getInvoiceItem(invoiceLines, item){
+        for (let index = 0; index < invoiceLines.length; index++) {
+            let element = invoiceLines[index];
+            let itemName = element.Item.ItemID["ID"];
+            if(item == itemName){
+                return element;
+            }
+        }
+        return null;
+    }
+
     return {
-        processPOAck: processPOAck
+        processPOAck: processPOAck,
+        processInvoice: processInvoice
 	};
 });

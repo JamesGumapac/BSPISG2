@@ -18,6 +18,11 @@
         return CONTANTS;
     }
 
+    /**
+     * If the vendor is a trading partner, return true. Otherwise, return false.
+     * @param vendor - The vendor ID of the vendor you want to check.
+     * @returns A boolean value.
+    */
     function isTradingPartner(vendor){
         const trading_partnerSearchObj = search.create({
             type: "customrecord_bsp_isg_trading_partner",
@@ -33,7 +38,11 @@
         return (searchResultCount > 0);
     }
 
-
+    /**
+     * It takes a vendor ID and returns the trading partner ID.
+     * @param vendor - The vendor ID of the vendor that you want to get the trading partner ID for.
+     * @returns The ID of the trading partner record.
+    */
     function getTradingPartnerID(vendor){
         let tradingPartnerID = null;
         log.debug("getTradingPartnerID", "Vendor: " + vendor);
@@ -179,23 +188,10 @@
     }
 
     /**
-     * "If the trading partner is essendant, then call the essendant processPOAck function, otherwise if
-     * the trading partner is spr, then call the spr processPOAck function."
-     * 
-     * @param jsonObjResponse - This is the JSON object that is returned from the server.
-     * @param tradingPartner - This is the trading partner that the PO Ack is coming from.
-     */
-    function processPOAck(jsonObjResponse, tradingPartner){
-        let result = {};
-        if(tradingPartner == CONTANTS.essendant){
-            result = ESSENDANT.processPOAck(jsonObjResponse);
-        }
-        if(tradingPartner == CONTANTS.spr){
-            result = SPR.processPOAck(jsonObjResponse);
-        }
-        return result;
-    }
-
+     * It takes a trading partner ID and returns the minimum amount for a carton PO.
+     * @param tradingPartnerID - The ID of the trading partner record.
+     * @returns The value of the field custrecord_bsp_isg_min_amount_carton_po
+    */
     function getMinAmountCartonPO(tradingPartnerID){
         let minAmount = 0.00;
 
@@ -210,15 +206,51 @@
         return minAmount;
     }
 
+    /**
+     * "If the trading partner is essendant, then call the essendant processPOAck function, otherwise if
+     * the trading partner is spr, then call the spr processPOAck function."
+     * 
+     * @param jsonObjResponse - This is the JSON object that is returned from the server.
+     * @param tradingPartner - This is the trading partner that the PO Ack is coming from.
+    */
+    function processPOAck(jsonObjResponse, tradingPartner){
+        let result = {};
+        if(tradingPartner == CONTANTS.essendant){
+            result = ESSENDANT.processPOAck(jsonObjResponse);
+        }
+        if(tradingPartner == CONTANTS.spr){
+            result = SPR.processPOAck(jsonObjResponse);
+        }
+        return result;
+    }
+
+    /**
+     * "If the trading partner is essendant, then call the essendant processInvoice function, otherwise if
+     * the trading partner is spr, then call the spr processInvoice function."
+     * 
+     * @param jsonObjResponse - This is the JSON object that is returned from the server.
+     * @param tradingPartner - This is the trading partner that the PO Ack is coming from.
+    */    
+    function processInvoice(jsonObjResponse, tradingPartner){
+        let result = {};
+        if(tradingPartner == CONTANTS.essendant){
+            result = ESSENDANT.processInvoice(jsonObjResponse);
+        }
+        if(tradingPartner == CONTANTS.spr){
+            result = SPR.processInvoice(jsonObjResponse);
+        }
+        return result;
+    }
+
     return {
         constants: constants,
         getTradingPartnerID: getTradingPartnerID,
         getTradingPartnerInfo: getTradingPartnerInfo,
         getTradingPartnerBODId: getTradingPartnerBODId,
         updateTradingPartnerBODId: updateTradingPartnerBODId,
-        isAcknowledgmentSPR: isAcknowledgmentSPR,
-        processPOAck: processPOAck,
         isTradingPartner: isTradingPartner,
-        getMinAmountCartonPO: getMinAmountCartonPO
+        getMinAmountCartonPO: getMinAmountCartonPO,
+        processPOAck: processPOAck,
+        processInvoice: processInvoice
 	};
 });
