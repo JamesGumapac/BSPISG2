@@ -19,7 +19,7 @@ define(["N/search", "N/record"], function (search, record) {
     const itemObj = []
     const iterator = fileObj.lines.iterator();
     iterator.each(function (line) {
-      const initialLineValue = line.value.replace(/"/g, '');
+      const initialLineValue = line.value.replace(/;/g, '');
       const lineValues = initialLineValue.split(",");
       itemObj.push(lineValues)
       const itemId = lineValues[2];
@@ -39,7 +39,6 @@ define(["N/search", "N/record"], function (search, record) {
       return true;
     });
     pricingToProcess.shift()
-    log.debug("itemObj", itemObj)
     //return object and remove the first element
     return pricingToProcess;
   }
@@ -72,7 +71,7 @@ define(["N/search", "N/record"], function (search, record) {
       return true;
     });
     pricingToProcess.shift()
-    log.debug("itemObj", itemObj)
+ 
     //return object and remove the first element of the array
     return pricingToProcess;
   }
@@ -242,8 +241,8 @@ function moveFolderToDone(fileId, folderId) {
       fieldId: "isonline",
       value: false,
     });
-
-    return itemRec.save({ ignoreErrors: true });
+    log.debug("Item Record ", itemRec);
+   // return itemRec.save({ ignoreErrors: true });
   }
 
   return {
@@ -252,6 +251,7 @@ function moveFolderToDone(fileId, folderId) {
     getSpRichardsItemPricingObj: getSpRichardsItemPricingObj,
     checkItemId: checkItemId,
     updateItemAndContractPlan: updateItemAndContractPlan,
+    createItem:createItem
     
   };
 });

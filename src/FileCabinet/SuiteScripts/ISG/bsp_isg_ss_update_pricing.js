@@ -2,60 +2,88 @@
  * @NApiVersion 2.1
  * @NScriptType ScheduledScript
  */
-define(["N/error", "N/file", "N/format", "N/record", "N/search"]
-/**
- * @param{error} error
- * @param{file} file
- * @param{format} format
- * @param{record} record
- * @param{search} search
- */, (error, file, format, record, search) => {
-  /**
-   * Defines the Scheduled script trigger point.
-   * @param {Object} scriptContext
-   * @param {string} scriptContext.type - Script execution context. Use values from the scriptContext.InvocationType enum.
-   * @since 2015.2
-   */
-  const execute = (scriptContext) => {
-	  try {
-		
-	  const fileSearch = search.create({
-		  type: search.Type.FOLDER,
-		  columns: [
-			  {
-				  join: "file",
-				  name: "internalid",
-			  },
-		  ],
-		  filters: [
-			  {
-				  name: "internalid",
-				  operator: "anyof",
-				  values: ["11279"],
-			  },
-		  ],
-	  });
+define(["N/error", "N/file", "N/record", "N/search", "N/runtime","./Lib/bsp_isg_schedule_update_pricing.js"], (
+	error,
+	file,
+	record,
+	search,
+	runtime,
+	BSPUpdatePricing
+) => {
+	/**
+	 * Defines the Scheduled script trigger point.
+	 * @param {Object} scriptContext
+	 * @param {string} scriptContext.type - Script execution context. Use values from the scriptContext.InvocationType enum.
+	 * @since 2015.2
+	 */
+	const execute = (scriptContext) => {
+		let folderId;
+		let isEssendant = false;
+		try {
+			
+			const scriptObj = runtime.getCurrentScript();
+			if (
+				scriptObj.deploymentId === "customdeploybsp_isg_essen_update_pricing"
+			) {
+				folderId = scriptObj.getParameter({
+					name: "custscript_bsp_isg_essendant",
+				});
+				isEssendant = true;
+			} else {
+				folderId = scriptObj.getParameter({
+					name: "custscript_bsp_isg_sp_richards",
+				});
+			}
+			
+			const fileSearch = search.create({
+				type: search.Type.FOLDER,
+				columns: [
+					{
+						join: "file",
+						name: "internalid",
+					},
+				],
+				filters: [
+					{
+						name: "internalid",
+						operator: "anyof",
+						values: folderId,
+					},
+				],
+			});
+			
+			let fileId;
+			fileSearch.run().each(function (result) {
+				fileId = result.getValue({
+					join: "file",
+					name: "internalid",
+				});
+				
+				return false;
+			});
+			
+			const FileObj = file.load({
+				id: fileId,
+			});
+			let pricingToProcess;
+			if(isEssendant === true){
+				pricingToProcess = BSPUpdatePricing.getEssendantItemPricingObj(FileObj)
+			}else{
+				pricingToProcess = BSPUpdatePricing.getSpRichardsItemPricingObj(FileObj)
+			}
+			log.debug("pricingToProcess", pricingToProcess)
+			pricingToProcess.forEach(function (item){
+				const isExisting = BSPUpdatePricing.checkItemId(item.itemId)
+				
+			})
+		} catch (e) {
+			log.error(e.message);
+			return {
+				success: false,
+				message: e.message,
+			};
+		}
+	};
 	
-	  let fileID;
-	  fileSearch.run().each(function (result) {
-		  fileID = result.getValue({
-			  join: "file",
-			  name: "internalid",
-		  });
-		
-		  //log.debug('fileID',fileID);
-		  return false;
-	  });
-	
-	  log.debug("fileID", fileID);
-	
-	  const fileObj = file.load({
-		  id: fileID,
-	  });
-		
-	  } catch (e) {
-		  log.error('execute',e.message)
-	  }
-  }
-  return { execute };
+	return {execute};
 });
