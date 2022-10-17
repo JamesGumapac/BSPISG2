@@ -10,7 +10,7 @@ define([
   "N/http",
   "N/format",
   "N/https",
-  "./bsp_isg_lb_elite_extra_api_service.js",
+  "./bsp_isg_elite_extra_api_service.js",
 ], /**
  * @param{record} record
  * @param{runtime} runtime
