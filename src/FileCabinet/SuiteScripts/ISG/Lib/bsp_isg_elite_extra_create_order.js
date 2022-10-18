@@ -322,8 +322,8 @@ define([
         type: record.Type.ITEM_FULFILLMENT,
         id: ifId,
         values: {
-          custbody_bsp_tracking_number: resBody.tracking,
-          custbody_bsp_tracking_link: trackingLink + resBody.tracking,
+          custbody_bsp_isg_tracking_number: resBody.tracking,
+          custbody_bsp_isg_tracking_link: trackingLink + resBody.tracking,
         },
       });
       log.debug("IF ID: " + ifUpdateId + " Updated", [
@@ -351,20 +351,19 @@ define([
   function getEliteExtraSettings(eliteExtraId) {
     const eliteExtraSettingResults = {};
     const eliteExtraSettingsSearch = search.lookupFields({
-      type: "customrecord_elite_extra_setting",
-      id: eliteExtraId,
+      id: "customrecord_bsp_isg_elite_extra_setting",
       columns: [
         "custrecord_bsp_isg_based64encoding",
-        "custrecord_bsp_create_order_ep_url",
-        "custrecord_bsp_order_tracking_link",
+        "custrecord_bsp_isg_create_order_ep_url",
+        "custrecord_bsp_isg_order_tracking_link",
       ],
     });
     eliteExtraSettingResults["endpointURL"] =
-      eliteExtraSettingsSearch["custrecord_bsp_create_order_ep_url"];
+      eliteExtraSettingsSearch["custrecord_bsp_isg_create_order_ep_url"];
     eliteExtraSettingResults["authorization"] =
       eliteExtraSettingsSearch["custrecord_bsp_isg_based64encoding"];
     eliteExtraSettingResults["trackingLink"] =
-      eliteExtraSettingsSearch["custrecord_bsp_order_tracking_link"];
+      eliteExtraSettingsSearch["custrecord_bsp_isg_order_tracking_link"];
 
     return eliteExtraSettingResults;
   }

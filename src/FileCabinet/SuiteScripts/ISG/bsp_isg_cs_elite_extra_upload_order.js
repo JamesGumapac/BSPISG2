@@ -29,11 +29,11 @@ define([
     const trackingNumberSearch = search.lookupFields({
       type: "itemfulfillment",
       id: ifId,
-      columns: ["custbody_bsp_tracking_number"],
+      columns: ["custbody_bsp_isg_tracking_number"],
     });
 
     if (
-      !BSPExliteExtra.isEmpty(trackingNumberSearch.custbody_bsp_tracking_number)
+      !BSPExliteExtra.isEmpty(trackingNumberSearch.custbody_bsp_isg_tracking_number)
     ) {
       let options = {
         title: "Order already exists. Do you want to re-upload it?",
