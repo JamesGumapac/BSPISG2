@@ -303,7 +303,7 @@
      * - location
      */
     function getFieldsFromTransmitionRecord(transmitionRecID){
-        let savedSearch, vendor, location, autoreceive, accountNumber, essendantADOT = null;
+        let savedSearch, vendor, location, autoreceive, accountNumber, adot = null;
 
         let transmitionFieldsObj = search.lookupFields({
             type: "customrecord_bsp_isg_transmission",
@@ -314,7 +314,7 @@
                 'custrecord_bsp_lb_transmition_loc', 
                 'custrecord_bsp_autoreceive',
                 'custrecord_bsp_lb_acct_number',
-                'custrecord_bsp_lb_essendant_adot'
+                'custrecord_bsp_isg_adot'
             ]
         });
 
@@ -334,8 +334,8 @@
             if(!(isEmpty(transmitionFieldsObj.custrecord_bsp_lb_acct_number))){
                 accountNumber = transmitionFieldsObj.custrecord_bsp_lb_acct_number[0];
             }  
-            if(!(isEmpty(transmitionFieldsObj.custrecord_bsp_lb_essendant_adot))){
-                essendantADOT = transmitionFieldsObj.custrecord_bsp_lb_essendant_adot;
+            if(!(isEmpty(transmitionFieldsObj.custrecord_bsp_isg_adot))){
+                adot = transmitionFieldsObj.custrecord_bsp_isg_adot[0].text;
             }      
         }
         
@@ -346,7 +346,7 @@
             location: location, 
             autoreceive: autoreceive,
             accountNumber: accountNumber,
-            essendantADOT: essendantADOT
+            adot: adot
         };
 
 		return transmitionFields;

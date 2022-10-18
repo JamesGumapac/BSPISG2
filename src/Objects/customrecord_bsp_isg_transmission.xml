@@ -196,7 +196,7 @@
       <storevalue>T</storevalue>
       <subtab></subtab>
     </customrecordcustomfield>
-    <customrecordcustomfield scriptid="custrecord_bsp_lb_essendant_adot">
+    <customrecordcustomfield scriptid="custrecord_bsp_isg_adot">
       <accesslevel>2</accesslevel>
       <allowquickadd>F</allowquickadd>
       <applyformatting>F</applyformatting>
@@ -210,7 +210,7 @@
       <displaywidth></displaywidth>
       <dynamicdefault></dynamicdefault>
       <encryptatrest>F</encryptatrest>
-      <fieldtype>TEXT</fieldtype>
+      <fieldtype>SELECT</fieldtype>
       <globalsearch>F</globalsearch>
       <help></help>
       <isformula>F</isformula>
@@ -221,17 +221,17 @@
       <maxlength></maxlength>
       <maxvalue></maxvalue>
       <minvalue></minvalue>
-      <onparentdelete></onparentdelete>
+      <onparentdelete>NO_ACTION</onparentdelete>
       <parentsubtab></parentsubtab>
       <rolerestrict>F</rolerestrict>
       <searchcomparefield></searchcomparefield>
       <searchdefault></searchdefault>
       <searchlevel>2</searchlevel>
-      <selectrecordtype></selectrecordtype>
+      <selectrecordtype>[scriptid=customrecord_bsp_isg_tp_adot_options]</selectrecordtype>
       <showinlist>F</showinlist>
-      <sourcefilterby></sourcefilterby>
-      <sourcefrom></sourcefrom>
-      <sourcelist></sourcelist>
+      <sourcefilterby>[scriptid=customrecord_bsp_isg_tp_adot_options.custrecord_bsp_isg_adot_parent_tp]</sourcefilterby>
+      <sourcefrom>[scriptid=custentity_bsp_isg_trading_part_settings]</sourcefrom>
+      <sourcelist>[scriptid=customrecord_bsp_isg_transmission.custrecord_bsp_lb_vendor_account]</sourcelist>
       <storevalue>T</storevalue>
       <subtab></subtab>
     </customrecordcustomfield>
