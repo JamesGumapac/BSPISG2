@@ -1,0 +1,19 @@
+<centercategory scriptid="custcentercategory_bsp_isg_integration_recs">
+  <center>BASIC</center>
+  <centertab>[scriptid=custcentertab_bsp_isg]</centertab>
+  <label>Integration Records</label>
+  <links>
+    <link>
+      <linklabel>EDI Service Logs</linklabel>
+      <linkobject>[scriptid=customrecord_bsp_isg_edi_service_logs]</linkobject>
+      <linktasktype>LIST</linktasktype>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linklabel>Error Logs</linklabel>
+      <linkobject>[scriptid=customrecord_bsp_isg_transm_error_logs]</linkobject>
+      <linktasktype>LIST</linktasktype>
+      <shortlist>F</shortlist>
+    </link>
+  </links>
+</centercategory>

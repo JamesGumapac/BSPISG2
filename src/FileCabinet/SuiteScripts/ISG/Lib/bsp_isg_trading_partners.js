@@ -18,20 +18,53 @@
         return CONTANTS;
     }
 
+    /**
+     * If the vendor is a trading partner, return true. Otherwise, return false.
+     * @param vendor - The vendor ID of the vendor you want to check.
+     * @returns A boolean value.
+    */
     function isTradingPartner(vendor){
-        let result = false;
-
-        let vendorFieldsObj = search.lookupFields({
-            type: record.Type.VENDOR,
-            id: vendor,
-            columns: 'custentity_bsp_isg_trading_part_settings'
+        const trading_partnerSearchObj = search.create({
+            type: "customrecord_bsp_isg_trading_partner",
+            filters:
+            [
+               ["custrecord_bsp_isg_tp_vendor","anyof",vendor], 
+               "AND", 
+               ["isinactive","is","F"]
+            ],
+            columns:[]
         });
-        if(vendorFieldsObj && vendorFieldsObj.custentity_bsp_isg_trading_part_settings && vendorFieldsObj.custentity_bsp_isg_trading_part_settings.length > 0){
-            result = true;
-        }
-        return result;
+        var searchResultCount = trading_partnerSearchObj.runPaged().count;
+        return (searchResultCount > 0);
     }
 
+    /**
+     * It takes a vendor ID and returns the trading partner ID.
+     * @param vendor - The vendor ID of the vendor that you want to get the trading partner ID for.
+     * @returns The ID of the trading partner record.
+    */
+    function getTradingPartnerID(vendor){
+        let tradingPartnerID = null;
+        log.debug("getTradingPartnerID", "Vendor: " + vendor);
+
+        const trading_partnerSearchObj = search.create({
+            type: "customrecord_bsp_isg_trading_partner",
+            filters:
+            [
+               ["custrecord_bsp_isg_tp_vendor","anyof",vendor], 
+               "AND", 
+               ["isinactive","is","F"]
+            ],
+            columns:[]
+         });
+
+         trading_partnerSearchObj.run().each(function(result){
+            tradingPartnerID = result.id;
+            return true;
+         });
+
+		return tradingPartnerID;
+    }
 
     /**
      * It takes a trading partner ID and returns the BOD ID associated with that trading partner.
@@ -61,101 +94,58 @@
     */
     function getTradingPartnerInfo(vendor){
         let tradingPartnerData = null;
+
         const tradingPartnerSearchObj = search.create({
-            type: "vendor",
+            type: "customrecord_bsp_isg_trading_partner",
             filters:
             [
-                ["internalid","anyof",vendor], 
-                "AND", 
-                ["isinactive","is","F"]
+               ["custrecord_bsp_isg_tp_vendor","anyof",vendor], 
+               "AND", 
+               ["isinactive","is","F"]
             ],
             columns:
             [
-                search.createColumn({
-                    name: "internalid",
-                    join: "custentity_bsp_isg_trading_part_settings",
-                    label: "Internal ID"
-                }),
-                search.createColumn({
-                    name: "name",
-                    join: "custentity_bsp_isg_trading_part_settings",
-                    label: "Name"
-                }),
-                search.createColumn({
-                    name: "custrecord_bsp_lb_as2_id",
-                    join: "custentity_bsp_isg_trading_part_settings",
-                    label: "AS2 Identifier"
-                }),
-                search.createColumn({
-                    name: "custrecord_bsp_compress_msg",
-                    join: "custentity_bsp_isg_trading_part_settings",
-                    label: "Compress Message"
-                }),
-                search.createColumn({
-                    name: "custrecord_bsp_encrypt_msg",
-                    join: "custentity_bsp_isg_trading_part_settings",
-                    label: "Encrypt Message"
-                }),
-                search.createColumn({
-                    name: "custrecord_bsp_encryption_algorithm",
-                    join: "custentity_bsp_isg_trading_part_settings",
-                    label: "Encryption Algorithm"
-                }),
-                search.createColumn({
-                    name: "custrecord_bsp_mdn_to",
-                    join: "custentity_bsp_isg_trading_part_settings",
-                    label: "MDN to"
-                }),
-                search.createColumn({
-                    name: "custrecord_bsp_sign_msg",
-                    join: "custentity_bsp_isg_trading_part_settings",
-                    label: "Sign Message"
-                }),
-                search.createColumn({
-                    name: "custrecord_bsp_signature_algorith",
-                    join: "custentity_bsp_isg_trading_part_settings",
-                    label: "Signature Algorithm"
-                }),
-                search.createColumn({
-                    name: "custrecord_bsp_lb_target_url",
-                    join: "custentity_bsp_isg_trading_part_settings",
-                    label: "Target URL"
-                }),
-                search.createColumn({
-                    name: "custrecord_bsp_template_xml_file",
-                    join: "custentity_bsp_isg_trading_part_settings",
-                    label: "Template XML file"
-                }),
-                search.createColumn({
-                    name: "custrecord_bsp_transm_output_folder_id",
-                    join: "custentity_bsp_isg_trading_part_settings",
-                    label: "Template XML file"
-                }),
-                search.createColumn({
-                name: "custrecord_bsp_trading_partner_act_code",
-                join: "custentity_bsp_isg_trading_part_settings",
-                label: "Action Code"
-                })
+               search.createColumn({name: "internalid", label: "Internal ID"}),
+               search.createColumn({
+                  name: "name",
+                  sort: search.Sort.ASC,
+                  label: "Name"
+               }),
+               search.createColumn({name: "custrecord_bsp_lb_as2_id", label: "AS2 Identifier"}),
+               search.createColumn({name: "custrecord_bsp_compress_msg", label: "Compress Message"}),
+               search.createColumn({name: "custrecord_bsp_encrypt_msg", label: "Encrypt Message"}),
+               search.createColumn({name: "custrecord_bsp_encryption_algorithm", label: "Encryption Algorithm"}),
+               search.createColumn({name: "custrecord_bsp_mdn_to", label: "MDN to"}),
+               search.createColumn({name: "custrecord_bsp_sign_msg", label: "Sign Message"}),
+               search.createColumn({name: "custrecord_bsp_signature_algorith", label: "Signature Algorithm"}),
+               search.createColumn({name: "custrecord_bsp_lb_target_url", label: "Target URL"}),
+               search.createColumn({name: "custrecord_bsp_template_xml_file", label: "Template XML file"}),
+               search.createColumn({name: "custrecord_bsp_trading_partner_act_code", label: "Action Code"}),
+               search.createColumn({name: "custrecord_bsp_edi_organization", label: "Organization AS2 Identifier"}),
+               search.createColumn({name: "custrecord_bsp_transm_output_folder_id", label: "Transmission Output folder"})
             ]
         });
+
         tradingPartnerSearchObj.run().each(function(result){
-            let id = result.getValue({name: "internalid", join: "custentity_bsp_isg_trading_part_settings"});
-            let name = result.getValue({name: "name", join: "custentity_bsp_isg_trading_part_settings"});
-            let as2Identifier = result.getValue({name: "custrecord_bsp_lb_as2_id", join: "custentity_bsp_isg_trading_part_settings"});
-            let compressMessage = result.getValue({name: "custrecord_bsp_compress_msg", join: "custentity_bsp_isg_trading_part_settings"});
-            let encryptMessage = result.getValue({name: "custrecord_bsp_encrypt_msg", join: "custentity_bsp_isg_trading_part_settings"});
-            let encryptionAlgorithm = result.getValue({name: "custrecord_bsp_encryption_algorithm", join: "custentity_bsp_isg_trading_part_settings"});
-            let mdnTo = result.getValue({name: "custrecord_bsp_mdn_to", join: "custentity_bsp_isg_trading_part_settings"});
-            let signMessage = result.getValue({name: "custrecord_bsp_sign_msg", join: "custentity_bsp_isg_trading_part_settings"});
-            let signatureAlgorithm = result.getValue({name: "custrecord_bsp_signature_algorith", join: "custentity_bsp_isg_trading_part_settings"});
-            let targetURL = result.getValue({name: "custrecord_bsp_lb_target_url", join: "custentity_bsp_isg_trading_part_settings"});
-            let xmlTemplateFileID = result.getValue({name: "custrecord_bsp_template_xml_file", join: "custentity_bsp_isg_trading_part_settings"});
-            let transmissionOutputFolderID = result.getValue({name: "custrecord_bsp_transm_output_folder_id", join: "custentity_bsp_isg_trading_part_settings"});
-            let actionCode = result.getValue({name: "custrecord_bsp_trading_partner_act_code", join: "custentity_bsp_isg_trading_part_settings"});
-            
+            let id = result.getValue({name: "internalid"});
+            let name = result.getValue({name: "name"});
+            let as2Identifier = result.getValue({name: "custrecord_bsp_lb_as2_id"});
+            let compressMessage = result.getValue({name: "custrecord_bsp_compress_msg"});
+            let encryptMessage = result.getValue({name: "custrecord_bsp_encrypt_msg"});
+            let encryptionAlgorithm = result.getValue({name: "custrecord_bsp_encryption_algorithm"});
+            let mdnTo = result.getValue({name: "custrecord_bsp_mdn_to"});
+            let signMessage = result.getValue({name: "custrecord_bsp_sign_msg"});
+            let signatureAlgorithm = result.getValue({name: "custrecord_bsp_signature_algorith"});
+            let targetURL = result.getValue({name: "custrecord_bsp_lb_target_url"});
+            let xmlTemplateFileID = result.getValue({name: "custrecord_bsp_template_xml_file"});
+            let transmissionOutputFolderID = result.getValue({name: "custrecord_bsp_transm_output_folder_id"});
+            let actionCode = result.getValue({name: "custrecord_bsp_trading_partner_act_code"});
+            let orgAS2Identifier = result.getValue({name: "custrecord_bsp_edi_organization"});
+
             tradingPartnerData = {
                 id: id,
                 name: name,
+                orgAS2Identifier: orgAS2Identifier,
                 as2Identifier: as2Identifier,
                 compressMessage: compressMessage,
                 encryptMessage: encryptMessage,
@@ -170,6 +160,7 @@
             }
             return true;
         });
+
         return tradingPartnerData;
     }
     
@@ -197,21 +188,23 @@
     }
 
     /**
-     * It returns true if the trading partner name is equal to the constant value "spr".
-     * @param jsonObjResponse - The JSON object that is returned from the API call.
-     * @returns A boolean value.
+     * It takes a trading partner ID and returns the minimum amount for a carton PO.
+     * @param tradingPartnerID - The ID of the trading partner record.
+     * @returns The value of the field custrecord_bsp_isg_min_amount_carton_po
     */
-    function isAcknowledgmentSPR(jsonObjResponse){
-        let order = jsonObjResponse.Order;
-        if(order){
-            let tradingPartnerName = order.EnterpriseCode;
-            if(!isEmpty(tradingPartnerName)){
-                return tradingPartnerName == CONTANTS.spr;
-            }
-        }
-        return false;
-    }
+    function getMinAmountCartonPO(tradingPartnerID){
+        let minAmount = 0.00;
 
+        let tpFieldsObj = search.lookupFields({
+            type: "customrecord_bsp_isg_trading_partner",
+            id: tradingPartnerID,
+            columns: 'custrecord_bsp_isg_min_amount_carton_po'
+        });
+        if(tpFieldsObj && tpFieldsObj.custrecord_bsp_isg_min_amount_carton_po){
+            minAmount = tpFieldsObj.custrecord_bsp_isg_min_amount_carton_po;
+        }
+        return minAmount;
+    }
 
     /**
      * "If the trading partner is essendant, then call the essendant processPOAck function, otherwise if
@@ -219,7 +212,7 @@
      * 
      * @param jsonObjResponse - This is the JSON object that is returned from the server.
      * @param tradingPartner - This is the trading partner that the PO Ack is coming from.
-     */
+    */
     function processPOAck(jsonObjResponse, tradingPartner){
         let result = {};
         if(tradingPartner == CONTANTS.essendant){
@@ -232,33 +225,32 @@
     }
 
     /**
-     * Check for Empty value
-     * @param {*} value 
-     * @returns 
-    */
-	function isEmpty(value) {
-		return (
-			value === "" ||
-			value == null ||
-			value == undefined ||
-			value == "null" ||
-			value == "undefined" ||
-			(value.constructor === Array && value.length == 0) ||
-			(value.constructor === Object &&
-				(function (v) {
-					for (let k in v) return false;
-					return true;
-				})(value))
-		);
-	}
+     * "If the trading partner is essendant, then call the essendant processInvoice function, otherwise if
+     * the trading partner is spr, then call the spr processInvoice function."
+     * 
+     * @param jsonObjResponse - This is the JSON object that is returned from the server.
+     * @param tradingPartner - This is the trading partner that the PO Ack is coming from.
+    */    
+    function processInvoice(jsonObjResponse, tradingPartner){
+        let result = {};
+        if(tradingPartner == CONTANTS.essendant){
+            result = ESSENDANT.processInvoice(jsonObjResponse);
+        }
+        if(tradingPartner == CONTANTS.spr){
+            result = SPR.processInvoice(jsonObjResponse);
+        }
+        return result;
+    }
 
     return {
         constants: constants,
+        getTradingPartnerID: getTradingPartnerID,
         getTradingPartnerInfo: getTradingPartnerInfo,
         getTradingPartnerBODId: getTradingPartnerBODId,
         updateTradingPartnerBODId: updateTradingPartnerBODId,
-        isAcknowledgmentSPR: isAcknowledgmentSPR,
+        isTradingPartner: isTradingPartner,
+        getMinAmountCartonPO: getMinAmountCartonPO,
         processPOAck: processPOAck,
-        isTradingPartner: isTradingPartner
+        processInvoice: processInvoice
 	};
 });

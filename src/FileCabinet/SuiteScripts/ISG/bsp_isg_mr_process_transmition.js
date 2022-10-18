@@ -41,13 +41,15 @@ define(['N/runtime', 'N/search', 'N/task', './Lib/bsp_isg_transmitions_util.js',
                 let transmitionSavedSearchID = transmitionRecFields.savedSearch;  
                 let vendor = transmitionRecFields.vendor;
                 let autoreceive = transmitionRecFields.autoreceive;
+                let adot = transmitionRecFields.adot;
                 let account = transmitionRecFields.accountNumber;
                 let transmissionLocation = transmitionRecFields.location;
 
                 let ediSettings = BSP_EDISettingsUtil.getEDIsettings(paramsObj.environment);
 
-                let transmitionSavedSearcObj = search.load({id: transmitionSavedSearchID});
-                let resultSearch = BSPTransmitionsUtil.searchAll(transmitionSavedSearcObj);
+                let paramTransmissionSavedSearchObj = search.load({id: transmitionSavedSearchID});
+                let transmissionSearchObj = BSPTransmitionsUtil.buildTransmissionSavedSearch(paramTransmissionSavedSearchObj);
+                let resultSearch = BSPTransmitionsUtil.searchAll(transmissionSearchObj);
                 resultSearch.forEach(element => {
                     let salesOrderID = element.id;
                     let routeCodeID = element.getValue("custbody_bsp_isg_route_code");
@@ -57,7 +59,7 @@ define(['N/runtime', 'N/search', 'N/task', './Lib/bsp_isg_transmitions_util.js',
                     let itemQuantityCommited = element.getValue("quantitycommitted");
                     let resultQuantity = (itemQuantity - itemQuantityCommited);
                     let customer = element.getValue("entity");
-
+                    let shipaddress1 = element.getValue("shipaddress1");
                     transmitionData.push({
                         transactionForm: ediSettings.transactionForm,
                         transmitionRecID: transmitionRecID,
@@ -68,7 +70,9 @@ define(['N/runtime', 'N/search', 'N/task', './Lib/bsp_isg_transmitions_util.js',
                         vendor: vendor,
                         itemQuantity: resultQuantity,
                         customer: customer,
+                        shipaddress1: shipaddress1,
                         autoreceive: autoreceive,
+                        adot: adot,
                         account: account,
                         transmissionLocation: transmissionLocation
                     });           
@@ -131,10 +135,12 @@ define(['N/runtime', 'N/search', 'N/task', './Lib/bsp_isg_transmitions_util.js',
                 let commonData = JSON.parse(reduceContext.values[0]);
                 let transmitionQueueID = commonData.transmitionQueueID;
                 let customer =  commonData.customer;
-                let account = BSPTransmitionsUtil.getAccountNumber(customer, commonData.account);
+                let shipaddress1 = commonData.shipaddress1;
                 let vendor = commonData.vendor;
+                let account = BSPTransmitionsUtil.getAccountNumber(customer, vendor, shipaddress1, commonData.account);
                 let routeCode = commonData.routeCode;
                 let autoreceive = commonData.autoreceive;
+                let adot = commonData.adot;
                 let transmissionLocation = commonData.transmissionLocation;
                 let transactionForm = commonData.transactionForm;
                 let poData = {
@@ -146,6 +152,7 @@ define(['N/runtime', 'N/search', 'N/task', './Lib/bsp_isg_transmitions_util.js',
                     routeCode: routeCode,
                     autoreceive: autoreceive, 
                     account: account,
+                    adot: adot,
                     transmissionLocation: transmissionLocation,
                     itemData: itemData
                 };
@@ -234,4 +241,3 @@ define(['N/runtime', 'N/search', 'N/task', './Lib/bsp_isg_transmitions_util.js',
         return {getInputData, map, reduce, summarize}
 
     });
-/*  */

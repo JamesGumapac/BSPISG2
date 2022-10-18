@@ -1,0 +1,31 @@
+<centercategory scriptid="custcentercategory_bsp_isg_logicblock">
+  <center>BASIC</center>
+  <centertab>[scriptid=custcentertab_bsp_isg]</centertab>
+  <label>Logicblock</label>
+  <links>
+    <link>
+      <linklabel>Integration Settings</linklabel>
+      <linkobject>[scriptid=customrecord_bsp_isg_lb_integ_settings]</linkobject>
+      <linktasktype>LIST</linktasktype>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linklabel>Service Logs</linklabel>
+      <linkobject>[scriptid=customrecord_bsp_isg_lb_service_logs]</linkobject>
+      <linktasktype>LIST</linktasktype>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linklabel>Error Logs</linklabel>
+      <linkobject>[scriptid=customrecord_bsp_isg_lb_error_logs]</linkobject>
+      <linktasktype>LIST</linktasktype>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linklabel>Orders imported</linklabel>
+      <linkobject>[scriptid=customsearch_bsp_isg_lb_so_imported]</linkobject>
+      <linktasktype>SRCH_RSLT</linktasktype>
+      <shortlist>F</shortlist>
+    </link>
+  </links>
+</centercategory>

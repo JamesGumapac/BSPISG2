@@ -52,12 +52,12 @@
   <searchcomparefield></searchcomparefield>
   <searchdefault></searchdefault>
   <searchlevel>2</searchlevel>
-  <selectrecordtype>-103</selectrecordtype>
-  <showhierarchy>T</showhierarchy>
+  <selectrecordtype>[scriptid=customrecord_bsp_isg_tp_location]</selectrecordtype>
+  <showhierarchy>F</showhierarchy>
   <showinlist>F</showinlist>
-  <sourcefilterby></sourcefilterby>
-  <sourcefrom></sourcefrom>
-  <sourcelist></sourcelist>
+  <sourcefilterby>[scriptid=customrecord_bsp_isg_tp_location.custrecord_bsp_isg_parent_tp]</sourcefilterby>
+  <sourcefrom>[scriptid=custentity_bsp_isg_trading_part_settings]</sourcefrom>
+  <sourcelist>STDBODYVENDOR</sourcelist>
   <storevalue>T</storevalue>
   <subtab>[scriptid=custtab_bsp_isg_po_transmission]</subtab>
 </transactionbodycustomfield>

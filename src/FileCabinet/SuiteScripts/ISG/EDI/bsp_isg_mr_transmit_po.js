@@ -32,6 +32,7 @@ define([
         const getInputData = (inputContext) => {
             let functionName = "getInputData";
             let transmitionDataList = [];
+            let poRecID = null;
             try
             {
                 log.debug(functionName, "************ EXECUTION STARTED ************");
@@ -39,7 +40,7 @@ define([
                 let paramsObj = getParameters();
                 let transmitionRecID = paramsObj.transmitionRecID;
                 let transmitionQueueID = paramsObj.transmitionQueueID;
-                let poRecID = paramsObj.poRecID;
+                poRecID = paramsObj.poRecID;
 
                 let ediSettings = BSP_EDISettingsUtil.getEDIsettings(paramsObj.environment);
 
@@ -88,6 +89,9 @@ define([
                 }            
             } catch (error)
             {
+                if(!BSPTransmitionsUtil.isEmpty(poRecID)){
+                    BSP_POutil.updatePOtransmissionStatus(poRecID, BSP_POutil.transmitionPOStatus().transmissionFailed);
+                }
                 log.error(functionName, {error: error.toString()});
             }
             return transmitionDataList;

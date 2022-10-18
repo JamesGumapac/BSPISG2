@@ -28,6 +28,12 @@
     });
 
 
+    /************************************************************
+     * 
+     *                   ACKNOWLEDGMENT LOGIC
+     *
+     * ***********************************************************/
+
     /**
      * The function takes a JSON object as an argument, and if the object contains a key called "poNumber",
      * it will use that value to find a PO in NetSuite, and if it finds one, it will update the PO's with
@@ -55,9 +61,13 @@
                 let processStatus = processPO(poID, jsonObjResponse);
                 if(processStatus == STATUS_CODES.processStatusOK){
                     BSP_POutil.updatePOtransmissionStatus(poID, BSP_POutil.transmitionPOStatus().acknowledged);
+                    result.status = "Ok";
+                }else{
+                    result.status = "Error";
                 }
             }else if(poAcknowledgmentStatus == STATUS_CODES.error){
                 BSP_POutil.deletePO(poID);
+                result.status = "Error";
             }
         }
         return result;
@@ -212,7 +222,131 @@
             return null;
     }
 
+    /************************************************************
+     * 
+     *                     INVOICING LOGIC
+     *
+     * ***********************************************************/
+
+    /**
+     * It creates a vendor bill from a purchase order, then processes the vendor bill.
+     * @param jsonObjResponse - The JSON object that is returned from the API call.
+     * @returns The result object is being returned.
+    */
+    function processInvoice(jsonObjResponse){
+        let stLogTitle = "Trading Partner: SPR";
+        log.debug(stLogTitle, `Processing Invoice`);
+
+        let result = {};
+
+        let poID = getInvoiceHeaderFieldValue(jsonObjResponse, "DealerPo");
+        log.debug(stLogTitle, `PO: ${poID}`);
+        result.poID = poID;
+        let vendorBillRec = BSP_POutil.createBillFromPO(poID);
+        if(vendorBillRec){
+            result = processVendorBill(vendorBillRec, jsonObjResponse, result);
+        }else{
+            result.status = "Error";
+        }
+        return result;
+    }
+
+    /**
+     * The function takes a vendor bill record, a JSON object containing the response from the API call,
+     * and a result object. It then gets the invoice lines from the JSON object, gets the item count from
+     * the vendor bill record, loops through the items on the vendor bill record, gets the invoice item
+     * from the invoice lines, and sets the quantity on the vendor bill record. If the item is not billed,
+     * it removes the line from the vendor bill record. If there are items on the vendor bill record, it
+     * saves the record and sets the vendor bill record ID on the result object. If there are no items on
+     * the vendor bill record, it sets the status to error and returns the result object.
+     * @param vendorBillRec - The vendor bill record that was created in the previous step.
+     * @param jsonObjResponse - The JSON response from the API call
+     * @param resultObj - This is the object that will be returned to the client script.
+     * @returns The resultObj is being returned.
+    */
+    function processVendorBill(vendorBillRec, jsonObjResponse, resultObj){
+        let invoicelines = getInvoicelines(jsonObjResponse);
+
+        let itemCount = vendorBillRec.getLineCount({
+            sublistId: 'item'
+        });
+
+        for(let i = (itemCount - 1); i >= 0; i--){
+            let item = vendorBillRec.getSublistText({
+                sublistId: 'item',
+                fieldId: 'item',
+                line: i
+            });
+            let invoiceItem = getInvoiceItem(invoicelines, item);
+            log.debug("processVendorBill", `Item ${JSON.stringify(invoiceItem)}`);
+            if(invoiceItem){
+                vendorBillRec.setSublistValue({
+                    sublistId: 'item',
+                    fieldId: 'quantity',
+                    line: i,
+                    value: parseInt(invoiceItem.QtyShipped)
+                });
+            }else {
+                log.debug("processVendorBill", `Item not billed`);
+                vendorBillRec.removeLine({
+                    sublistId: 'item',
+                    line: i,
+               });
+            }
+        }
+        
+        itemCount = vendorBillRec.getLineCount({
+            sublistId: 'item'
+        });
+
+        if(itemCount > 0){
+            let recID = vendorBillRec.save();
+            resultObj.vendorBillRecID = recID;
+        }else{
+            resultObj.status = "Error";
+            resultObj.vendorBillRecID = null;
+            return resultObj;
+        }
+
+        return resultObj;
+    }
+
+    function getInvoiceHeaderFieldValue(jsonObjResponse, field){
+        switch (field) {
+            case "DealerPo": 
+                return  jsonObjResponse.Invoice.InvHeader.SOHeader[field];
+        }
+        return null;
+    }
+
+    function getInvoicelines(jsonObjResponse){
+        let lines = [];
+        let invoiceLines = getLines(jsonObjResponse);
+        if(invoiceLines.length > 0){
+            lines = invoiceLines;
+        }else{
+            lines.push(invoiceLines);
+        }
+        return lines;
+    }
+
+    function getLines(jsonObjResponse){
+        return jsonObjResponse.Invoice.InvHeader.SOHeader.ItemDetail;
+    }
+
+    function getInvoiceItem(invoiceLines, item){
+        for (let index = 0; index < invoiceLines.length; index++) {
+            let element = invoiceLines[index];
+            let itemName = element.ItemNum;
+            if(item == itemName){
+                return element;
+            }
+        }
+        return null;
+    }
+
     return {
-        processPOAck: processPOAck
+        processPOAck: processPOAck,
+        processInvoice: processInvoice
 	};
 });

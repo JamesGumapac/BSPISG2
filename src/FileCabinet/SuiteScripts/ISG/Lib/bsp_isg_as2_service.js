@@ -15,7 +15,7 @@
         let base64EncodedXMLcontent = encodeXMLContent(transmissionData.xmlFileObj.fileContent);
 
         let bodyObj = {
-            "AS2Identifier": transmissionData.ediSettings.as2Identifier,
+            "AS2Identifier": transmissionData.tradingPartner.orgAS2Identifier,
             "Partner": {
                 "AS2Identifier": transmissionData.tradingPartner.as2Identifier,
                 "MDNTo": transmissionData.tradingPartner.mdnTo,

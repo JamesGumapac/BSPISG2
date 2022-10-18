@@ -1,0 +1,24 @@
+<customlist scriptid="customlist_bsp_isg_order_type">
+  <description></description>
+  <isinactive>F</isinactive>
+  <ismatrixoption>F</ismatrixoption>
+  <isordered>T</isordered>
+  <name>Order Shipment Type</name>
+  <customvalues>
+    <customvalue scriptid="val_943117_t927173_423">
+      <abbreviation>D</abbreviation>
+      <isinactive>F</isinactive>
+      <value>Dropship</value>
+    </customvalue>
+    <customvalue scriptid="val_943118_t927173_458">
+      <abbreviation>W</abbreviation>
+      <isinactive>F</isinactive>
+      <value>Wrap and Label</value>
+    </customvalue>
+    <customvalue scriptid="val_945279_t927173_551">
+      <abbreviation>S</abbreviation>
+      <isinactive>F</isinactive>
+      <value>Stock</value>
+    </customvalue>
+  </customvalues>
+</customlist>
