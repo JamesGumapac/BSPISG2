@@ -8,10 +8,11 @@
     const PO_TRANSMITION_STATUSES = Object.freeze({
         pendingTransmission: 1,
         pendingAcknowledment: 2,
-        acknowledged: 3,
+        pendingShipmentNotification: 3,
         transmissionFailed: 4,
         transmitting: 5,
-        acknowledgmentFailed: 6
+        acknowledgmentFailed: 6,
+        shipmentConfirmed: 7
     });
 
     /**
@@ -515,6 +516,155 @@
     }
 
     /**
+     * This function takes a PO ID and returns an Item Fulfillmemt record.
+     * @param poID - The internal ID of the Purchase Order record
+     * @returns A Vendor Bill Record
+    */
+    function createItemFulfillmentFromPO(soID) {
+        let functionName = "createItemFulfillmentFromPO";
+        let itemFulfillmentRec = null;
+        try{        
+            itemFulfillmentRec = record.transform({
+                fromType: record.Type.SALES_ORDER,
+                fromId: parseInt(soID),
+                toType: record.Type.ITEM_FULFILLMENT,
+            });
+        }catch(error){
+            log.error(functionName, "Error creating Item Fulfillment Record: " + JSON.stringify(error.message));
+            return null;
+        }
+
+        return itemFulfillmentRec;
+    }
+
+    /**
+     * This function takes a PO ID and returns an Item Receipt record.
+     * @param poID - The internal ID of the Purchase Order record
+     * @returns A Vendor Bill Record
+    */
+    function createItemReceiptFromPO(poID) {
+        let functionName = "createItemReceiptFromPO";
+        let itemReceiptRec = null;
+        try{        
+            itemReceiptRec = record.transform({
+                fromType: record.Type.PURCHASE_ORDER,
+                fromId: parseInt(poID),
+                toType: record.Type.ITEM_RECEIPT,
+            });
+        }catch(error){
+            log.error(functionName, "Error creating Item Receipt Record: " + JSON.stringify(error.message));
+            return null;
+        }
+
+        return itemReceiptRec;
+    }
+
+    /**
+     * If the PO has a value in the custom field "custbody_bsp_isg_order_type" and that value is
+     * "Dropship", then return true. Otherwise, return false.
+     * @param poID - The internal ID of the Purchase Order
+     * @returns a boolean value.
+    */
+    function isDropShip(poID){
+        let poFields = search.lookupFields({
+            type: record.Type.PURCHASE_ORDER,
+            id: parseInt(poID),
+            columns: 'custbody_bsp_isg_order_type'
+        });
+        if(poFields && poFields.custbody_bsp_isg_order_type){
+            return poFields.custbody_bsp_isg_order_type[0].text == "Dropship";
+        }
+        return false;
+    }
+
+    /**
+     * It takes a PO ID and returns the Sales Order ID that the PO was created from.
+     * @param poID - The internal ID of the Purchase Order record
+     * @returns The Sales Order ID
+    */
+    function getSalesOrderID(poID){
+        let poFields = search.lookupFields({
+            type: record.Type.PURCHASE_ORDER,
+            id: parseInt(poID),
+            columns: 'createdfrom'
+        });
+        log.debug("getSalesOrderID", JSON.stringify(poFields));
+        if(poFields && !isEmpty(poFields.createdfrom)){
+            return poFields.createdfrom[0].value;
+        }
+        return null;
+    }
+
+    /**
+     * This function takes in a PO ID, an array of items that have been partially shipped, and an array of
+     * items that have not been shipped. It then loops through the arrays and sets the "isclosed" field to
+     * true for each item in the arrays
+     * @param poID - The internal ID of the Purchase Order
+     * @param linesPartiallyShipped - An array of objects that contain the item ID and the quantity that
+     * was shipped.
+     * @param itemsNotShipped - An array of objects that contain the item ID and the quantity that was not
+     * shipped.
+    */
+    function closePOlines(poID, linesPartiallyShipped, itemsNotShipped){
+        let purchaseOrderRec = record.load({
+            type: record.Type.PURCHASE_ORDER,
+            id: parseInt(poID),
+            isDynamic: true
+        });
+
+        for(let i = 0; i < linesPartiallyShipped.length; i++){
+            let item = linesPartiallyShipped[i];
+            let itemID = item.itemID;
+
+            let lineNum = purchaseOrderRec.findSublistLineWithValue({
+                sublistId: 'item',
+                fieldId: 'item',
+                value: itemID
+            });
+
+            purchaseOrderRec.selectLine({
+                sublistId: 'item',
+                line: lineNum
+            });
+
+            purchaseOrderRec.setCurrentSublistValue({
+                sublistId: 'item',
+                fieldId: 'isclosed',
+                value: true
+            });
+            purchaseOrderRec.commitLine({
+                sublistId: "item",
+            });
+        }
+        for(let i = 0; i < itemsNotShipped.length; i++){
+            let item = itemsNotShipped[i];
+            let itemID = item.itemID;
+
+            let lineNum = purchaseOrderRec.findSublistLineWithValue({
+                sublistId: 'item',
+                fieldId: 'item',
+                value: itemID
+            });
+
+            purchaseOrderRec.selectLine({
+                sublistId: 'item',
+                line: lineNum
+            });
+
+            purchaseOrderRec.setCurrentSublistValue({
+                sublistId: 'item',
+                fieldId: 'isclosed',
+                value: true
+            });
+            purchaseOrderRec.commitLine({
+                sublistId: "item",
+            });
+        }
+        purchaseOrderRec.save();
+        log.debug("closePOlines", `Purchase Order lines closed`);
+    }
+
+    /**
      * Get all results from a saved search
      * @param {*} objSavedSearch 
      * @returns 
@@ -564,6 +714,28 @@
         return date.toISOString().slice(0, 19);
     }
 
+    
+    /**
+     * Check for Empty value
+     * @param {*} value 
+     * @returns 
+    */
+	function isEmpty(value) {
+		return (
+			value === "" ||
+			value == null ||
+			value == undefined ||
+			value == "null" ||
+			value == "undefined" ||
+			(value.constructor === Array && value.length == 0) ||
+			(value.constructor === Object &&
+				(function (v) {
+					for (let k in v) return false;
+					return true;
+				})(value))
+		);
+	}
+
     return {
         transmitionPOStatus: transmitionPOStatus,
         createPurchaseOrders: createPurchaseOrders,
@@ -575,6 +747,11 @@
         getQueueOfPO: getQueueOfPO,
         getVendor: getVendor,
         getTransmissionFields: getTransmissionFields,
-        createBillFromPO: createBillFromPO
+        isDropShip: isDropShip,
+        getSalesOrderID: getSalesOrderID,
+        createBillFromPO: createBillFromPO,
+        createItemFulfillmentFromPO: createItemFulfillmentFromPO,
+        createItemReceiptFromPO: createItemReceiptFromPO,
+        closePOlines: closePOlines
 	};
 });

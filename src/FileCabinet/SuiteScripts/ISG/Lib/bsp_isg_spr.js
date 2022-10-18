@@ -60,7 +60,7 @@
             if(poAcknowledgmentStatus == STATUS_CODES.accepted){
                 let processStatus = processPO(poID, jsonObjResponse);
                 if(processStatus == STATUS_CODES.processStatusOK){
-                    BSP_POutil.updatePOtransmissionStatus(poID, BSP_POutil.transmitionPOStatus().acknowledged);
+                    BSP_POutil.updatePOtransmissionStatus(poID, BSP_POutil.transmitionPOStatus().pendingShipmentNotification);
                     result.status = "Ok";
                 }else{
                     result.status = "Error";

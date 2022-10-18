@@ -64,7 +64,20 @@
                     log.debug(functionName, `Error in Manual PO Acknowledgment`);
                 }
 
+             }else if(isShipmentNotification(jsonObjResponse)){
+
+                let result = null;
+                if(isShipmentNotificationSPR(jsonObjResponse)){
+                    log.debug(functionName, `This is a Shipment Notification from SPR`);
+                    //result = BSPTradingParnters.processASN(jsonObjResponse, BSPTradingParnters.constants().spr);
+                }else if(isShipmentNotificationEssendant(jsonObjResponse)){
+                    log.debug(functionName, `This is a Shipment Notification from Essendant`);
+                    result = BSPTradingParnters.processASN(jsonObjResponse, BSPTradingParnters.constants().essendant);
+                }      
+                log.debug(functionName, "Shipment Notification: " + JSON.stringify(result));
+
              }else if(isInvoice(jsonObjResponse)){
+
                 let result = null;
                 if(isInvoiceSPR(jsonObjResponse)){
                     log.debug(functionName, `This is an Invoice from SPR`);
@@ -74,6 +87,7 @@
                     result = BSPTradingParnters.processInvoice(jsonObjResponse, BSPTradingParnters.constants().essendant);
                 }      
                 log.debug(functionName, "Invoice processed: " + JSON.stringify(result));
+
              }
 
              response = {
@@ -145,6 +159,32 @@
     }
 
     /**
+     * Checks if the JSON object is a Shipment Notification.
+     * @param jsonObjResponse - The JSON object that is returned from the API call.
+     * @returns A boolean value.
+    */   
+    const isShipmentNotification = (jsonObjResponse) => {
+
+        /**
+         * Check for SPR
+        */
+        let shipmentSPR = jsonObjResponse.Shipment;
+        if(shipmentSPR){
+            return true;
+        }
+
+        /**
+         * Check for Essendant
+        */
+        let shipmentEssendant = jsonObjResponse.ShowShipment;
+        if(shipmentEssendant){
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
      * It returns true if the trading partner name of the Acknowledgment is equal to the constant value "spr".
      * @param jsonObjResponse - The JSON object that is returned from the API call.
      * @returns A boolean value.
@@ -174,6 +214,19 @@
     }
 
     /**
+     * It returns true if the trading partner name of the Shipment Notification is equal to the constant value "spr".
+     * @param jsonObjResponse - The JSON object that is returned from the API call.
+     * @returns A boolean value.
+    */
+    function isShipmentNotificationSPR(jsonObjResponse){
+        let shipmentSPR = jsonObjResponse.Shipment;
+        if(shipmentSPR){
+            return true;
+        }
+        return false;
+    }
+
+    /**
      * It returns true if the trading partner name of the Acknowledgment is equal to the constant value "Essendant Inc".
      * @param jsonObjResponse - The JSON object that is returned from the API call.
      * @returns A boolean value.
@@ -194,6 +247,19 @@
     function isInvoiceEssendant(jsonObjResponse){
         let invoiceEssendant = jsonObjResponse.ShowInvoice;
         if(invoiceEssendant){
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * It returns true if the trading partner name of the Shipment Notification is equal to the constant value "Essendant Inc".
+     * @param jsonObjResponse - The JSON object that is returned from the API call.
+     * @returns A boolean value.
+    */
+    function isShipmentNotificationEssendant(jsonObjResponse){
+        let shipmentEssendant = jsonObjResponse.ShowShipment;
+        if(shipmentEssendant){
             return true;
         }
         return false;
