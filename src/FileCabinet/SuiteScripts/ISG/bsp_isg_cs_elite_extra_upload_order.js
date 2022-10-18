@@ -31,7 +31,7 @@ define([
       id: ifId,
       columns: ["custbody_bsp_isg_tracking_number"],
     });
-
+    
     if (
       !BSPExliteExtra.isEmpty(trackingNumberSearch.custbody_bsp_isg_tracking_number)
     ) {

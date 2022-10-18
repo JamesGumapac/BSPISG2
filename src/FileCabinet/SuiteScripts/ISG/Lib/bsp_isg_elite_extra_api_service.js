@@ -30,6 +30,7 @@ function (search, https, BSPEliteServiceLogs) {
 
 
     const eliteExtraResponse = uploadOrder(orderXML, headers, serviceURL);
+    log.debug("eliteExtraResponse", eliteExtraResponse)
     BSPEliteServiceLogs.eliteExtracreateServiceLog(
         serviceURL,
         soapAction,

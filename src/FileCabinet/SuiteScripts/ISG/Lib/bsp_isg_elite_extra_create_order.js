@@ -351,7 +351,8 @@ define([
   function getEliteExtraSettings(eliteExtraId) {
     const eliteExtraSettingResults = {};
     const eliteExtraSettingsSearch = search.lookupFields({
-      id: "customrecord_bsp_isg_elite_extra_setting",
+      type:"customrecord_bsp_isg_elite_extra_setting",
+      id: eliteExtraId,
       columns: [
         "custrecord_bsp_isg_based64encoding",
         "custrecord_bsp_isg_create_order_ep_url",
@@ -364,7 +365,6 @@ define([
       eliteExtraSettingsSearch["custrecord_bsp_isg_based64encoding"];
     eliteExtraSettingResults["trackingLink"] =
       eliteExtraSettingsSearch["custrecord_bsp_isg_order_tracking_link"];
-
     return eliteExtraSettingResults;
   }
 
