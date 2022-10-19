@@ -202,36 +202,41 @@
         log.debug(stLogTitle, `PO: ${poID}`);
         result.poID = poID;
         let soID = BSP_POutil.getSalesOrderID(poID);
-        if(dropShipPO(poID)){
-            let itemFulfillmentRec = BSP_POutil.createItemFulfillmentFromPO(soID);
-            if(itemFulfillmentRec){
-                result = processItemFulfillment(itemFulfillmentRec, jsonObjResponse, poID, soID, result);
-                if(result.itemFulfillmentRecID){
-                    BSP_POutil.updatePOtransmissionStatus(poID, BSP_POutil.transmitionPOStatus().shipmentConfirmed);
-                    result.status = "Ok";
+        if(autoreceievePO(poID)){
+            if(dropShipPO(poID)){
+                let itemFulfillmentRec = BSP_POutil.createItemFulfillmentFromPO(soID);
+                if(itemFulfillmentRec){
+                    result = processItemFulfillment(itemFulfillmentRec, jsonObjResponse, poID, soID, result);
+                    if(result.itemFulfillmentRecID){
+                        BSP_POutil.updatePOtransmissionStatus(poID, BSP_POutil.transmitionPOStatus().shipmentConfirmed);
+                        result.status = "Ok";
+                    }else{
+                        result.status = "Error";
+                    }
                 }else{
                     result.status = "Error";
                 }
             }else{
-                result.status = "Error";
-            }
-        }else{
-            let itemReceiptRec = BSP_POutil.createItemReceiptFromPO(poID);
-            if(itemReceiptRec){
-                result = processItemReceipt(itemReceiptRec, jsonObjResponse, poID, soID, result);
-                if(result.itemReceiptRecID){
-                    BSP_POutil.updatePOtransmissionStatus(poID, BSP_POutil.transmitionPOStatus().shipmentConfirmed);
-                    result.status = "Ok";
+                let itemReceiptRec = BSP_POutil.createItemReceiptFromPO(poID);
+                if(itemReceiptRec){
+                    result = processItemReceipt(itemReceiptRec, jsonObjResponse, poID, soID, result);
+                    if(result.itemReceiptRecID){
+                        BSP_POutil.updatePOtransmissionStatus(poID, BSP_POutil.transmitionPOStatus().shipmentConfirmed);
+                        result.status = "Ok";
+                    }else{
+                        result.status = "Error";
+                    }
                 }else{
                     result.status = "Error";
                 }
-            }else{
-                result.status = "Error";
             }
-        }
+        }   
         return result;
     }
 
+    function autoreceievePO(poID){
+        return BSP_POutil.isAutoreceive(poID);
+    }
     /**
      * This function returns a boolean value of true or false based on whether the PO is a drop ship PO or
      * not.
@@ -399,7 +404,7 @@
             let recID = itemReceiptRec.save();
             resultObj.itemReceiptRecID = recID;  
             BSP_SOUtil.updateSOLinesPartiallyShipped(soID, linesPartiallyShipped);    
-            BSP_POutil.closePOlines(poID, linesPartiallyShipped, itemsNotShipped);
+            //BSP_POutil.closePOlines(poID, linesPartiallyShipped, itemsNotShipped);
         }catch(error){
             resultObj.status = "Error";
             resultObj.itemReceiptRecID = null;

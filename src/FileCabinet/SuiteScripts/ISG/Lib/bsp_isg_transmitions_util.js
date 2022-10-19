@@ -268,7 +268,7 @@
         });
 
         if(!accountNumber){
-            accountNumber = overrideAccountNumber;
+            accountNumber = accountOverrideDefault;
         }
 
         if(!accountNumber){
@@ -326,7 +326,7 @@
                 vendor = transmitionFieldsObj.custrecord_bsp_lb_vendor_account[0].value;
             } 
             if(!(isEmpty(transmitionFieldsObj.custrecord_bsp_lb_transmition_loc))){
-                location = transmitionFieldsObj.custrecord_bsp_lb_transmition_loc;
+                location = transmitionFieldsObj.custrecord_bsp_lb_transmition_loc[0].value;;
             }  
             if(!(isEmpty(transmitionFieldsObj.custrecord_bsp_autoreceive))){
                 autoreceive = transmitionFieldsObj.custrecord_bsp_autoreceive;
@@ -335,7 +335,7 @@
                 accountNumber = transmitionFieldsObj.custrecord_bsp_lb_acct_number[0];
             }  
             if(!(isEmpty(transmitionFieldsObj.custrecord_bsp_isg_adot))){
-                adot = transmitionFieldsObj.custrecord_bsp_isg_adot[0].text;
+                adot = transmitionFieldsObj.custrecord_bsp_isg_adot[0].value;
             }      
         }
         
@@ -549,17 +549,6 @@
                rightparens: 0
             },
             {
-               name: "custbody_bsp_isg_route_code",
-               operator: "noneof",
-               values: [
-                  "@NONE@"
-               ],
-               isor: false,
-               isnot: false,
-               leftparens: 0,
-               rightparens: 0
-            },
-            {
                name: "purchaseorder",
                operator: "anyof",
                values: [
@@ -608,26 +597,13 @@
 
         let fixedColumns = [
             search.createColumn({name: "custbody_bsp_isg_route_code", label: "Route Code"}),
-            search.createColumn({
-               name: "custrecord_bsp_lb_route_code_desc",
-               join: "CUSTBODY_BSP_ISG_ROUTE_CODE",
-               label: "Route Code Description"
-            }),
-            search.createColumn({
-               name: "custrecord_bsp_lb_location",
-               join: "CUSTBODY_BSP_ISG_ROUTE_CODE",
-               label: "Location"
-            }),
+            search.createColumn({name: "location", label: "Location"}),
             search.createColumn({name: "item", label: "Item"}),
-            search.createColumn({name: "line", label: "Item Line Number"}),
-            search.createColumn({name: "rate", label: "Item Rate"}),
             search.createColumn({name: "quantity", label: "Quantity"}),
             search.createColumn({name: "quantitycommitted", label: "Quantity Committed"}),
-            search.createColumn({name: "internalid", label: "Sales Order ID"}),
-            search.createColumn({name: "tranid", label: "Sales Order Number"}),
-            search.createColumn({name: "datecreated", label: "Sales Order Date"}),
             search.createColumn({name: "entity", label: "Customer"}),
-            search.createColumn({name: "shipaddress1", label: "Shipping Address 1"})
+            search.createColumn({name: "shipaddress1", label: "Shipping Address 1"}),
+            search.createColumn({name: "custcol_bsp_order_shipment_type", label: "Order Shipment Type"})
         ];
 
         let searchFilters = transmitionSavedSearcObj.filters;
