@@ -3,7 +3,7 @@
  * @NScriptType ClientScript
  * @NModuleScope SameAccount
  */
-define(["N/search", "N/record"], function (search, record) {
+define(["N/file", "N/search", "N/record"], function (file, search, record) {
   /**
    * Function to be executed after page is initialized.
    *
@@ -14,14 +14,18 @@ define(["N/search", "N/record"], function (search, record) {
    * @since 2015.2
    */
   function pageInit(scriptContext) {}
+  /**
+   * This function maps the column line for SPR and iterate each line and return the line object
+   * @param {*} fileObj - file Object
+   */
   function getSpRichardsItemPricingObj(fileObj) {
     const pricingToProcess = [];
-    const itemObj = []
+     const itemObj = [];
     const iterator = fileObj.lines.iterator();
     iterator.each(function (line) {
-      const initialLineValue = line.value.replace(/;/g, '');
+      const initialLineValue = line.value.replace(/;/g, "");
       const lineValues = initialLineValue.split(",");
-      itemObj.push(lineValues)
+       itemObj.push(lineValues);
       const itemId = lineValues[2];
       const description = lineValues[3];
       const OUM = lineValues[6];
@@ -38,22 +42,23 @@ define(["N/search", "N/record"], function (search, record) {
       });
       return true;
     });
-    pricingToProcess.shift()
+    pricingToProcess.shift();
     //return object and remove the first element
     return pricingToProcess;
   }
+
   /**
-   * This function maps the column line for essendant and iterate each line and return the object
+   * This function maps the column line for essendant and iterate each line and return the line object
    * @param {*} fileObj - file Object
    */
   function getEssendantItemPricingObj(fileObj) {
     const pricingToProcess = [];
-    const itemObj = []
+    const itemObj = [];
     const iterator = fileObj.lines.iterator();
     iterator.each(function (line) {
-      const initialLineValue = line.value.replace(/"/g, '');
+      const initialLineValue = line.value.replace(/"/g, "");
       const lineValues = initialLineValue.split(",");
-      itemObj.push(lineValues)
+      itemObj.push(lineValues);
       const itemId = lineValues[0];
       const description = lineValues[7];
       const OUM = lineValues[8];
@@ -70,8 +75,8 @@ define(["N/search", "N/record"], function (search, record) {
       });
       return true;
     });
-    pricingToProcess.shift()
- 
+    pricingToProcess.shift();
+
     //return object and remove the first element of the array
     return pricingToProcess;
   }
@@ -89,17 +94,31 @@ define(["N/search", "N/record"], function (search, record) {
         search.createColumn({ name: "internalid", label: "Internal ID" }),
       ],
     });
-    const searchResultCount = itemSearchObj.runPaged().count;
-
     itemSearchObj.run().each(function (result) {
       itemIdResults = result.id;
       return true;
     });
     return itemIdResults;
   }
-function moveFolderToDone(fileId, folderId) {
 
-}
+  /**
+   * Move the processed CSV file to done folder
+   * @param {*} fileId
+   * @param {*} folderId
+   */
+  function moveFolderToDone(fileId, folderId) {
+    const fileObj = file.load({
+      id: fileId,
+    });
+    if (fileObj) {
+      fileObj.folder = folderId;
+      const moved = fileObj.save();
+      log.debug(
+        "File with internal ID: " + moved + " moved to folder " + folderId + "."
+      );
+    } else log.debug( "File with internal ID: " + fileId + " not found.");
+  }
+
   /**
    * This update the item and item contract plan
    * @param {*} itemId
@@ -182,6 +201,13 @@ function moveFolderToDone(fileId, folderId) {
     log.debug("item and contract plan", { itemRecId, itemContractPlan });
   }
 
+  /**
+   * This function update item contract plan
+   * @param {*} itemId
+   * @param {*} contractCode
+   * @param {*} purchasePrice
+   * @param {*} cost
+   */
   function updateItemContractPlanPirce(
     itemId,
     contractCode,
@@ -198,7 +224,7 @@ function moveFolderToDone(fileId, folderId) {
       ],
     });
     const searchResultCount = contractPlanSearch.runPaged().count;
-    if(searchResultCount <= 0) return false
+    if (searchResultCount <= 0) return false;
     contractPlanSearch.run().each(function (result) {
       itemContractPlanId = result.id;
       return true;
@@ -212,12 +238,18 @@ function moveFolderToDone(fileId, folderId) {
     });
   }
 
+  /**
+   * This function create item record if the item is not existing
+   * @param {*} itemId
+   * @param {*} purchasePrice
+   * @param {*} cost
+   * @param {*} description
+   */
   function createItem(itemId, purchasePrice, cost, description) {
     const itemRec = record.create({
       type: "inventoryitem",
       isDynamic: true,
     });
-
     if (purchasePrice) {
       itemRec.setValue({
         fieldId: "purchaseunit",
@@ -241,9 +273,42 @@ function moveFolderToDone(fileId, folderId) {
       fieldId: "isonline",
       value: false,
     });
-    log.debug("Item Record ", itemRec);
 
-   // return itemRec.save({ ignoreErrors: true });
+    // return itemRec.save({ ignoreErrors: true });
+  }
+  
+  /**
+   * This function get the file Id of the CSV file in the Pending Folder
+   * @param {*} folderId
+   */
+  function getFileId(folderId) {
+    let fileId;
+    const fileSearch = search.create({
+      type: search.Type.FOLDER,
+      columns: [
+        {
+          join: "file",
+          name: "internalid",
+        },
+      ],
+      filters: [
+        {
+          name: "internalid",
+          operator: "anyof",
+          values: folderId,
+        },
+      ],
+    });
+
+    fileSearch.run().each(function (result) {
+      fileId = result.getValue({
+        join: "file",
+        name: "internalid",
+      });
+
+      return false;
+    });
+    return fileId;
   }
 
   return {
@@ -252,7 +317,8 @@ function moveFolderToDone(fileId, folderId) {
     getSpRichardsItemPricingObj: getSpRichardsItemPricingObj,
     checkItemId: checkItemId,
     updateItemAndContractPlan: updateItemAndContractPlan,
-    createItem:createItem
-    
+    createItem: createItem,
+    moveFolderToDone: moveFolderToDone,
+    getFileId: getFileId,
   };
 });

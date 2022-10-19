@@ -22,11 +22,14 @@ define([
    * @returns {Array|Object|Search|ObjectRef|File|Query} The input data to use in the map/reduce process
    * @since 2015.2
    */
-  let isEssendant = false;
+
   const getInputData = (inputContext) => {
     let functionName = "getInputData";
+    let isEssendant = false;
     let folderId;
+    log.audit(functionName, "************ EXECUTION STARTED ************");
     try {
+      // check the deployment ID and verify is it is for Essendant or SPR
       const scriptObj = runtime.getCurrentScript();
       if (scriptObj.deploymentId === "customdeploy_bsp_isg_esse_updt_prcng") {
         folderId = scriptObj.getParameter({
@@ -38,38 +41,13 @@ define([
           name: "custscript_bsp_isg_sp_richards",
         });
       }
-      const fileSearch = search.create({
-        type: search.Type.FOLDER,
-        columns: [
-          {
-            join: "file",
-            name: "internalid",
-          },
-        ],
-        filters: [
-          {
-            name: "internalid",
-            operator: "anyof",
-            values: folderId,
-          },
-        ],
-      });
-
-      let fileId;
-      fileSearch.run().each(function (result) {
-        fileId = result.getValue({
-          join: "file",
-          name: "internalid",
-        });
-
-        return false;
-      });
 
       const FileObj = file.load({
-        id: fileId,
+        id: BSPUpdatePricing.getFileId(folderId),
       });
       let pricingToProcess = [];
       if (isEssendant === true) {
+        log.audit("Processing Essendant Pricing");
         pricingToProcess = BSPUpdatePricing.getEssendantItemPricingObj(FileObj);
       } else {
         pricingToProcess =
@@ -122,7 +100,6 @@ define([
           vendor
         );
       } else {
-      
         BSPUpdatePricing.createItem(
           pricingToUpdateDataObj.itemId,
           pricingToUpdateDataObj.purchasePrice,
@@ -154,7 +131,39 @@ define([
    * @param {Object} summaryContext.reduceSummary - Statistics about the reduce stage
    * @since 2015.2
    */
-  const summarize = (summaryContext) => {};
+  const summarize = (summaryContext) => {
+    let functionName = "Summarize";
+    const scriptObj = runtime.getCurrentScript();
+    let folderId;
+    let doneFolderId;
+    if (scriptObj.deploymentId === "customdeploy_bsp_isg_esse_updt_prcng") {
+      folderId = scriptObj.getParameter({
+        name: "custscript_bsp_isg_essendant",
+      });
+      doneFolderId = scriptObj.getParameter({
+        name: "custscript_bsp_isg_essen_done_folder_id",
+      });
+    } else {
+      folderId = scriptObj.getParameter({
+        name: "custscript_bsp_isg_sp_richards",
+      });
+      doneFolderId = scriptObj.getParameter({
+        name: "custscript_bsp_isg_spr_done_folder_id",
+      });
+    }
+
+    BSPUpdatePricing.moveFolderToDone(
+      BSPUpdatePricing.getFileId(folderId),
+      doneFolderId
+    );
+
+    log.audit(functionName, {
+      UsageConsumed: summaryContext.usage,
+      NumberOfQueues: summaryContext.concurrency,
+      NumberOfYields: summaryContext.yields,
+    });
+    log.debug(functionName, "************ EXECUTION COMPLETED ************");
+  };
 
   return { getInputData, reduce, summarize };
 });
