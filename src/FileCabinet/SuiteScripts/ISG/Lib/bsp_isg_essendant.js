@@ -320,7 +320,7 @@
             let recID = itemFulfillmentRec.save();
             resultObj.itemFulfillmentRecID = recID;    
             BSP_SOUtil.updateSOLinesPartiallyShipped(soID, linesPartiallyShipped);  
-            BSP_POutil.closePOlines(poID, linesPartiallyShipped, itemsNotShipped);
+            //BSP_POutil.closePOlines(poID, linesPartiallyShipped, itemsNotShipped);
         }catch(error){
             resultObj.status = "Error";
             resultObj.itemFulfillmentRecID = null;
