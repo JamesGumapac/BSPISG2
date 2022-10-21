@@ -69,7 +69,7 @@
                 let result = null;
                 if(isShipmentNotificationSPR(jsonObjResponse)){
                     log.debug(functionName, `This is a Shipment Notification from SPR`);
-                    //result = BSPTradingParnters.processASN(jsonObjResponse, BSPTradingParnters.constants().spr);
+                    result = BSPTradingParnters.processASN(jsonObjResponse, BSPTradingParnters.constants().spr);
                 }else if(isShipmentNotificationEssendant(jsonObjResponse)){
                     log.debug(functionName, `This is a Shipment Notification from Essendant`);
                     result = BSPTradingParnters.processASN(jsonObjResponse, BSPTradingParnters.constants().essendant);
@@ -168,7 +168,7 @@
         /**
          * Check for SPR
         */
-        let shipmentSPR = jsonObjResponse.Shipment;
+        let shipmentSPR = jsonObjResponse.manifest;
         if(shipmentSPR){
             return true;
         }
@@ -219,7 +219,7 @@
      * @returns A boolean value.
     */
     function isShipmentNotificationSPR(jsonObjResponse){
-        let shipmentSPR = jsonObjResponse.Shipment;
+        let shipmentSPR = jsonObjResponse.manifest;
         if(shipmentSPR){
             return true;
         }
