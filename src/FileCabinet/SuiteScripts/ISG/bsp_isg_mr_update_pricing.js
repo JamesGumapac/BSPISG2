@@ -45,7 +45,7 @@ define([
       const FileObj = file.load({
         id: BSPUpdatePricing.getFileId(folderId),
       });
-      let pricingToProcess = [];
+      let pricingToProcess;
       if (isEssendant === true) {
         log.audit("Processing Essendant Pricing");
         pricingToProcess = BSPUpdatePricing.getEssendantItemPricingObj(FileObj);
@@ -76,35 +76,35 @@ define([
    * @since 2015.2
    */
   const reduce = (reduceContext) => {
-    const scriptObj = runtime.getCurrentScript();
-    const vendor = scriptObj.getParameter({
-      name: "custscript_bsp_isg_vendor",
-    });
     let functionName = "reduceContext";
     try {
+      const scriptObj = runtime.getCurrentScript();
+      const vendor = scriptObj.getParameter({
+        name: "custscript_bsp_isg_vendor",
+      });
       let pricingToUpdateData = reduceContext.values;
       let pricingToUpdateDataObj = JSON.parse(pricingToUpdateData);
-      log.debug(
-        functionName + " " + "pricingToUpdateData",
-        pricingToUpdateDataObj
-      );
+      log.debug(functionName + " pricingToUpdateData", pricingToUpdateDataObj);
       const itemId = BSPUpdatePricing.checkItemId(
         pricingToUpdateDataObj.itemId
       );
-      if (itemId !== true) {
+      
+      if (itemId) {
         BSPUpdatePricing.updateItemAndContractPlan(
-            itemId,
+          itemId,
           pricingToUpdateDataObj.contractCode,
-          pricingToUpdateDataObj.purchasePrice,
+          pricingToUpdateDataObj.description,
+          pricingToUpdateDataObj.price,
           pricingToUpdateDataObj.cost,
           vendor
         );
       } else {
+       
         BSPUpdatePricing.createItem(
           pricingToUpdateDataObj.itemId,
-          pricingToUpdateDataObj.purchasePrice,
           pricingToUpdateDataObj.cost,
-          pricingToUpdateDataObj.description
+          pricingToUpdateDataObj.description,
+          vendor
         );
       }
     } catch (e) {

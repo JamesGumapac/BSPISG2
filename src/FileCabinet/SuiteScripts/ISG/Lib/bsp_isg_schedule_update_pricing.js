@@ -2,47 +2,43 @@
  * @NApiVersion 2.1
  */
 define(["N/file", "N/search", "N/record"], function (file, search, record) {
-
   /**
    * This function maps the column line for SPR and iterate each line and return the line object
    * @param {*} fileObj - file Object
    */
   function getSpRichardsItemPricingObj(fileObj) {
     try {
-  
-    const pricingToProcess = [];
-     const itemObj = [];
-    const iterator = fileObj.lines.iterator();
-    iterator.each(function (line) {
-      const initialLineValue = line.value.replace(/;/g, "");
-      const lineValues = initialLineValue.split(",");
-       itemObj.push(lineValues);
-      const itemId = lineValues[2];
-      const description = lineValues[3];
-      const OUM = lineValues[6];
-      const price = lineValues[31];
-      const itemWeight = lineValues[20];
-      const minimumQty = lineValues[76]
-      const cost = lineValues[77];
-      const contractCode = lineValues[101];
-      pricingToProcess.push({
-        itemId: itemId,
-        description: description,
-        OUM: OUM,
-        itemWeight: itemWeight,
-        minimumQty: minimumQty,
-        price: price,
-        cost: cost,
-        contractCode: contractCode,
+      const pricingToProcess = [];
+
+      const iterator = fileObj.lines.iterator();
+      iterator.each(function (line) {
+        const initialLineValue = line.value.replace(/;/g, "");
+        const lineValues = initialLineValue.split(",");
+        const itemId = lineValues[2];
+        const description = lineValues[3];
+        const OUM = lineValues[6];
+        const price = lineValues[31];
+        const itemWeight = lineValues[20];
+        const minimumQty = lineValues[76];
+        const cost = lineValues[77];
+        const contractCode = lineValues[101];
+        pricingToProcess.push({
+          itemId: itemId,
+          description: description,
+          OUM: OUM,
+          itemWeight: itemWeight,
+          minimumQty: minimumQty,
+          price: price,
+          cost: cost,
+          contractCode: contractCode,
+        });
+        return true;
       });
-      return true;
-    });
-    pricingToProcess.shift();
-    //return object and remove the first element
-    return pricingToProcess;
-  
+      pricingToProcess.shift();
+      //return object and remove the first element
+      return pricingToProcess;
     } catch (e) {
-      log.error("Function Name:getSpRichardsItemPricingObj ", e.message)
+      log.error("Function Name:getSpRichardsItemPricingObj ", e.message);
     }
   }
 
@@ -52,37 +48,33 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
    */
   function getEssendantItemPricingObj(fileObj) {
     try {
-    
-    const pricingToProcess = [];
-    const itemObj = [];
-    const iterator = fileObj.lines.iterator();
-    iterator.each(function (line) {
-      const initialLineValue = line.value.replace(/"/g, "");
-      const lineValues = initialLineValue.split(",");
-      itemObj.push(lineValues);
-      const itemId = lineValues[0];
-      const description = lineValues[7];
-      const OUM = lineValues[8];
-     
-      const price = lineValues[10];
-      const cost = lineValues[9];
-      const contractCode = lineValues[17];
-      pricingToProcess.push({
-        itemId: itemId,
-        description: description,
-        OUM: OUM,
-        price: price,
-        cost: cost,
-        contractCode: contractCode,
+      const pricingToProcess = [];
+      const iterator = fileObj.lines.iterator();
+      iterator.each(function (line) {
+        const initialLineValue = line.value.replace(/"/g, "");
+        const lineValues = initialLineValue.split(",");
+        const itemId = lineValues[0];
+        const description = lineValues[7];
+        const OUM = lineValues[8];
+        const price = lineValues[10];
+        const cost = lineValues[9];
+        const contractCode = lineValues[17];
+        pricingToProcess.push({
+          itemId: itemId,
+          description: description,
+          OUM: OUM,
+          price: price,
+          cost: cost,
+          contractCode: contractCode,
+        });
+        return true;
       });
-      return true;
-    });
-    pricingToProcess.shift();
+      pricingToProcess.shift();
 
-    //return object and remove the first element of the array
-    return pricingToProcess;
+      //return object and remove the first element of the array
+      return pricingToProcess;
     } catch (e) {
-      log.error("Function Name: getEssendantItemPricingObj", e.message)
+      log.error("Function Name: getEssendantItemPricingObj", e.message);
     }
   }
 
@@ -92,22 +84,21 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
    */
   function checkItemId(itemId) {
     try {
-  
-    let itemIdResults = false;
-    const itemSearchObj = search.create({
-      type: "item",
-      filters: [["name", "is", itemId]],
-      columns: [
-        search.createColumn({ name: "internalid", label: "Internal ID" }),
-      ],
-    });
-    itemSearchObj.run().each(function (result) {
-      itemIdResults = result.id;
-      return true;
-    });
-    return itemIdResults;
+      let itemIdResults;
+      const itemSearchObj = search.create({
+        type: "item",
+        filters: [["name", "is", itemId]],
+        columns: [
+          search.createColumn({ name: "internalid", label: "Internal ID" }),
+        ],
+      });
+      itemSearchObj.run().each(function (result) {
+        itemIdResults = result.id;
+        return true;
+      });
+      return itemIdResults;
     } catch (e) {
-      log.error("Function Name: checkItemId ", e.message)
+      log.error("Function Name: checkItemId ", e.message);
     }
   }
 
@@ -126,94 +117,119 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
       log.debug(
         "File with internal ID: " + moved + " moved to folder " + folderId + "."
       );
-    } else log.debug( "File with internal ID: " + fileId + " not found.");
+    } else log.debug("File with internal ID: " + fileId + " not found.");
   }
 
   /**
    * This update the item and item contract plan
    * @param {*} itemId
    * @param {*} contractCode
-   * @param {*} purchasePrice
+   * @param {*} description
+   * @param {*} price
    * @param {*} cost
    * @param {*} vendor
    */
   function updateItemAndContractPlan(
     itemId,
     contractCode,
-    purchasePrice,
+    description,
+    price,
     cost,
     vendor
   ) {
     try {
-    
-    const itemRec = record.load({
-      type: record.Type.INVENTORY_ITEM,
-      id: itemId,
-      isDynamic: true,
-    });
-    const vendorLine = itemRec.findSublistLineWithValue({
-      sublistId: "itemvendor",
-      fieldId: "vendor",
-      value: vendor,
-    });
-    const vendorCodeLine = itemRec.findSublistLineWithValue({
-      sublistId: "itemvendor",
-      fieldId: "vendorcode",
-      value: contractCode.toString(),
-    });
+      const itemRec = record.load({
+        type: record.Type.INVENTORY_ITEM,
+        id: itemId,
+        isDynamic: true,
+      });
+      if (cost) {
+        itemRec.setValue({
+          fieldId: "cost",
+          value: cost,
+        });
+      }
 
-    if (vendorLine !== -1 && vendorCodeLine !== -1 && vendorLine === vendorCodeLine) {
-      itemRec.selectLine({
-        sublistId: "itemvendor",
-        line: vendorLine,
-      });
-      itemRec.setCurrentSublistValue({
-        sublistId: "itemvendor",
-        fieldId: "cost",
-        value: cost,
-      });
-      itemRec.commitLine({
-        sublistId: "itemvendor",
-      });
-    } else {
-      //if vendor line is not found create line for vendor and contractCode
-      itemRec.selectNewLine({
-        sublistId: "itemvendor",
-      });
-      itemRec.setCurrentSublistValue({
+      if (description) {
+        itemRec.setValue({
+          fieldId: "displayname",
+          value: description,
+        });
+      }
+
+      const vendorLine = itemRec.findSublistLineWithValue({
         sublistId: "itemvendor",
         fieldId: "vendor",
         value: vendor,
       });
-      itemRec.setCurrentSublistValue({
+
+      const vendorCodeLine = itemRec.findSublistLineWithValue({
         sublistId: "itemvendor",
         fieldId: "vendorcode",
-        value: contractCode,
+        value: contractCode.toString(),
       });
-      itemRec.setCurrentSublistValue({
-        sublistId: "itemvendor",
-        fieldId: "purchaseprice",
-        value: cost,
-      });
-      itemRec.commitLine({
-        sublistId: "itemvendor",
-      });
-    }
-    const itemRecId = itemRec.save({
-      ignoreMandatoryFields: true,
-    });
 
-    const itemContractPlan = updateItemContractPlanPrice(
-      itemId,
-      contractCode,
-      purchasePrice,
-      cost
-    );
-      log.debug("item and contract plan", { itemRecId, itemContractPlan });
+      if (
+        vendorLine !== -1 &&
+        vendorCodeLine !== -1 &&
+        vendorLine === vendorCodeLine
+      ) {
+        itemRec.selectLine({
+          sublistId: "itemvendor",
+          line: vendorLine,
+        });
+        itemRec.setCurrentSublistValue({
+          sublistId: "itemvendor",
+          fieldId: "purchaseprice",
+          value: cost,
+        });
+        itemRec.commitLine({
+          sublistId: "itemvendor",
+        });
+      } else {
+        //if vendor line is not found create line for vendor and contractCode
+        itemRec.selectLine({
+          sublistId: "itemvendor",
+          line: vendorLine,
+        });
+        itemRec.setCurrentSublistValue({
+          sublistId: "itemvendor",
+          fieldId: "vendor",
+          value: vendor,
+        });
+        itemRec.setCurrentSublistValue({
+          sublistId: "itemvendor",
+          fieldId: "vendorcode",
+          value: contractCode,
+        });
+        itemRec.setCurrentSublistValue({
+          sublistId: "itemvendor",
+          fieldId: "purchaseprice",
+          value: cost,
+        });
+        itemRec.commitLine({
+          sublistId: "itemvendor",
+        });
+      }
+      const itemRecId = itemRec.save({
+        ignoreMandatoryFields: true,
+      });
+      log.debug(
+        "Function Name: updateItemAndContractPlan ",
+        `Item ${itemRecId} updated successfully`
+      );
+      if (contractCode) {
+        const itemContractPlan = updateItemContractPlanPrice(
+          itemRecId,
+          contractCode,
+          price,
+          cost
+        );
+        log.debug("item and contract plan", { itemRecId, itemContractPlan });
+      }
     } catch (e) {
-      log.error("Function Name:updateItemAndContractPlan ", e.message)
+      log.error("Function Name:updateItemAndContractPlan ", e.message);
     }
- 
   }
 
   /**
@@ -230,32 +246,30 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
     cost
   ) {
     try {
-    
-  
-    let itemContractPlanId = "";
-    const contractPlanSearch = search.create({
-      type: "customrecord_bsp_isg_item_acct_data",
-      filters: [
-        ["custrecord_bsp_isg_parent_item.internalid", "anyof", itemId],
-        "AND",
-        ["custrecord_bsp_isg_item_contract_code.name", "is", contractCode],
-      ],
-    });
-    const searchResultCount = contractPlanSearch.runPaged().count;
-    if (searchResultCount <= 0) return false;
-    contractPlanSearch.run().each(function (result) {
-      itemContractPlanId = result.id;
-      return true;
-    });
-    return record.submitFields({
-      type: "customrecord_bsp_isg_item_acct_data",
-      id: itemContractPlanId,
-      value: "custrecord_bsp_isg_item_price",
-      purchasePrice,
-      custrecord_bsp_isg_item_cost: cost,
-    });
+      let itemContractPlanId = "";
+      const contractPlanSearch = search.create({
+        type: "customrecord_bsp_isg_item_acct_data",
+        filters: [
+          ["custrecord_bsp_isg_parent_item.internalid", "anyof", itemId],
+          "AND",
+          ["custrecord_bsp_isg_item_contract_code.name", "is", contractCode],
+        ],
+      });
+      const searchResultCount = contractPlanSearch.runPaged().count;
+      if (searchResultCount <= 0) return false;
+      contractPlanSearch.run().each(function (result) {
+        itemContractPlanId = result.id;
+        return true;
+      });
+      return record.submitFields({
+        type: "customrecord_bsp_isg_item_acct_data",
+        id: itemContractPlanId,
+        value: "custrecord_bsp_isg_item_price",
+        purchasePrice,
+        custrecord_bsp_isg_item_cost: cost,
+      });
     } catch (e) {
-      log.error("Function Name:updateItemContractPlanPrice " , e.message)
+      log.error("Function Name:updateItemContractPlanPrice ", e.message);
     }
   }
 
@@ -264,79 +278,99 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
    * @param {*} itemId
    * @param {*} cost
    * @param {*} description
+   * @param {*} vendor
    */
-  function createItem(itemId, cost, description) {
+  function createItem(itemId, cost, description, vendor) {
     try {
-    
-    const itemRec = record.create({
-      type: "inventoryitem",
-      isDynamic: true,
-    });
-    if (cost) {
-      itemRec.setValue({
-        fieldId: "cost",
-        value: cost,
+      const itemRec = record.create({
+        type: "inventoryitem",
+        isDynamic: true,
       });
-    }
+      if (cost) {
+        itemRec.setValue({
+          fieldId: "cost",
+          value: cost,
+        });
+      }
 
-    if (description) {
+      if (description) {
+        itemRec.setValue({
+          fieldId: "displayname",
+          value: description,
+        });
+      }
+
       itemRec.setValue({
         fieldId: "itemid",
-        value: description,
+        value: itemId,
       });
-    }
 
-    itemRec.setValue({
-      fieldId: "itemid",
-      value: itemId,
-    });
+      itemRec.setValue({
+        fieldId: "isonline",
+        value: false,
+      });
+      itemRec.selectNewLine({
+        sublistId: "itemvendor",
+      });
+      itemRec.setCurrentSublistValue({
+        sublistId: "itemvendor",
+        fieldId: "vendor",
+        value: vendor,
+      });
+      itemRec.setCurrentSublistValue({
+        sublistId: "itemvendor",
+        fieldId: "purchaseprice",
+        value: cost,
+      });
+      itemRec.commitLine({
+        sublistId: "itemvendor",
+      });
 
-    itemRec.setValue({
-      fieldId: "isonline",
-      value: false,
-    });
-
-    // return itemRec.save({ ignoreErrors: true });
+      const itemRecId = itemRec.save({ ignoreErrors: true });
+      log.debug(
+        "Function Name: updateItemAndContractPlan ",
+        `Item ${itemRecId} updated successfully`
+      );
     } catch (e) {
-      log.error("Function Name: createItem",e.message)
+      log.error("Function Name: createItem", e.message);
     }
   }
-  
+
   /**
    * This function get the file Id of the CSV file in the Pending Folder
    * @param {*} folderId
    */
   function getFileId(folderId) {
     try {
-    let fileId;
-    const fileSearch = search.create({
-      type: search.Type.FOLDER,
-      columns: [
-        {
-          join: "file",
-          name: "internalid",
-        },
-      ],
-      filters: [
-        {
-          name: "internalid",
-          operator: "anyof",
-          values: folderId,
-        },
-      ],
-    });
-
-    fileSearch.run().each(function (result) {
-      fileId = result.getValue({
-        join: "file",
-        name: "internalid",
+      let fileId;
+      const fileSearch = search.create({
+        type: search.Type.FOLDER,
+        columns: [
+          {
+            join: "file",
+            name: "internalid",
+          },
+        ],
+        filters: [
+          {
+            name: "internalid",
+            operator: "anyof",
+            values: folderId,
+          },
+        ],
       });
 
-      return false;
-    });
-    return fileId;
+      fileSearch.run().each(function (result) {
+        fileId = result.getValue({
+          join: "file",
+          name: "internalid",
+        });
+
+        return false;
+      });
+      return fileId;
     } catch (e) {
-      log.error("Function Name:getFileId ",e.message)
+      log.error("Function Name:getFileId ", e.message);
     }
   }
 
