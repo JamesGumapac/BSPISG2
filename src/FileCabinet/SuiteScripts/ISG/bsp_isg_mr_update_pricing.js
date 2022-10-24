@@ -88,12 +88,12 @@ define([
         functionName + " " + "pricingToUpdateData",
         pricingToUpdateDataObj
       );
-      const isExisting = BSPUpdatePricing.checkItemId(
+      const itemId = BSPUpdatePricing.checkItemId(
         pricingToUpdateDataObj.itemId
       );
-      if (isExisting === true) {
+      if (itemId !== true) {
         BSPUpdatePricing.updateItemAndContractPlan(
-          pricingToUpdateDataObj.itemId,
+            itemId,
           pricingToUpdateDataObj.contractCode,
           pricingToUpdateDataObj.purchasePrice,
           pricingToUpdateDataObj.cost,

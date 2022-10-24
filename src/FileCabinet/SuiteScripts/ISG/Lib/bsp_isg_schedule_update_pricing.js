@@ -1,24 +1,15 @@
 /**
  * @NApiVersion 2.1
- * @NScriptType ClientScript
- * @NModuleScope SameAccount
  */
 define(["N/file", "N/search", "N/record"], function (file, search, record) {
-  /**
-   * Function to be executed after page is initialized.
-   *
-   * @param {Object} scriptContext
-   * @param {Record} scriptContext.currentRecord - Current form record
-   * @param {string} scriptContext.mode - The mode in which the record is being accessed (create, copy, or edit)
-   *
-   * @since 2015.2
-   */
-  function pageInit(scriptContext) {}
+
   /**
    * This function maps the column line for SPR and iterate each line and return the line object
    * @param {*} fileObj - file Object
    */
   function getSpRichardsItemPricingObj(fileObj) {
+    try {
+  
     const pricingToProcess = [];
      const itemObj = [];
     const iterator = fileObj.lines.iterator();
@@ -30,12 +21,16 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
       const description = lineValues[3];
       const OUM = lineValues[6];
       const price = lineValues[31];
+      const itemWeight = lineValues[20];
+      const minimumQty = lineValues[76]
       const cost = lineValues[77];
       const contractCode = lineValues[101];
       pricingToProcess.push({
         itemId: itemId,
         description: description,
         OUM: OUM,
+        itemWeight: itemWeight,
+        minimumQty: minimumQty,
         price: price,
         cost: cost,
         contractCode: contractCode,
@@ -45,6 +40,10 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
     pricingToProcess.shift();
     //return object and remove the first element
     return pricingToProcess;
+  
+    } catch (e) {
+      log.error("Function Name:getSpRichardsItemPricingObj ", e.message)
+    }
   }
 
   /**
@@ -52,6 +51,8 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
    * @param {*} fileObj - file Object
    */
   function getEssendantItemPricingObj(fileObj) {
+    try {
+    
     const pricingToProcess = [];
     const itemObj = [];
     const iterator = fileObj.lines.iterator();
@@ -62,6 +63,7 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
       const itemId = lineValues[0];
       const description = lineValues[7];
       const OUM = lineValues[8];
+     
       const price = lineValues[10];
       const cost = lineValues[9];
       const contractCode = lineValues[17];
@@ -79,6 +81,9 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
 
     //return object and remove the first element of the array
     return pricingToProcess;
+    } catch (e) {
+      log.error("Function Name: getEssendantItemPricingObj", e.message)
+    }
   }
 
   /**
@@ -86,6 +91,8 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
    * @param {*} itemId
    */
   function checkItemId(itemId) {
+    try {
+  
     let itemIdResults = false;
     const itemSearchObj = search.create({
       type: "item",
@@ -99,6 +106,9 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
       return true;
     });
     return itemIdResults;
+    } catch (e) {
+      log.error("Function Name: checkItemId ", e.message)
+    }
   }
 
   /**
@@ -134,6 +144,8 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
     cost,
     vendor
   ) {
+    try {
+    
     const itemRec = record.load({
       type: record.Type.INVENTORY_ITEM,
       id: itemId,
@@ -149,21 +161,21 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
       fieldId: "vendorcode",
       value: contractCode.toString(),
     });
-    console.log(vendorCodeLine + ": " + vendorLine);
-    if (vendorLine === vendorCodeLine) {
+
+    if (vendorLine !== -1 && vendorCodeLine !== -1 && vendorLine === vendorCodeLine) {
       itemRec.selectLine({
         sublistId: "itemvendor",
         line: vendorLine,
       });
       itemRec.setCurrentSublistValue({
         sublistId: "itemvendor",
-        fieldId: "purchaseprice",
-        value: purchasePrice,
+        fieldId: "cost",
+        value: cost,
       });
       itemRec.commitLine({
         sublistId: "itemvendor",
       });
-    } else if (vendorLine === -1) {
+    } else {
       //if vendor line is not found create line for vendor and contractCode
       itemRec.selectNewLine({
         sublistId: "itemvendor",
@@ -181,7 +193,7 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
       itemRec.setCurrentSublistValue({
         sublistId: "itemvendor",
         fieldId: "purchaseprice",
-        value: purchasePrice,
+        value: cost,
       });
       itemRec.commitLine({
         sublistId: "itemvendor",
@@ -191,14 +203,17 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
       ignoreMandatoryFields: true,
     });
 
-    const itemContractPlan = updateItemContractPlanPirce(
+    const itemContractPlan = updateItemContractPlanPrice(
       itemId,
       contractCode,
       purchasePrice,
       cost
     );
-
-    log.debug("item and contract plan", { itemRecId, itemContractPlan });
+      log.debug("item and contract plan", { itemRecId, itemContractPlan });
+    } catch (e) {
+      log.error("Function Name:updateItemAndContractPlan ", e.message)
+    }
+ 
   }
 
   /**
@@ -208,12 +223,15 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
    * @param {*} purchasePrice
    * @param {*} cost
    */
-  function updateItemContractPlanPirce(
+  function updateItemContractPlanPrice(
     itemId,
     contractCode,
     purchasePrice,
     cost
   ) {
+    try {
+    
+  
     let itemContractPlanId = "";
     const contractPlanSearch = search.create({
       type: "customrecord_bsp_isg_item_acct_data",
@@ -236,30 +254,34 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
       purchasePrice,
       custrecord_bsp_isg_item_cost: cost,
     });
+    } catch (e) {
+      log.error("Function Name:updateItemContractPlanPrice " , e.message)
+    }
   }
 
   /**
    * This function create item record if the item is not existing
    * @param {*} itemId
-   * @param {*} purchasePrice
    * @param {*} cost
    * @param {*} description
    */
-  function createItem(itemId, purchasePrice, cost, description) {
+  function createItem(itemId, cost, description) {
+    try {
+    
     const itemRec = record.create({
       type: "inventoryitem",
       isDynamic: true,
     });
-    if (purchasePrice) {
+    if (cost) {
       itemRec.setValue({
-        fieldId: "purchaseunit",
-        value: purchasePrice,
+        fieldId: "cost",
+        value: cost,
       });
     }
 
     if (description) {
       itemRec.setValue({
-        fieldId: "description",
+        fieldId: "itemid",
         value: description,
       });
     }
@@ -275,6 +297,9 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
     });
 
     // return itemRec.save({ ignoreErrors: true });
+    } catch (e) {
+      log.error("Function Name: createItem",e.message)
+    }
   }
   
   /**
@@ -282,6 +307,7 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
    * @param {*} folderId
    */
   function getFileId(folderId) {
+    try {
     let fileId;
     const fileSearch = search.create({
       type: search.Type.FOLDER,
@@ -309,10 +335,12 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
       return false;
     });
     return fileId;
+    } catch (e) {
+      log.error("Function Name:getFileId ",e.message)
+    }
   }
 
   return {
-    pageInit: pageInit,
     getEssendantItemPricingObj: getEssendantItemPricingObj,
     getSpRichardsItemPricingObj: getSpRichardsItemPricingObj,
     checkItemId: checkItemId,
