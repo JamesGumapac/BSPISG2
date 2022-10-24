@@ -38,7 +38,7 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
       //return object and remove the first element
       return pricingToProcess;
     } catch (e) {
-      log.error("Function Name:getSpRichardsItemPricingObj ", e.message);
+      log.error("getSpRichardsItemPricingObj ", e.message);
     }
   }
 
@@ -74,7 +74,7 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
       //return object and remove the first element of the array
       return pricingToProcess;
     } catch (e) {
-      log.error("Function Name: getEssendantItemPricingObj", e.message);
+      log.error("getEssendantItemPricingObj", e.message);
     }
   }
 
@@ -98,7 +98,7 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
       });
       return itemIdResults;
     } catch (e) {
-      log.error("Function Name: checkItemId ", e.message);
+      log.error(" checkItemId ", e.message);
     }
   }
 
@@ -123,39 +123,27 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
   /**
    * This update the item and item contract plan
    * @param {*} itemId
-   * @param {*} contractCode
-   * @param {*} description
-   * @param {*} price
-   * @param {*} cost
+   * @param {*} itemPricingData
    * @param {*} vendor
    */
-  function updateItemAndContractPlan(
-    itemId,
-    contractCode,
-    description,
-    price,
-    cost,
-    vendor
-  ) {
+  function updateItemAndContractPlan(itemId,itemPricingData, vendor) {
     try {
       const itemRec = record.load({
         type: record.Type.INVENTORY_ITEM,
         id: itemId,
         isDynamic: true,
       });
-      if (cost) {
+      itemPricingData.cost &&
         itemRec.setValue({
           fieldId: "cost",
-          value: cost,
+          value: itemPricingData.cost,
         });
-      }
 
-      if (description) {
+      itemPricingData.description &&
         itemRec.setValue({
           fieldId: "displayname",
-          value: description,
+          value: itemPricingData.description,
         });
-      }
 
       const vendorLine = itemRec.findSublistLineWithValue({
         sublistId: "itemvendor",
@@ -166,9 +154,8 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
       const vendorCodeLine = itemRec.findSublistLineWithValue({
         sublistId: "itemvendor",
         fieldId: "vendorcode",
-        value: contractCode.toString(),
-      });
-
+        value: itemPricingData.contractCode
+      })
       if (
         vendorLine !== -1 &&
         vendorCodeLine !== -1 &&
@@ -181,7 +168,7 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
         itemRec.setCurrentSublistValue({
           sublistId: "itemvendor",
           fieldId: "purchaseprice",
-          value: cost,
+          value: itemPricingData.cost,
         });
         itemRec.commitLine({
           sublistId: "itemvendor",
@@ -200,12 +187,12 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
         itemRec.setCurrentSublistValue({
           sublistId: "itemvendor",
           fieldId: "vendorcode",
-          value: contractCode,
+          value: itemPricingData.contractCode,
         });
         itemRec.setCurrentSublistValue({
           sublistId: "itemvendor",
           fieldId: "purchaseprice",
-          value: cost,
+          value: itemPricingData.cost,
         });
         itemRec.commitLine({
           sublistId: "itemvendor",
@@ -215,20 +202,20 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
         ignoreMandatoryFields: true,
       });
       log.debug(
-        "Function Name: updateItemAndContractPlan ",
+        " updateItemAndContractPlan ",
         `Item ${itemRecId} updated successfully`
       );
-      if (contractCode) {
+      if (itemPricingData.contractCode) {
         const itemContractPlan = updateItemContractPlanPrice(
           itemRecId,
-          contractCode,
-          price,
-          cost
+          itemPricingData.contractCode,
+          itemPricingData.price,
+          itemPricingData.cost
         );
         log.debug("item and contract plan", { itemRecId, itemContractPlan });
       }
     } catch (e) {
-      log.error("Function Name:updateItemAndContractPlan ", e.message);
+      log.error("updateItemAndContractPlan ", e.message);
     }
   }
 
@@ -269,40 +256,36 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
         custrecord_bsp_isg_item_cost: cost,
       });
     } catch (e) {
-      log.error("Function Name:updateItemContractPlanPrice ", e.message);
+      log.error("updateItemContractPlanPrice ", e.message);
     }
   }
 
   /**
    * This function create item record if the item is not existing
-   * @param {*} itemId
-   * @param {*} cost
-   * @param {*} description
+   * @param {*} itemPricingData
    * @param {*} vendor
    */
-  function createItem(itemId, cost, description, vendor) {
+  function createItem(itemPricingData, vendor) {
     try {
       const itemRec = record.create({
         type: "inventoryitem",
         isDynamic: true,
       });
-      if (cost) {
+      itemPricingData.cost &&
         itemRec.setValue({
           fieldId: "cost",
-          value: cost,
+          value: itemPricingData.cost,
         });
-      }
 
-      if (description) {
+      itemPricingData.description &&
         itemRec.setValue({
           fieldId: "displayname",
-          value: description,
+          value: itemPricingData.description,
         });
-      }
 
       itemRec.setValue({
         fieldId: "itemid",
-        value: itemId,
+        value: itemPricingData.itemId,
       });
 
       itemRec.setValue({
@@ -320,7 +303,7 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
       itemRec.setCurrentSublistValue({
         sublistId: "itemvendor",
         fieldId: "purchaseprice",
-        value: cost,
+        value: itemPricingData.cost,
       });
       itemRec.commitLine({
         sublistId: "itemvendor",
@@ -328,11 +311,11 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
 
       const itemRecId = itemRec.save({ ignoreErrors: true });
       log.debug(
-        "Function Name: updateItemAndContractPlan ",
+        " updateItemAndContractPlan ",
         `Item ${itemRecId} updated successfully`
       );
     } catch (e) {
-      log.error("Function Name: createItem", e.message);
+      log.error("createItem", e.message);
     }
   }
 
@@ -370,7 +353,7 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
       });
       return fileId;
     } catch (e) {
-      log.error("Function Name:getFileId ", e.message);
+      log.error("getFileId ", e.message);
     }
   }
 

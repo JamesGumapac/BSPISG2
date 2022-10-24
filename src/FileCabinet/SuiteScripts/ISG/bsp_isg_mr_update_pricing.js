@@ -82,33 +82,20 @@ define([
       const vendor = scriptObj.getParameter({
         name: "custscript_bsp_isg_vendor",
       });
-      let pricingToUpdateData = reduceContext.values;
-      let pricingToUpdateDataObj = JSON.parse(pricingToUpdateData);
-      log.debug(functionName + " pricingToUpdateData", pricingToUpdateDataObj);
-      const itemId = BSPUpdatePricing.checkItemId(
-        pricingToUpdateDataObj.itemId
-      );
-      
-      if (itemId) {
-        BSPUpdatePricing.updateItemAndContractPlan(
-          itemId,
-          pricingToUpdateDataObj.contractCode,
-          pricingToUpdateDataObj.description,
-          pricingToUpdateDataObj.price,
-          pricingToUpdateDataObj.cost,
-          vendor
-        );
-      } else {
-       
-        BSPUpdatePricing.createItem(
-          pricingToUpdateDataObj.itemId,
-          pricingToUpdateDataObj.cost,
-          pricingToUpdateDataObj.description,
-          vendor
-        );
-      }
+      let itemPricingData = JSON.parse(reduceContext.values);
+
+      log.debug(functionName + " itemPricingData", itemPricingData);
+      const itemId = BSPUpdatePricing.checkItemId(itemPricingData.itemId);
+
+      itemId
+        ? BSPUpdatePricing.updateItemAndContractPlan(
+            itemId,
+            itemPricingData,
+            vendor
+          )
+        : BSPUpdatePricing.createItem(itemPricingData, vendor);
     } catch (e) {
-      log.error(functionName, e.toString());
+      log.error("Function Name: " + functionName, e.tostring());
     }
   };
 
@@ -136,21 +123,19 @@ define([
     const scriptObj = runtime.getCurrentScript();
     let folderId;
     let doneFolderId;
-    if (scriptObj.deploymentId === "customdeploy_bsp_isg_esse_updt_prcng") {
-      folderId = scriptObj.getParameter({
-        name: "custscript_bsp_isg_essendant",
-      });
-      doneFolderId = scriptObj.getParameter({
-        name: "custscript_bsp_isg_essen_done_folder_id",
-      });
-    } else {
-      folderId = scriptObj.getParameter({
-        name: "custscript_bsp_isg_sp_richards",
-      });
-      doneFolderId = scriptObj.getParameter({
-        name: "custscript_bsp_isg_spr_done_folder_id",
-      });
-    }
+    scriptObj.deploymentId === "customdeploy_bsp_isg_esse_updt_prcng"
+      ? ((folderId = scriptObj.getParameter({
+          name: "custscript_bsp_isg_essendant",
+        })),
+        (doneFolderId = scriptObj.getParameter({
+          name: "custscript_bsp_isg_essen_done_folder_id",
+        })))
+      : ((folderId = scriptObj.getParameter({
+          name: "custscript_bsp_isg_sp_richards",
+        })),
+        (doneFolderId = scriptObj.getParameter({
+          name: "custscript_bsp_isg_spr_done_folder_id",
+        })));
 
     BSPUpdatePricing.moveFolderToDone(
       BSPUpdatePricing.getFileId(folderId),
