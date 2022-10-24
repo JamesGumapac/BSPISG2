@@ -3,7 +3,7 @@
  * @NModuleScope Public
  */
 
- define(['N/record', './bsp_isg_lb_utils.js', './bsp_isg_lb_items.js', './bsp_isg_lb_ordersservice_api.js', './bsp_isg_lb_entities.js'], function (record, BSPLBUtils, BSPLBItems, LBOrdersAPI, BSPLBEntities) {
+ define(['N/record', 'N/search', './bsp_isg_lb_utils.js', './bsp_isg_lb_items.js', './bsp_isg_lb_ordersservice_api.js', './bsp_isg_lb_entities.js'], function (record, search, BSPLBUtils, BSPLBItems, LBOrdersAPI, BSPLBEntities) {
 
     /**
      * Create Transaction Record in NS
@@ -68,6 +68,47 @@
             }           
         }
 
+        /*--- Tax Calculations   ---
+        log.debug('settings', settings);
+        let avatax = settings.custrecord_bsp_lb_avatax;
+        let subTotal= objFields.order.SubTotal;
+        let taxTotal = objFields.order.TaxTotal;
+        let afterTaxesResult;
+
+        log.debug('objFields.order', objFields.order);
+        log.debug("subtotal", subTotal);
+        log.debug('avatax variable',avatax);
+        log.debug('taxTotal', taxTotal);
+
+
+        if(avatax == 'F'){
+            afterTaxesResult = (taxTotal*100)/subTotal;
+            log.debug('afterTaxesResult', afterTaxesResult);
+
+        }
+
+        */
+
+        /*--- Delivery zone checker   ---*/
+
+        let delZoneChecker;
+        let delZone = searchDeliveryZone(objFields.order);
+
+        if(searchDeliveryZone(objFields.order)==false){
+            delZoneChecker = false;
+        }
+        else{
+            delZoneChecker = true;
+                if(delZone[0].routeCode)
+                {
+                transactionRecord.setValue({ fieldId: "custbody_bsp_isg_route_code", value: delZone[0].routeCode});
+                }
+                if(delZone[0].location)
+                {
+                transactionRecord.setValue({ fieldId: "location", value: delZone[0].location});
+                }
+        }
+
         for (const fieldMapping of objMappingFields.bodyFields) {
             let nsField = fieldMapping.netSuiteFieldId;
             let nsFieldName = fieldMapping.netSuiteFieldName;
@@ -128,8 +169,8 @@
                 }                            
             }
         }
-        processTransactionLines(transactionRecord, objFields.order, objMappingFields, itemRecordsResult);
 
+        processTransactionLines(transactionRecord, objFields.order, objMappingFields, itemRecordsResult, delZoneChecker);
         /**
          * Default values
          */
@@ -153,7 +194,7 @@
      * @param {*} objMappingFields 
      * @param {*} itemRecordsResult 
      */
-    function processTransactionLines(transactionRecord, order, objMappingFields, itemRecordsResult){
+    function processTransactionLines(transactionRecord, order, objMappingFields, itemRecordsResult, delZoneChecker){
         let lineItems = [];
         if(order.LineItems.LineItem.length && order.LineItems.LineItem.length > 0){
             lineItems = order.LineItems.LineItem;
@@ -168,7 +209,20 @@
                 let itemRecId = BSPLBItems.getItemNetSuiteRecID(productSKU, itemRecordsResult);
                 if(itemRecId){
                     transactionRecord.setCurrentSublistValue({ sublistId: strSublistID, fieldId: "item", value: itemRecId });
+                    
+                    /*--- 1=Dropship
+                          2=Wrap and Label   ---*/
 
+                    if(delZoneChecker == false)
+                    {
+                    transactionRecord.setCurrentSublistValue({sublistId: 'item', fieldId: 'custcol_bsp_order_shipment_type', value: 1});
+                    }
+                    
+                    if(delZoneChecker == true)
+                    {
+                    transactionRecord.setCurrentSublistValue({sublistId: 'item', fieldId: 'custcol_bsp_order_shipment_type', value: 2})
+                    } 
+                    
                     let excludeItemFromTransmission = BSPLBItems.getItemField(itemRecId, "custitem_bsp_isg_excl_from_auto_transm");
                     
                     if(excludeItemFromTransmission){
@@ -201,7 +255,8 @@
                                     );
                                     if(!BSPLBUtils.isEmpty(resultValue)){
                                         transactionRecord.setCurrentSublistValue({sublistId: nsSublistId, fieldId: nsLineFieldId, value: resultValue });
-                                    }           
+                                    }  
+                                            
                                 }else{
                                     if(fieldDataType == "String"){               
                                         transactionRecord.setCurrentSublistValue({ sublistId: nsSublistId, fieldId: nsLineFieldId, value: lbValue });
@@ -214,14 +269,15 @@
                             }else if(!BSPLBUtils.isEmpty(defaultValue)){
                                 transactionRecord.setCurrentSublistValue({sublistId: nsSublistId, fieldId: nsLineFieldId, value: defaultValue });
                             }                                       
-                        }
-                    }  
-                    transactionRecord.commitLine({
-                        sublistId: strSublistID,
-                    });
-                }                
-            }       
-        });   
+                        }            
+                    }    
+                transactionRecord.commitLine({
+                    sublistId: strSublistID,
+                });      
+                      
+            }   
+        }    
+        })   
     }
 
     /**
@@ -240,7 +296,11 @@
         let transactionRecordResult = {};
         let transactionUpdated = false;
         try{   
-            let transactionRecID = BSPLBUtils.getRecordInternalID(order.Id);
+            let transactionRecID;
+            if(!BSPLBUtils.getRecordInternalID(order.Id)){
+                transactionRecID = '';
+            }
+           // let transactionRecID = BSPLBUtils.getRecordInternalID(order.Id);
             if(transactionRecID){
                 transactionUpdated = true;
                 try{
@@ -312,9 +372,60 @@
         return orderPaymentMethod;
     }
 
+    function searchDeliveryZone(order) {
+        let results = [];
+        try{
+            const customrecord_bsp_deliveryzoneSearchObj = search.create({
+                type: "customrecord_bsp_isg_deliveryzone",
+                filters:
+                [
+                   ["custrecord_bsp_zipcode","is", order.ShippingAddress.PostalCode], 
+                   "AND", 
+                   ["custrecord_bsp_state_.shortname","is",order.ShippingAddress.RegionCode], 
+                   "AND", 
+                   ["custrecord_bsp_city","is", order.ShippingAddress.City],
+                ],
+                columns:
+                [
+                   search.createColumn({name: "custrecord_bsp_zipcode", label: "Zip code"}),
+                   search.createColumn({name: "custrecord_bsp_state_", label: "State"}),
+                   search.createColumn({name: "custrecord_bsp_routecode", label: "Route Code"}),
+                   search.createColumn({name: "custrecord_bsp_location_", label: "Location"})
+                ]
+             });
+          
+             var searchResultCount = customrecord_bsp_deliveryzoneSearchObj.runPaged().count;
+
+             if(searchResultCount > 0)
+             {
+                    customrecord_bsp_deliveryzoneSearchObj.run().each(function(result){
+                        let city = result.getValue({name: "custrecord_bsp_city"});
+                        let state= result.getValue({name: "custrecord_bsp_state_"});
+                        let zipCode= result.getValue({name: "custrecord_bsp_zipcode"});
+                        let routeCode= result.getValue({name: "custrecord_bsp_routecode"});
+                        let location= result.getValue({name: "custrecord_bsp_location_"});
+
+                        results.push({city: city, state: state, zipCode: zipCode, routeCode: routeCode, location:location});
+                        return true;
+                    });
+             }
+             else
+             {
+                    results = false;
+             }
+                            
+        }catch (error)
+        {
+           
+        } 
+
+        return results;
+
+    }
+
     return {
 		fetchTransaction: fetchTransaction,
         orderPaid: orderPaid
 	};
-
-});
+    
+}); 
