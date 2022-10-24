@@ -1,170 +1,164 @@
 /**
  * @NApiVersion 2.x
- * @NScriptType ClientScript
- * @NModuleScope SameAccount
  */
 define([
-  "N/record",
-  "N/runtime",
-  "N/search",
-  "N/http",
-  "N/format",
-  "N/https",
-  "./bsp_isg_elite_extra_api_service.js",
+	"N/record",
+	"N/runtime",
+	"N/search",
+	"N/format",
+	"./bsp_isg_elite_extra_api_service.js",
 ], /**
  * @param{record} record
  * @param{runtime} runtime
  * @param{search} search
- * @param{message} message
- * @param{http} http
+ * @param{format} format,
+ * @param{*} BSPEliteExtraAPIService
  */ function (
-  record,
-  runtime,
-  search,
-  http,
-  format,
-  https,
-  BSPEliteExtraAPIService
+	record,
+	runtime,
+	search,
+	format,
+	BSPEliteExtraAPIService
 ) {
-  /**
-   * Get the item IF and SO details and create an object with it
-   * @param {*} ifRecId
-   */
-  function getIfDetails(ifRecId) {
-    try {
-      const ifRec = record.load({
-        type: record.Type.ITEM_FULFILLMENT,
-        id: ifRecId,
-        isDynamic: true,
-      });
-      const soId = ifRec.getValue("createdfrom");
-      const soRec = record.load({
-        type: record.Type.SALES_ORDER,
-        id: soId,
-        isDynamic: true,
-      });
-
-      const salesRepId = soRec.getValue("salesrep");
-      let salesRepInfo = "";
-      if (!isEmpty(salesRepId)) {
-        salesRepInfo = search.lookupFields({
-          type: search.Type.EMPLOYEE,
-          id: salesRepId,
-          columns: ["firstname", "lastname"],
-        });
-      }
-
-      const billSubRecord = soRec.getSubrecord({
-        fieldId: "billingaddress",
-      });
-
-      const shipSubRecord = soRec.getSubrecord({
-        fieldId: "shippingaddress",
-      });
-
-      const orderHeaderFields = [];
-      orderHeaderFields.push({
-        orderId: ifRec.getValue("tranid"),
-        warehouse: "1", //soRec.getValue("location"),
-        po: soRec.getValue("otherrefnum") || "",
-        status: "",
-        price: "",
-        tax: soRec.getValue("tax") || 0,
-        deposit: soRec.getValue("custbody_bsp_aab_so_deposit") || 0,
-        dateTime: formatDateTime(soRec.getValue("trandate")) || "",
-        shipTime: formatDateTime(ifRec.getValue("trandate")) || "",
-        comment: soRec.getValue("memo") || "",
-        shipViaName: soRec.getText("shipmethod"),
-        salesPersonId: soRec.getValue("salesrep"),
-        salesPersonName: isEmpty(salesRepInfo) ? "" : salesRepInfo.firstname,
-        salesPersonLastname: isEmpty(salesRepInfo) ? "" : salesRepInfo.lastname,
-        billToId: soRec.getValue("entity") || "",
-        billToName: billSubRecord.getValue("addressee") || "",
-        billToPhone: billSubRecord.getValue("phone") || "",
-        billAddressLine1: billSubRecord.getValue("addr1") || "",
-        billAddressLine2: billSubRecord.getValue("addr2") || "",
-        billAddressLine3: billSubRecord.getValue("addr3") || "",
-        billCity: billSubRecord.getValue("city") || "",
-        billState: billSubRecord.getValue("state") || "",
-        billZip: billSubRecord.getValue("zip") || "",
-        shipToId: soRec.getValue("entity") || "",
-        shipToName: shipSubRecord.getValue("addressee") || "",
-        shipToPhone: shipSubRecord.getValue("phone") || "",
-        shipAddressLine1: shipSubRecord.getValue("addr1") || "",
-        shipAddressLine2: shipSubRecord.getValue("addr2") || "",
-        shipAddressLine3: shipSubRecord.getValue("addr3") || "",
-        shipCity: shipSubRecord.getValue("city") || "",
-        shipState: shipSubRecord.getValue("state") || "",
-        shipZip: shipSubRecord.getValue("zip") || "",
-      });
-
-      const itemLineInfo = [];
-      for (let i = 0; i < ifRec.getLineCount("item"); i++) {
-        const itemReceive = ifRec.getSublistValue({
-          sublistId: "item",
-          fieldId: "itemreceive",
-          line: i,
-        });
-        if (itemReceive == "T" || itemReceive == true) {
-          const itemId = ifRec.getSublistValue({
-            sublistId: "item",
-            fieldId: "itemname",
-            line: i,
-          });
-
-          const rate = soRec.getSublistValue({
-            sublistId: "item",
-            fieldId: "rate",
-            line: i,
-          });
-          const order_quantity = ifRec.getSublistValue({
-            sublistId: "item",
-            fieldId: "quantity",
-            line: i,
-          });
-          let lineAmount = 0;
-          lineAmount = parseFloat(rate) * parseFloat(order_quantity);
-
-          itemLineInfo.push({
-            order_quantity: order_quantity,
-            number: itemId,
-            rate: rate,
-            amount: lineAmount,
-            description: ifRec.getSublistValue({
-              sublistId: "item",
-              fieldId: "description",
-              line: i,
-            }),
-            location: ifRec.getSublistValue({
-              sublistId: "item",
-              fieldId: "location",
-              line: i,
-            }),
-          });
-        }
-      }
-      log.debug("order obj", { orderHeaderFields, itemLineInfo });
-      return { orderHeaderFields, itemLineInfo };
-    } catch (e) {
-      log.error(e.message);
-    }
-  }
-
-  /**
-   * Create XML body from IF and SO and send the request using Elite Extra settings
-   * @param {*} ifId
-   * @param {*} eliteExtraId
-   */
-  function sendOrderDetails(ifId, eliteExtraId) {
-    try {
-      const orderObj = getIfDetails(ifId);
-      const headerFieldsInfo = [orderObj.orderHeaderFields];
-      const lineItemInfo = orderObj.itemLineInfo;
-
-      let lineItemXml = "";
-      //Create line XML from Order Object Line info
-      lineItemInfo.forEach(function (lineItem) {
-        lineItemXml += `
+	/**
+	 * Get the item IF and SO details and create an object with it
+	 * @param {*} ifRecId
+	 */
+	function getIfDetails(ifRecId) {
+		try {
+			const ifRec = record.load({
+				type: record.Type.ITEM_FULFILLMENT,
+				id: ifRecId,
+				isDynamic: true,
+			});
+			const soId = ifRec.getValue("createdfrom");
+			const soRec = record.load({
+				type: record.Type.SALES_ORDER,
+				id: soId,
+				isDynamic: true,
+			});
+			
+			const salesRepId = soRec.getValue("salesrep");
+			let salesRepInfo = "";
+			if (!isEmpty(salesRepId)) {
+				salesRepInfo = search.lookupFields({
+					type: search.Type.EMPLOYEE,
+					id: salesRepId,
+					columns: ["firstname", "lastname"],
+				});
+			}
+			
+			const billSubRecord = soRec.getSubrecord({
+				fieldId: "billingaddress",
+			});
+			
+			const shipSubRecord = soRec.getSubrecord({
+				fieldId: "shippingaddress",
+			});
+			
+			const orderHeaderFields = [];
+			orderHeaderFields.push({
+				orderId: ifRec.getValue("tranid"),
+				warehouse: "1", //soRec.getValue("location"),
+				po: soRec.getValue("otherrefnum") || "",
+				status: "",
+				price: "",
+				tax: soRec.getValue("tax") || 0,
+				deposit: soRec.getValue("custbody_bsp_aab_so_deposit") || 0,
+				dateTime: formatDateTime(soRec.getValue("trandate")) || "",
+				shipTime: formatDateTime(ifRec.getValue("trandate")) || "",
+				comment: soRec.getValue("memo") || "",
+				shipViaName: soRec.getText("shipmethod"),
+				salesPersonId: soRec.getValue("salesrep"),
+				salesPersonName: isEmpty(salesRepInfo) ? "" : salesRepInfo.firstname,
+				salesPersonLastname: isEmpty(salesRepInfo) ? "" : salesRepInfo.lastname,
+				billToId: soRec.getValue("entity") || "",
+				billToName: billSubRecord.getValue("addressee") || "",
+				billToPhone: billSubRecord.getValue("phone") || "",
+				billAddressLine1: billSubRecord.getValue("addr1") || "",
+				billAddressLine2: billSubRecord.getValue("addr2") || "",
+				billAddressLine3: billSubRecord.getValue("addr3") || "",
+				billCity: billSubRecord.getValue("city") || "",
+				billState: billSubRecord.getValue("state") || "",
+				billZip: billSubRecord.getValue("zip") || "",
+				shipToId: soRec.getValue("entity") || "",
+				shipToName: shipSubRecord.getValue("addressee") || "",
+				shipToPhone: shipSubRecord.getValue("phone") || "",
+				shipAddressLine1: shipSubRecord.getValue("addr1") || "",
+				shipAddressLine2: shipSubRecord.getValue("addr2") || "",
+				shipAddressLine3: shipSubRecord.getValue("addr3") || "",
+				shipCity: shipSubRecord.getValue("city") || "",
+				shipState: shipSubRecord.getValue("state") || "",
+				shipZip: shipSubRecord.getValue("zip") || "",
+			});
+			
+			const itemLineInfo = [];
+			for (let i = 0; i < ifRec.getLineCount("item"); i++) {
+				const itemReceive = ifRec.getSublistValue({
+					sublistId: "item",
+					fieldId: "itemreceive",
+					line: i,
+				});
+				if (itemReceive === "T" || itemReceive === true) {
+					const itemId = ifRec.getSublistValue({
+						sublistId: "item",
+						fieldId: "itemname",
+						line: i,
+					});
+					
+					const rate = soRec.getSublistValue({
+						sublistId: "item",
+						fieldId: "rate",
+						line: i,
+					});
+					const order_quantity = ifRec.getSublistValue({
+						sublistId: "item",
+						fieldId: "quantity",
+						line: i,
+					});
+					let lineAmount = 0;
+					lineAmount = parseFloat(rate) * parseFloat(order_quantity);
+					
+					itemLineInfo.push({
+						order_quantity: order_quantity,
+						number: itemId,
+						rate: rate,
+						amount: lineAmount,
+						description: ifRec.getSublistValue({
+							sublistId: "item",
+							fieldId: "description",
+							line: i,
+						}),
+						location: ifRec.getSublistValue({
+							sublistId: "item",
+							fieldId: "location",
+							line: i,
+						}),
+					});
+				}
+			}
+			log.debug("order obj", {orderHeaderFields, itemLineInfo});
+			return {orderHeaderFields, itemLineInfo};
+		} catch (e) {
+			log.error(e.message);
+		}
+	}
+	
+	/**
+	 * Create XML body from IF and SO and send the request using Elite Extra settings
+	 * @param {*} ifId
+	 * @param {*} eliteExtraId
+	 */
+	function sendOrderDetails(ifId, eliteExtraId) {
+		try {
+			const orderObj = getIfDetails(ifId);
+			const headerFieldsInfo = [orderObj.orderHeaderFields];
+			const lineItemInfo = orderObj.itemLineInfo;
+			
+			let lineItemXml = "";
+			//Create line XML from Order Object Line info
+			lineItemInfo.forEach(function (lineItem) {
+				lineItemXml += `
                     <line>
                   <order_quantity>${lineItem.order_quantity}</order_quantity>
                   <ship_quantity>${lineItem.order_quantity}</ship_quantity>
@@ -181,9 +175,9 @@ define([
                   <integration_type></integration_type>
                   <uom></uom>
               </line>`;
-      });
-      //Map the Order Details into XML body
-      let orderXML = `<?xml version="1.0"?>
+			});
+			//Map the Order Details into XML body
+			let orderXML = `<?xml version="1.0"?>
 <order id="${headerFieldsInfo[0][0].orderId}">
     <warehouse id="1">
     </warehouse>
@@ -290,121 +284,80 @@ define([
     <phone_number></phone_number>
     <duration></duration>
 </order>`;
-
-      const eliteExtraSettings = getEliteExtraSettings(eliteExtraId);
-      const uploadResponse = BSPEliteExtraAPIService.runService(
-        ifId,
-        eliteExtraId,
-        orderXML,
-        eliteExtraSettings
-      );
-
-      //update tracking information and tracking link in IF
-      return updateIF(uploadResponse, ifId,eliteExtraSettings.trackingLink);
-    } catch (e) {
-      log.error(e.message);
-    }
-  }
-
-  /**
-   * Update IF tracking information
-   * @param {*} res
-   * @param {*} ifId
-   * @param {*} trackingLink
-   */
-  function updateIF(res, ifId,trackingLink) {
-    const response = res.body;
-    const resString = [response];
-    const resBody = JSON.parse(resString[0]);
-    let message = [];
-    if (res.code === 200 && !isEmpty(resBody.tracking)) {
-      const ifUpdateId = record.submitFields({
-        type: record.Type.ITEM_FULFILLMENT,
-        id: ifId,
-        values: {
-          custbody_bsp_isg_tracking_number: resBody.tracking,
-          custbody_bsp_isg_tracking_link: trackingLink + resBody.tracking,
-        },
-      });
-      log.debug("IF ID: " + ifUpdateId + " Updated", [
-        resBody.tracking,
-        resBody.filename,
-      ]);
-      message.push({
-        message: "Order has been created successfully. Please refresh the page",
-        failed: false,
-      });
-    } else {
-      message.push({
-        message: "Failed to create order",
-        failed: true,
-      });
-    }
-    log.debug("message", message);
-    return message;
-  }
-
-  /**
-   * Load elite extra settings
-   * @param {*} eliteExtraId
-   */
-  function getEliteExtraSettings(eliteExtraId) {
-    const eliteExtraSettingResults = {};
-    const eliteExtraSettingsSearch = search.lookupFields({
-      type:"customrecord_bsp_isg_elite_extra_setting",
-      id: eliteExtraId,
-      columns: [
-        "custrecord_bsp_isg_based64encoding",
-        "custrecord_bsp_isg_create_order_ep_url",
-        "custrecord_bsp_isg_order_tracking_link",
-      ],
-    });
-    eliteExtraSettingResults["endpointURL"] =
-      eliteExtraSettingsSearch["custrecord_bsp_isg_create_order_ep_url"];
-    eliteExtraSettingResults["authorization"] =
-      eliteExtraSettingsSearch["custrecord_bsp_isg_based64encoding"];
-    eliteExtraSettingResults["trackingLink"] =
-      eliteExtraSettingsSearch["custrecord_bsp_isg_order_tracking_link"];
-    return eliteExtraSettingResults;
-  }
-
-  /**
-   * Check if empty string is passed
-   * @param {*} stValue
-   */
-  function isEmpty(stValue) {
-    return (
-      stValue === "" ||
-      stValue == null ||
-      stValue == undefined ||
-      (stValue.constructor === Array && stValue.length == 0) ||
-      (stValue.constructor === Object &&
-        (function (v) {
-          for (var k in v) return false;
-          return true;
-        })(stValue))
-    );
-  }
-
-  /**
-   * format the date time into ISO 8601 format and set the timezone to newyork
-   * @param {*} date
-   */
-  function formatDateTime(date) {
-    const dateTime = format.format({
-      value: new Date(date),
-      type: format.Type.DATETIMETZ,
-      timezone: format.Timezone.AMERICA_NEW_YORK,
-    });
-    let dateobj = new Date(dateTime);
-    let d = dateobj.toISOString();
-    return d;
-  }
-
-  return {
-    getIfDetails: getIfDetails,
-    isEmpty: isEmpty,
-    sendOrderDetails: sendOrderDetails,
-    getEliteExtraSettings: getEliteExtraSettings,
-  };
+			
+			const eliteExtraSettings = getEliteExtraSettings(eliteExtraId);
+			return BSPEliteExtraAPIService.uploadOrder(
+				ifId,
+				eliteExtraId,
+				orderXML,
+				eliteExtraSettings
+			);
+			
+		} catch (e) {
+			log.error(e.message);
+		}
+	}
+	
+	
+	/**
+	 * Load elite extra settings
+	 * @param {*} eliteExtraId
+	 */
+	function getEliteExtraSettings(eliteExtraId) {
+		const eliteExtraSettingResults = {};
+		const eliteExtraSettingsSearch = search.lookupFields({
+			type: "customrecord_bsp_isg_elite_extra_setting",
+			id: eliteExtraId,
+			columns: [
+				"custrecord_bsp_isg_based64encoding",
+				"custrecord_bsp_isg_create_order_ep_url",
+				"custrecord_bsp_isg_order_tracking_link",
+			],
+		});
+		eliteExtraSettingResults["endpointURL"] =
+			eliteExtraSettingsSearch["custrecord_bsp_isg_create_order_ep_url"];
+		eliteExtraSettingResults["authorization"] =
+			eliteExtraSettingsSearch["custrecord_bsp_isg_based64encoding"];
+		eliteExtraSettingResults["trackingLink"] =
+			eliteExtraSettingsSearch["custrecord_bsp_isg_order_tracking_link"];
+		return eliteExtraSettingResults;
+	}
+	
+	/**
+	 * Check if empty string is passed
+	 * @param {*} stValue
+	 */
+	function isEmpty(stValue) {
+		return (
+			stValue === "" ||
+			stValue == null ||
+			stValue == undefined ||
+			(stValue.constructor === Array && stValue.length == 0) ||
+			(stValue.constructor === Object &&
+				(function (v) {
+					for (var k in v) return false;
+					return true;
+				})(stValue))
+		);
+	}
+	
+	/**
+	 * format the date time into ISO 8601 format and set the timezone to newyork
+	 * @param {*} date
+	 */
+	function formatDateTime(date) {
+		const dateTime = format.format({
+			value: new Date(date),
+			type: format.Type.DATETIMETZ,
+			timezone: format.Timezone.AMERICA_NEW_YORK,
+		});
+		let dateobj = new Date(dateTime);
+		return dateobj.toISOString();
+	}
+	
+	return {
+		isEmpty: isEmpty,
+		sendOrderDetails: sendOrderDetails,
+		getEliteExtraSettings: getEliteExtraSettings,
+	};
 });
