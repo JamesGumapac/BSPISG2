@@ -22,44 +22,40 @@ define([
    * @returns {Array|Object|Search|ObjectRef|File|Query} The input data to use in the map/reduce process
    * @since 2015.2
    */
-
+  const ESSENDANT_DEPLOYMENT_ID = "customdeploy_bsp_isg_esse_updt_prcng";
   const getInputData = (inputContext) => {
     let functionName = "getInputData";
     let isEssendant = false;
     let folderId;
+
     log.audit(functionName, "************ EXECUTION STARTED ************");
     try {
-      // check the deployment ID and verify is it is for Essendant or SPR
       const scriptObj = runtime.getCurrentScript();
-      if (scriptObj.deploymentId === "customdeploy_bsp_isg_esse_updt_prcng") {
-        folderId = scriptObj.getParameter({
-          name: "custscript_bsp_isg_essendant",
-        });
-        isEssendant = true;
-      } else {
-        folderId = scriptObj.getParameter({
-          name: "custscript_bsp_isg_sp_richards",
-        });
-      }
+      // check the deployment ID and verify is it is for Essendant or SPR
+      scriptObj.deploymentId === ESSENDANT_DEPLOYMENT_ID
+        ? ((folderId = scriptObj.getParameter({
+            name: "custscript_bsp_isg_essendant",
+          })),
+          (isEssendant = true))
+        : (folderId = scriptObj.getParameter({
+            name: "custscript_bsp_isg_sp_richards",
+          }));
 
-      const FileObj = file.load({
+      const fileObj = file.load({
         id: BSPUpdatePricing.getFileId(folderId),
       });
       let pricingToProcess;
-      if (isEssendant === true) {
-        log.audit("Processing Essendant Pricing");
-        pricingToProcess = BSPUpdatePricing.getEssendantItemPricingObj(FileObj);
-      } else {
-        pricingToProcess =
-          BSPUpdatePricing.getSpRichardsItemPricingObj(FileObj);
-      }
+      isEssendant === true
+        ? (pricingToProcess =
+            BSPUpdatePricing.getEssendantItemPricingObj(fileObj))
+        : (pricingToProcess =
+            BSPUpdatePricing.getSpRichardsItemPricingObj(fileObj));
 
       return pricingToProcess;
     } catch (e) {
       log.error(functionName, e.toString());
     }
   };
-
   /**
    * Defines the function that is executed when the reduce entry point is triggered. This entry point is triggered
    * automatically when the associated map stage is complete. This function is applied to each group in the provided context.
@@ -119,35 +115,39 @@ define([
    * @since 2015.2
    */
   const summarize = (summaryContext) => {
-    let functionName = "Summarize";
-    const scriptObj = runtime.getCurrentScript();
-    let folderId;
-    let doneFolderId;
-    scriptObj.deploymentId === "customdeploy_bsp_isg_esse_updt_prcng"
-      ? ((folderId = scriptObj.getParameter({
-          name: "custscript_bsp_isg_essendant",
-        })),
-        (doneFolderId = scriptObj.getParameter({
-          name: "custscript_bsp_isg_essen_done_folder_id",
-        })))
-      : ((folderId = scriptObj.getParameter({
-          name: "custscript_bsp_isg_sp_richards",
-        })),
-        (doneFolderId = scriptObj.getParameter({
-          name: "custscript_bsp_isg_spr_done_folder_id",
-        })));
+    const functionName = "Summarize";
+    try {
+      const scriptObj = runtime.getCurrentScript();
+      let folderId;
+      let doneFolderId;
+      scriptObj.deploymentId === ESSENDANT_DEPLOYMENT_ID
+        ? ((folderId = scriptObj.getParameter({
+            name: "custscript_bsp_isg_essendant",
+          })),
+          (doneFolderId = scriptObj.getParameter({
+            name: "custscript_bsp_isg_essen_done_folder_id",
+          })))
+        : ((folderId = scriptObj.getParameter({
+            name: "custscript_bsp_isg_sp_richards",
+          })),
+          (doneFolderId = scriptObj.getParameter({
+            name: "custscript_bsp_isg_spr_done_folder_id",
+          })));
 
-    BSPUpdatePricing.moveFolderToDone(
-      BSPUpdatePricing.getFileId(folderId),
-      doneFolderId
-    );
+      // BSPUpdatePricing.moveFolderToDone(
+      //   BSPUpdatePricing.getFileId(folderId),
+      //   doneFolderId
+      // );
 
-    log.audit(functionName, {
-      UsageConsumed: summaryContext.usage,
-      NumberOfQueues: summaryContext.concurrency,
-      NumberOfYields: summaryContext.yields,
-    });
-    log.debug(functionName, "************ EXECUTION COMPLETED ************");
+      log.audit(functionName, {
+        UsageConsumed: summaryContext.usage,
+        NumberOfQueues: summaryContext.concurrency,
+        NumberOfYields: summaryContext.yields,
+      });
+      log.debug(functionName, "************ EXECUTION COMPLETED ************");
+    } catch (e) {
+      log.error(functionName, e.message);
+    }
   };
 
   return { getInputData, reduce, summarize };

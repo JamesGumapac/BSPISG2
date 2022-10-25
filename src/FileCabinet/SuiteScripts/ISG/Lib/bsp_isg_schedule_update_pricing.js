@@ -215,7 +215,7 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
         log.debug("item and contract plan", { itemRecId, itemContractPlan });
       }
     } catch (e) {
-      log.error("updateItemAndContractPlan ", e.message);
+      log.error(" updateItemAndContractPlan ", e.message);
     }
   }
 
