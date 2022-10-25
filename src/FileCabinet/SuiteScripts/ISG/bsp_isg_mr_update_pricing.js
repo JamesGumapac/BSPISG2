@@ -8,7 +8,7 @@ define([
   "N/record",
   "N/search",
   "N/runtime",
-  "./Lib/bsp_isg_schedule_update_pricing.js",
+  "./Lib/bsp_isg_update_pricing.js",
 ], (error, file, record, search, runtime, BSPUpdatePricing) => {
   /**
    * Defines the function that is executed at the beginning of the map/reduce process and generates the input data.
