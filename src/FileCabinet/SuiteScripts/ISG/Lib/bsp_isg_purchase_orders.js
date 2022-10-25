@@ -749,7 +749,7 @@
      * @param itemsNotShipped - An array of objects that contain the item ID and the quantity that was not
      * shipped.
     */
-    function closePOlines(poID, linesPartiallyShipped, itemsNotShipped){
+    function updatePOlines(poID, linesPartiallyShipped, itemsNotShipped){
         let purchaseOrderRec = record.load({
             type: record.Type.PURCHASE_ORDER,
             id: parseInt(poID),
@@ -759,7 +759,7 @@
         for(let i = 0; i < linesPartiallyShipped.length; i++){
             let item = linesPartiallyShipped[i];
             let itemID = item.itemID;
-
+            let itemQty = item.quantityShipped;
             let lineNum = purchaseOrderRec.findSublistLineWithValue({
                 sublistId: 'item',
                 fieldId: 'item',
@@ -773,39 +773,15 @@
 
             purchaseOrderRec.setCurrentSublistValue({
                 sublistId: 'item',
-                fieldId: 'isclosed',
-                value: true
-            });
-            purchaseOrderRec.commitLine({
-                sublistId: "item",
-            });
-        }
-        for(let i = 0; i < itemsNotShipped.length; i++){
-            let item = itemsNotShipped[i];
-            let itemID = item.itemID;
-
-            let lineNum = purchaseOrderRec.findSublistLineWithValue({
-                sublistId: 'item',
-                fieldId: 'item',
-                value: itemID
-            });
-
-            purchaseOrderRec.selectLine({
-                sublistId: 'item',
-                line: lineNum
-            });
-
-            purchaseOrderRec.setCurrentSublistValue({
-                sublistId: 'item',
-                fieldId: 'isclosed',
-                value: true
+                fieldId: 'quantity',
+                value: itemQty
             });
             purchaseOrderRec.commitLine({
                 sublistId: "item",
             });
         }
         purchaseOrderRec.save();
-        log.debug("closePOlines", `Purchase Order lines closed`);
+        log.debug("updatePOlines", `Purchase Order lines closed`);
     }
 
     /**
@@ -897,6 +873,6 @@
         createBillFromPO: createBillFromPO,
         createItemFulfillmentFromPO: createItemFulfillmentFromPO,
         createItemReceiptFromPO: createItemReceiptFromPO,
-        closePOlines: closePOlines
+        updatePOlines: updatePOlines
 	};
 });
