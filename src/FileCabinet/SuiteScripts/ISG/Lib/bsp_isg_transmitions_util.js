@@ -3,7 +3,7 @@
  * @NModuleScope Public
  */
 
- define(['N/search', 'N/record'], function (search, record) {
+ define(['N/search', 'N/record', './bsp_isg_trading_partners.js'], function (search, record, BSPTradingParnters) {
     
     const CONTANTS = Object.freeze({
         essendant : "Essendant Inc"
@@ -226,41 +226,54 @@
     }
 
 
-    /**
-     * If the customer record has an account number override on the address sublist, use that. Otherwise,
-     * if the customer record has an account number override on the main record, use that. Otherwise, use
-     * the transmission account number.
-     * @param customer - The customer ID
-     * @param transmissionAccount - The account number that is being used for the transmission.
-     * @returns The account number.
-    */
-    function getAccountNumber(customer, transmissionAccount){
+    function getAccountNumber(customer, vendor, shipaddress1, transmissionAccount){
         let accountNumber = null;
-        let customerRec = record.load({
-            type: record.Type.CUSTOMER,
-            id: customer
+        log.debug("getAccountNumber", "ShipAddress: " + shipaddress1);
+        log.debug("getAccountNumber", "TransmissionAccount: " + JSON.stringify(transmissionAccount));
+        
+        let tradingPartnerID = BSPTradingParnters.getTradingPartnerID(vendor);
+
+        const acctOverrideSearchObj = search.create({
+            type: "customrecord_bsp_isg_cust_acct_override",
+            filters:
+            [
+               ["custrecord_bsp_isg_customer","anyof",customer], 
+               "AND", 
+               ["custrecord_bsp_isg_acct_trading_partner","anyof",tradingPartnerID]
+            ],
+            columns:
+            [
+               search.createColumn({name: "custrecord_bsp_isg_acct_number", label: "Account Number"}),
+               search.createColumn({name: "custrecord_bsp_isg_acct_address", label: "Address"})
+            ]
         });
 
-        let addressSubRecord = customerRec.getSublistSubrecord({
-            sublistId: 'addressbook',
-            fieldId: 'addressbookaddress',
-            line: 0
+        let accountOverrideDefault = null;
+        acctOverrideSearchObj.run().each(function(result){
+            let overrideAccountNumberValue = result.getValue({name: "custrecord_bsp_isg_acct_number"});
+            let overrideAccountNumberText = result.getText({name: "custrecord_bsp_isg_acct_number"});
+            let address = result.getText({name: "custrecord_bsp_isg_acct_address"});
+            if(address == shipaddress1){
+                accountNumber = {
+                    value: overrideAccountNumberValue,
+                    text: overrideAccountNumberText
+                };
+            }else if(isEmpty(address)){
+                accountOverrideDefault = {
+                    value: overrideAccountNumberValue,
+                    text: overrideAccountNumberText
+                };
+            }
+            return true;
         });
 
-        if(addressSubRecord){
-            accountNumber = addressSubRecord.getValue({
-                fieldId: 'custrecord_bsp_isg_acct_num_override'
-            });
+        if(!accountNumber){
+            accountNumber = overrideAccountNumber;
         }
-  
-        if(isEmpty(accountNumber)){
-            accountNumber = customerRec.getValue({
-                fieldId: 'custentity_bsp_isg_acct_num_override'
-            });
-        }   
-        if(isEmpty(accountNumber)){
+
+        if(!accountNumber){
             accountNumber = transmissionAccount;
-        }    
+        }
 
         return accountNumber;
     }
@@ -290,7 +303,7 @@
      * - location
      */
     function getFieldsFromTransmitionRecord(transmitionRecID){
-        let savedSearch, vendor, location, autoreceive, accountNumber, essendantADOT = null;
+        let savedSearch, vendor, location, autoreceive, accountNumber, adot = null;
 
         let transmitionFieldsObj = search.lookupFields({
             type: "customrecord_bsp_isg_transmission",
@@ -301,7 +314,7 @@
                 'custrecord_bsp_lb_transmition_loc', 
                 'custrecord_bsp_autoreceive',
                 'custrecord_bsp_lb_acct_number',
-                'custrecord_bsp_lb_essendant_adot'
+                'custrecord_bsp_isg_adot'
             ]
         });
 
@@ -321,8 +334,8 @@
             if(!(isEmpty(transmitionFieldsObj.custrecord_bsp_lb_acct_number))){
                 accountNumber = transmitionFieldsObj.custrecord_bsp_lb_acct_number[0];
             }  
-            if(!(isEmpty(transmitionFieldsObj.custrecord_bsp_lb_essendant_adot))){
-                essendantADOT = transmitionFieldsObj.custrecord_bsp_lb_essendant_adot;
+            if(!(isEmpty(transmitionFieldsObj.custrecord_bsp_isg_adot))){
+                adot = transmitionFieldsObj.custrecord_bsp_isg_adot[0].text;
             }      
         }
         
@@ -333,7 +346,7 @@
             location: location, 
             autoreceive: autoreceive,
             accountNumber: accountNumber,
-            essendantADOT: essendantADOT
+            adot: adot
         };
 
 		return transmitionFields;
@@ -463,7 +476,6 @@
         return arrReturnSearchResults;
     }
 
-
     /**
      * It takes a JavaScript Date object and returns a string in the format of an XML dateTime.
      * @param date - The date to be converted to XML format.
@@ -473,6 +485,10 @@
         return date.toISOString().slice(0, 19);
     }
 
+    /**
+     * If there are no PO records in the queue to be processed, delete the queue.
+     * @param queueID - The internal ID of the queue record.
+    */
     function checkTransmissionQueue(queueID){
         const purchaseOrderSearchObj = search.create({
             type: "purchaseorder",
@@ -508,6 +524,122 @@
         log.debug("deleteQueue", `Queue ID ${queueID} has been deleted`);
     }
 
+    function buildTransmissionSavedSearch(transmitionSavedSearcObj){
+        let fixedFilters = [
+            {
+               name: "type",
+               operator: "anyof",
+               values: [
+                  "SalesOrd"
+               ],
+               isor: false,
+               isnot: false,
+               leftparens: 0,
+               rightparens: 0
+            },
+            {
+               name: "mainline",
+               operator: "is",
+               values: [
+                  "F"
+               ],
+               isor: false,
+               isnot: false,
+               leftparens: 0,
+               rightparens: 0
+            },
+            {
+               name: "custbody_bsp_isg_route_code",
+               operator: "noneof",
+               values: [
+                  "@NONE@"
+               ],
+               isor: false,
+               isnot: false,
+               leftparens: 0,
+               rightparens: 0
+            },
+            {
+               name: "purchaseorder",
+               operator: "anyof",
+               values: [
+                  "@NONE@"
+               ],
+               isor: false,
+               isnot: false,
+               leftparens: 0,
+               rightparens: 0
+            },
+            {
+               name: "taxline",
+               operator: "is",
+               values: [
+                  "F"
+               ],
+               isor: false,
+               isnot: false,
+               leftparens: 0,
+               rightparens: 0
+            },
+            {
+               name: "custcol_bsp_isg_exclude_auto_transm",
+               operator: "anyof",
+               values: [
+                  "1"
+               ],
+               isor: false,
+               isnot: false,
+               leftparens: 0,
+               rightparens: 0
+            },
+            {
+               name: "formulanumeric",
+               operator: "greaterthan",
+               values: [
+                  "0"
+               ],
+               formula: "{quantity} - NVL({quantitycommitted}, 0)",
+               isor: false,
+               isnot: false,
+               leftparens: 0,
+               rightparens: 0
+            }
+         ];
+
+        let fixedColumns = [
+            search.createColumn({name: "custbody_bsp_isg_route_code", label: "Route Code"}),
+            search.createColumn({
+               name: "custrecord_bsp_lb_route_code_desc",
+               join: "CUSTBODY_BSP_ISG_ROUTE_CODE",
+               label: "Route Code Description"
+            }),
+            search.createColumn({
+               name: "custrecord_bsp_lb_location",
+               join: "CUSTBODY_BSP_ISG_ROUTE_CODE",
+               label: "Location"
+            }),
+            search.createColumn({name: "item", label: "Item"}),
+            search.createColumn({name: "line", label: "Item Line Number"}),
+            search.createColumn({name: "rate", label: "Item Rate"}),
+            search.createColumn({name: "quantity", label: "Quantity"}),
+            search.createColumn({name: "quantitycommitted", label: "Quantity Committed"}),
+            search.createColumn({name: "internalid", label: "Sales Order ID"}),
+            search.createColumn({name: "tranid", label: "Sales Order Number"}),
+            search.createColumn({name: "datecreated", label: "Sales Order Date"}),
+            search.createColumn({name: "entity", label: "Customer"}),
+            search.createColumn({name: "shipaddress1", label: "Shipping Address 1"})
+        ];
+
+        let searchFilters = transmitionSavedSearcObj.filters;
+        let combinedFilters = fixedFilters.concat(searchFilters);
+        let searchObj = search.create({
+            type: "salesorder",
+            filters: combinedFilters,
+            columns: fixedColumns
+        });
+        return searchObj;
+    }
+
     return {
         constants: constants,
         transmitionQueueStatus: transmitionQueueStatus,
@@ -525,6 +657,7 @@
         buildFileName: buildFileName,
         getXMLDate: getXMLDate,
         getAccountNumber: getAccountNumber,
-        checkTransmissionQueue: checkTransmissionQueue
+        checkTransmissionQueue: checkTransmissionQueue,
+        buildTransmissionSavedSearch: buildTransmissionSavedSearch
 	};
 });

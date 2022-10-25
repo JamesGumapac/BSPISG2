@@ -18,7 +18,7 @@ function (file, xml, render){
      */
     function buildFileFromTemplate(templateID, content, fileName, outputFolder){
         let resultFile = null;
-
+        let resultObj = {};
         let objFile = file.load({
             id: templateID
         });
@@ -35,18 +35,27 @@ function (file, xml, render){
         });
 
         let xmlObj = renderer.renderAsString();
-        resultFile = file.create({
-            name: `${fileName}.xml`,
-            fileType: file.Type.XMLDOC,
-            contents: xmlObj,
-            folder: outputFolder
-        });
-        let resultFileId = resultFile.save();
-        let resultObj = {
-            fileId: resultFileId,
-            fileName: fileName,
-            fileContent: xmlObj
+        if(fileName){
+            resultFile = file.create({
+                name: `${fileName}.xml`,
+                fileType: file.Type.XMLDOC,
+                contents: xmlObj,
+                folder: outputFolder
+            });
+            let resultFileId = resultFile.save();
+            resultObj = {
+                fileId: resultFileId,
+                fileName: fileName,
+                fileContent: xmlObj
+            }
+        }else{
+            resultObj = {
+                fileId: null,
+                fileName: null,
+                fileContent: xmlObj
+            }
         }
+        
         return resultObj;
     }
 

@@ -1,0 +1,19 @@
+<centercategory scriptid="custcentercategory_bsp_isg_carton_buy_program">
+  <center>BASIC</center>
+  <centertab>[scriptid=custcentertab_bsp_isg]</centertab>
+  <label>Carton Buy Program</label>
+  <links>
+    <link>
+      <linklabel>Create PO</linklabel>
+      <linkobject>[scriptid=custlink_bsp_isg_carton_buy_create_po]</linkobject>
+      <linktasktype>LINK</linktasktype>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linklabel>Purchase Orders</linklabel>
+      <linkobject>[scriptid=customsearch_bsp_isg_cb_po_created]</linkobject>
+      <linktasktype>SRCH_RSLT</linktasktype>
+      <shortlist>F</shortlist>
+    </link>
+  </links>
+</centercategory>

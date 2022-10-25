@@ -3,14 +3,15 @@
  * @NModuleScope Public
  */
 
- define(['N/search', 'N/record', './bsp_isg_transmitions_util.js'], function (search, record, BSPTransmitionsUtil) {
+ define(['N/search', 'N/record'], function (search, record) {
 
     const PO_TRANSMITION_STATUSES = Object.freeze({
         pendingTransmission: 1,
         pendingAcknowledment: 2,
         acknowledged: 3,
         transmissionFailed: 4,
-        transmitting: 5
+        transmitting: 5,
+        acknowledgmentFailed: 6
     });
 
     /**
@@ -62,6 +63,7 @@
     function getPurchaseOrdersForTransmission(transmitionQueueID, poRecID){
         let purchaseOrderList = [];
         let purchaseOrderSearchObj = null;
+
         if(transmitionQueueID){
             purchaseOrderSearchObj = search.create({
                 type: "purchaseorder",
@@ -78,6 +80,7 @@
                 columns:
                 [
                    search.createColumn({name: "tranid", label: "Document Number"}),
+                   search.createColumn({name: "custbody_bsp_isg_order_type", label: "Order Type"}),
                    search.createColumn({name: "custbody_bsp_isg_route_code", label: "Route Code"}),
                    search.createColumn({name: "line", label: "Line ID"}),
                    search.createColumn({name: "item", label: "Item"}),
@@ -87,7 +90,8 @@
                    search.createColumn({name: "trandate", label: "Date"}),
                    search.createColumn({name: "createdfrom", label: "Sales Order"}),
                    search.createColumn({name: "custbody_bsp_isg_transmission_acct_num", label: "Account Number"}),
-                   search.createColumn({name: "custbody_bsp_isg_transmission_loc", label: "Transmission Location"}),         
+                   search.createColumn({name: "custbody_bsp_isg_transmission_loc", label: "Transmission Location"}),
+                   search.createColumn({name: "custbody_bsp_isg_adot", label: "Adot"}),         
                    search.createColumn({
                       name: "entityid",
                       join: "customer",
@@ -144,6 +148,7 @@
                 columns:
                 [
                    search.createColumn({name: "tranid", label: "Document Number"}),
+                   search.createColumn({name: "custbody_bsp_isg_order_type", label: "Order Type"}),
                    search.createColumn({name: "custbody_bsp_isg_route_code", label: "Route Code"}),
                    search.createColumn({name: "line", label: "Line ID"}),
                    search.createColumn({name: "item", label: "Item"}),
@@ -153,7 +158,8 @@
                    search.createColumn({name: "trandate", label: "Date"}),
                    search.createColumn({name: "createdfrom", label: "Sales Order"}),
                    search.createColumn({name: "custbody_bsp_isg_transmission_acct_num", label: "Account Number"}),
-                   search.createColumn({name: "custbody_bsp_isg_transmission_loc", label: "Transmission Location"}),         
+                   search.createColumn({name: "custbody_bsp_isg_transmission_loc", label: "Transmission Location"}), 
+                   search.createColumn({name: "custbody_bsp_isg_adot", label: "Adot"}),    
                    search.createColumn({
                       name: "entityid",
                       join: "customer",
@@ -197,11 +203,13 @@
                 ]
             });
         }
-       
-        let poResultList = BSPTransmitionsUtil.searchAll(purchaseOrderSearchObj);
+
+        let poResultList = searchAll(purchaseOrderSearchObj);
+
         poResultList.forEach(element => {
             let purchaseOrderID = element.id;
             let purchaseOrderNumber = element.getValue("tranid");
+            let orderType = element.getText("custbody_bsp_isg_order_type");
             let purchaseOrderDate = element.getValue("trandate");
             let salesOrderID = element.getValue("createdfrom");
             let salesOrder = element.getText("createdfrom");
@@ -212,6 +220,7 @@
             let accountNumberText = element.getText("custbody_bsp_isg_transmission_acct_num");
             let locationID = element.getValue("custbody_bsp_isg_transmission_loc");
             let locationText = element.getText("custbody_bsp_isg_transmission_loc");
+            let adot = element.getText("custbody_bsp_isg_adot");
             let customer = {
                 companyName: element.getValue({name: "entityid", join: "customer"}),
                 addressee: element.getValue({name: "addressee", join: "customer"}),
@@ -237,7 +246,8 @@
                 purchaseOrderList.push({
                     purchaseOrderID: purchaseOrderID,
                     purchaseOrderNumber: purchaseOrderNumber,
-                    purchaseOrderDate: BSPTransmitionsUtil.getXMLDate(new Date(purchaseOrderDate)),
+                    orderType: orderType,
+                    purchaseOrderDate: getXMLDate(new Date(purchaseOrderDate)),
                     salesOrderID: salesOrderID,
                     salesOrder: salesOrder,
                     routeCodeID: routeCodeID,
@@ -246,6 +256,7 @@
                     customer: customer,
                     account: {id:accountNumberID, text: accountNumberText},
                     transmissionLocation: {id:locationID, text: locationText},
+                    adot: adot,
                     items: [item]
                 })
            }
@@ -305,6 +316,11 @@
         purchaseOrderRec.setValue({
             fieldId: "custbody_bsp_isg_autoreceived",
             value: poData.autoreceive,
+        });
+
+        purchaseOrderRec.setValue({
+            fieldId: "custbody_bsp_isg_adot",
+            value: poData.adot,
         });
 
         purchaseOrderRec.setValue({
@@ -371,17 +387,19 @@
     }
 
     /**
-     * This function deletes a PO record when the PO is rejected.
+     * This function deletes a PO record when the PO is rejected. (Only delete POs from Automatic transmissions)
      * @param poID - The internal ID of the PO record
     */
     function deletePO(poID){
-        record.delete({
-            type: record.Type.PURCHASE_ORDER,
-            id: parseInt(poID),
-        });
-        log.debug("deletePO", `PO ID ${poID} REJECTED. PO Record has been deleted`);
+        let queueID = getQueueOfPO(poID);
+        if(queueID){
+            record.delete({
+                type: record.Type.PURCHASE_ORDER,
+                id: parseInt(poID),
+            });
+            log.debug("deletePO", `PO ID ${poID} REJECTED. PO Record has been deleted`);
+        }  
     }
-
 
     /**
      * It takes a PO number as an argument and returns the internal ID of the PO.
@@ -462,15 +480,88 @@
         let poFields = search.lookupFields({
             type: record.Type.PURCHASE_ORDER,
             id: parseInt(poID),
-            columns: ['custbody_bsp_isg_essendant_adot', 'custbody_bsp_isg_transmission_acct_num']
+            columns: ['custbody_bsp_isg_adot', 'custbody_bsp_isg_transmission_acct_num']
         });
-        if(poFields && poFields.custbody_bsp_isg_essendant_adot){
-            fields.essendantADOT = poFields.custbody_bsp_isg_essendant_adot;
+        if(poFields && poFields.custbody_bsp_isg_adot){
+            fields.adot = poFields.custbody_bsp_isg_adot[0].text;
         }
         if(poFields && poFields.custbody_bsp_isg_transmission_acct_num){
             fields.accountNumber = poFields.custbody_bsp_isg_transmission_acct_num[0];
         }
         return fields;
+    }
+
+
+    /**
+     * This function takes a PO ID and returns a Vendor Bill record.
+     * @param poID - The internal ID of the Purchase Order record
+     * @returns A Vendor Bill Record
+    */
+    function createBillFromPO(poID) {
+        let functionName = "createBillFromPO";
+        let vendorBillRec = null;
+        try{        
+            vendorBillRec = record.transform({
+                fromType: record.Type.PURCHASE_ORDER,
+                fromId: parseInt(poID),
+                toType: record.Type.VENDOR_BILL,
+            });
+        }catch(error){
+            log.error(functionName, "Error creating Vendor Bill Record: " + JSON.stringify(error.message));
+            return null;
+        }
+
+        return vendorBillRec;
+    }
+
+    /**
+     * Get all results from a saved search
+     * @param {*} objSavedSearch 
+     * @returns 
+    */
+    function searchAll(objSavedSearch) {
+        let title = "searchAll";
+        let arrReturnSearchResults = [];
+        try {
+            let objResultset = objSavedSearch.run();
+            let intSearchIndex = 0;
+            let objResultSlice = null;
+            let maxSearchReturn = 1000;
+
+            let maxResults = 0;
+
+            do {
+                let start = intSearchIndex;
+                let end = intSearchIndex + maxSearchReturn;
+                if (maxResults && maxResults <= end) {
+                    end = maxResults;
+                }
+                objResultSlice = objResultset.getRange(start, end);
+
+                if (!objResultSlice) {
+                    break;
+                }
+
+                arrReturnSearchResults = arrReturnSearchResults.concat(objResultSlice);
+                intSearchIndex = intSearchIndex + objResultSlice.length;
+
+                if (maxResults && maxResults == intSearchIndex) {
+                    break;
+                }
+            } while (objResultSlice.length >= maxSearchReturn);
+        } catch (error) {
+            log.error(title, error.toString());
+        }
+        return arrReturnSearchResults;
+    }
+
+    /**
+     * It takes a JavaScript Date object and returns a string in the format of an XML dateTime.
+     * @param date - The date to be converted to XML format.
+     * @returns The date in ISO format.
+    */
+    function getXMLDate(date){
+        return date.toISOString().slice(0, 19);
     }
 
     return {
@@ -483,6 +574,7 @@
         findPObyNumber: findPObyNumber,
         getQueueOfPO: getQueueOfPO,
         getVendor: getVendor,
-        getTransmissionFields: getTransmissionFields
+        getTransmissionFields: getTransmissionFields,
+        createBillFromPO: createBillFromPO
 	};
 });
