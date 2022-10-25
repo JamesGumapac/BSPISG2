@@ -312,7 +312,7 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
       const itemRecId = itemRec.save({ ignoreErrors: true });
       log.debug(
         " updateItemAndContractPlan ",
-        `Item ${itemRecId} updated successfully`
+        `Item ${itemRecId} created successfully`
       );
     } catch (e) {
       log.error("createItem", e.message);

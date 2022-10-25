@@ -80,7 +80,7 @@ define([
       });
       let itemPricingData = JSON.parse(reduceContext.values);
 
-      log.debug(functionName + " itemPricingData", itemPricingData);
+      // log.debug(functionName + " itemPricingData", itemPricingData);
       const itemId = BSPUpdatePricing.checkItemId(itemPricingData.itemId);
 
       itemId
@@ -91,7 +91,7 @@ define([
           )
         : BSPUpdatePricing.createItem(itemPricingData, vendor);
     } catch (e) {
-      log.error("Function Name: " + functionName, e.tostring());
+      log.error(functionName, e.tostring());
     }
   };
 
