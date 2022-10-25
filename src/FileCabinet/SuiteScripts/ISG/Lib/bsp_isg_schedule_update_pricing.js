@@ -4,12 +4,12 @@
 define(["N/file", "N/search", "N/record"], function (file, search, record) {
   /**
    * This function maps the column line for SPR and iterate each line and return the line object
-   * @param {*} fileObj - file Object
+   * @param {csv} fileObj - CSV file Object
    */
   function getSpRichardsItemPricingObj(fileObj) {
     try {
       const pricingToProcess = [];
-
+      
       const iterator = fileObj.lines.iterator();
       iterator.each(function (line) {
         const initialLineValue = line.value.replace(/;/g, "");
@@ -41,10 +41,10 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
       log.error("getSpRichardsItemPricingObj ", e.message);
     }
   }
-
+  
   /**
    * This function maps the column line for essendant and iterate each line and return the line object
-   * @param {*} fileObj - file Object
+   * @param {csv} fileObj - file Object
    */
   function getEssendantItemPricingObj(fileObj) {
     try {
@@ -70,14 +70,13 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
         return true;
       });
       pricingToProcess.shift();
-
       //return object and remove the first element of the array
       return pricingToProcess;
     } catch (e) {
       log.error("getEssendantItemPricingObj", e.message);
     }
   }
-
+  
   /**
    * This function check if the item ID exist
    * @param {*} itemId
@@ -101,7 +100,7 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
       log.error(" checkItemId ", e.message);
     }
   }
-
+  
   /**
    * Move the processed CSV file to done folder
    * @param {*} fileId
@@ -115,11 +114,11 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
       fileObj.folder = folderId;
       const moved = fileObj.save();
       log.debug(
-        "File with internal ID: " + moved + " moved to folder " + folderId + "."
+          `File with internal ID: ${moved}  moved to folder ${folderId}.`
       );
-    } else log.debug("File with internal ID: " + fileId + " not found.");
+    } else log.debug(`File with internal ID:  ${fileId} not found.`);
   }
-
+  
   /**
    * This update the item and item contract plan
    * @param {*} itemId
@@ -134,32 +133,32 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
         isDynamic: true,
       });
       itemPricingData.cost &&
-        itemRec.setValue({
-          fieldId: "cost",
-          value: itemPricingData.cost,
-        });
-
+      itemRec.setValue({
+        fieldId: "cost",
+        value: itemPricingData.cost,
+      });
+      
       itemPricingData.description &&
-        itemRec.setValue({
-          fieldId: "displayname",
-          value: itemPricingData.description,
-        });
-
+      itemRec.setValue({
+        fieldId: "displayname",
+        value: itemPricingData.description,
+      });
+      
       const vendorLine = itemRec.findSublistLineWithValue({
         sublistId: "itemvendor",
         fieldId: "vendor",
         value: vendor,
       });
-
+      
       const vendorCodeLine = itemRec.findSublistLineWithValue({
         sublistId: "itemvendor",
         fieldId: "vendorcode",
         value: itemPricingData.contractCode,
       });
       if (
-        vendorLine !== -1 &&
-        vendorCodeLine !== -1 &&
-        vendorLine === vendorCodeLine
+          vendorLine !== -1 &&
+          vendorCodeLine !== -1 &&
+          vendorLine === vendorCodeLine
       ) {
         itemRec.selectLine({
           sublistId: "itemvendor",
@@ -202,24 +201,23 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
         ignoreMandatoryFields: true,
       });
       log.debug(
-        " updateItemAndContractPlan ",
-        `Item ${itemRecId} updated successfully`
+          " updateItemAndContractPlan ",
+          `Item ${itemRecId} updated successfully`
       );
       if (itemPricingData.contractCode) {
-        const itemContractPlan = updateItemContractPlanPrice(
-          vendor,
-          itemId,
-          itemPricingData.contractCode,
-          itemPricingData.price,
-          itemPricingData.cost
+        updateItemContractPlanPrice(
+            vendor,
+            itemId,
+            itemPricingData.contractCode,
+            itemPricingData.price,
+            itemPricingData.cost
         );
-        log.debug("item and contract plan", { itemRecId, itemContractPlan });
       }
     } catch (e) {
       log.error(" updateItemAndContractPlan ", e.message);
     }
   }
-
+  
   /**
    * This function update item contract plan
    * @param {*} vendor
@@ -229,19 +227,13 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
    * @param {*} cost
    */
   function updateItemContractPlanPrice(
-    vendor,
-    itemId,
-    contractCode,
-    price,
-    cost
-  ) {
-    log.debug("updateItemContractPlanPrice", {
       vendor,
       itemId,
       contractCode,
       price,
-      cost,
-    });
+      cost
+  ) {
+    
     try {
       let itemContractPlanId = "";
       const contractPlanSearch = search.create({
@@ -258,7 +250,6 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
       if (searchResultCount <= 0) return false;
       contractPlanSearch.run().each(function (result) {
         itemContractPlanId = result.id;
-        log.audit("updateItemContractPlanPrice ", itemContractPlanId);
         return true;
       });
       return record.submitFields({
@@ -273,7 +264,7 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
       log.error("updateItemContractPlanPrice ", e.message);
     }
   }
-
+  
   /**
    * This function create item record if the item is not existing
    * @param {*} itemPricingData
@@ -286,22 +277,22 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
         isDynamic: true,
       });
       itemPricingData.cost &&
-        itemRec.setValue({
-          fieldId: "cost",
-          value: itemPricingData.cost,
-        });
-
+      itemRec.setValue({
+        fieldId: "cost",
+        value: itemPricingData.cost,
+      });
+      
       itemPricingData.description &&
-        itemRec.setValue({
-          fieldId: "displayname",
-          value: itemPricingData.description,
-        });
-
+      itemRec.setValue({
+        fieldId: "displayname",
+        value: itemPricingData.description,
+      });
+      
       itemRec.setValue({
         fieldId: "itemid",
         value: itemPricingData.itemId,
       });
-
+      
       itemRec.setValue({
         fieldId: "isonline",
         value: false,
@@ -322,14 +313,14 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
       itemRec.commitLine({
         sublistId: "itemvendor",
       });
-
+      
       const itemRecId = itemRec.save({ ignoreErrors: true });
-      log.debug(" createItem ", `Item ${itemRecId} created successfully`);
+      log.debug("createItem", `Item ${itemRecId} created successfully`);
     } catch (e) {
       log.error("createItem", e.message);
     }
   }
-
+  
   /**
    * This function get the file Id of the CSV file in the Pending Folder
    * @param {*} folderId
@@ -353,13 +344,13 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
           },
         ],
       });
-
+      
       fileSearch.run().each(function (result) {
         fileId = result.getValue({
           join: "file",
           name: "internalid",
         });
-
+        
         return false;
       });
       return fileId;
@@ -367,7 +358,7 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
       log.error("getFileId ", e.message);
     }
   }
-
+  
   return {
     getEssendantItemPricingObj: getEssendantItemPricingObj,
     getSpRichardsItemPricingObj: getSpRichardsItemPricingObj,

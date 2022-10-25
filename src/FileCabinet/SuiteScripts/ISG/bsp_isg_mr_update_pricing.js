@@ -27,30 +27,30 @@ define([
     let functionName = "getInputData";
     let isEssendant = false;
     let folderId;
-
+    
     log.audit(functionName, "************ EXECUTION STARTED ************");
     try {
       const scriptObj = runtime.getCurrentScript();
       // check the deployment ID and verify is it is for Essendant or SPR
       scriptObj.deploymentId === ESSENDANT_DEPLOYMENT_ID
-        ? ((folderId = scriptObj.getParameter({
+          ? ((folderId = scriptObj.getParameter({
             name: "custscript_bsp_isg_essendant",
           })),
-          (isEssendant = true))
-        : (folderId = scriptObj.getParameter({
+              (isEssendant = true))
+          : (folderId = scriptObj.getParameter({
             name: "custscript_bsp_isg_sp_richards",
           }));
-
+      
       const fileObj = file.load({
         id: BSPUpdatePricing.getFileId(folderId),
       });
       let pricingToProcess;
       isEssendant === true
-        ? (pricingToProcess =
-            BSPUpdatePricing.getEssendantItemPricingObj(fileObj))
-        : (pricingToProcess =
-            BSPUpdatePricing.getSpRichardsItemPricingObj(fileObj));
-
+          ? (pricingToProcess =
+              BSPUpdatePricing.getEssendantItemPricingObj(fileObj))
+          : (pricingToProcess =
+              BSPUpdatePricing.getSpRichardsItemPricingObj(fileObj));
+      
       return pricingToProcess;
     } catch (e) {
       log.error(functionName, e.toString());
@@ -79,22 +79,22 @@ define([
         name: "custscript_bsp_isg_vendor",
       });
       let itemPricingData = JSON.parse(reduceContext.values);
-
+      
       // log.debug(functionName + " itemPricingData", itemPricingData);
       const itemId = BSPUpdatePricing.checkItemId(itemPricingData.itemId);
-
+      
       itemId
-        ? BSPUpdatePricing.updateItemAndContractPlan(
-            itemId,
-            itemPricingData,
-            vendor
+          ? BSPUpdatePricing.updateItemAndContractPlan(
+          itemId,
+          itemPricingData,
+          vendor
           )
-        : BSPUpdatePricing.createItem(itemPricingData, vendor);
+          : BSPUpdatePricing.createItem(itemPricingData, vendor);
     } catch (e) {
       log.error(functionName, e.tostring());
     }
   };
-
+  
   /**
    * Defines the function that is executed when the summarize entry point is triggered. This entry point is triggered
    * automatically when the associated reduce stage is complete. This function is applied to the entire result set.
@@ -121,24 +121,24 @@ define([
       let folderId;
       let doneFolderId;
       scriptObj.deploymentId === ESSENDANT_DEPLOYMENT_ID
-        ? ((folderId = scriptObj.getParameter({
+          ? ((folderId = scriptObj.getParameter({
             name: "custscript_bsp_isg_essendant",
           })),
-          (doneFolderId = scriptObj.getParameter({
-            name: "custscript_bsp_isg_essen_done_folder_id",
-          })))
-        : ((folderId = scriptObj.getParameter({
+              (doneFolderId = scriptObj.getParameter({
+                name: "custscript_bsp_isg_essen_done_folder_id",
+              })))
+          : ((folderId = scriptObj.getParameter({
             name: "custscript_bsp_isg_sp_richards",
           })),
-          (doneFolderId = scriptObj.getParameter({
-            name: "custscript_bsp_isg_spr_done_folder_id",
-          })));
-
+              (doneFolderId = scriptObj.getParameter({
+                name: "custscript_bsp_isg_spr_done_folder_id",
+              })));
+      
       // BSPUpdatePricing.moveFolderToDone(
       //   BSPUpdatePricing.getFileId(folderId),
       //   doneFolderId
       // );
-
+      
       log.audit(functionName, {
         UsageConsumed: summaryContext.usage,
         NumberOfQueues: summaryContext.concurrency,
@@ -149,6 +149,6 @@ define([
       log.error(functionName, e.message);
     }
   };
-
+  
   return { getInputData, reduce, summarize };
 });
