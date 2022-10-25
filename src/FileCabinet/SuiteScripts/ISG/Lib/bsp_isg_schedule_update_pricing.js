@@ -126,7 +126,7 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
    * @param {*} itemPricingData
    * @param {*} vendor
    */
-  function updateItemAndContractPlan(itemId,itemPricingData, vendor) {
+  function updateItemAndContractPlan(itemId, itemPricingData, vendor) {
     try {
       const itemRec = record.load({
         type: record.Type.INVENTORY_ITEM,
@@ -154,8 +154,8 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
       const vendorCodeLine = itemRec.findSublistLineWithValue({
         sublistId: "itemvendor",
         fieldId: "vendorcode",
-        value: itemPricingData.contractCode
-      })
+        value: itemPricingData.contractCode,
+      });
       if (
         vendorLine !== -1 &&
         vendorCodeLine !== -1 &&
@@ -207,7 +207,8 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
       );
       if (itemPricingData.contractCode) {
         const itemContractPlan = updateItemContractPlanPrice(
-          itemRecId,
+          vendor,
+          itemId,
           itemPricingData.contractCode,
           itemPricingData.price,
           itemPricingData.cost
@@ -221,17 +222,26 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
 
   /**
    * This function update item contract plan
+   * @param {*} vendor
    * @param {*} itemId
    * @param {*} contractCode
-   * @param {*} purchasePrice
+   * @param {*} price
    * @param {*} cost
    */
   function updateItemContractPlanPrice(
+    vendor,
     itemId,
     contractCode,
-    purchasePrice,
+    price,
     cost
   ) {
+    log.debug("updateItemContractPlanPrice", {
+      vendor,
+      itemId,
+      contractCode,
+      price,
+      cost,
+    });
     try {
       let itemContractPlanId = "";
       const contractPlanSearch = search.create({
@@ -240,20 +250,24 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
           ["custrecord_bsp_isg_parent_item.internalid", "anyof", itemId],
           "AND",
           ["custrecord_bsp_isg_item_contract_code.name", "is", contractCode],
+          "AND",
+          ["custrecord_bsp_isg_item_supplier", "anyof", vendor],
         ],
       });
       const searchResultCount = contractPlanSearch.runPaged().count;
       if (searchResultCount <= 0) return false;
       contractPlanSearch.run().each(function (result) {
         itemContractPlanId = result.id;
+        log.audit("updateItemContractPlanPrice ", itemContractPlanId);
         return true;
       });
       return record.submitFields({
         type: "customrecord_bsp_isg_item_acct_data",
         id: itemContractPlanId,
-        value: "custrecord_bsp_isg_item_price",
-        purchasePrice,
-        custrecord_bsp_isg_item_cost: cost,
+        values: {
+          custrecord_bsp_isg_item_price: price,
+          custrecord_bsp_isg_item_cost: cost,
+        },
       });
     } catch (e) {
       log.error("updateItemContractPlanPrice ", e.message);
@@ -310,10 +324,7 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
       });
 
       const itemRecId = itemRec.save({ ignoreErrors: true });
-      log.debug(
-        " updateItemAndContractPlan ",
-        `Item ${itemRecId} created successfully`
-      );
+      log.debug(" createItem ", `Item ${itemRecId} created successfully`);
     } catch (e) {
       log.error("createItem", e.message);
     }
