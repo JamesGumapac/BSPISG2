@@ -53,19 +53,22 @@ define(['N/runtime', 'N/search', 'N/task', './Lib/bsp_isg_transmitions_util.js',
                 resultSearch.forEach(element => {
                     let salesOrderID = element.id;
                     let routeCodeID = element.getValue("custbody_bsp_isg_route_code");
-                    let location = element.getValue({name: "custrecord_bsp_lb_location", join: "custbody_bsp_isg_route_code"});
+                    let location = element.getValue({name: "location"});
                     let itemID = element.getValue("item");
                     let itemQuantity = element.getValue("quantity");
                     let itemQuantityCommited = element.getValue("quantitycommitted");
                     let resultQuantity = (itemQuantity - itemQuantityCommited);
                     let customer = element.getValue("entity");
                     let shipaddress1 = element.getValue("shipaddress1");
+                    let shipmentType = element.getValue("custcol_bsp_order_shipment_type");
                     transmitionData.push({
                         transactionForm: ediSettings.transactionForm,
                         transmitionRecID: transmitionRecID,
                         transmitionQueueID: transmitionQueueID,
                         salesOrderID: salesOrderID,
-                        routeCode: {routeCodeID: routeCodeID, location: location},
+                        location: location,
+                        routeCodeID: routeCodeID,
+                        shipmentType: shipmentType,
                         itemID: itemID,
                         vendor: vendor,
                         itemQuantity: resultQuantity,
@@ -138,7 +141,8 @@ define(['N/runtime', 'N/search', 'N/task', './Lib/bsp_isg_transmitions_util.js',
                 let shipaddress1 = commonData.shipaddress1;
                 let vendor = commonData.vendor;
                 let account = BSPTransmitionsUtil.getAccountNumber(customer, vendor, shipaddress1, commonData.account);
-                let routeCode = commonData.routeCode;
+                let routeCode = commonData.routeCodeID;
+                let location = commonData.location;
                 let autoreceive = commonData.autoreceive;
                 let adot = commonData.adot;
                 let transmissionLocation = commonData.transmissionLocation;
@@ -150,6 +154,7 @@ define(['N/runtime', 'N/search', 'N/task', './Lib/bsp_isg_transmitions_util.js',
                     customer:customer, 
                     vendor:vendor, 
                     routeCode: routeCode,
+                    location: location,
                     autoreceive: autoreceive, 
                     account: account,
                     adot: adot,
@@ -158,8 +163,8 @@ define(['N/runtime', 'N/search', 'N/task', './Lib/bsp_isg_transmitions_util.js',
                 };
                 log.debug(functionName, `Working with SO data: ${JSON.stringify(poData)}`);
 
-                let purchaseOrder = BSP_POutil.createPurchaseOrders(poData);
-                log.debug(functionName, `PO Created: ${purchaseOrder}`);
+                let purchaseOrders = BSP_POutil.createPurchaseOrders(poData);
+                log.debug(functionName, `POs Created: ${purchaseOrders}`);
 
             }catch (error)
             {

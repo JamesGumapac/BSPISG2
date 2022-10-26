@@ -8,10 +8,16 @@
     const PO_TRANSMITION_STATUSES = Object.freeze({
         pendingTransmission: 1,
         pendingAcknowledment: 2,
-        acknowledged: 3,
+        pendingShipmentNotification: 3,
         transmissionFailed: 4,
         transmitting: 5,
-        acknowledgmentFailed: 6
+        acknowledgmentFailed: 6,
+        shipmentConfirmed: 7
+    });
+
+    const SHIPMENT_TYPES = Object.freeze({
+        dropship: 1,
+        wrapAndLabel: 2
     });
 
     /**
@@ -289,85 +295,207 @@
      * @returns The ID of the newly created Purchase Order.
     */
     function createPurchaseOrders(poData){
-        let poID = null;
+        let purchaseOrderIDs = [];
 
-        let purchaseOrderRec = record.create({
-            type: record.Type.PURCHASE_ORDER,
-            isDynamic: true,
-            defaultValues: {
-                'soid' : poData.salesOrderID,
-                'dropship' : 'T',
-                'specord' : 'T',
-                'custid': poData.customer,
-                'entity': poData.vendor
-            }
-        });
+        let wrapAndLabelItems = getWrapAndLabelItems(poData.itemData);
+        let dropShipItems = getDropShipItems(poData.itemData);
 
-        purchaseOrderRec.setValue({
-            fieldId: "customform",
-            value: parseInt(poData.transactionForm),
-        });
-
-        purchaseOrderRec.setValue({
-            fieldId: "location",
-            value: parseInt(poData.routeCode.location),
-        });
-
-        purchaseOrderRec.setValue({
-            fieldId: "custbody_bsp_isg_autoreceived",
-            value: poData.autoreceive,
-        });
-
-        purchaseOrderRec.setValue({
-            fieldId: "custbody_bsp_isg_adot",
-            value: poData.adot,
-        });
-
-        purchaseOrderRec.setValue({
-            fieldId: "custbody_bsp_isg_transmission_acct_num",
-            value: poData.account.value,
-        });
-
-        purchaseOrderRec.setValue({
-            fieldId: "custbody_bsp_isg_transmission_loc",
-            value: poData.transmissionLocation,
-        });
-
-        purchaseOrderRec.setValue({
-            fieldId: "custbody_bsp_isg_transm_queue_id",
-            value: poData.transmitionQueueID,
-        });
-
-        purchaseOrderRec.setValue({
-            fieldId: "custbody_bsp_isg_po_transm_status",
-            value: PO_TRANSMITION_STATUSES.pendingTransmission,
-        });
-
-        let itemCount = purchaseOrderRec.getLineCount({
-            sublistId: 'item'
-        });
-        if(itemCount > 0){
-            for(let i = 0 ; i < itemCount ; i++){
-                let item = purchaseOrderRec.getSublistValue({
-                    sublistId: 'item',
-                    fieldId: 'item',
-                    line: i
-                });
-                if(itemNotIncludedInTransmission(item, poData.itemData)){
-                    log.debug("createPurchaseOrders", `Item ${item} will be removed`);
-                    purchaseOrderRec.removeLine({
-                        sublistId: 'item',
-                        line: i,
-                   });
+        if(wrapAndLabelItems.length > 0){
+            let purchaseOrderRec = record.create({
+                type: record.Type.PURCHASE_ORDER,
+                isDynamic: true,
+                defaultValues: {
+                    'soid' : poData.salesOrderID,
+                    'specord' : 'T',
+                    'custid': poData.customer,
+                    'entity': poData.vendor
                 }
-            }
-            poID = purchaseOrderRec.save();
-        }else{
-            throw `There was an unexpected Error while trynig to create a PO for Sales Order ID ${poData.salesOrderID}`;
-        }
-       
+            });
 
-        return poID;
+            purchaseOrderRec.setValue({
+                fieldId: "customform",
+                value: parseInt(poData.transactionForm),
+            });
+    
+            purchaseOrderRec.setValue({
+                fieldId: "location",
+                value: parseInt(poData.location),
+            });
+
+            purchaseOrderRec.setValue({
+                fieldId: "custbody_bsp_isg_route_code",
+                value: parseInt(poData.routeCode),
+            });
+    
+            purchaseOrderRec.setValue({
+                fieldId: "custbody_bsp_isg_autoreceived",
+                value: poData.autoreceive,
+            });
+    
+            purchaseOrderRec.setValue({
+                fieldId: "custbody_bsp_isg_adot",
+                value: poData.adot,
+            });
+    
+            purchaseOrderRec.setValue({
+                fieldId: "custbody_bsp_isg_transmission_acct_num",
+                value: poData.account.value,
+            });
+    
+            purchaseOrderRec.setValue({
+                fieldId: "custbody_bsp_isg_transmission_loc",
+                value: poData.transmissionLocation,
+            });
+    
+            purchaseOrderRec.setValue({
+                fieldId: "custbody_bsp_isg_transm_queue_id",
+                value: poData.transmitionQueueID,
+            });
+
+            purchaseOrderRec.setValue({
+                fieldId: "custbody_bsp_isg_order_type",
+                value: SHIPMENT_TYPES.wrapAndLabel,
+            });
+    
+            purchaseOrderRec.setValue({
+                fieldId: "custbody_bsp_isg_po_transm_status",
+                value: PO_TRANSMITION_STATUSES.pendingTransmission,
+            });
+    
+            let itemCount = purchaseOrderRec.getLineCount({
+                sublistId: 'item'
+            });
+            if(itemCount > 0){
+                for(let i = 0 ; i < itemCount ; i++){
+                    let item = purchaseOrderRec.getSublistValue({
+                        sublistId: 'item',
+                        fieldId: 'item',
+                        line: i
+                    });
+                    if(itemNotIncludedInTransmission(item, wrapAndLabelItems)){
+                        log.debug("createPurchaseOrder W&L", `Item ${item} will be removed`);
+                        purchaseOrderRec.removeLine({
+                            sublistId: 'item',
+                            line: i,
+                       });
+                    }
+                }
+                poID = purchaseOrderRec.save();
+                purchaseOrderIDs.push(poID);
+            }else{
+                throw `There was an unexpected Error while trynig to create a PO for Sales Order ID ${poData.salesOrderID}`;
+            }
+        }
+
+        if(dropShipItems.length > 0){
+            let purchaseOrderRec = record.create({
+                type: record.Type.PURCHASE_ORDER,
+                isDynamic: true,
+                defaultValues: {
+                    'soid' : poData.salesOrderID,
+                    'dropship' : 'T',
+                    'custid': poData.customer,
+                    'entity': poData.vendor
+                }
+            });
+
+            purchaseOrderRec.setValue({
+                fieldId: "customform",
+                value: parseInt(poData.transactionForm),
+            });
+      
+            purchaseOrderRec.setValue({
+                fieldId: "custbody_bsp_isg_autoreceived",
+                value: poData.autoreceive,
+            });
+    
+            purchaseOrderRec.setValue({
+                fieldId: "custbody_bsp_isg_adot",
+                value: poData.adot,
+            });
+    
+            purchaseOrderRec.setValue({
+                fieldId: "custbody_bsp_isg_transmission_acct_num",
+                value: poData.account.value,
+            });
+    
+            purchaseOrderRec.setValue({
+                fieldId: "custbody_bsp_isg_transmission_loc",
+                value: poData.transmissionLocation,
+            });
+    
+            purchaseOrderRec.setValue({
+                fieldId: "custbody_bsp_isg_transm_queue_id",
+                value: poData.transmitionQueueID,
+            });
+    
+            purchaseOrderRec.setValue({
+                fieldId: "custbody_bsp_isg_order_type",
+                value: SHIPMENT_TYPES.dropship,
+            });
+
+            purchaseOrderRec.setValue({
+                fieldId: "custbody_bsp_isg_po_transm_status",
+                value: PO_TRANSMITION_STATUSES.pendingTransmission,
+            });
+    
+            let itemCount = purchaseOrderRec.getLineCount({
+                sublistId: 'item'
+            });
+            if(itemCount > 0){
+                for(let i = 0 ; i < itemCount ; i++){
+                    let item = purchaseOrderRec.getSublistValue({
+                        sublistId: 'item',
+                        fieldId: 'item',
+                        line: i
+                    });
+                    if(itemNotIncludedInTransmission(item, dropShipItems)){
+                        log.debug("createPurchaseOrder dropShip", `Item ${item} will be removed`);
+                        purchaseOrderRec.removeLine({
+                            sublistId: 'item',
+                            line: i,
+                       });
+                    }
+                }
+                poID = purchaseOrderRec.save();
+                purchaseOrderIDs.push(poID);
+            }else{
+                throw `There was an unexpected Error while trynig to create a PO for Sales Order ID ${poData.salesOrderID}`;
+            }
+        }
+        return purchaseOrderIDs;
+    }
+
+    /**
+     * It takes an array of items from the Sales Orders, and returns an array of items that are WrapAndLabel.
+     * @param items - An array of JSON objects that represent the items in the cart.
+     * @returns An array of objects.
+     */
+    function getWrapAndLabelItems(items) {
+        let wrapAndLabelItems = [];
+        for (let index = 0; index < items.length; index++) {
+            let element = JSON.parse(items[index]);
+            if(element.shipmentType == SHIPMENT_TYPES.wrapAndLabel){
+                wrapAndLabelItems.push(element);
+            }
+        }
+        return wrapAndLabelItems;
+    }
+
+    /**
+     * It takes an array of items from the Sales Orders, and returns an array of items that are dropship.
+     * @param items - An array of JSON objects that represent the items in the cart.
+     * @returns An array of objects.
+     */
+    function getDropShipItems(items) {
+        let dropshipItems = [];
+        for (let index = 0; index < items.length; index++) {
+            let element = JSON.parse(items[index]);
+            if(element.shipmentType == SHIPMENT_TYPES.dropship){
+                dropshipItems.push(element);
+            }
+        }
+        return dropshipItems;
     }
 
     /**
@@ -378,7 +506,7 @@
     */
     function itemNotIncludedInTransmission(itemID, items){
         for (let index = 0; index < items.length; index++) {
-            const element = JSON.parse(items[index]);
+            const element = items[index];
             if(itemID == element.itemID){
                 return false;
             }
@@ -427,7 +555,6 @@
         });
         return poID; 
     }
-
 
     /**
      * It takes a PO ID and returns the ID of the queue that the PO is assigned to.
@@ -515,6 +642,149 @@
     }
 
     /**
+     * This function takes a PO ID and returns an Item Fulfillmemt record.
+     * @param poID - The internal ID of the Purchase Order record
+     * @returns A Vendor Bill Record
+    */
+    function createItemFulfillmentFromPO(soID) {
+        let functionName = "createItemFulfillmentFromPO";
+        let itemFulfillmentRec = null;
+        try{        
+            itemFulfillmentRec = record.transform({
+                fromType: record.Type.SALES_ORDER,
+                fromId: parseInt(soID),
+                toType: record.Type.ITEM_FULFILLMENT,
+            });
+        }catch(error){
+            log.error(functionName, "Error creating Item Fulfillment Record: " + JSON.stringify(error.message));
+            return null;
+        }
+
+        return itemFulfillmentRec;
+    }
+
+    /**
+     * This function takes a PO ID and returns an Item Receipt record.
+     * @param poID - The internal ID of the Purchase Order record
+     * @returns A Vendor Bill Record
+    */
+    function createItemReceiptFromPO(poID) {
+        let functionName = "createItemReceiptFromPO";
+        let itemReceiptRec = null;
+        try{        
+            itemReceiptRec = record.transform({
+                fromType: record.Type.PURCHASE_ORDER,
+                fromId: parseInt(poID),
+                toType: record.Type.ITEM_RECEIPT,
+            });
+        }catch(error){
+            log.error(functionName, "Error creating Item Receipt Record: " + JSON.stringify(error.message));
+            return null;
+        }
+
+        return itemReceiptRec;
+    }
+
+    /**
+     * If the PO has a value in the custom field "custbody_bsp_isg_order_type" and that value is
+     * "Dropship", then return true. Otherwise, return false.
+     * @param poID - The internal ID of the Purchase Order
+     * @returns a boolean value.
+    */
+    function isDropShip(poID){
+        let poFields = search.lookupFields({
+            type: record.Type.PURCHASE_ORDER,
+            id: parseInt(poID),
+            columns: 'custbody_bsp_isg_order_type'
+        });
+        if(poFields && poFields.custbody_bsp_isg_order_type){
+            return poFields.custbody_bsp_isg_order_type[0].text == "Dropship";
+        }
+        return false;
+    }
+
+    /**
+     * If the PO has a value in the custom field "custbody_bsp_isg_autoreceived" and that value is
+     * "true", then return true. Otherwise, return false.
+     * @param poID - The internal ID of the Purchase Order
+     * @returns a boolean value.
+    */
+    function isAutoreceive(poID){
+        let poFields = search.lookupFields({
+            type: record.Type.PURCHASE_ORDER,
+            id: parseInt(poID),
+            columns: 'custbody_bsp_isg_autoreceived'
+        });
+        if(poFields && poFields.custbody_bsp_isg_autoreceived){
+            return poFields.custbody_bsp_isg_autoreceived == true;
+        }
+        return false;
+    }
+
+    /**
+     * It takes a PO ID and returns the Sales Order ID that the PO was created from.
+     * @param poID - The internal ID of the Purchase Order record
+     * @returns The Sales Order ID
+    */
+    function getSalesOrderID(poID){
+        let poFields = search.lookupFields({
+            type: record.Type.PURCHASE_ORDER,
+            id: parseInt(poID),
+            columns: 'createdfrom'
+        });
+        log.debug("getSalesOrderID", JSON.stringify(poFields));
+        if(poFields && !isEmpty(poFields.createdfrom)){
+            return poFields.createdfrom[0].value;
+        }
+        return null;
+    }
+
+    /**
+     * This function takes in a PO ID, an array of items that have been partially shipped, and an array of
+     * items that have not been shipped. It then loops through the arrays and sets the "isclosed" field to
+     * true for each item in the arrays
+     * @param poID - The internal ID of the Purchase Order
+     * @param linesPartiallyShipped - An array of objects that contain the item ID and the quantity that
+     * was shipped.
+     * @param itemsNotShipped - An array of objects that contain the item ID and the quantity that was not
+     * shipped.
+    */
+    function updatePOlines(poID, linesPartiallyShipped, itemsNotShipped){
+        let purchaseOrderRec = record.load({
+            type: record.Type.PURCHASE_ORDER,
+            id: parseInt(poID),
+            isDynamic: true
+        });
+
+        for(let i = 0; i < linesPartiallyShipped.length; i++){
+            let item = linesPartiallyShipped[i];
+            let itemID = item.itemID;
+            let itemQty = item.quantityShipped;
+            let lineNum = purchaseOrderRec.findSublistLineWithValue({
+                sublistId: 'item',
+                fieldId: 'item',
+                value: itemID
+            });
+
+            purchaseOrderRec.selectLine({
+                sublistId: 'item',
+                line: lineNum
+            });
+
+            purchaseOrderRec.setCurrentSublistValue({
+                sublistId: 'item',
+                fieldId: 'quantity',
+                value: itemQty
+            });
+            purchaseOrderRec.commitLine({
+                sublistId: "item",
+            });
+        }
+        purchaseOrderRec.save();
+        log.debug("updatePOlines", `Purchase Order lines closed`);
+    }
+
+    /**
      * Get all results from a saved search
      * @param {*} objSavedSearch 
      * @returns 
@@ -564,6 +834,28 @@
         return date.toISOString().slice(0, 19);
     }
 
+    
+    /**
+     * Check for Empty value
+     * @param {*} value 
+     * @returns 
+    */
+	function isEmpty(value) {
+		return (
+			value === "" ||
+			value == null ||
+			value == undefined ||
+			value == "null" ||
+			value == "undefined" ||
+			(value.constructor === Array && value.length == 0) ||
+			(value.constructor === Object &&
+				(function (v) {
+					for (let k in v) return false;
+					return true;
+				})(value))
+		);
+	}
+
     return {
         transmitionPOStatus: transmitionPOStatus,
         createPurchaseOrders: createPurchaseOrders,
@@ -575,6 +867,12 @@
         getQueueOfPO: getQueueOfPO,
         getVendor: getVendor,
         getTransmissionFields: getTransmissionFields,
-        createBillFromPO: createBillFromPO
+        isDropShip: isDropShip,
+        isAutoreceive: isAutoreceive,
+        getSalesOrderID: getSalesOrderID,
+        createBillFromPO: createBillFromPO,
+        createItemFulfillmentFromPO: createItemFulfillmentFromPO,
+        createItemReceiptFromPO: createItemReceiptFromPO,
+        updatePOlines: updatePOlines
 	};
 });

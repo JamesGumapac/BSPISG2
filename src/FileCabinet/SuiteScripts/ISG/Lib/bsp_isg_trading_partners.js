@@ -242,6 +242,24 @@
         return result;
     }
 
+    /**
+     * "If the trading partner is essendant, then call the essendant processASN function, otherwise if
+     * the trading partner is spr, then call the spr processASN function."
+     * 
+     * @param jsonObjResponse - This is the JSON object that is returned from the server.
+     * @param tradingPartner - This is the trading partner that the PO Ack is coming from.
+    */    
+    function processASN(jsonObjResponse, tradingPartner){
+        let result = {};
+        if(tradingPartner == CONTANTS.essendant){
+            result = ESSENDANT.processASN(jsonObjResponse);
+        }
+        if(tradingPartner == CONTANTS.spr){
+            result = SPR.processASN(jsonObjResponse);
+        }
+        return result;
+    }
+
     return {
         constants: constants,
         getTradingPartnerID: getTradingPartnerID,
@@ -251,6 +269,7 @@
         isTradingPartner: isTradingPartner,
         getMinAmountCartonPO: getMinAmountCartonPO,
         processPOAck: processPOAck,
-        processInvoice: processInvoice
+        processInvoice: processInvoice,
+        processASN: processASN
 	};
 });

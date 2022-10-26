@@ -425,6 +425,7 @@ define(['N/runtime', 'N/record', 'N/url', 'N/ui/serverWidget', 'N/search', './Li
                     [
                         search.createColumn({name: "tranid", label: "Document Number"}),
                         search.createColumn({name: "entity", label: "Name"}),
+                        search.createColumn({name: "trandate", label: "Date"}),
                         search.createColumn({name: "custbody_bsp_isg_route_code", label: "Route Code"}),
                         search.createColumn({
                             name: "custrecord_bsp_lb_route_code_desc",
@@ -453,6 +454,7 @@ define(['N/runtime', 'N/record', 'N/url', 'N/ui/serverWidget', 'N/search', './Li
                         isEditMode: false
                     });
                     let salesOrderNumber = result.getValue("tranid");
+                    let salesOrderDate = result.getValue("trandate");
                     let customer = result.getText("entity");
                     let routeCode = result.getText("custbody_bsp_isg_route_code");
                     let routeCodeDesc = result.getValue({name: "custrecord_bsp_lb_route_code_desc", join: "CUSTBODY_BSP_ISG_ROUTE_CODE"});
@@ -465,6 +467,7 @@ define(['N/runtime', 'N/record', 'N/url', 'N/ui/serverWidget', 'N/search', './Li
                         itemData[itemIndex].salesOrderLines.push({
                             salesOrderID: salesOrderID,
                             salesOrderNumber: salesOrderNumber,
+                            salesOrderDate: salesOrderDate,
                             soURL: soURL,
                             customer: customer,
                             routeCode: routeCode,

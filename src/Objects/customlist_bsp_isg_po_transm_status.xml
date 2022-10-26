@@ -23,12 +23,22 @@
     <customvalue scriptid="val_882610_t927173_453">
       <abbreviation>C</abbreviation>
       <isinactive>F</isinactive>
-      <value>Acknowledged</value>
+      <value>Pending Shipment Notification</value>
     </customvalue>
     <customvalue scriptid="val_882611_t927173_282">
       <abbreviation>T</abbreviation>
       <isinactive>F</isinactive>
       <value>Transmission failed</value>
+    </customvalue>
+    <customvalue scriptid="val_941096_t927173_367">
+      <abbreviation>A</abbreviation>
+      <isinactive>F</isinactive>
+      <value>Acknowledgment failed</value>
+    </customvalue>
+    <customvalue scriptid="val_958572_t927173_257">
+      <abbreviation>S</abbreviation>
+      <isinactive>F</isinactive>
+      <value>Shipment confirmed</value>
     </customvalue>
   </customvalues>
 </customlist>
