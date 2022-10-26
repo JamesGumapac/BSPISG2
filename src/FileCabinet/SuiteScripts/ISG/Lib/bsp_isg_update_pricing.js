@@ -1,7 +1,12 @@
 /**
  * @NApiVersion 2.1
  */
-define(["N/file", "N/search", "N/record","N/task"], function (file, search, record,task) {
+define(["N/file", "N/search", "N/record", "N/task"], function (
+  file,
+  search,
+  record,
+  task
+) {
   /**
    * This function maps the column line for SPR and iterate each line and return the line object
    * @param {*} fileObj - CSV file Object
@@ -43,22 +48,24 @@ define(["N/file", "N/search", "N/record","N/task"], function (file, search, reco
       log.error("getSpRichardsItemPricingObj ", e.message);
     }
   }
+
   /**
    * This function call the creation and update of the item and item account plan custom record
    * @param {*}scriptId
    * @param {*}deploymentId
    */
-function createItemAndItemAccountPlan(scriptId,deploymentId){
+  function createItemAndItemAccountPlan(scriptId, deploymentId) {
     const mrTask = task.create({
       taskType: task.TaskType.MAP_REDUCE,
       scriptId: scriptId,
-      deploymentId: deploymentId
-    })
-  let mrTaskId = mrTask.submit();
-  let taskStatus = task.checkStatus(mrTaskId);
-  log.debug("runMapReduce",taskStatus)
-    return mrTaskId
-}
+      deploymentId: deploymentId,
+    });
+    let mrTaskId = mrTask.submit();
+    let taskStatus = task.checkStatus(mrTaskId);
+    log.debug("runMapReduce", taskStatus);
+    return mrTaskId;
+  }
+
   /**
    * This function maps the column line for essendant and iterate each line and return the line object
    * @param {*}fileObj - file Object
@@ -103,29 +110,32 @@ function createItemAndItemAccountPlan(scriptId,deploymentId){
    */
   function checkIfTPAccountNumberExists(tradingPartnerId, accountNumber) {
     try {
-    
-    let returnedAccountNumber;
-    const tpAccountNumberSearch = search.create({
-      type: "customrecord_bsp_isg_account_number",
-      filters: [
-        ["custrecord_bsp_isg_parent_trading_partn", "anyof", tradingPartnerId],
-        "AND",
-        ["name", "is", accountNumber],
-      ],
-      columns: [],
-    });
-    log.debug(
-      "checkIfTPAccountNumberExists",
-      tpAccountNumberSearch.runPaged().count
-    );
-    if (tpAccountNumberSearch.runPaged().count === 0) return false;
-    tpAccountNumberSearch.run().each(function (result) {
-      returnedAccountNumber = result.id;
-      return true;
-    });
-    return returnedAccountNumber;
+      let returnedAccountNumber;
+      const tpAccountNumberSearch = search.create({
+        type: "customrecord_bsp_isg_account_number",
+        filters: [
+          [
+            "custrecord_bsp_isg_parent_trading_partn",
+            "anyof",
+            tradingPartnerId,
+          ],
+          "AND",
+          ["name", "is", accountNumber],
+        ],
+        columns: [],
+      });
+      log.debug(
+        "checkIfTPAccountNumberExists",
+        tpAccountNumberSearch.runPaged().count
+      );
+      if (tpAccountNumberSearch.runPaged().count === 0) return false;
+      tpAccountNumberSearch.run().each(function (result) {
+        returnedAccountNumber = result.id;
+        return true;
+      });
+      return returnedAccountNumber;
     } catch (e) {
-      log.error(checkIfTPAccountNumberExists, e.message)
+      log.error(checkIfTPAccountNumberExists, e.message);
     }
   }
 
@@ -136,7 +146,7 @@ function createItemAndItemAccountPlan(scriptId,deploymentId){
    */
   function searchItemAccountNumberPlan(accountNUmber, tradingPartnerId) {
     try {
-      const itemAccountPriceListToDelete =[]
+      const itemAccountPriceListToDelete = [];
       const itemContractPlanSearch = search.create({
         type: "customrecord_bsp_isg_item_acct_data",
         filters: [
@@ -145,8 +155,8 @@ function createItemAndItemAccountPlan(scriptId,deploymentId){
           ["custrecord_bsp_isg_item_supplier", "anyof", tradingPartnerId],
         ],
       });
-      itemContractPlanSearch.run().each(function(result){
-        itemAccountPriceListToDelete.push(result.id)
+      itemContractPlanSearch.run().each(function (result) {
+        itemAccountPriceListToDelete.push(result.id);
         return true;
       });
       return itemAccountPriceListToDelete;
@@ -155,10 +165,6 @@ function createItemAndItemAccountPlan(scriptId,deploymentId){
     }
   }
 
-  /**
-   * This function check if the item ID exist
-   * @param {*} itemId
-   */
   function checkItemId(itemId) {
     try {
       let itemIdResults;
@@ -178,20 +184,24 @@ function createItemAndItemAccountPlan(scriptId,deploymentId){
       log.error(" checkItemId ", e.message);
     }
   }
-function InstanceChecker(scriptDeploymentID){
-  var scheduledscriptinstanceSearchObj = search.create({
-    type: "scheduledscriptinstance",
-    filters:
-        [
-          ["scriptdeployment.scriptid","is",scriptDeploymentID],
-          "AND",
-          ["status","anyof","PROCESSING"]
-        ],
-      
-  });
-  const intanceCount = scheduledscriptinstanceSearchObj.runPaged().count;
-return searchResultCount
-}
+
+  /**
+   * This function check the update/create of the item and item account contract plan is still running
+   * @param {*} scriptDeploymentID
+   */
+  function InstanceChecker(scriptDeploymentID) {
+    var scheduledscriptinstanceSearchObj = search.create({
+      type: "scheduledscriptinstance",
+      filters: [
+        ["scriptdeployment.scriptid", "is", scriptDeploymentID],
+        "AND",
+        ["status", "anyof", "PROCESSING"],
+      ],
+    });
+
+    return scheduledscriptinstanceSearchObj.runPaged().count;
+  }
+
   /**
    * This function create BSP | ISG | Item Contract/Plans
    * @param {*} itemPricingData - item pricing data
@@ -304,7 +314,7 @@ return searchResultCount
       log.error(" updateItemAndContractPlan ", e.message);
     }
   }
-  
+
   /**
    * This function create item record if the item is not existing
    * @param {*} itemPricingData
@@ -395,5 +405,6 @@ return searchResultCount
     searchItemAccountNumberPlan: searchItemAccountNumberPlan,
     getFileId: getFileId,
     createItemAndItemAccountPlan: createItemAndItemAccountPlan,
+    InstanceChecker: InstanceChecker,
   };
 });

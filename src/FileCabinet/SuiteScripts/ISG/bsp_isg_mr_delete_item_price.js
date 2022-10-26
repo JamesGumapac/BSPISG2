@@ -28,10 +28,16 @@ define([
    * @since 2015.2
    */
   let tpAccountNumber;
+  const ESSENDANT_UPDATE_PRICING_DEPLOYMENT_ID =
+      "customdeploy_bsp_isg_esse_updt_prcng";
+  const ESSENDANT_UPDATE_PRICING_SCRIPT_ID =
+      "customscript_bsp_mr_update_item_pricing";
+  
   const getInputData = (inputContext) => {
     try {
       let functionName = "getInputData";
       log.audit(functionName, "************ EXECUTION STARTED ************");
+     
       let folderId;
       const scriptObj = runtime.getCurrentScript();
       const vendor = scriptObj.getParameter({
@@ -44,6 +50,9 @@ define([
         folderId = scriptObj.getParameter({
           name: "custscript_bsp_isg_esse_pen_fol_id",
         });
+        const InstanceChecker = BSPUpdatePricing.InstanceChecker(ESSENDANT_UPDATE_PRICING_DEPLOYMENT_ID)
+        if(InstanceChecker)
+          throw "Item and Item account plan map reduce is still running"
       }
       const fileObj = file.load({
         id: BSPUpdatePricing.getFileId(folderId),
@@ -63,7 +72,7 @@ define([
         vendor
       );
     } catch (e) {
-      log.error(functionName, e.message);
+      log.error("getInputData", e.message);
     }
   };
 
@@ -118,12 +127,7 @@ define([
    */
   const summarize = (summaryContext) => {
     log.debug("TpAccountNumber", tpAccountNumber)
-    const functionName = "Summarize";
-    const ESSENDANT_UPDATE_PRICING_DEPLOYMENT_ID =
-      "customdeploy_bsp_isg_esse_updt_prcng";
-    const ESSENDANT_UPDATE_PRICING_SCRIPT_ID =
-      "customscript_bsp_mr_update_item_pricing";
-
+    let functionName = "summaryContext"
     const scriptObj = runtime.getCurrentScript();
     const isEssendant = scriptObj.getParameter({
       name: "custscript_bsp_isg_is_essendant",
