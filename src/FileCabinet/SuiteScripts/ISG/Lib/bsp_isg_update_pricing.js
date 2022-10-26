@@ -313,11 +313,11 @@ define(["N/file", "N/search", "N/record", "N/task"], function (
           value: itemPricingData.cost,
         });
 
-      // itemPricingData.description &&
-      //   itemRec.setValue({
-      //     fieldId: "displayname",
-      //     value: itemPricingData.description,
-      //   });
+      itemPricingData.description &&
+        itemRec.setValue({
+          fieldId: "displayname",
+          value: itemPricingData.description,
+        });
 
       itemRec.setValue({
         fieldId: "itemid",
