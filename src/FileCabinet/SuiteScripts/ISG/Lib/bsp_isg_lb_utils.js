@@ -3,7 +3,7 @@
  * @NModuleScope Public
  */
 
-define([
+ define([
   "N/search",
   "N/record",
   "./Third Parties/lodash.min.js",
@@ -60,9 +60,9 @@ define([
     customerPayment: "customerpayment",
   });
 
-  const SHIPMENT_TYPE = Object.freeze({
+  const SHIPMENT_TYPE = ({
     dropship: 1,
-    wrapAndlabel: 2,
+    wrapAndLabel: 2,
   });
 
   /**
@@ -214,6 +214,8 @@ define([
         "custrecord_bsp_lb_account",
         "custrecord_bsp_lb_default_location_trans",
         "custrecord_bsp_lb_default_route_code",
+        "custrecord_bsp_lb_avatax",
+        "custrecord_bsp_isg_taxable"
       ],
     });
 
