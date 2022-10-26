@@ -2,19 +2,22 @@
  * @NApiVersion 2.1
  * @NScriptType MapReduceScript
  */
+
 define([
   "N/runtime",
   "N/search",
   "N/file",
   "N/record",
+  "N/task",
   "./Lib/bsp_isg_update_pricing.js",
 ], /**
  * @param{runtime} runtime
  * @param{search} search
  * @param{file} file
  * @param{record} record
+ * @param{task} task
  * @param{*} BSPUpdatePricing
- */ (runtime, search, file, record, BSPUpdatePricing) => {
+ */ (runtime, search, file, record, task, BSPUpdatePricing) => {
   /**
    * Defines the function that is executed at the beginning of the map/reduce process and generates the input data.
    * @param {Object} inputContext
@@ -27,52 +30,42 @@ define([
    * @returns {Array|Object|Search|ObjectRef|File|Query} The input data to use in the map/reduce process
    * @since 2015.2
    */
-  let tpAccountNumber;
-  const ESSENDANT_UPDATE_PRICING_DEPLOYMENT_ID =
-      "customdeploy_bsp_isg_esse_updt_prcng";
-  const ESSENDANT_UPDATE_PRICING_SCRIPT_ID =
-      "customscript_bsp_mr_update_item_pricing";
-  
+
   const getInputData = (inputContext) => {
+    let functionName = "getInputData";
+    log.audit(functionName, "************ EXECUTION STARTED ************");
+
+    let errorMessage = "";
     try {
-      let functionName = "getInputData";
-      log.audit(functionName, "************ EXECUTION STARTED ************");
-     
       let folderId;
-      const scriptObj = runtime.getCurrentScript();
-      const vendor = scriptObj.getParameter({
-        name: "custscript_bsp_isg_vendor_trdng_prtnr",
-      });
-      const isEssendant = scriptObj.getParameter({
-        name: "custscript_bsp_isg_is_essendant",
-      });
-      if (isEssendant) {
-        folderId = scriptObj.getParameter({
-          name: "custscript_bsp_isg_esse_pen_fol_id",
-        });
-        const InstanceChecker = BSPUpdatePricing.InstanceChecker(ESSENDANT_UPDATE_PRICING_DEPLOYMENT_ID)
-        if(InstanceChecker)
-          throw "Item and Item account plan map reduce is still running"
+      const params = getParameters();
+      if (params.isEssendant) {
+        folderId = params.pendingFolderId;
+        const InstanceChecker = BSPUpdatePricing.InstanceChecker(
+          params.mr_script_dep_id
+        );
+        if (InstanceChecker)
+          throw "Item and Item account plan create/update map reduce is still running";
       }
       const fileObj = file.load({
         id: BSPUpdatePricing.getFileId(folderId),
       });
-      const tradingPartnerId = scriptObj.getParameter({
-        name: "custscript_bsp_isg_tp",
-      });
+
       const accountNumber = fileObj.name.replace(".csv", "");
-      tpAccountNumber = BSPUpdatePricing.checkIfTPAccountNumberExists(
-        tradingPartnerId,
+      let tpAccountNumber = BSPUpdatePricing.checkIfTPAccountNumberExists(
+        params.tradingPartnerId,
         accountNumber
       );
-      if (!tpAccountNumber)
-        throw "Cannot Process the file. Account Number does not exist";
+      if (!tpAccountNumber) {
+        errorMessage = "Cannot Process the file. Account Number does not exist";
+        throw errorMessage;
+      }
       return BSPUpdatePricing.searchItemAccountNumberPlan(
         tpAccountNumber,
-        vendor
+        params.vendor
       );
     } catch (e) {
-      log.error("getInputData", e.message);
+      log.error("getInputData", errorMessage ? errorMessage : e.message);
     }
   };
 
@@ -97,6 +90,7 @@ define([
     let functionName = "reduceContext";
     try {
       let itemAccountPlanId = JSON.parse(reduceContext.values);
+
       record.delete({
         type: "customrecord_bsp_isg_item_acct_data",
         id: itemAccountPlanId,
@@ -126,18 +120,41 @@ define([
    * @since 2015.2
    */
   const summarize = (summaryContext) => {
-    log.debug("TpAccountNumber", tpAccountNumber)
-    let functionName = "summaryContext"
-    const scriptObj = runtime.getCurrentScript();
-    const isEssendant = scriptObj.getParameter({
-      name: "custscript_bsp_isg_is_essendant",
-    });
+    let functionName = "summaryContext";
+    let folderId;
+    const params = getParameters();
+    const isEssendant = params.isEssendant;
+    const mrParams = [];
+    mrParams["custscript_bsp_isg_is_essendant"] = isEssendant;
     if (isEssendant) {
-      BSPUpdatePricing.createItemAndItemAccountPlan(
-        ESSENDANT_UPDATE_PRICING_SCRIPT_ID,
-        ESSENDANT_UPDATE_PRICING_DEPLOYMENT_ID
-      );
+      folderId = params.pendingFolderId;
     }
+    const fileId = BSPUpdatePricing.getFileId(folderId);
+    const fileObj = file.load({
+      id: fileId,
+    });
+    const tradingPartnerId = params.tradingPartnerId;
+    const vendor = params.vendor;
+    const accountNumber = fileObj.name.replace(".csv", "");
+    let accountNumberId = BSPUpdatePricing.checkIfTPAccountNumberExists(
+      tradingPartnerId,
+      accountNumber
+    );
+
+    const mrTask = task.create({
+      taskType: task.TaskType.MAP_REDUCE,
+      scriptId: params.mr_script_id,
+      deploymentId: params.mr_script_dep_id,
+      params: {
+        custscript_bsp_isg_is_essendant_vendor: isEssendant,
+        custscript_bsp_isg_acc_num: +accountNumberId,
+        custscript_bsp_isg_file_id: fileId,
+        custscript_bsp_isg_up_trading_partner: +tradingPartnerId,
+        custscript_bsp_isg_vendor: +vendor,
+      },
+    });
+    let mrTaskId = mrTask.submit();
+    log.debug(functionName, `MR Task submitted with ID: ${mrTaskId} `);
 
     log.audit(functionName, {
       UsageConsumed: summaryContext.usage,
@@ -146,6 +163,32 @@ define([
     });
     log.debug(functionName, "************ EXECUTION COMPLETED ************");
   };
+  const getParameters = () => {
+    let objParams = {};
 
+    let objScript = runtime.getCurrentScript();
+    objParams = {
+      isEssendant: objScript.getParameter({
+        name: "custscript_bsp_isg_is_essendant",
+      }),
+      pendingFolderId: objScript.getParameter({
+        name: "custscript_bsp_isg_esse_pen_fol_id",
+      }),
+      mr_script_id: objScript.getParameter({
+        name: "custscript_bsp_mr_updt_itm_pln_dep",
+      }),
+      mr_script_dep_id: objScript.getParameter({
+        name: "custscript_bsp_mr_updt_itm_pln_script_id",
+      }),
+      tradingPartnerId: objScript.getParameter({
+        name: "custscript_bsp_isg_tp",
+      }),
+      vendor: objScript.getParameter({
+        name: "custscript_bsp_isg_vendor_trdng_prtnr",
+      }),
+    };
+    log.debug("objParams", objParams);
+    return objParams;
+  };
   return { getInputData, reduce, summarize };
 });

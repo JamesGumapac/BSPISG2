@@ -51,20 +51,10 @@ define(["N/file", "N/search", "N/record", "N/task"], function (
 
   /**
    * This function call the creation and update of the item and item account plan custom record
-   * @param {*}scriptId
-   * @param {*}deploymentId
+   * @param {*} scriptId
+   * @param {*} deploymentId
+   * @param {*} params
    */
-  function createItemAndItemAccountPlan(scriptId, deploymentId) {
-    const mrTask = task.create({
-      taskType: task.TaskType.MAP_REDUCE,
-      scriptId: scriptId,
-      deploymentId: deploymentId,
-    });
-    let mrTaskId = mrTask.submit();
-    let taskStatus = task.checkStatus(mrTaskId);
-    log.debug("runMapReduce", taskStatus);
-    return mrTaskId;
-  }
 
   /**
    * This function maps the column line for essendant and iterate each line and return the line object
@@ -95,6 +85,7 @@ define(["N/file", "N/search", "N/record", "N/task"], function (
         });
         return true;
       });
+
       pricingToProcess.shift();
       //return object and remove the first element of the array
       return pricingToProcess;
@@ -110,7 +101,7 @@ define(["N/file", "N/search", "N/record", "N/task"], function (
    */
   function checkIfTPAccountNumberExists(tradingPartnerId, accountNumber) {
     try {
-      let returnedAccountNumber;
+      let returnedAccountNumber = 0;
       const tpAccountNumberSearch = search.create({
         type: "customrecord_bsp_isg_account_number",
         filters: [
@@ -124,11 +115,8 @@ define(["N/file", "N/search", "N/record", "N/task"], function (
         ],
         columns: [],
       });
-      log.debug(
-        "checkIfTPAccountNumberExists",
-        tpAccountNumberSearch.runPaged().count
-      );
-      if (tpAccountNumberSearch.runPaged().count === 0) return false;
+   
+      if (tpAccountNumberSearch.runPaged().count === 0) return;
       tpAccountNumberSearch.run().each(function (result) {
         returnedAccountNumber = result.id;
         return true;
@@ -247,14 +235,10 @@ define(["N/file", "N/search", "N/record", "N/task"], function (
           fieldId: "custrecord_bsp_isg_contract_code_uom",
           value: itemPricingData.OUM,
         });
-      const recId = itemAccountPLansRec.save({
+      return itemAccountPLansRec.save({
         ignoreMandatoryFields: true,
       });
-      return recId;
-      log.debug(
-        "createItemAccountPlans",
-        `BSP | ISG | Item Contract/Plans ID ${recId} has been successfully created`
-      );
+      
     } catch (e) {
       log.error(createItemAccountPlans, e.message);
     }
@@ -284,7 +268,7 @@ define(["N/file", "N/search", "N/record", "N/task"], function (
    * @param {*} itemPricingData
    * @param {*} vendor
    */
-  function updateItemAndContractPlan(itemId, itemPricingData, vendor) {
+  function updateItem(itemId, itemPricingData, vendor) {
     try {
       const itemRec = record.load({
         type: record.Type.INVENTORY_ITEM,
@@ -303,15 +287,12 @@ define(["N/file", "N/search", "N/record", "N/task"], function (
           value: itemPricingData.description,
         });
 
-      const itemRecId = itemRec.save({
+      return itemRec.save({
         ignoreMandatoryFields: true,
       });
-      log.debug(
-        " updateItemAndContractPlan ",
-        `Item ${itemRecId} updated successfully`
-      );
+   
     } catch (e) {
-      log.error(" updateItemAndContractPlan ", e.message);
+      log.error(" updateItem ", e.message);
     }
   }
 
@@ -332,11 +313,11 @@ define(["N/file", "N/search", "N/record", "N/task"], function (
           value: itemPricingData.cost,
         });
 
-      itemPricingData.description &&
-        itemRec.setValue({
-          fieldId: "displayname",
-          value: itemPricingData.description,
-        });
+      // itemPricingData.description &&
+      //   itemRec.setValue({
+      //     fieldId: "displayname",
+      //     value: itemPricingData.description,
+      //   });
 
       itemRec.setValue({
         fieldId: "itemid",
@@ -349,6 +330,7 @@ define(["N/file", "N/search", "N/record", "N/task"], function (
       });
 
       const itemRecId = itemRec.save({ ignoreMandatoryFields: true });
+      return itemRecId
       log.debug("createItem", `Item ${itemRecId} created successfully`);
     } catch (e) {
       log.error("createItem", e.message);
@@ -397,14 +379,13 @@ define(["N/file", "N/search", "N/record", "N/task"], function (
     getEssendantItemPricingObj: getEssendantItemPricingObj,
     getSpRichardsItemPricingObj: getSpRichardsItemPricingObj,
     checkItemId: checkItemId,
-    updateItemAndContractPlan: updateItemAndContractPlan,
+    updateItem: updateItem,
     createItemAccountPlans: createItemAccountPlans,
     createItem: createItem,
     checkIfTPAccountNumberExists: checkIfTPAccountNumberExists,
     moveFolderToDone: moveFolderToDone,
     searchItemAccountNumberPlan: searchItemAccountNumberPlan,
     getFileId: getFileId,
-    createItemAndItemAccountPlan: createItemAndItemAccountPlan,
     InstanceChecker: InstanceChecker,
   };
 });

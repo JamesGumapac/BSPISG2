@@ -22,58 +22,38 @@ define([
    * @returns {Array|Object|Search|ObjectRef|File|Query} The input data to use in the map/reduce process
    * @since 2015.2
    */
-  const ESSENDANT_DEPLOYMENT_ID = "customdeploy_bsp_isg_esse_updt_prcng";
   const getInputData = (inputContext) => {
     let functionName = "getInputData";
-    let isEssendant = false;
-    let folderId;
-
+    let errorMessage = "";
     log.audit(functionName, "************ EXECUTION STARTED ************");
     try {
-      const scriptObj = runtime.getCurrentScript();
-      const vendor = scriptObj.getParameter({
-        name: "custscript_bsp_isg_vendor",
-      });
-      // check the deployment ID and verify is it is for Essendant or SPR
-      scriptObj.deploymentId === ESSENDANT_DEPLOYMENT_ID
-        ? ((folderId = scriptObj.getParameter({
-            name: "custscript_bsp_isg_essendant",
-          })),
-          (isEssendant = true))
-        : (folderId = scriptObj.getParameter({
-            name: "custscript_bsp_isg_sp_richards",
-          }));
-      const tradingPartnerId = scriptObj.getParameter({
-        name: "custscript_bsp_isg_up_trading_partner",
-      });
-      const fileObj = file.load({
-        id: BSPUpdatePricing.getFileId(folderId),
-      });
-      const accountNumber = fileObj.name.replace(".csv", "");
-      const tpAccountNumber = BSPUpdatePricing.checkIfTPAccountNumberExists(
-        tradingPartnerId,
-        accountNumber
-      );
-      if (!tpAccountNumber)
-        throw "Cannot Process the file. Account Number does not exist";
+      const params = getParameters();
 
+      log.debug("paramsObj: ", params);
+      const fileObj = file.load({
+        id: parseInt(params.fileId),
+      });
+
+      if (!params.accountNumberId) {
+        errorMessage = "Cannot Process the file. Account Number does not exist";
+        throw errorMessage;
+      }
       let pricingToProcess;
-      if (isEssendant === true) {
+      if (params.isEssendant) {
         pricingToProcess = BSPUpdatePricing.getEssendantItemPricingObj(
           fileObj,
-          tpAccountNumber
+          params.accountNumberId
         );
       } else {
         pricingToProcess = BSPUpdatePricing.getSpRichardsItemPricingObj(
           fileObj,
-          tpAccountNumber
+          params.accountNumberId
         );
       }
-      
 
       return pricingToProcess;
     } catch (e) {
-      log.error(functionName, e.toString());
+      log.error(functionName, errorMessage ? errorMessage : e.message);
     }
   };
   /**
@@ -94,21 +74,13 @@ define([
   const reduce = (reduceContext) => {
     let functionName = "reduceContext";
     try {
-    
-      const scriptObj = runtime.getCurrentScript();
-      const vendor = scriptObj.getParameter({
-        name: "custscript_bsp_isg_vendor",
-      });
+      const params = getParameters();
       let itemPricingData = JSON.parse(reduceContext.values);
-      log.debug(functionName + " itemPricingData", itemPricingData);
+      const vendor = params.vendor;
       const itemId = BSPUpdatePricing.checkItemId(itemPricingData.itemId);
-
+      log.debug(functionName + " Processing:", { itemId, itemPricingData });
       if (itemId) {
-        BSPUpdatePricing.updateItemAndContractPlan(
-          itemId,
-          itemPricingData,
-          vendor
-        );
+        BSPUpdatePricing.updateItem(itemId, itemPricingData, vendor);
         BSPUpdatePricing.createItemAccountPlans(
           itemId,
           itemPricingData,
@@ -116,6 +88,7 @@ define([
         );
       } else {
         const newItemId = BSPUpdatePricing.createItem(itemPricingData, vendor);
+        log.audit(functionName, "item id created: " + newItemId)
         newItemId
           ? BSPUpdatePricing.createItemAccountPlans(
               newItemId,
@@ -151,10 +124,12 @@ define([
   const summarize = (summaryContext) => {
     const functionName = "Summarize";
     try {
+      const params = getParameters();
       const scriptObj = runtime.getCurrentScript();
+
       let folderId;
       let doneFolderId;
-      scriptObj.deploymentId === ESSENDANT_DEPLOYMENT_ID
+      params.isEssendant
         ? ((folderId = scriptObj.getParameter({
             name: "custscript_bsp_isg_essendant",
           })),
@@ -183,6 +158,26 @@ define([
       log.error(functionName, e.message);
     }
   };
+  const getParameters = () => {
+    let objParams = {};
 
+    let environment = runtime.envType;
+    let objScript = runtime.getCurrentScript();
+    objParams = {
+      isEssendant: objScript.getParameter({
+        name: "custscript_bsp_isg_is_essendant_vendor",
+      }),
+      accountNumberId: objScript.getParameter({
+        name: "custscript_bsp_isg_acc_num",
+      }),
+      fileId: objScript.getParameter({ name: "custscript_bsp_isg_file_id" }),
+      tradingPartnerId: objScript.getParameter({
+        name: "custscript_bsp_isg_up_trading_partner",
+      }),
+      vendor: objScript.getParameter({ name: "custscript_bsp_isg_vendor" }),
+    };
+
+    return objParams;
+  };
   return { getInputData, reduce, summarize };
 });
