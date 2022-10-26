@@ -27,30 +27,50 @@ define([
     let functionName = "getInputData";
     let isEssendant = false;
     let folderId;
-    
+
     log.audit(functionName, "************ EXECUTION STARTED ************");
     try {
       const scriptObj = runtime.getCurrentScript();
+      const vendor = scriptObj.getParameter({
+        name: "custscript_bsp_isg_vendor",
+      });
       // check the deployment ID and verify is it is for Essendant or SPR
       scriptObj.deploymentId === ESSENDANT_DEPLOYMENT_ID
-          ? ((folderId = scriptObj.getParameter({
+        ? ((folderId = scriptObj.getParameter({
             name: "custscript_bsp_isg_essendant",
           })),
-              (isEssendant = true))
-          : (folderId = scriptObj.getParameter({
+          (isEssendant = true))
+        : (folderId = scriptObj.getParameter({
             name: "custscript_bsp_isg_sp_richards",
           }));
-      
+      const tradingPartnerId = scriptObj.getParameter({
+        name: "custscript_bsp_isg_up_trading_partner",
+      });
       const fileObj = file.load({
         id: BSPUpdatePricing.getFileId(folderId),
       });
+      const accountNumber = fileObj.name.replace(".csv", "");
+      const tpAccountNumber = BSPUpdatePricing.checkIfTPAccountNumberExists(
+        tradingPartnerId,
+        accountNumber
+      );
+      if (!tpAccountNumber)
+        throw "Cannot Process the file. Account Number does not exist";
+
       let pricingToProcess;
-      isEssendant === true
-          ? (pricingToProcess =
-              BSPUpdatePricing.getEssendantItemPricingObj(fileObj))
-          : (pricingToProcess =
-              BSPUpdatePricing.getSpRichardsItemPricingObj(fileObj));
+      if (isEssendant === true) {
+        pricingToProcess = BSPUpdatePricing.getEssendantItemPricingObj(
+          fileObj,
+          tpAccountNumber
+        );
+      } else {
+        pricingToProcess = BSPUpdatePricing.getSpRichardsItemPricingObj(
+          fileObj,
+          tpAccountNumber
+        );
+      }
       
+
       return pricingToProcess;
     } catch (e) {
       log.error(functionName, e.toString());
@@ -74,27 +94,41 @@ define([
   const reduce = (reduceContext) => {
     let functionName = "reduceContext";
     try {
+    
       const scriptObj = runtime.getCurrentScript();
       const vendor = scriptObj.getParameter({
         name: "custscript_bsp_isg_vendor",
       });
       let itemPricingData = JSON.parse(reduceContext.values);
-      
-      // log.debug(functionName + " itemPricingData", itemPricingData);
+      log.debug(functionName + " itemPricingData", itemPricingData);
       const itemId = BSPUpdatePricing.checkItemId(itemPricingData.itemId);
-      
-      itemId
-          ? BSPUpdatePricing.updateItemAndContractPlan(
+
+      if (itemId) {
+        BSPUpdatePricing.updateItemAndContractPlan(
           itemId,
           itemPricingData,
           vendor
-          )
-          : BSPUpdatePricing.createItem(itemPricingData, vendor);
+        );
+        BSPUpdatePricing.createItemAccountPlans(
+          itemId,
+          itemPricingData,
+          vendor
+        );
+      } else {
+        const newItemId = BSPUpdatePricing.createItem(itemPricingData, vendor);
+        newItemId
+          ? BSPUpdatePricing.createItemAccountPlans(
+              newItemId,
+              itemPricingData,
+              vendor
+            )
+          : false;
+      }
     } catch (e) {
-      log.error(functionName, e.tostring());
+      log.error(functionName, e.message);
     }
   };
-  
+
   /**
    * Defines the function that is executed when the summarize entry point is triggered. This entry point is triggered
    * automatically when the associated reduce stage is complete. This function is applied to the entire result set.
@@ -121,24 +155,24 @@ define([
       let folderId;
       let doneFolderId;
       scriptObj.deploymentId === ESSENDANT_DEPLOYMENT_ID
-          ? ((folderId = scriptObj.getParameter({
+        ? ((folderId = scriptObj.getParameter({
             name: "custscript_bsp_isg_essendant",
           })),
-              (doneFolderId = scriptObj.getParameter({
-                name: "custscript_bsp_isg_essen_done_folder_id",
-              })))
-          : ((folderId = scriptObj.getParameter({
+          (doneFolderId = scriptObj.getParameter({
+            name: "custscript_bsp_isg_essen_done_folder_id",
+          })))
+        : ((folderId = scriptObj.getParameter({
             name: "custscript_bsp_isg_sp_richards",
           })),
-              (doneFolderId = scriptObj.getParameter({
-                name: "custscript_bsp_isg_spr_done_folder_id",
-              })));
-      
+          (doneFolderId = scriptObj.getParameter({
+            name: "custscript_bsp_isg_spr_done_folder_id",
+          })));
+
       // BSPUpdatePricing.moveFolderToDone(
       //   BSPUpdatePricing.getFileId(folderId),
       //   doneFolderId
       // );
-      
+
       log.audit(functionName, {
         UsageConsumed: summaryContext.usage,
         NumberOfQueues: summaryContext.concurrency,
@@ -149,6 +183,6 @@ define([
       log.error(functionName, e.message);
     }
   };
-  
+
   return { getInputData, reduce, summarize };
 });

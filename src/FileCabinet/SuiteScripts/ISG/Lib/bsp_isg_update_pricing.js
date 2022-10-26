@@ -1,15 +1,16 @@
 /**
  * @NApiVersion 2.1
  */
-define(["N/file", "N/search", "N/record"], function (file, search, record) {
+define(["N/file", "N/search", "N/record","N/task"], function (file, search, record,task) {
   /**
    * This function maps the column line for SPR and iterate each line and return the line object
-   * @param {csv} fileObj - CSV file Object
+   * @param {*} fileObj - CSV file Object
+   * @param {*} accountNumber
    */
-  function getSpRichardsItemPricingObj(fileObj) {
+  function getSpRichardsItemPricingObj(fileObj, accountNumber) {
     try {
       const pricingToProcess = [];
-      
+
       const iterator = fileObj.lines.iterator();
       iterator.each(function (line) {
         const initialLineValue = line.value.replace(/;/g, "");
@@ -23,6 +24,7 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
         const cost = lineValues[77];
         const contractCode = lineValues[101];
         pricingToProcess.push({
+          accountNumber: accountNumber,
           itemId: itemId,
           description: description,
           OUM: OUM,
@@ -41,12 +43,28 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
       log.error("getSpRichardsItemPricingObj ", e.message);
     }
   }
-  
+  /**
+   * This function call the creation and update of the item and item account plan custom record
+   * @param {*}scriptId
+   * @param {*}deploymentId
+   */
+function createItemAndItemAccountPlan(scriptId,deploymentId){
+    const mrTask = task.create({
+      taskType: task.TaskType.MAP_REDUCE,
+      scriptId: scriptId,
+      deploymentId: deploymentId
+    })
+  let mrTaskId = mrTask.submit();
+  let taskStatus = task.checkStatus(mrTaskId);
+  log.debug("runMapReduce",taskStatus)
+    return mrTaskId
+}
   /**
    * This function maps the column line for essendant and iterate each line and return the line object
-   * @param {csv} fileObj - file Object
+   * @param {*}fileObj - file Object
+   * @param {*}accountNumber
    */
-  function getEssendantItemPricingObj(fileObj) {
+  function getEssendantItemPricingObj(fileObj, accountNumber) {
     try {
       const pricingToProcess = [];
       const iterator = fileObj.lines.iterator();
@@ -54,12 +72,13 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
         const initialLineValue = line.value.replace(/"/g, "");
         const lineValues = initialLineValue.split(",");
         const itemId = lineValues[0];
-        const description = lineValues[7];
+        const description = lineValues[6];
         const OUM = lineValues[8];
         const price = lineValues[10];
         const cost = lineValues[9];
-        const contractCode = lineValues[17];
+        const contractCode = lineValues[18];
         pricingToProcess.push({
+          accountNumber: accountNumber,
           itemId: itemId,
           description: description,
           OUM: OUM,
@@ -76,7 +95,66 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
       log.error("getEssendantItemPricingObj", e.message);
     }
   }
-  
+
+  /**
+   * This function check if the account number for trading partner is existing.
+   * @param {int} tradingPartnerId
+   * @param {string} accountNumber
+   */
+  function checkIfTPAccountNumberExists(tradingPartnerId, accountNumber) {
+    try {
+    
+    let returnedAccountNumber;
+    const tpAccountNumberSearch = search.create({
+      type: "customrecord_bsp_isg_account_number",
+      filters: [
+        ["custrecord_bsp_isg_parent_trading_partn", "anyof", tradingPartnerId],
+        "AND",
+        ["name", "is", accountNumber],
+      ],
+      columns: [],
+    });
+    log.debug(
+      "checkIfTPAccountNumberExists",
+      tpAccountNumberSearch.runPaged().count
+    );
+    if (tpAccountNumberSearch.runPaged().count === 0) return false;
+    tpAccountNumberSearch.run().each(function (result) {
+      returnedAccountNumber = result.id;
+      return true;
+    });
+    return returnedAccountNumber;
+    } catch (e) {
+      log.error(checkIfTPAccountNumberExists, e.message)
+    }
+  }
+
+  /**
+   * This function delete all of the contact plan under the specified account number and vendor
+   * @param {*} accountNUmber
+   * @param {*} tradingPartnerId
+   */
+  function searchItemAccountNumberPlan(accountNUmber, tradingPartnerId) {
+    try {
+      const itemAccountPriceListToDelete =[]
+      const itemContractPlanSearch = search.create({
+        type: "customrecord_bsp_isg_item_acct_data",
+        filters: [
+          ["custrecord_bsp_isg_account_number", "anyof", accountNUmber],
+          "AND",
+          ["custrecord_bsp_isg_item_supplier", "anyof", tradingPartnerId],
+        ],
+      });
+      itemContractPlanSearch.run().each(function(result){
+        itemAccountPriceListToDelete.push(result.id)
+        return true;
+      });
+      return itemAccountPriceListToDelete;
+    } catch (e) {
+      log.error("searchItemAccountNumberPlan", e.message);
+    }
+  }
+
   /**
    * This function check if the item ID exist
    * @param {*} itemId
@@ -100,7 +178,78 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
       log.error(" checkItemId ", e.message);
     }
   }
-  
+function InstanceChecker(scriptDeploymentID){
+  var scheduledscriptinstanceSearchObj = search.create({
+    type: "scheduledscriptinstance",
+    filters:
+        [
+          ["scriptdeployment.scriptid","is",scriptDeploymentID],
+          "AND",
+          ["status","anyof","PROCESSING"]
+        ],
+      
+  });
+  const intanceCount = scheduledscriptinstanceSearchObj.runPaged().count;
+return searchResultCount
+}
+  /**
+   * This function create BSP | ISG | Item Contract/Plans
+   * @param {*} itemPricingData - item pricing data
+   * @param {*} vendor
+   */
+  function createItemAccountPlans(itemId, itemPricingData, vendor) {
+    try {
+      const itemAccountPLansRec = record.create({
+        type: "customrecord_bsp_isg_item_acct_data",
+      });
+      itemPricingData.accountNumber &&
+        itemAccountPLansRec.setValue({
+          fieldId: "custrecord_bsp_isg_account_number",
+          value: +itemPricingData.accountNumber,
+        });
+      itemPricingData.itemId &&
+        itemAccountPLansRec.setValue({
+          fieldId: "custrecord_bsp_isg_parent_item",
+          value: itemId,
+        });
+      vendor &&
+        itemAccountPLansRec.setValue({
+          fieldId: "custrecord_bsp_isg_item_supplier",
+          value: vendor,
+        });
+      itemPricingData.contractCode &&
+        itemAccountPLansRec.setValue({
+          fieldId: "custrecord_bsp_isg_item_contract_code",
+          value: itemPricingData.contractCode,
+        });
+      itemPricingData.price &&
+        itemAccountPLansRec.setValue({
+          fieldId: "custrecord_bsp_isg_item_price",
+          value: itemPricingData.price,
+        });
+      itemPricingData.cost &&
+        itemAccountPLansRec.setValue({
+          fieldId: "custrecord_bsp_isg_item_cost",
+          value: itemPricingData.cost,
+        });
+      itemPricingData.OUM &&
+        itemAccountPLansRec.setValue({
+          fieldId: "custrecord_bsp_isg_contract_code_uom",
+          value: itemPricingData.OUM,
+        });
+      const recId = itemAccountPLansRec.save({
+        ignoreMandatoryFields: true,
+      });
+      return recId;
+      log.debug(
+        "createItemAccountPlans",
+        `BSP | ISG | Item Contract/Plans ID ${recId} has been successfully created`
+      );
+    } catch (e) {
+      log.error(createItemAccountPlans, e.message);
+    }
+  }
+
   /**
    * Move the processed CSV file to done folder
    * @param {*} fileId
@@ -114,11 +263,11 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
       fileObj.folder = folderId;
       const moved = fileObj.save();
       log.debug(
-          `File with internal ID: ${moved}  moved to folder ${folderId}.`
+        `File with internal ID: ${moved}  moved to folder ${folderId}.`
       );
     } else log.debug(`File with internal ID:  ${fileId} not found.`);
   }
-  
+
   /**
    * This update the item and item contract plan
    * @param {*} itemId
@@ -133,135 +282,26 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
         isDynamic: true,
       });
       itemPricingData.cost &&
-      itemRec.setValue({
-        fieldId: "cost",
-        value: itemPricingData.cost,
-      });
-      
+        itemRec.setValue({
+          fieldId: "cost",
+          value: itemPricingData.cost,
+        });
+
       itemPricingData.description &&
-      itemRec.setValue({
-        fieldId: "displayname",
-        value: itemPricingData.description,
-      });
-      
-      const vendorLine = itemRec.findSublistLineWithValue({
-        sublistId: "itemvendor",
-        fieldId: "vendor",
-        value: vendor,
-      });
-      
-      const vendorCodeLine = itemRec.findSublistLineWithValue({
-        sublistId: "itemvendor",
-        fieldId: "vendorcode",
-        value: itemPricingData.contractCode,
-      });
-      if (
-          vendorLine !== -1 &&
-          vendorCodeLine !== -1 &&
-          vendorLine === vendorCodeLine
-      ) {
-        itemRec.selectLine({
-          sublistId: "itemvendor",
-          line: vendorLine,
+        itemRec.setValue({
+          fieldId: "displayname",
+          value: itemPricingData.description,
         });
-        itemRec.setCurrentSublistValue({
-          sublistId: "itemvendor",
-          fieldId: "purchaseprice",
-          value: itemPricingData.cost,
-        });
-        itemRec.commitLine({
-          sublistId: "itemvendor",
-        });
-      } else {
-        //if vendor line is not found create line for vendor and contractCode
-        itemRec.selectLine({
-          sublistId: "itemvendor",
-          line: vendorLine,
-        });
-        itemRec.setCurrentSublistValue({
-          sublistId: "itemvendor",
-          fieldId: "vendor",
-          value: vendor,
-        });
-        itemRec.setCurrentSublistValue({
-          sublistId: "itemvendor",
-          fieldId: "vendorcode",
-          value: itemPricingData.contractCode,
-        });
-        itemRec.setCurrentSublistValue({
-          sublistId: "itemvendor",
-          fieldId: "purchaseprice",
-          value: itemPricingData.cost,
-        });
-        itemRec.commitLine({
-          sublistId: "itemvendor",
-        });
-      }
+
       const itemRecId = itemRec.save({
         ignoreMandatoryFields: true,
       });
       log.debug(
-          " updateItemAndContractPlan ",
-          `Item ${itemRecId} updated successfully`
+        " updateItemAndContractPlan ",
+        `Item ${itemRecId} updated successfully`
       );
-      if (itemPricingData.contractCode) {
-        updateItemContractPlanPrice(
-            vendor,
-            itemId,
-            itemPricingData.contractCode,
-            itemPricingData.price,
-            itemPricingData.cost
-        );
-      }
     } catch (e) {
       log.error(" updateItemAndContractPlan ", e.message);
-    }
-  }
-  
-  /**
-   * This function update item contract plan
-   * @param {*} vendor
-   * @param {*} itemId
-   * @param {*} contractCode
-   * @param {*} price
-   * @param {*} cost
-   */
-  function updateItemContractPlanPrice(
-      vendor,
-      itemId,
-      contractCode,
-      price,
-      cost
-  ) {
-    
-    try {
-      let itemContractPlanId = "";
-      const contractPlanSearch = search.create({
-        type: "customrecord_bsp_isg_item_acct_data",
-        filters: [
-          ["custrecord_bsp_isg_parent_item.internalid", "anyof", itemId],
-          "AND",
-          ["custrecord_bsp_isg_item_contract_code.name", "is", contractCode],
-          "AND",
-          ["custrecord_bsp_isg_item_supplier", "anyof", vendor],
-        ],
-      });
-      const searchResultCount = contractPlanSearch.runPaged().count;
-      if (searchResultCount <= 0) return false;
-      contractPlanSearch.run().each(function (result) {
-        itemContractPlanId = result.id;
-        return true;
-      });
-      return record.submitFields({
-        type: "customrecord_bsp_isg_item_acct_data",
-        id: itemContractPlanId,
-        values: {
-          custrecord_bsp_isg_item_price: price,
-          custrecord_bsp_isg_item_cost: cost,
-        },
-      });
-    } catch (e) {
-      log.error("updateItemContractPlanPrice ", e.message);
     }
   }
   
@@ -277,50 +317,34 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
         isDynamic: true,
       });
       itemPricingData.cost &&
-      itemRec.setValue({
-        fieldId: "cost",
-        value: itemPricingData.cost,
-      });
-      
+        itemRec.setValue({
+          fieldId: "cost",
+          value: itemPricingData.cost,
+        });
+
       itemPricingData.description &&
-      itemRec.setValue({
-        fieldId: "displayname",
-        value: itemPricingData.description,
-      });
-      
+        itemRec.setValue({
+          fieldId: "displayname",
+          value: itemPricingData.description,
+        });
+
       itemRec.setValue({
         fieldId: "itemid",
         value: itemPricingData.itemId,
       });
-      
+
       itemRec.setValue({
         fieldId: "isonline",
         value: false,
       });
-      itemRec.selectNewLine({
-        sublistId: "itemvendor",
-      });
-      itemRec.setCurrentSublistValue({
-        sublistId: "itemvendor",
-        fieldId: "vendor",
-        value: vendor,
-      });
-      itemRec.setCurrentSublistValue({
-        sublistId: "itemvendor",
-        fieldId: "purchaseprice",
-        value: itemPricingData.cost,
-      });
-      itemRec.commitLine({
-        sublistId: "itemvendor",
-      });
-      
-      const itemRecId = itemRec.save({ ignoreErrors: true });
+
+      const itemRecId = itemRec.save({ ignoreMandatoryFields: true });
       log.debug("createItem", `Item ${itemRecId} created successfully`);
     } catch (e) {
       log.error("createItem", e.message);
     }
   }
-  
+
   /**
    * This function get the file Id of the CSV file in the Pending Folder
    * @param {*} folderId
@@ -344,13 +368,13 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
           },
         ],
       });
-      
+
       fileSearch.run().each(function (result) {
         fileId = result.getValue({
           join: "file",
           name: "internalid",
         });
-        
+
         return false;
       });
       return fileId;
@@ -358,14 +382,18 @@ define(["N/file", "N/search", "N/record"], function (file, search, record) {
       log.error("getFileId ", e.message);
     }
   }
-  
+
   return {
     getEssendantItemPricingObj: getEssendantItemPricingObj,
     getSpRichardsItemPricingObj: getSpRichardsItemPricingObj,
     checkItemId: checkItemId,
     updateItemAndContractPlan: updateItemAndContractPlan,
+    createItemAccountPlans: createItemAccountPlans,
     createItem: createItem,
+    checkIfTPAccountNumberExists: checkIfTPAccountNumberExists,
     moveFolderToDone: moveFolderToDone,
+    searchItemAccountNumberPlan: searchItemAccountNumberPlan,
     getFileId: getFileId,
+    createItemAndItemAccountPlan: createItemAndItemAccountPlan,
   };
 });
