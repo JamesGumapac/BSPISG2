@@ -116,12 +116,9 @@
         */
         let orderSPR = jsonObjResponse.Order;
         if(orderSPR){
-            let tradingPartnerName = order.EnterpriseCode;
-            if(!isEmpty(tradingPartnerName)){
-                return tradingPartnerName == CONTANTS.spr;
-            }
+            return true;
         }
-
+        
         /**
          * Check for Essendant
         */
@@ -190,12 +187,9 @@
      * @returns A boolean value.
     */
     function isAcknowledgmentSPR(jsonObjResponse){
-        let order = jsonObjResponse.Order;
-        if(order){
-            let tradingPartnerName = order.EnterpriseCode;
-            if(!isEmpty(tradingPartnerName)){
-                return tradingPartnerName == CONTANTS.spr;
-            }
+        let orderSPR = jsonObjResponse.Order;
+        if(orderSPR){
+            return true;
         }
         return false;
     }
