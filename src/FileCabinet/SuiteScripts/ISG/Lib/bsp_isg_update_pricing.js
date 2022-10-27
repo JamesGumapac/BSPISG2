@@ -1,11 +1,11 @@
 /**
  * @NApiVersion 2.1
  */
-define(["N/file", "N/search", "N/record", "N/task"], function (
+define(["N/file", "N/search", "N/record"], function (
   file,
   search,
   record,
-  task
+ 
 ) {
   /**
    * This function maps the column line for SPR and iterate each line and return the line object
@@ -49,12 +49,6 @@ define(["N/file", "N/search", "N/record", "N/task"], function (
     }
   }
 
-  /**
-   * This function call the creation and update of the item and item account plan custom record
-   * @param {*} scriptId
-   * @param {*} deploymentId
-   * @param {*} params
-   */
 
   /**
    * This function maps the column line for essendant and iterate each line and return the line object
@@ -128,7 +122,7 @@ define(["N/file", "N/search", "N/record", "N/task"], function (
   }
 
   /**
-   * This function delete all of the contact plan under the specified account number and vendor
+   * This function search all of the contract plan under the specified account number and trading partner
    * @param {*} accountNUmber
    * @param {*} tradingPartnerId
    */
@@ -159,9 +153,7 @@ define(["N/file", "N/search", "N/record", "N/task"], function (
       const itemSearchObj = search.create({
         type: "item",
         filters: [["name", "is", itemId]],
-        columns: [
-          search.createColumn({ name: "internalid", label: "Internal ID" }),
-        ],
+      
       });
       itemSearchObj.run().each(function (result) {
         itemIdResults = result.id;
@@ -174,11 +166,11 @@ define(["N/file", "N/search", "N/record", "N/task"], function (
   }
 
   /**
-   * This function check the update/create of the item and item account contract plan is still running
+   * This function check the update/create of the item and item account contract plan is still running to avoid deletion and creation at the same time.
    * @param {*} scriptDeploymentID
    */
   function InstanceChecker(scriptDeploymentID) {
-    var scheduledscriptinstanceSearchObj = search.create({
+    const scheduledscriptinstanceSearchObj = search.create({
       type: "scheduledscriptinstance",
       filters: [
         ["scriptdeployment.scriptid", "is", scriptDeploymentID],
@@ -192,6 +184,7 @@ define(["N/file", "N/search", "N/record", "N/task"], function (
 
   /**
    * This function create BSP | ISG | Item Contract/Plans
+   * @param {*} itemId
    * @param {*} itemPricingData - item pricing data
    * @param {*} vendor
    */
@@ -260,42 +253,10 @@ define(["N/file", "N/search", "N/record", "N/task"], function (
       );
     } else log.debug(`File with internal ID:  ${fileId} not found.`);
   }
+  
 
   /**
-   * This update the item and item contract plan
-   * @param {*} itemId
-   * @param {*} itemPricingData
-   * @param {*} vendor
-   */
-  // function updateItem(itemId, itemPricingData, vendor) {
-  //   try {
-  //     const itemRec = record.load({
-  //       type: record.Type.INVENTORY_ITEM,
-  //       id: itemId,
-  //       isDynamic: true,
-  //     });
-  //     itemPricingData.cost &&
-  //       itemRec.setValue({
-  //         fieldId: "cost",
-  //         value: itemPricingData.cost,
-  //       });
-  //
-  //     itemPricingData.description &&
-  //       itemRec.setValue({
-  //         fieldId: "displayname",
-  //         value: itemPricingData.description,
-  //       });
-  //
-  //     return itemRec.save({
-  //       ignoreMandatoryFields: true,
-  //     });
-  //   } catch (e) {
-  //     log.error(" updateItem ", e.message);
-  //   }
-  // }
-
-  /**
-   * This function create item record if the item is not existing
+   * This function create item record if the item is not existing in Netsuite
    * @param {*} itemPricingData
    * @param {*} vendor
    */

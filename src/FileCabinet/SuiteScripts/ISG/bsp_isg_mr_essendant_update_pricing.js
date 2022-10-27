@@ -28,23 +28,18 @@ define([
     log.audit(functionName, "************ EXECUTION STARTED ************");
     try {
       const params = getParameters();
-      log.debug("paramsObj: ", params);
       const fileObj = file.load({
-        id: parseInt(params.fileId),
+        id: +params.fileId,
       });
-
       if (!params.accountNumberId) {
         errorMessage = "Cannot Process the file. Account Number does not exist";
         throw errorMessage;
       }
-      let pricingToProcess;
-      //process csv file for essendant
-      pricingToProcess = BSPUpdatePricing.getEssendantItemPricingObj(
+      //parse csv file for essendant
+      return BSPUpdatePricing.getEssendantItemPricingObj(
         fileObj,
         params.accountNumberId
       );
-
-      return pricingToProcess;
     } catch (e) {
       log.error(functionName, errorMessage ? errorMessage : e.message);
     }
@@ -65,33 +60,37 @@ define([
    * @since 2015.2
    */
   const reduce = (reduceContext) => {
-    let functionName = "reduceContext";
+    let functionName = "reduce";
     try {
       const params = getParameters();
-      let itemPricingData = JSON.parse(reduceContext.values);
-      const vendor = params.vendor;
+      const itemPricingData = JSON.parse(reduceContext.values);
       const itemId = BSPUpdatePricing.checkItemId(itemPricingData.itemId);
-     
+
       if (itemId) {
         const itemContractPlanId = BSPUpdatePricing.createItemAccountPlans(
           itemId,
           itemPricingData,
-          vendor
+          params.vendor
         );
         log.debug(
           functionName,
           `Item: ${itemId} already exist | created account contraplan ID: ${itemContractPlanId} `
         );
       } else {
-        const newItemId = BSPUpdatePricing.createItem(itemPricingData, vendor);
-        log.audit(functionName, "item id created: " + newItemId);
+        const newItemId = BSPUpdatePricing.createItem(
+          itemPricingData,
+          params.vendor
+        );
         if (newItemId) {
           const itemContractPlanId = BSPUpdatePricing.createItemAccountPlans(
             newItemId,
             itemPricingData,
-            vendor
+            params.vendor
           );
-	        log.debug(functionName, `Created Item ID: ${newItemId} and account contraplan ID: ${itemContractPlanId} `);
+          log.debug(
+            functionName,
+            `Created Item ID: ${newItemId} and account contraplan ID: ${itemContractPlanId} `
+          );
         }
       }
     } catch (e) {
@@ -119,31 +118,27 @@ define([
    * @since 2015.2
    */
   const summarize = (summaryContext) => {
-    const functionName = "Summarize";
+    const functionName = "summarize";
     try {
       const params = getParameters();
-
-      let folderId;
-      let doneFolderId;
-
-      folderId = params.pendingFolderId;
-      doneFolderId = params.doneFolderId;
-      log.debug(functionName + " FolderId's: ", { folderId, doneFolderId });
       // BSPUpdatePricing.moveFolderToDone(
-      //   BSPUpdatePricing.getFileId(folderId),
-      //   doneFolderId
+      //   BSPUpdatePricing.getFileId(params.pendingFolderId),
+      //   params.doneFolderId
       // );
-
       log.audit(functionName, {
         UsageConsumed: summaryContext.usage,
         NumberOfQueues: summaryContext.concurrency,
         NumberOfYields: summaryContext.yields,
       });
-      log.debug(functionName, "************ EXECUTION COMPLETED ************");
+      log.audit(functionName, "************ EXECUTION COMPLETED ************");
     } catch (e) {
       log.error(functionName, e.message);
     }
   };
+
+  /**
+   * Get Script Parameters
+   */
   const getParameters = () => {
     let objParams = {};
 
@@ -155,11 +150,18 @@ define([
       accountNumberId: objScript.getParameter({
         name: "custscript_bsp_isg_acc_num",
       }),
-      fileId: objScript.getParameter({ name: "custscript_bsp_isg_file_id" }),
+      fileId: objScript.getParameter({
+        name: "custscript_bsp_isg_file_id",
+      }),
       tradingPartnerId: objScript.getParameter({
         name: "custscript_bsp_isg_up_trading_partner",
       }),
-      vendor: objScript.getParameter({ name: "custscript_bsp_isg_vendor" }),
+      vendor: objScript.getParameter({
+        name: "custscript_bsp_isg_vendor",
+      }),
+      pendingFolderId: objScript.getParameter({
+        name: "custscript_bsp_isg_essendant",
+      }),
     };
 
     return objParams;
