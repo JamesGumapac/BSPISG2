@@ -39,14 +39,15 @@ define([
     try {
       let folderId;
       const params = getParameters();
-      if (params.isEssendant) {
-        folderId = params.pendingFolderId;
-        const InstanceChecker = BSPUpdatePricing.InstanceChecker(
-          params.mr_script_dep_id
-        );
-        if (InstanceChecker)
-          throw "Item and Item account plan create/update map reduce is still running";
+
+      folderId = params.pendingFolderId;
+      const InstanceChecker = BSPUpdatePricing.InstanceChecker(
+        params.mr_script_dep_id
+      );
+      if (InstanceChecker) {
+        throw "Item and Item account plan create/update map reduce is still running";
       }
+
       const fileObj = file.load({
         id: BSPUpdatePricing.getFileId(folderId),
       });
@@ -90,7 +91,7 @@ define([
     let functionName = "reduceContext";
     try {
       let itemAccountPlanId = JSON.parse(reduceContext.values);
-
+      //delete all contract plan of the specified trading partner account
       record.delete({
         type: "customrecord_bsp_isg_item_acct_data",
         id: itemAccountPlanId,
@@ -123,12 +124,7 @@ define([
     let functionName = "summaryContext";
     let folderId;
     const params = getParameters();
-    const isEssendant = params.isEssendant;
-    const mrParams = [];
-    mrParams["custscript_bsp_isg_is_essendant"] = isEssendant;
-    if (isEssendant) {
-      folderId = params.pendingFolderId;
-    }
+    folderId = params.pendingFolderId;
     const fileId = BSPUpdatePricing.getFileId(folderId);
     const fileObj = file.load({
       id: fileId,
@@ -146,7 +142,6 @@ define([
       scriptId: params.mr_script_id,
       deploymentId: params.mr_script_dep_id,
       params: {
-        custscript_bsp_isg_is_essendant_vendor: isEssendant,
         custscript_bsp_isg_acc_num: +accountNumberId,
         custscript_bsp_isg_file_id: fileId,
         custscript_bsp_isg_up_trading_partner: +tradingPartnerId,
@@ -163,22 +158,21 @@ define([
     });
     log.debug(functionName, "************ EXECUTION COMPLETED ************");
   };
+  
+  
   const getParameters = () => {
     let objParams = {};
 
     let objScript = runtime.getCurrentScript();
     objParams = {
-      isEssendant: objScript.getParameter({
-        name: "custscript_bsp_isg_is_essendant",
-      }),
       pendingFolderId: objScript.getParameter({
         name: "custscript_bsp_isg_esse_pen_fol_id",
       }),
       mr_script_id: objScript.getParameter({
-        name: "custscript_bsp_mr_updt_itm_pln_dep",
+        name: "custscript_bsp_mr_updt_itm_pln_script_id",
       }),
       mr_script_dep_id: objScript.getParameter({
-        name: "custscript_bsp_mr_updt_itm_pln_script_id",
+        name: "custscript_bsp_mr_updt_itm_pln_dep",
       }),
       tradingPartnerId: objScript.getParameter({
         name: "custscript_bsp_isg_tp",

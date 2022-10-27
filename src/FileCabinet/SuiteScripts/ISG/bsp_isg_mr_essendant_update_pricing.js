@@ -28,7 +28,6 @@ define([
     log.audit(functionName, "************ EXECUTION STARTED ************");
     try {
       const params = getParameters();
-
       log.debug("paramsObj: ", params);
       const fileObj = file.load({
         id: parseInt(params.fileId),
@@ -39,17 +38,11 @@ define([
         throw errorMessage;
       }
       let pricingToProcess;
-      if (params.isEssendant) {
-        pricingToProcess = BSPUpdatePricing.getEssendantItemPricingObj(
-          fileObj,
-          params.accountNumberId
-        );
-      } else {
-        pricingToProcess = BSPUpdatePricing.getSpRichardsItemPricingObj(
-          fileObj,
-          params.accountNumberId
-        );
-      }
+      //process csv file for essendant
+      pricingToProcess = BSPUpdatePricing.getEssendantItemPricingObj(
+        fileObj,
+        params.accountNumberId
+      );
 
       return pricingToProcess;
     } catch (e) {
@@ -78,24 +71,28 @@ define([
       let itemPricingData = JSON.parse(reduceContext.values);
       const vendor = params.vendor;
       const itemId = BSPUpdatePricing.checkItemId(itemPricingData.itemId);
-      log.debug(functionName + " Processing:", { itemId, itemPricingData });
+     
       if (itemId) {
-        BSPUpdatePricing.updateItem(itemId, itemPricingData, vendor);
-        BSPUpdatePricing.createItemAccountPlans(
+        const itemContractPlanId = BSPUpdatePricing.createItemAccountPlans(
           itemId,
           itemPricingData,
           vendor
         );
+        log.debug(
+          functionName,
+          `Item: ${itemId} already exist | created account contraplan ID: ${itemContractPlanId} `
+        );
       } else {
         const newItemId = BSPUpdatePricing.createItem(itemPricingData, vendor);
-        log.audit(functionName, "item id created: " + newItemId)
-        newItemId
-          ? BSPUpdatePricing.createItemAccountPlans(
-              newItemId,
-              itemPricingData,
-              vendor
-            )
-          : false;
+        log.audit(functionName, "item id created: " + newItemId);
+        if (newItemId) {
+          const itemContractPlanId = BSPUpdatePricing.createItemAccountPlans(
+            newItemId,
+            itemPricingData,
+            vendor
+          );
+	        log.debug(functionName, `Created Item ID: ${newItemId} and account contraplan ID: ${itemContractPlanId} `);
+        }
       }
     } catch (e) {
       log.error(functionName, e.message);
@@ -125,24 +122,13 @@ define([
     const functionName = "Summarize";
     try {
       const params = getParameters();
-      const scriptObj = runtime.getCurrentScript();
 
       let folderId;
       let doneFolderId;
-      params.isEssendant
-        ? ((folderId = scriptObj.getParameter({
-            name: "custscript_bsp_isg_essendant",
-          })),
-          (doneFolderId = scriptObj.getParameter({
-            name: "custscript_bsp_isg_essen_done_folder_id",
-          })))
-        : ((folderId = scriptObj.getParameter({
-            name: "custscript_bsp_isg_sp_richards",
-          })),
-          (doneFolderId = scriptObj.getParameter({
-            name: "custscript_bsp_isg_spr_done_folder_id",
-          })));
 
+      folderId = params.pendingFolderId;
+      doneFolderId = params.doneFolderId;
+      log.debug(functionName + " FolderId's: ", { folderId, doneFolderId });
       // BSPUpdatePricing.moveFolderToDone(
       //   BSPUpdatePricing.getFileId(folderId),
       //   doneFolderId
@@ -161,11 +147,10 @@ define([
   const getParameters = () => {
     let objParams = {};
 
-    let environment = runtime.envType;
     let objScript = runtime.getCurrentScript();
     objParams = {
-      isEssendant: objScript.getParameter({
-        name: "custscript_bsp_isg_is_essendant_vendor",
+      doneFolderId: objScript.getParameter({
+        name: "custscript_bsp_isg_essen_done_folder_id",
       }),
       accountNumberId: objScript.getParameter({
         name: "custscript_bsp_isg_acc_num",

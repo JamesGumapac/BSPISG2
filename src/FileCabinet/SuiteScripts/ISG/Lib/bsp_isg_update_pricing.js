@@ -115,7 +115,7 @@ define(["N/file", "N/search", "N/record", "N/task"], function (
         ],
         columns: [],
       });
-   
+
       if (tpAccountNumberSearch.runPaged().count === 0) return;
       tpAccountNumberSearch.run().each(function (result) {
         returnedAccountNumber = result.id;
@@ -238,7 +238,6 @@ define(["N/file", "N/search", "N/record", "N/task"], function (
       return itemAccountPLansRec.save({
         ignoreMandatoryFields: true,
       });
-      
     } catch (e) {
       log.error(createItemAccountPlans, e.message);
     }
@@ -268,33 +267,32 @@ define(["N/file", "N/search", "N/record", "N/task"], function (
    * @param {*} itemPricingData
    * @param {*} vendor
    */
-  function updateItem(itemId, itemPricingData, vendor) {
-    try {
-      const itemRec = record.load({
-        type: record.Type.INVENTORY_ITEM,
-        id: itemId,
-        isDynamic: true,
-      });
-      itemPricingData.cost &&
-        itemRec.setValue({
-          fieldId: "cost",
-          value: itemPricingData.cost,
-        });
-
-      itemPricingData.description &&
-        itemRec.setValue({
-          fieldId: "displayname",
-          value: itemPricingData.description,
-        });
-
-      return itemRec.save({
-        ignoreMandatoryFields: true,
-      });
-   
-    } catch (e) {
-      log.error(" updateItem ", e.message);
-    }
-  }
+  // function updateItem(itemId, itemPricingData, vendor) {
+  //   try {
+  //     const itemRec = record.load({
+  //       type: record.Type.INVENTORY_ITEM,
+  //       id: itemId,
+  //       isDynamic: true,
+  //     });
+  //     itemPricingData.cost &&
+  //       itemRec.setValue({
+  //         fieldId: "cost",
+  //         value: itemPricingData.cost,
+  //       });
+  //
+  //     itemPricingData.description &&
+  //       itemRec.setValue({
+  //         fieldId: "displayname",
+  //         value: itemPricingData.description,
+  //       });
+  //
+  //     return itemRec.save({
+  //       ignoreMandatoryFields: true,
+  //     });
+  //   } catch (e) {
+  //     log.error(" updateItem ", e.message);
+  //   }
+  // }
 
   /**
    * This function create item record if the item is not existing
@@ -329,9 +327,7 @@ define(["N/file", "N/search", "N/record", "N/task"], function (
         value: false,
       });
 
-      const itemRecId = itemRec.save({ ignoreMandatoryFields: true });
-      return itemRecId
-      log.debug("createItem", `Item ${itemRecId} created successfully`);
+      return itemRec.save({ ignoreMandatoryFields: true });
     } catch (e) {
       log.error("createItem", e.message);
     }
