@@ -375,7 +375,6 @@ define(["N/file", "N/search", "N/record", "N/task"], function (
     getEssendantItemPricingObj: getEssendantItemPricingObj,
     getSpRichardsItemPricingObj: getSpRichardsItemPricingObj,
     checkItemId: checkItemId,
-    updateItem: updateItem,
     createItemAccountPlans: createItemAccountPlans,
     createItem: createItem,
     checkIfTPAccountNumberExists: checkIfTPAccountNumberExists,
