@@ -354,17 +354,15 @@
                 fieldId: 'itemname',
                 line: i
             });
+            let itemID = itemFulfillmentRec.getSublistValue({
+                sublistId: 'item',
+                fieldId: 'item',
+                line: i
+            });
             let shipmentItem = getShipmentItem(shipmentlines, itemName);
             log.debug("processItemFulfillment", `Item ${JSON.stringify(shipmentItem)}`);
             if(shipmentItem){
-                if(parseInt(shipmentItem.soline.qordrd) > parseInt(shipmentItem.soline.qshppd)){
-
-                    let itemID = itemFulfillmentRec.getSublistValue({
-                        sublistId: 'item',
-                        fieldId: 'item',
-                        line: i
-                    });
-
+                if(parseInt(shipmentItem.soline.qordrd) > parseInt(shipmentItem.soline.qshppd)){                
                     linesPartiallyShipped.push({
                         itemID: itemID,
                         originalQuantity: parseInt(shipmentItem.soline.qordrd),
@@ -440,16 +438,16 @@
                 fieldId: 'itemname',
                 line: i
             });
+            let itemID = itemReceiptRec.getSublistValue({
+                sublistId: 'item',
+                fieldId: 'item',
+                line: i
+            });
             log.debug("processItemReceipt", `ItemName ${JSON.stringify(itemName)}`);
             let shipmentItem = getShipmentItem(shipmentlines, itemName);
             log.debug("processItemReceipt", `ItemFound ${JSON.stringify(shipmentItem)}`);
             if(shipmentItem){
                 if(parseInt(shipmentItem.soline.qordrd) > parseInt(shipmentItem.soline.qshppd)){
-                    let itemID = itemReceiptRec.getSublistValue({
-                        sublistId: 'item',
-                        fieldId: 'item',
-                        line: i
-                    });
                     linesPartiallyShipped.push({
                         itemID: itemID,
                         originalQuantity: parseInt(shipmentItem.soline.qordrd),

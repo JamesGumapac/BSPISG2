@@ -865,8 +865,37 @@
                 sublistId: "item",
             });
         }
+
+        if(itemsNotShipped.length > 0){
+            let itemCount = purchaseOrderRec.getLineCount({
+                sublistId: 'item'
+            });
+            for(let i = (itemCount - 1); i >= 0; i--){
+                let itemID = purchaseOrderRec.getSublistValue({
+                    sublistId: 'item',
+                    fieldId: 'item',
+                    line: i
+                });
+                if(notShipped(itemsNotShipped, itemID)){
+                    purchaseOrderRec.removeLine({
+                        sublistId: 'item',
+                        line: i,
+                   });
+                }
+            }
+        }
+
         purchaseOrderRec.save();
         log.debug("updatePOlines", `Purchase Order lines quantity updated`);
+    }
+
+    function notShipped(itemsNotShipped, itemID){
+        for (let index = 0; index < itemsNotShipped.length; index++) {
+            const element = itemsNotShipped[index];
+            if(element.itemID == itemID)
+                return true;
+        }
+        return false;
     }
 
     /**

@@ -324,17 +324,15 @@
                 fieldId: 'itemname',
                 line: i
             });
+            let itemID = itemFulfillmentRec.getSublistValue({
+                sublistId: 'item',
+                fieldId: 'item',
+                line: i
+            });
             let shipmentItem = getShipmentItem(shipmentlines, itemName);
             log.debug("processItemFulfillment", `Item ${JSON.stringify(shipmentItem)}`);
             if(shipmentItem){
                 if(parseInt(shipmentItem.OrderQuantity) > parseInt(shipmentItem.ShippedQuantity)){
-
-                    let itemID = itemFulfillmentRec.getSublistValue({
-                        sublistId: 'item',
-                        fieldId: 'item',
-                        line: i
-                    });
-
                     linesPartiallyShipped.push({
                         itemID: itemID,
                         originalQuantity: parseInt(shipmentItem.OrderQuantity),
@@ -410,16 +408,16 @@
                 fieldId: 'itemname',
                 line: i
             });
+            let itemID = itemReceiptRec.getSublistValue({
+                sublistId: 'item',
+                fieldId: 'item',
+                line: i
+            });
             log.debug("processItemReceipt", `ItemName ${JSON.stringify(itemName)}`);
             let shipmentItem = getShipmentItem(shipmentlines, itemName);
             log.debug("processItemReceipt", `ItemFound ${JSON.stringify(shipmentItem)}`);
             if(shipmentItem){
                 if(parseInt(shipmentItem.OrderQuantity) > parseInt(shipmentItem.ShippedQuantity)){
-                    let itemID = itemReceiptRec.getSublistValue({
-                        sublistId: 'item',
-                        fieldId: 'item',
-                        line: i
-                    });
                     linesPartiallyShipped.push({
                         itemID: itemID,
                         originalQuantity: parseInt(shipmentItem.OrderQuantity),
