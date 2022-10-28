@@ -1,4 +1,4 @@
-<mapreducescript scriptid="customscript_bsp_isg_mr_delete_itmprc">
+<mapreducescript scriptid="customscript_bsp_isg_mr_esse_dlt_itmprc">
   <description></description>
   <isinactive>F</isinactive>
   <name>BSP | ISG | MR |Essen| Delete Item Price</name>
@@ -157,7 +157,7 @@
       <queueallstagesatonce>T</queueallstagesatonce>
       <runasrole>ADMINISTRATOR</runasrole>
       <status>NOTSCHEDULED</status>
-      <title>BSP | ISG | MR |Essen| Delete Item Price</title>
+      <title>BSP | ISG | MR |ESSEN| Delete Item Price</title>
       <yieldaftermins>60</yieldaftermins>
       <recurrence>
         <single>
