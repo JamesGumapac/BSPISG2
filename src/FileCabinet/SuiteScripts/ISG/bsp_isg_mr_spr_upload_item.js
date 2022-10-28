@@ -2,14 +2,7 @@
  * @NApiVersion 2.1
  * @NScriptType MapReduceScript
  */
-define([
-  "N/error",
-  "N/file",
-  "N/record",
-  "N/search",
-  "N/runtime",
-  "./Lib/bsp_isg_update_pricing.js",
-], (error, file, record, search, runtime, BSPUpdatePricing) => {
+define(["N/file", "./Lib/bsp_isg_spr_price_file_parser.js"], (file,parser) => {
   /**
    * Defines the function that is executed at the beginning of the map/reduce process and generates the input data.
    * @param {Object} inputContext
@@ -22,29 +15,24 @@ define([
    * @returns {Array|Object|Search|ObjectRef|File|Query} The input data to use in the map/reduce process
    * @since 2015.2
    */
+
   const getInputData = (inputContext) => {
-    let functionName = "getInputData";
-    let errorMessage = "";
-    log.audit(functionName, "************ EXECUTION STARTED ************");
+    const functionName = "getInputData";
     try {
-   
-      const params = getParameters();
-      const fileObj = file.load({
-        id: +params.fileId,
+      const itemPricePlan = file.load({
+        id: 3084075,
       });
-      if (!params.accountNumberId) {
-        errorMessage = "Cannot Process the file. Account Number does not exist";
-        throw errorMessage;
-      }
-      //parse csv file for SPR
-      return BSPUpdatePricing.getSpRichardsItemPricingObj(
-        fileObj,
-        params.accountNumberId
-      );
+      const itemPricePlanContent = itemPricePlan.getContents();
+      let itemList = itemPricePlanContent.replace(/['\n']/g, ",");
+      let item = itemList.split(",");
+      
+
+      return item;
     } catch (e) {
-      log.error(functionName, errorMessage ? errorMessage : e.message);
+      log.error(functionName, e.message);
     }
   };
+
   /**
    * Defines the function that is executed when the reduce entry point is triggered. This entry point is triggered
    * automatically when the associated map stage is complete. This function is applied to each group in the provided context.
@@ -61,40 +49,13 @@ define([
    * @since 2015.2
    */
   const reduce = (reduceContext) => {
-    let functionName = "reduce";
+    const functionName = "reduce";
     try {
-      const params = getParameters();
-      log.debug("params", params);
-      const itemPricingData = JSON.parse(reduceContext.values);
-      const itemId = BSPUpdatePricing.checkItemId(itemPricingData.itemId);
-
-      if (itemId) {
-        const itemContractPlanId = BSPUpdatePricing.createItemAccountPlans(
-          itemId,
-          itemPricingData,
-          params.vendor
-        );
-        log.debug(
-          functionName,
-          `Item: ${itemId} already exist | created account contraplan ID: ${itemContractPlanId} `
-        );
-      } else {
-        const newItemId = BSPUpdatePricing.createItem(
-          itemPricingData,
-          params.vendor
-        );
-        if (newItemId) {
-          const itemContractPlanId = BSPUpdatePricing.createItemAccountPlans(
-            newItemId,
-            itemPricingData,
-            params.vendor
-          );
-          log.debug(
-            functionName,
-            `Created Item ID: ${newItemId} and account contraplan ID: ${itemContractPlanId} `
-          );
-        }
-      }
+    
+      const itemPricingData = reduceContext.values;
+      parser.getItem(itemPricingData[0])
+      
+     
     } catch (e) {
       log.error(functionName, e.message);
     }
@@ -119,54 +80,7 @@ define([
    * @param {Object} summaryContext.reduceSummary - Statistics about the reduce stage
    * @since 2015.2
    */
-  const summarize = (summaryContext) => {
-    const functionName = "summarize";
-    try {
-      const params = getParameters();
-      // BSPUpdatePricing.moveFolderToDone(
-      //   BSPUpdatePricing.getFileId(params.pendingFolderId),
-      //   params.doneFolderId
-      // );
-      log.audit(functionName, {
-        UsageConsumed: summaryContext.usage,
-        NumberOfQueues: summaryContext.concurrency,
-        NumberOfYields: summaryContext.yields,
-      });
-      log.audit(functionName, "************ EXECUTION COMPLETED ************");
-    } catch (e) {
-      log.error(functionName, e.message);
-    }
-  };
+  const summarize = (summaryContext) => {};
 
-  /**
-   * Get Script Parameters
-   */
-  const getParameters = () => {
-    let objParams = {};
-
-    let objScript = runtime.getCurrentScript();
-    objParams = {
-      doneFolderId: objScript.getParameter({
-        name: "custscript_bsp_isg_spr_up_done_folder",
-      }),
-      accountNumberId: objScript.getParameter({
-        name: "custscript_bsp_isg_spr_up_acc_num",
-      }),
-      fileId: objScript.getParameter({
-        name: "custscript_bsp_isg_spr_up_file_id",
-      }),
-      tradingPartnerId: objScript.getParameter({
-        name: "custscript_bsp_isg_spr_up_trdng_prtnr",
-      }),
-      vendor: objScript.getParameter({
-        name: "custscript_bsp_isg_spr_up_vendor",
-      }),
-      pendingFolderId: objScript.getParameter({
-        name: "custscript_bsp_isg_spr_pending_folder",
-      }),
-    };
-
-    return objParams;
-  };
   return { getInputData, reduce, summarize };
 });
