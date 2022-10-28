@@ -37,10 +37,7 @@ define([
 
     let errorMessage = "";
     try {
-      let folderId;
       const params = getParameters();
-
-      folderId = params.pendingFolderId;
       const InstanceChecker = BSPUpdatePricing.InstanceChecker(
         params.mr_script_dep_id
       );
@@ -49,11 +46,11 @@ define([
       }
 
       const fileObj = file.load({
-        id: BSPUpdatePricing.getFileId(folderId),
+        id: BSPUpdatePricing.getFileId(params.pendingFolderId),
       });
 
       const accountNumber = fileObj.name.replace(".csv", "");
-      let tpAccountNumber = BSPUpdatePricing.checkIfTPAccountNumberExists(
+      const tpAccountNumber = BSPUpdatePricing.checkIfTPAccountNumberExists(
         params.tradingPartnerId,
         accountNumber
       );
@@ -88,10 +85,10 @@ define([
    */
 
   const reduce = (reduceContext) => {
-    let functionName = "reduceContext";
+    let functionName = "reduce";
     try {
       let itemAccountPlanId = JSON.parse(reduceContext.values);
-      //delete all contract plan of the specified trading partner account
+      //delete all BSP | ISG | Item Contract/Plans record of the specified trading partner account
       record.delete({
         type: "customrecord_bsp_isg_item_acct_data",
         id: itemAccountPlanId,
@@ -121,19 +118,16 @@ define([
    * @since 2015.2
    */
   const summarize = (summaryContext) => {
-    let functionName = "summaryContext";
-    let folderId;
+    let functionName = "summarize";
+
     const params = getParameters();
-    folderId = params.pendingFolderId;
-    const fileId = BSPUpdatePricing.getFileId(folderId);
+    const fileId = BSPUpdatePricing.getFileId(params.pendingFolderId);
     const fileObj = file.load({
       id: fileId,
     });
-    const tradingPartnerId = params.tradingPartnerId;
-    const vendor = params.vendor;
     const accountNumber = fileObj.name.replace(".csv", "");
-    let accountNumberId = BSPUpdatePricing.checkIfTPAccountNumberExists(
-      tradingPartnerId,
+    const accountNumberId = BSPUpdatePricing.checkIfTPAccountNumberExists(
+      params.tradingPartnerId,
       accountNumber
     );
 
@@ -143,9 +137,9 @@ define([
       deploymentId: params.mr_script_dep_id,
       params: {
         custscript_bsp_isg_acc_num: +accountNumberId,
-        custscript_bsp_isg_file_id: fileId,
-        custscript_bsp_isg_up_trading_partner: +tradingPartnerId,
-        custscript_bsp_isg_vendor: +vendor,
+        custscript_bsp_isg_file_id: +fileId,
+        custscript_bsp_isg_up_trading_partner: +params.tradingPartnerId,
+        custscript_bsp_isg_vendor: +params.vendor,
       },
     });
     let mrTaskId = mrTask.submit();
@@ -156,10 +150,13 @@ define([
       NumberOfQueues: summaryContext.concurrency,
       NumberOfYields: summaryContext.yields,
     });
-    log.debug(functionName, "************ EXECUTION COMPLETED ************");
+    log.audit(functionName, "************ EXECUTION COMPLETED ************");
   };
   
   
+  /**
+   * Get Script Parameters
+   */
   const getParameters = () => {
     let objParams = {};
 
@@ -181,7 +178,6 @@ define([
         name: "custscript_bsp_isg_vendor_trdng_prtnr",
       }),
     };
-    log.debug("objParams", objParams);
     return objParams;
   };
   return { getInputData, reduce, summarize };
