@@ -43,6 +43,7 @@ define(["N/file", "N/search", "N/record"], function (
       });
       pricingToProcess.shift();
       //return object and remove the first element
+   
       return pricingToProcess;
     } catch (e) {
       log.error("getSpRichardsItemPricingObj ", e.message);
@@ -124,23 +125,25 @@ define(["N/file", "N/search", "N/record"], function (
   /**
    * This function search all of the contract plan under the specified account number and trading partner
    * @param {*} accountNUmber
-   * @param {*} tradingPartnerId
+   * @param {*} vendor
    */
-  function searchItemAccountNumberPlan(accountNUmber, tradingPartnerId) {
+  function searchItemAccountNumberPlan(accountNumber, vendor) {
     try {
+      log.debug("searchItemAccountNumberPlan params: " , {accountNumber, vendor})
       const itemAccountPriceListToDelete = [];
       const itemContractPlanSearch = search.create({
         type: "customrecord_bsp_isg_item_acct_data",
         filters: [
-          ["custrecord_bsp_isg_account_number", "anyof", accountNUmber],
-          "AND",
-          ["custrecord_bsp_isg_item_supplier", "anyof", tradingPartnerId],
+         ["custrecord_bsp_isg_account_number", "anyof", accountNumber],
+         "AND",
+          ["custrecord_bsp_isg_item_supplier", "anyof", vendor],
         ],
       });
       itemContractPlanSearch.run().each(function (result) {
         itemAccountPriceListToDelete.push(result.id);
         return true;
       });
+      
       return itemAccountPriceListToDelete;
     } catch (e) {
       log.error("searchItemAccountNumberPlan", e.message);
@@ -190,24 +193,23 @@ define(["N/file", "N/search", "N/record"], function (
    */
   function createItemAccountPlans(itemId, itemPricingData, vendor) {
     try {
+     
       const itemAccountPLansRec = record.create({
         type: "customrecord_bsp_isg_item_acct_data",
+        isDynamic: true
       });
-      itemPricingData.accountNumber &&
-        itemAccountPLansRec.setValue({
-          fieldId: "custrecord_bsp_isg_account_number",
-          value: +itemPricingData.accountNumber,
-        });
+      vendor &&
+      itemAccountPLansRec.setValue({
+        fieldId: "custrecord_bsp_isg_item_supplier",
+        value: vendor,
+      });
+
       itemPricingData.itemId &&
         itemAccountPLansRec.setValue({
           fieldId: "custrecord_bsp_isg_parent_item",
           value: itemId,
         });
-      vendor &&
-        itemAccountPLansRec.setValue({
-          fieldId: "custrecord_bsp_isg_item_supplier",
-          value: vendor,
-        });
+     
       itemPricingData.contractCode &&
         itemAccountPLansRec.setValue({
           fieldId: "custrecord_bsp_isg_item_contract_code",
@@ -228,6 +230,11 @@ define(["N/file", "N/search", "N/record"], function (
           fieldId: "custrecord_bsp_isg_contract_code_uom",
           value: itemPricingData.OUM,
         });
+      itemPricingData.accountNumber &&
+      itemAccountPLansRec.setValue({
+        fieldId: "custrecord_bsp_isg_account_number",
+        value: itemPricingData.accountNumber,
+      });
       return itemAccountPLansRec.save({
         ignoreMandatoryFields: true,
       });
