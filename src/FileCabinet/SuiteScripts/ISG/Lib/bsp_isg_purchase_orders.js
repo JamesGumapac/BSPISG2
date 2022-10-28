@@ -297,8 +297,9 @@
     function createPurchaseOrders(poData){
         let purchaseOrderIDs = [];
 
-        let wrapAndLabelItems = getWrapAndLabelItems(poData.itemData);
-        let dropShipItems = getDropShipItems(poData.itemData);
+        let itemData = getItemPrices(poData.itemData, poData.vendor, poData.account.value);
+        let wrapAndLabelItems = getWrapAndLabelItems(itemData);
+        let dropShipItems = getDropShipItems(itemData);
 
         if(wrapAndLabelItems.length > 0){
             let purchaseOrderRec = record.create({
@@ -372,6 +373,22 @@
                         fieldId: 'item',
                         line: i
                     });
+                    let rate = findItemRate(wrapAndLabelItems, item);
+                    if(rate && rate != -1){
+                        purchaseOrderRec.selectLine({
+                            sublistId: 'item',
+                            line: i
+                        });
+            
+                        purchaseOrderRec.setCurrentSublistValue({
+                            sublistId: 'item',
+                            fieldId: 'rate',
+                            value: parseFloat(rate)
+                        });
+                        purchaseOrderRec.commitLine({
+                            sublistId: "item",
+                        });
+                    }
                     if(itemNotIncludedInTransmission(item, wrapAndLabelItems)){
                         log.debug("createPurchaseOrder W&L", `Item ${item} will be removed`);
                         purchaseOrderRec.removeLine({
@@ -449,6 +466,22 @@
                         fieldId: 'item',
                         line: i
                     });
+                    let rate = findItemRate(dropShipItems, item);
+                    if(rate && rate != -1){
+                        purchaseOrderRec.selectLine({
+                            sublistId: 'item',
+                            line: i
+                        });
+            
+                        purchaseOrderRec.setCurrentSublistValue({
+                            sublistId: 'item',
+                            fieldId: 'rate',
+                            value: parseFloat(rate)
+                        });
+                        purchaseOrderRec.commitLine({
+                            sublistId: "item",
+                        });
+                    }
                     if(itemNotIncludedInTransmission(item, dropShipItems)){
                         log.debug("createPurchaseOrder dropShip", `Item ${item} will be removed`);
                         purchaseOrderRec.removeLine({
@@ -466,6 +499,59 @@
         return purchaseOrderIDs;
     }
 
+    function getItemPrices(items, vendor, account){
+
+        let resultItems = items.map(i => JSON.parse(i));
+
+        const customrecord_bsp_isg_item_acct_dataSearchObj = search.create({
+            type: "customrecord_bsp_isg_item_acct_data",
+            filters:
+            [
+               ["custrecord_bsp_isg_parent_item","anyof",resultItems.map(i => i.itemID)], 
+               "AND", 
+               ["custrecord_bsp_isg_account_number","anyof",account], 
+               "AND", 
+               ["custrecord_bsp_isg_item_supplier","anyof",vendor]
+            ],
+            columns:
+            [
+               search.createColumn({name: "custrecord_bsp_isg_parent_item", label: "Item"}),
+               search.createColumn({name: "custrecord_bsp_isg_item_cost", label: "Cost"})
+            ]
+         });
+
+        customrecord_bsp_isg_item_acct_dataSearchObj.run().each(function(result){
+            let itemID = result.getValue({name: 'custrecord_bsp_isg_parent_item'});
+            let cost = result.getValue({name: 'custrecord_bsp_isg_item_cost'});
+            let itemIndex = findItemIndex(resultItems, itemID);
+            if(itemIndex >=0){
+                resultItems[itemIndex].cost = cost;
+            }
+            return true;
+        })
+        return resultItems;
+    }
+
+    function findItemIndex(items, itemID){
+        for (let index = 0; index < items.length; index++) {
+            const element = items[index];
+            if(element.itemID == itemID){
+                return index;
+            }
+        }     
+        return -1;
+    }
+
+    function findItemRate(items, itemID){
+        for (let index = 0; index < items.length; index++) {
+            const element = items[index];
+            if(element.itemID == itemID){
+                return element.cost;
+            }
+        }     
+        return -1;
+    }
+
     /**
      * It takes an array of items from the Sales Orders, and returns an array of items that are WrapAndLabel.
      * @param items - An array of JSON objects that represent the items in the cart.
@@ -474,7 +560,7 @@
     function getWrapAndLabelItems(items) {
         let wrapAndLabelItems = [];
         for (let index = 0; index < items.length; index++) {
-            let element = JSON.parse(items[index]);
+            let element = items[index];
             if(element.shipmentType == SHIPMENT_TYPES.wrapAndLabel){
                 wrapAndLabelItems.push(element);
             }
@@ -490,7 +576,7 @@
     function getDropShipItems(items) {
         let dropshipItems = [];
         for (let index = 0; index < items.length; index++) {
-            let element = JSON.parse(items[index]);
+            let element = items[index];
             if(element.shipmentType == SHIPMENT_TYPES.dropship){
                 dropshipItems.push(element);
             }
@@ -732,7 +818,6 @@
             id: parseInt(poID),
             columns: 'createdfrom'
         });
-        log.debug("getSalesOrderID", JSON.stringify(poFields));
         if(poFields && !isEmpty(poFields.createdfrom)){
             return poFields.createdfrom[0].value;
         }
@@ -781,7 +866,7 @@
             });
         }
         purchaseOrderRec.save();
-        log.debug("updatePOlines", `Purchase Order lines closed`);
+        log.debug("updatePOlines", `Purchase Order lines quantity updated`);
     }
 
     /**
