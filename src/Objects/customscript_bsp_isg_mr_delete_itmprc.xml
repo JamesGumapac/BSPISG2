@@ -5,7 +5,7 @@
   <notifyadmins>F</notifyadmins>
   <notifyemails></notifyemails>
   <notifyowner>T</notifyowner>
-  <scriptfile>[/SuiteScripts/ISG/bsp_isg_essendant_mr_delete_item_price.js]</scriptfile>
+  <scriptfile>[/SuiteScripts/ISG/bsp_isg_mr_essendant_delete_item_price.js]</scriptfile>
   <scriptcustomfields>
     <scriptcustomfield scriptid="custscript_bsp_isg_esse_pen_fol_id">
       <accesslevel>2</accesslevel>
