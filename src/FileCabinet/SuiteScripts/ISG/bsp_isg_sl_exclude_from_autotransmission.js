@@ -173,9 +173,9 @@ define(['N/runtime', 'N/record', 'N/url', 'N/ui/serverWidget', 'N/search', './Li
             let vendor = null;
             if(selectedVendor && selectedVendor.selectedVendorID){
                 let vendorIndex = findVendorInListBy(vendorsData, selectedVendor.selectedVendorID, "id");
-                vendor = {id: selectedVendor.selectedVendorID, name: selectedVendor.selectedVendorName, contractCodes: vendorsData[vendorIndex].contractCodes};
+                vendor = {id: selectedVendor.selectedVendorID, name: selectedVendor.selectedVendorName, accounts: vendorsData[vendorIndex].accounts};
             }else{
-                vendor = {id:  vendorsData[0].id, name:  vendorsData[0].name, contractCodes: vendorsData[0].contractCodes}
+                vendor = {id:  vendorsData[0].id, name:  vendorsData[0].name, accounts: vendorsData[0].accounts}
             }
 
             const salesOrderSearchObj = search.create({
@@ -251,7 +251,7 @@ define(['N/runtime', 'N/record', 'N/url', 'N/ui/serverWidget', 'N/search', './Li
                     [
                        search.createColumn({name: "custrecord_bsp_isg_parent_item", label: "Item"}),
                        search.createColumn({name: "custrecord_bsp_isg_item_supplier", label: "Supplier"}),
-                       search.createColumn({name: "custrecord_bsp_isg_item_contract_code", label: "Contract Code"}),
+                       search.createColumn({name: "custrecord_bsp_isg_account_number", label: "Account Number"}),
                        search.createColumn({name: "custrecord_bsp_isg_min_quantity", label: "Minimum Quantity"}),
                        search.createColumn({name: "custrecord_bsp_isg_item_cost", label: "Cost"})
                     ]
@@ -263,20 +263,20 @@ define(['N/runtime', 'N/record', 'N/url', 'N/ui/serverWidget', 'N/search', './Li
                     let itemID = result.getValue({name: 'custrecord_bsp_isg_parent_item'});
                     let vendorID = result.getValue({name: 'custrecord_bsp_isg_item_supplier'});
                     let vendorName = result.getText({name: 'custrecord_bsp_isg_item_supplier'});
-                    let contractCode = result.getText({name: 'custrecord_bsp_isg_item_contract_code'});
+                    let accountNumber = result.getValue({name: 'custrecord_bsp_isg_account_number'});
                     let minQuantity = result.getValue({name: 'custrecord_bsp_isg_min_quantity'});
                     let itemCost = result.getValue({name: 'custrecord_bsp_isg_item_cost'});
                     let itemIndex = findItemIndex(itemsPricingData, itemID);
                     if(itemIndex == -1){
-                        if(isCartonBuy(vendor.contractCodes,contractCode)){
+                        if(isCartonBuy(vendor.accounts,accountNumber)){
                             itemsPricingData.push({
                                 itemID: itemID,
                                 vendorID: vendorID,
                                 vendorName: vendorName,
-                                contractCodes: {
+                                accounts: {
                                     cartonBuy: 
                                         {
-                                            contractCode: contractCode, 
+                                            accountNumber: accountNumber, 
                                             minQuantity: minQuantity,
                                             itemCost: itemCost
                                         }
@@ -289,11 +289,11 @@ define(['N/runtime', 'N/record', 'N/url', 'N/ui/serverWidget', 'N/search', './Li
                                 itemID: itemID,
                                 vendorID: vendorID,
                                 vendorName: vendorName,
-                                contractCodes: {
+                                accounts: {
                                     cartonBuy: {},
                                     regularAccount: 
                                         {
-                                            contractCode: contractCode, 
+                                            accountNumber: accountNumber, 
                                             minQuantity: minQuantity,
                                             itemCost: itemCost
                                         }
@@ -302,34 +302,34 @@ define(['N/runtime', 'N/record', 'N/url', 'N/ui/serverWidget', 'N/search', './Li
                             })
                         }
                     }else{
-                        if(isCartonBuy(vendor.contractCodes,contractCode)){
-                            if(!isEmpty(itemsPricingData[itemIndex].contractCodes.cartonBuy)){
-                                if(isBetterPrice(itemsPricingData[itemIndex].contractCodes.cartonBuy.itemCost, itemCost)){
-                                    itemsPricingData[itemIndex].contractCodes.cartonBuy = {
-                                        contractCode: contractCode, 
+                        if(isCartonBuy(vendor.accounts,accountNumber)){
+                            if(!isEmpty(itemsPricingData[itemIndex].accounts.cartonBuy)){
+                                if(isBetterPrice(itemsPricingData[itemIndex].accounts.cartonBuy.itemCost, itemCost)){
+                                    itemsPricingData[itemIndex].accounts.cartonBuy = {
+                                        accountNumber: accountNumber, 
                                         minQuantity: minQuantity,
                                         itemCost: itemCost
                                     };
                                 }
                             }else{
-                                itemsPricingData[itemIndex].contractCodes.cartonBuy = {
-                                    contractCode: contractCode, 
+                                itemsPricingData[itemIndex].accounts.cartonBuy = {
+                                    accountNumber: accountNumber, 
                                     minQuantity: minQuantity,
                                     itemCost: itemCost
                                 };
                             }
                         }else{ 
-                            if(!isEmpty(itemsPricingData[itemIndex].contractCodes.regularAccount)){
-                                if(isBetterPrice(itemsPricingData[itemIndex].contractCodes.regularAccount.itemCost, itemCost)){
-                                    itemsPricingData[itemIndex].contractCodes.regularAccount = {
-                                        contractCode: contractCode, 
+                            if(!isEmpty(itemsPricingData[itemIndex].accounts.regularAccount)){
+                                if(isBetterPrice(itemsPricingData[itemIndex].accounts.regularAccount.itemCost, itemCost)){
+                                    itemsPricingData[itemIndex].accounts.regularAccount = {
+                                        accountNumber: accountNumber, 
                                         minQuantity: minQuantity,
                                         itemCost: itemCost
                                     };
                                 }
                             }else{
-                                itemsPricingData[itemIndex].contractCodes.regularAccount = {
-                                    contractCode: contractCode, 
+                                itemsPricingData[itemIndex].accounts.regularAccount = {
+                                    accountNumber: accountNumber, 
                                     minQuantity: minQuantity,
                                     itemCost: itemCost
                                 };
@@ -342,9 +342,9 @@ define(['N/runtime', 'N/record', 'N/url', 'N/ui/serverWidget', 'N/search', './Li
                 itemsPricingData.forEach(item => {
                     let itemID = item.itemID;
                     let vendorName = item.vendorName;
-                    let itemMinQuantity = item.contractCodes.cartonBuy.minQuantity || "Not Defined";
-                    let itemCartonCost = item.contractCodes.cartonBuy.itemCost || "Not Defined";
-                    let itemRegularCost = item.contractCodes.regularAccount.itemCost || "Not Defined";
+                    let itemMinQuantity = item.accounts.cartonBuy.minQuantity || "Not Defined";
+                    let itemCartonCost = item.accounts.cartonBuy.itemCost || "Not Defined";
+                    let itemRegularCost = item.accounts.regularAccount.itemCost || "Not Defined";
                      
                     let itemIndex = findItemIndex(itemData, itemID);
                     if(itemIndex >= 0){
@@ -529,7 +529,7 @@ define(['N/runtime', 'N/record', 'N/url', 'N/ui/serverWidget', 'N/search', './Li
                     id: id,
                     name: name,
                     tradingPartnerID: tradingPartnerID,
-                    contractCodes: {cartonBuy: [], regularAccount: []}
+                    accounts: {cartonBuy: [], regularAccount: []}
                 })
                 return true;
             });
@@ -542,27 +542,21 @@ define(['N/runtime', 'N/record', 'N/url', 'N/ui/serverWidget', 'N/search', './Li
                 ],
                 columns:
                 [
-                   search.createColumn({
-                      name: "name",
-                      join: "CUSTRECORD_BSP_ISG_PARENT_ACCT_NUMBER",
-                      label: "Name"
-                   }),
                    search.createColumn({name: "custrecord_bsp_isg_carton_buy_acct", label: "Carton Buy"}),
                    search.createColumn({name: "custrecord_bsp_isg_parent_trading_partn", label: "Trading Partner"})
                 ]
              });
 
              accountNumberSearchObj.run().each(function(result){
-                let contractCodeName = result.getValue({name: 'name', join: 'CUSTRECORD_BSP_ISG_PARENT_ACCT_NUMBER'});
+                let accountID = result.id;
                 let isCartonBuy = result.getValue({name: 'custrecord_bsp_isg_carton_buy_acct'});
-                
                 let tradingPartnerID = result.getValue({name: 'custrecord_bsp_isg_parent_trading_partn'});
                 let vendorIndex = findVendorInListBy(vendors, tradingPartnerID, "tradingPartnerID");
                 if(vendorIndex >= 0){
                     if(isCartonBuy){
-                        vendors[vendorIndex].contractCodes.cartonBuy.push(contractCodeName);
+                        vendors[vendorIndex].accounts.cartonBuy.push(accountID);
                     }else{
-                        vendors[vendorIndex].contractCodes.regularAccount.push(contractCodeName);
+                        vendors[vendorIndex].accounts.regularAccount.push(accountID);
                     }
                 }
                 return true;
@@ -592,15 +586,15 @@ define(['N/runtime', 'N/record', 'N/url', 'N/ui/serverWidget', 'N/search', './Li
         }
 
         /**
-         * If the contractCode is in the cartonBuy array, return true, otherwise return false.
-         * @param contractCodes - {
-         * @param contractCode - "CARTON_BUY"
+         * If the accountID is in the cartonBuy array, return true, otherwise return false.
+         * @param accounts - {
+         * @param accountID - "CARTON_BUY"
          * @returns A boolean value.
          */
-        const isCartonBuy = (contractCodes, contractCode) => {
-            for (let index = 0; index < contractCodes.cartonBuy.length; index++) {
-                const element = contractCodes.cartonBuy[index];   
-                if(element == contractCode){
+        const isCartonBuy = (accounts, accountID) => {
+            for (let index = 0; index < accounts.cartonBuy.length; index++) {
+                const element = accounts.cartonBuy[index];   
+                if(element == accountID){
                     return true;
                 }
             }

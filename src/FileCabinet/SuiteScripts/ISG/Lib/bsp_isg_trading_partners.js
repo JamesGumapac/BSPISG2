@@ -206,6 +206,28 @@
         return minAmount;
     }
 
+    function getPricePlanID(itemID, supplier, account){
+        let planID = null;
+        const customrecord_bsp_isg_item_acct_dataSearchObj = search.create({
+            type: "customrecord_bsp_isg_item_acct_data",
+            filters:
+            [
+               ["custrecord_bsp_isg_parent_item","anyof",itemID], 
+               "AND", 
+               ["custrecord_bsp_isg_item_supplier","anyof",supplier], 
+               "AND", 
+               ["custrecord_bsp_isg_account_number","anyof",account]
+            ],
+            columns:[]
+         });
+
+        customrecord_bsp_isg_item_acct_dataSearchObj.run().each(function(result){
+            planID = result.id;
+            return true;
+        });
+        return planID;
+    }
+
     /**
      * "If the trading partner is essendant, then call the essendant processPOAck function, otherwise if
      * the trading partner is spr, then call the spr processPOAck function."
@@ -268,6 +290,7 @@
         updateTradingPartnerBODId: updateTradingPartnerBODId,
         isTradingPartner: isTradingPartner,
         getMinAmountCartonPO: getMinAmountCartonPO,
+        getPricePlanID: getPricePlanID,
         processPOAck: processPOAck,
         processInvoice: processInvoice,
         processASN: processASN

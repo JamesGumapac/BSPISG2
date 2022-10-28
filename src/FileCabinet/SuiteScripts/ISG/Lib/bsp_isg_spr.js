@@ -3,7 +3,7 @@
  * @NModuleScope Public
  */
 
- define(['N/record','./bsp_isg_purchase_orders.js', './bsp_isg_sales_orders.js'], function (record, BSP_POutil, BSP_SOUtil) {
+ define(['N/record','./bsp_isg_purchase_orders.js', './bsp_isg_sales_orders.js', './bsp_isg_trading_partners'], function (record, BSP_POutil, BSP_SOUtil, BSP_TradingPartner) {
 
     /**
      *  'A' = accepted
@@ -89,6 +89,9 @@
 
         let ackPOlines = getPOlines(jsonObjResponse);
         let soID = purchaseOrderRec.getValue("createdfrom");
+        let vendor = purchaseOrderRec.getValue("entity");
+        let account = purchaseOrderRec.getValue("custbody_bsp_isg_transmission_acct_num");
+
         let itemCount = purchaseOrderRec.getLineCount({
             sublistId: 'item'
         });
@@ -103,8 +106,25 @@
             let acknowledgmentItem = getAcknowledmentItem(ackPOlines, item);
             log.debug("processPOline", `PO Acknowledgment Item Data ${JSON.stringify(acknowledgmentItem)}`);
             let acknowledgmentItemStatus = acknowledgmentItem.Extn.EXTNSprOrderLineList.EXTNSprOrderLine.EXTNSprOrderLine.AckStatus;
+            let rate = acknowledgmentItem.Extn.EXTNSprOrderLineList.EXTNSprOrderLine.EXTNSprOrderLine.DealerPrice;
             if(acknowledgmentItemStatus == STATUS_CODES.accepted){
+                purchaseOrderRec.setSublistValue({
+                    sublistId: 'item',
+                    fieldId: 'rate',
+                    line: i,
+                    value: parseFloat(rate)
+                });
                 log.debug("processPOline", `Item Processed successfully`);
+
+                let itemID = purchaseOrderRec.getSublistValue({
+                    sublistId: 'item',
+                    fieldId: 'item',
+                    line: i
+                });
+
+                updatePricePlan(itemID, vendor, account, parseFloat(rate));    
+                log.debug("processPOline", `Price plan updated`); 
+
             }else if(acknowledgmentItemStatus == STATUS_CODES.processedPartially){
                 let quantitySent = acknowledgmentItem.OrderLineTranQuantity.OrderLineTranQuantity.OrderedQty;
                 let quantityAcknowledged = acknowledgmentItem.Extn.EXTNSprOrderLineList.EXTNSprOrderLine.EXTNSprOrderLine.QtyShipped;
@@ -129,10 +149,19 @@
     
                     purchaseOrderRec.setSublistValue({
                         sublistId: 'item',
+                        fieldId: 'rate',
+                        line: i,
+                        value: parseFloat(rate)
+                    });
+                    purchaseOrderRec.setSublistValue({
+                        sublistId: 'item',
                         fieldId: 'quantity',
                         line: i,
                         value: parseInt(quantityAcknowledged)
                     });
+
+                    updatePricePlan(itemID, vendor, account, parseFloat(rate));    
+                    log.debug("processPOline", `Price plan updated`); 
                 }
             }else {
                 log.debug("processPOline", `Item Rejected`);
@@ -222,6 +251,23 @@
             return null;
     }
 
+    function updatePricePlan(itemID, vendor, account, rate){
+        let pricePlanRecID = BSP_TradingPartner.getPricePlanID(itemID, vendor, account);
+        if(pricePlanRecID){
+            record.submitFields({
+                type: "customrecord_bsp_isg_item_acct_data",
+                id: pricePlanRecID,
+                values: {
+                    custrecord_bsp_isg_item_cost: rate
+                },
+                options: {        
+                    enableSourcing: false,        
+                    ignoreMandatoryFields : true    
+                }           
+            });
+        }
+    }
+
     /************************************************************
      * 
      *                     SHIPMENT NOTIFICATION LOGIC
@@ -308,17 +354,15 @@
                 fieldId: 'itemname',
                 line: i
             });
+            let itemID = itemFulfillmentRec.getSublistValue({
+                sublistId: 'item',
+                fieldId: 'item',
+                line: i
+            });
             let shipmentItem = getShipmentItem(shipmentlines, itemName);
             log.debug("processItemFulfillment", `Item ${JSON.stringify(shipmentItem)}`);
             if(shipmentItem){
-                if(parseInt(shipmentItem.soline.qordrd) > parseInt(shipmentItem.soline.qshppd)){
-
-                    let itemID = itemFulfillmentRec.getSublistValue({
-                        sublistId: 'item',
-                        fieldId: 'item',
-                        line: i
-                    });
-
+                if(parseInt(shipmentItem.soline.qordrd) > parseInt(shipmentItem.soline.qshppd)){                
                     linesPartiallyShipped.push({
                         itemID: itemID,
                         originalQuantity: parseInt(shipmentItem.soline.qordrd),
@@ -394,16 +438,16 @@
                 fieldId: 'itemname',
                 line: i
             });
+            let itemID = itemReceiptRec.getSublistValue({
+                sublistId: 'item',
+                fieldId: 'item',
+                line: i
+            });
             log.debug("processItemReceipt", `ItemName ${JSON.stringify(itemName)}`);
             let shipmentItem = getShipmentItem(shipmentlines, itemName);
             log.debug("processItemReceipt", `ItemFound ${JSON.stringify(shipmentItem)}`);
             if(shipmentItem){
                 if(parseInt(shipmentItem.soline.qordrd) > parseInt(shipmentItem.soline.qshppd)){
-                    let itemID = itemReceiptRec.getSublistValue({
-                        sublistId: 'item',
-                        fieldId: 'item',
-                        line: i
-                    });
                     linesPartiallyShipped.push({
                         itemID: itemID,
                         originalQuantity: parseInt(shipmentItem.soline.qordrd),

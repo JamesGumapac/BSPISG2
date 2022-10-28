@@ -55,17 +55,6 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                             });
                         }
 
-                        /*let objMRTask = task.create({
-                            taskType: task.TaskType.MAP_REDUCE,
-                            scriptId: "customscript_bsp_isg_mr_update_manual_so",
-                            deploymentId: "customdeploy_bsp_isg_mr_update_manual_so",
-                            params: {
-                                custscript_bsp_mr_cb_po_rec_id: poRecID
-                            }
-                        });
-                        let intTaskID = objMRTask.submit();
-                        log.debug(functionName, `MR Task submitted with ID: ${intTaskID}`);*/
-
                     }catch(error){
                         log.error(functionName, "Error: " + JSON.stringify(error.message));
                         redirect.toSuitelet({
@@ -221,8 +210,6 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                 container: 'fieldgroup_items_info'
             });
 
-            
-
             form.addSubmitButton({
                 label: 'Create PO'
             });
@@ -278,29 +265,21 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                         sort: search.Sort.ASC,
                         label: "Name"
                    }), 
-                   search.createColumn({name: "custrecord_bsp_isg_parent_trading_partn", label: "Trading Partner"}),
-                   search.createColumn({
-                      name: "name",
-                      join: "CUSTRECORD_BSP_ISG_PARENT_ACCT_NUMBER",
-                      label: "Name"
-                   })
+                   search.createColumn({name: "custrecord_bsp_isg_parent_trading_partn", label: "Trading Partner"})
                 ]
              });
 
              accountNumberSearchObj.run().each(function(result){
                 let accountID = result.id;
                 let accountName = result.getValue({name: 'name'});
-                let contractCodeName = result.getValue({name: 'name', join: 'CUSTRECORD_BSP_ISG_PARENT_ACCT_NUMBER'});
-         
                 let tradingPartnerID = result.getValue({name: 'custrecord_bsp_isg_parent_trading_partn'});
+
                 let vendorIndex = findVendorInListBy(vendors, tradingPartnerID, "tradingPartnerID");
                 if(vendorIndex >= 0){
-                    let accountNumberIndex = findAccountInList(vendors[vendorIndex].accountNumbers, tradingPartnerID,accountID);
-                    if(accountNumberIndex >= 0){
-                        vendors[vendorIndex].accountNumbers[accountNumberIndex].contractCodes.push(contractCodeName);
-                    }else{
-                        vendors[vendorIndex].accountNumbers.push({id: accountID, name: accountName, contractCodes: [contractCodeName]});
-                    }               
+                    let accountNumberIndex = findAccountInList(vendors[vendorIndex].accountNumbers, tradingPartnerID, accountID);
+                    if(accountNumberIndex < 0){
+                        vendors[vendorIndex].accountNumbers.push({id: accountID, name: accountName});
+                    }             
                 }
                 return true;
             });
@@ -533,6 +512,7 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
          * @param items - This is the array of items that you want to populate the sublist with.
         */
         const pupulateItemSublist = (sublist, items) => {
+
             if(items.length > 0){
                 let lineCount = 0;
                 items.forEach(element => {
@@ -589,31 +569,35 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                         line: lineCount,
                         value: poQuantity
                     });
-                    sublist.setSublistValue({
-                        id: "custpage_account_number",
-                        line: lineCount,
-                        value: cartonAccount.id
-                    });
+                    if(cartonAccount){
+                        sublist.setSublistValue({
+                            id: "custpage_account_number",
+                            line: lineCount,
+                            value: cartonAccount.id
+                        });
+                    }
                     sublist.setSublistValue({
                         id: "custpage_item_sum_cost",
                         line: lineCount,
-                        value:  `$${itemSumCost}`
+                        value:  `${itemSumCost != "Not defined" ? "$"+itemSumCost : itemSumCost}`
                     });
                     sublist.setSublistValue({
                         id: "custpage_so_item_price",
                         line: lineCount,
-                        value: `$${itemPrice}`
+                        value: `${itemPrice != "Not defined" ? "$"+itemPrice : itemPrice}`
                     });
                     sublist.setSublistValue({
                         id: "custpage_po_sales_orders",
                         line: lineCount,
                         value: JSON.stringify(salesOrders)
                     });
-                    sublist.setSublistValue({
-                        id: "custpage_item_accounts",
-                        line: lineCount,
-                        value: JSON.stringify(accounts)
-                    });
+                    if(accounts){
+                        sublist.setSublistValue({
+                            id: "custpage_item_accounts",
+                            line: lineCount,
+                            value: JSON.stringify(accounts)
+                        });
+                    }
                     lineCount++;
                 });
             }
@@ -634,9 +618,7 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                 "AND",
                 ["purchaseorder","anyof","@NONE@"], 
                 "AND", 
-                ["custcol_bsp_isg_exclude_auto_transm","anyof","2"],
-                /*"AND", 
-                ["custcol_bsp_isg_manual_po_id","isempty",""]*/
+                ["custcol_bsp_isg_exclude_auto_transm","anyof","2"]
             ];
             
             const salesOrderSearchObj = search.create({
@@ -743,7 +725,7 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                     let itemLineUniqueID = element.getValue("custrecord_bsp_isg_item_line_unique_id");
                     itemList = processItemsByUniqueID(itemList, itemLineUniqueID);
                 });
-                 
+                
                 if(itemList.length > 0){
                     let vendorSelected = null;
                     if(params.vendorSelected){
@@ -765,12 +747,7 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                         [
                            search.createColumn({name: "custrecord_bsp_isg_parent_item", label: "Item"}),
                            search.createColumn({name: "custrecord_bsp_isg_item_supplier", label: "Supplier"}),
-                           search.createColumn({
-                                name: "custrecord_bsp_isg_parent_acct_number",
-                                join: "CUSTRECORD_BSP_ISG_ITEM_CONTRACT_CODE",
-                                label: "Account Number"
-                           }),
-                           search.createColumn({name: "custrecord_bsp_isg_item_contract_code", label: "Contract Code"}),
+                           search.createColumn({name: "custrecord_bsp_isg_account_number", label: "Account Number"}),
                            search.createColumn({name: "custrecord_bsp_isg_min_quantity", label: "Minimum Quantity"}),
                            search.createColumn({name: "custrecord_bsp_isg_item_cost", label: "Cost"})
                         ]
@@ -782,9 +759,8 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                         let itemID = result.getValue({name: 'custrecord_bsp_isg_parent_item'});
                         let vendorID = result.getValue({name: 'custrecord_bsp_isg_item_supplier'});
                         let vendorName = result.getText({name: 'custrecord_bsp_isg_item_supplier'});
-                        let accountID = result.getValue({name: 'custrecord_bsp_isg_parent_acct_number', join: 'CUSTRECORD_BSP_ISG_ITEM_CONTRACT_CODE'});
-                        let accountName = result.getText({name: 'custrecord_bsp_isg_parent_acct_number', join: 'CUSTRECORD_BSP_ISG_ITEM_CONTRACT_CODE'});
-                        let contractCode = result.getText({name: 'custrecord_bsp_isg_item_contract_code'});
+                        let accountID = result.getValue({name: 'custrecord_bsp_isg_account_number'});
+                        let accountName = result.getText({name: 'custrecord_bsp_isg_account_number'});
                         let minQuantity = result.getValue({name: 'custrecord_bsp_isg_min_quantity'});
                         let itemCost = result.getValue({name: 'custrecord_bsp_isg_item_cost'});
 
@@ -799,14 +775,12 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                                     accountNumberBestPrice: {   
                                         id: accountID,
                                         name: accountName,                       
-                                        contractCode: contractCode, 
                                         minQuantity: minQuantity,
                                         itemCost: itemCost                                        
                                     },
                                     accountNumbers: [{   
                                         id: accountID,
                                         name: accountName,                       
-                                        contractCode: contractCode, 
                                         minQuantity: minQuantity,
                                         itemCost: itemCost                                        
                                     }]
@@ -816,7 +790,6 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                                     itemsPricingData[itemIndex].accountNumberBestPrice = {
                                         id: accountID,
                                         name: accountName,    
-                                        contractCode: contractCode, 
                                         minQuantity: minQuantity,
                                         itemCost: itemCost
                                     };
@@ -824,7 +797,6 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                                 itemsPricingData[itemIndex].accountNumbers.push({
                                     id: accountID,
                                     name: accountName,    
-                                    contractCode: contractCode, 
                                     minQuantity: minQuantity,
                                     itemCost: itemCost
                                 }); 
