@@ -136,10 +136,10 @@ define([
       scriptId: params.mr_script_id,
       deploymentId: params.mr_script_dep_id,
       params: {
-        custscript_bsp_isg_acc_num: +accountNumberId,
-        custscript_bsp_isg_file_id: +fileId,
-        custscript_bsp_isg_up_trading_partner: +params.tradingPartnerId,
-        custscript_bsp_isg_vendor: +params.vendor,
+        custscript_bsp_isg_esse_up_acc_num: +accountNumberId,
+        custscript_bsp_isg_esse_up_file_id: +fileId,
+        custscript_bsp_isg_esse_up_trdng_prtnr: +params.tradingPartnerId,
+        custscript_bsp_isg_esse_up_vendor: +params.vendor,
       },
     });
     let mrTaskId = mrTask.submit();
@@ -166,16 +166,16 @@ define([
         name: "custscript_bsp_isg_esse_pen_fol_id",
       }),
       mr_script_id: objScript.getParameter({
-        name: "custscript_bsp_mr_updt_itm_pln_script_id",
+        name: "custscript_bsp_isg_esse_script_id",
       }),
       mr_script_dep_id: objScript.getParameter({
-        name: "custscript_bsp_mr_updt_itm_pln_dep",
+        name: "custscript_bsp_isg_esse_scrpt_dep",
       }),
       tradingPartnerId: objScript.getParameter({
-        name: "custscript_bsp_isg_tp",
+        name: "custscript_bsp_isg_esse_trading_partner",
       }),
       vendor: objScript.getParameter({
-        name: "custscript_bsp_isg_vendor_trdng_prtnr",
+        name: "custscript_bsp_isg_esse_vendor",
       }),
     };
     return objParams;

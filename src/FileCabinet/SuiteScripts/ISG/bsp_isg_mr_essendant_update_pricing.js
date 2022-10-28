@@ -145,22 +145,22 @@ define([
     let objScript = runtime.getCurrentScript();
     objParams = {
       doneFolderId: objScript.getParameter({
-        name: "custscript_bsp_isg_essen_done_folder_id",
+        name: "custscript_bsp_isg_esse_up_done_folder",
       }),
       accountNumberId: objScript.getParameter({
-        name: "custscript_bsp_isg_acc_num",
+        name: "custscript_bsp_isg_esse_up_acc_num",
       }),
       fileId: objScript.getParameter({
-        name: "custscript_bsp_isg_file_id",
+        name: "custscript_bsp_isg_esse_up_file_id",
       }),
       tradingPartnerId: objScript.getParameter({
-        name: "custscript_bsp_isg_up_trading_partner",
+        name: "custscript_bsp_isg_esse_up_trdng_prtnr",
       }),
       vendor: objScript.getParameter({
-        name: "custscript_bsp_isg_vendor",
+        name: "custscript_bsp_isg_esse_up_vendor",
       }),
       pendingFolderId: objScript.getParameter({
-        name: "custscript_bsp_isg_essendant",
+        name: "custscript_bsp_isg_esse_pending_folder",
       }),
     };
 
