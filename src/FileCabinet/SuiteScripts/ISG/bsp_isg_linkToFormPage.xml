@@ -42,8 +42,8 @@
 											</td>
 											<td>${item.itemName}</td>
 											<td>${item.vendor}</td>
-											<td><#if item.itemRegularCost == "Not Defined">${item.itemRegularCost}<#else>$${item.itemRegularCost}</#if></td>
-											<td><#if item.itemCartonCost == "Not Defined">${item.itemCartonCost}<#else>$${item.itemCartonCost}</#if></td>
+											<td><#if item.itemRegularCost == "Not defined">${item.itemRegularCost}<#else>$${item.itemRegularCost}</#if></td>
+											<td><#if item.itemCartonCost == "Not defined">${item.itemCartonCost}<#else>$${item.itemCartonCost}</#if></td>
 											<td>${item.itemQuantity}</td>
 											<td>${item.itemBackOrderQuantity}</td>
 											<td>${item.itemMinQuantity}</td>

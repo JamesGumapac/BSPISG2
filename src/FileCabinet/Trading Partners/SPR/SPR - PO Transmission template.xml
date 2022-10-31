@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Order EnterpriseCode="${data.tradingPartner.name}" 
+		BuyerOrganizationCode="${data.transmissionData.accountNumber.text}"
+		EntryType="AS2"		
+		DraftOrderFlag="Y" 
+		OrderType="<#if data.purchaseOrder.orderType == 'W&L'>03<#else>04</#if>" 
+		IsShipComplete="${data.transmissionData.adot}" 
+		ShipNode="<#if data.purchaseOrder.adot == 'N'>${data.purchaseOrder.transmissionLocation.text}</#if>"
+		CancelOrderOnBackorder="N" 
+		CustomerPONo="${data.purchaseOrder.purchaseOrderNumber}">
+	<PersonInfoShipTo FirstName="${data.purchaseOrder.customer.companyName}" 
+					AddressLine1="${data.purchaseOrder.customer.address1}" 
+					City="${data.purchaseOrder.customer.city}"
+					State="${data.purchaseOrder.customer.state}" 
+					ZipCode="${data.purchaseOrder.customer.zipcode}" 
+					Country="${data.purchaseOrder.customer.countrycode}" />
+	<PersonInfoContact FirstName="${data.purchaseOrder.customer.addressee}" />
+	<OrderLines>
+		<#list data.purchaseOrder.items as item>
+			<OrderLine PrimeLineNo="${item.itemLine}" CustomerLinePONo="${item.itemLine}">
+				<OrderLineTranQuantity TransactionalUOM="${item.itemUOM}" OrderedQty="${item.itemQuantity}" />
+				<Item CustomerItem="${item.itemName}" />
+				<Instructions>
+					<Instruction InstructionText="TEST" />
+				</Instructions>
+				<Extn>
+					<EXTNSprOrderLineList>
+						<EXTNSprOrderLine OkProSubs="N" 
+									OkLikeSubs="N" 
+									OkFullPacks="N" 
+									OkBackorder="N"
+									OkPartial="Y" 
+									DealerCost="${item.itemRate}" />
+					</EXTNSprOrderLineList>
+				</Extn>
+			</OrderLine>
+		</#list>	
+	</OrderLines>
+	<Extn>
+		<EXTNSprOrderHeaderList>
+			<EXTNSprOrderHeader ShipMethod="00" 
+								PricedPackSlip="D" 
+								CanNonUps="N"
+								ParcelZone="Y" 
+								ShowCost="N" 
+								ShowList="N" 
+								OneOrder="Y" 
+								ListCost="L" 
+								StdDescs="Y" 
+								CurrencyCode="${data.purchaseOrder.currency}" 
+								DealerRoute="${data.purchaseOrder.routeCode}" 
+								UseDcAddr="N" />
+		</EXTNSprOrderHeaderList>
+	</Extn>
+</Order>
