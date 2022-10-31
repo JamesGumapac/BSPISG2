@@ -130,16 +130,14 @@ define([
       params.tradingPartnerId,
       accountNumber
     );
-
+  
     const mrTask = task.create({
       taskType: task.TaskType.MAP_REDUCE,
       scriptId: params.mr_script_id,
       deploymentId: params.mr_script_dep_id,
       params: {
-        custscript_bsp_isg_esse_up_acc_num: +accountNumberId,
-        custscript_bsp_isg_esse_up_file_id: +fileId,
-        custscript_bsp_isg_esse_up_trdng_prtnr: +params.tradingPartnerId,
-        custscript_bsp_isg_esse_up_vendor: +params.vendor,
+        "custscript_bsp_isg_esse_up_acc_num": + accountNumberId,
+        "custscript_bsp_isg_esse_up_file_id": + fileId
       },
     });
     let mrTaskId = mrTask.submit();

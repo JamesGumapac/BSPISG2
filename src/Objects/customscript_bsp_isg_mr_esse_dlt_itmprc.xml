@@ -23,7 +23,7 @@
       <help></help>
       <isformula>F</isformula>
       <ismandatory>F</ismandatory>
-      <label>Pending Folder ID</label>
+      <label>PENDING FOLDER ID</label>
       <linktext></linktext>
       <maxlength></maxlength>
       <maxvalue></maxvalue>
@@ -50,7 +50,7 @@
       <help></help>
       <isformula>F</isformula>
       <ismandatory>F</ismandatory>
-      <label>Script Deployment</label>
+      <label>ESSENDANT UPDATE PRICING DEPLOYMENT ID</label>
       <linktext></linktext>
       <maxlength></maxlength>
       <maxvalue></maxvalue>
@@ -77,7 +77,7 @@
       <help></help>
       <isformula>F</isformula>
       <ismandatory>F</ismandatory>
-      <label>Script ID</label>
+      <label>ESSENDANT UPDATE PRICING SCRIPT ID</label>
       <linktext></linktext>
       <maxlength></maxlength>
       <maxvalue></maxvalue>
@@ -104,7 +104,7 @@
       <help></help>
       <isformula>F</isformula>
       <ismandatory>F</ismandatory>
-      <label>Trading Partner </label>
+      <label>TRADING PARTNER ID </label>
       <linktext></linktext>
       <maxlength></maxlength>
       <maxvalue></maxvalue>
@@ -131,7 +131,7 @@
       <help></help>
       <isformula>F</isformula>
       <ismandatory>F</ismandatory>
-      <label>Vendor</label>
+      <label>VENDOR</label>
       <linktext></linktext>
       <maxlength></maxlength>
       <maxvalue></maxvalue>

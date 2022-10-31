@@ -23,7 +23,7 @@
       <help></help>
       <isformula>F</isformula>
       <ismandatory>F</ismandatory>
-      <label>Essendant Pending Folder ID</label>
+      <label>ESSENDANT PENDING FOLDER ID</label>
       <linktext></linktext>
       <maxlength></maxlength>
       <maxvalue></maxvalue>
@@ -50,7 +50,7 @@
       <help></help>
       <isformula>F</isformula>
       <ismandatory>F</ismandatory>
-      <label>Vendor</label>
+      <label>VENDOR</label>
       <linktext></linktext>
       <maxlength></maxlength>
       <maxvalue></maxvalue>
@@ -77,7 +77,7 @@
       <help></help>
       <isformula>F</isformula>
       <ismandatory>F</ismandatory>
-      <label>Essendant Done Folder ID</label>
+      <label>ESSENDANT DONE FOLDER ID</label>
       <linktext></linktext>
       <maxlength></maxlength>
       <maxvalue></maxvalue>
@@ -104,7 +104,7 @@
       <help></help>
       <isformula>F</isformula>
       <ismandatory>F</ismandatory>
-      <label>Trading Partner </label>
+      <label>TRADING PARTER</label>
       <linktext></linktext>
       <maxlength></maxlength>
       <maxvalue></maxvalue>
@@ -131,7 +131,7 @@
       <help></help>
       <isformula>F</isformula>
       <ismandatory>F</ismandatory>
-      <label>Account Number</label>
+      <label>ACCOUNT NUMBER</label>
       <linktext></linktext>
       <maxlength></maxlength>
       <maxvalue></maxvalue>
@@ -178,8 +178,8 @@
       <custscript_bsp_isg_esse_up_acc_num></custscript_bsp_isg_esse_up_acc_num>
       <custscript_bsp_isg_esse_up_done_folder>11278</custscript_bsp_isg_esse_up_done_folder>
       <custscript_bsp_isg_esse_up_file_id></custscript_bsp_isg_esse_up_file_id>
-      <custscript_bsp_isg_esse_up_trdng_prtnr></custscript_bsp_isg_esse_up_trdng_prtnr>
-      <custscript_bsp_isg_esse_up_vendor></custscript_bsp_isg_esse_up_vendor>
+      <custscript_bsp_isg_esse_up_trdng_prtnr>[scriptid=customrecord_bsp_isg_trading_partner.val_864754_t927173_934]</custscript_bsp_isg_esse_up_trdng_prtnr>
+      <custscript_bsp_isg_esse_up_vendor>[ACCOUNT_SPECIFIC_VALUE]</custscript_bsp_isg_esse_up_vendor>
       <isdeployed>T</isdeployed>
       <loglevel>DEBUG</loglevel>
       <queueallstagesatonce>T</queueallstagesatonce>
