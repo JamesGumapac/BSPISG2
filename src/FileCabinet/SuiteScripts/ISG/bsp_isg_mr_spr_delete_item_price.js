@@ -44,7 +44,6 @@ define([
 			if (InstanceChecker) {
 				throw "Item and Item account plan create/update map reduce is still running";
 			}
-			
 			const fileObj = file.load({
 				id: BSPUpdatePricing.getFileId(params.pendingFolderId),
 			});
