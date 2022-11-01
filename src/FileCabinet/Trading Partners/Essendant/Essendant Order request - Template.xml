@@ -1,0 +1,82 @@
+<?xml version="1.0"?>
+<us:ProcessPurchaseOrder xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:us="http://www.ussco.com/oagis/0" xmlns:oa="http://www.openapplications.org/oagis/9" releaseID="1.0" systemEnvironmentCode="Production" languageCode="en-US">
+	<us:ApplicationArea>
+		<oa:Sender>
+			<oa:LogicalID>${data.tradingPartner.orgAS2Identifier}</oa:LogicalID> 
+		</oa:Sender>
+		<us:ReceiverId>${data.tradingPartner.as2Identifier}</us:ReceiverId> 
+		<oa:CreationDateTime>${data.transmissionData.dateCreated}</oa:CreationDateTime> 
+		<oa:BODID>${data.tradingPartner.documentControlNumber}</oa:BODID> 
+	</us:ApplicationArea>
+	<us:DataArea>
+		<oa:Process>
+			<oa:ActionCriteria>
+				<oa:ChangeStatus>
+					<oa:Code>${data.tradingPartner.actionCode}</oa:Code> 
+				</oa:ChangeStatus>
+			</oa:ActionCriteria>
+		</oa:Process>	
+		<us:PurchaseOrder xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:us="http://www.ussco.com/oagis/0" xmlns:oa="http://www.openapplications.org/oagis/9">
+			<us:PurchaseOrderHeader>
+				<oa:DocumentID>
+					<oa:ID>${data.purchaseOrder.purchaseOrderID}</oa:ID> 
+				</oa:DocumentID>
+				<oa:AlternateDocumentID>
+					<oa:ID>${data.purchaseOrder.purchaseOrderNumber}</oa:ID> 
+				</oa:AlternateDocumentID>
+				<oa:DocumentDateTime>${data.purchaseOrder.purchaseOrderDate}</oa:DocumentDateTime> 
+				<oa:DocumentReference type="Reference Tag">
+					<oa:DocumentID>
+						<oa:ID>${data.purchaseOrder.salesOrder}</oa:ID> 
+					</oa:DocumentID>
+					<oa:SalesOrderReference>
+						<oa:DocumentID>
+							<oa:ID>${data.purchaseOrder.salesOrderID}</oa:ID> 
+						</oa:DocumentID>
+					</oa:SalesOrderReference>
+				</oa:DocumentReference>
+				<oa:SupplierParty>
+					<oa:Name>${data.tradingPartner.name}</oa:Name> 
+				</oa:SupplierParty>
+				<oa:ShipToParty>
+					<oa:PartyIDs>
+						<oa:ID><#if data.purchaseOrder.account.id?? && data.purchaseOrder.account.id?trim?has_content>${data.purchaseOrder.account.text}<#else>${data.transmissionData.accountNumber.text}</#if></oa:ID> 
+					</oa:PartyIDs>
+					<oa:Name>${data.purchaseOrder.customer.addressee}</oa:Name> 
+					<oa:Location>
+						<oa:Address type="<#if data.purchaseOrder.orderType == 'W&L'>W<#else>D</#if>">
+							<oa:LineOne>${data.purchaseOrder.customer.address1}</oa:LineOne> 
+							<oa:LineTwo>${data.purchaseOrder.customer.address2}</oa:LineTwo> 
+							<oa:LineThree>${data.purchaseOrder.customer.address3}</oa:LineThree> 
+							<oa:CityName>${data.purchaseOrder.customer.city}</oa:CityName> 
+							<oa:CountrySubDivisionCode>${data.purchaseOrder.customer.state}</oa:CountrySubDivisionCode> 
+							<oa:PostalCode>${data.purchaseOrder.customer.zipcode}</oa:PostalCode> 
+						</oa:Address>
+					</oa:Location>
+				</oa:ShipToParty>
+				<us:ShippingIndicator>true</us:ShippingIndicator> 
+				<us:DealerRouteCode>${data.purchaseOrder.routeCode}</us:DealerRouteCode> 
+				<us:DealerRouteID>${data.purchaseOrder.routeCodeID}</us:DealerRouteID>
+                <#if data.purchaseOrder.adot == "N">
+                    <us:FacilityID>${data.purchaseOrder.transmissionLocation.text}</us:FacilityID> 
+                </#if>
+			</us:PurchaseOrderHeader>
+			<#list data.purchaseOrder.items as item>
+				<us:PurchaseOrderLine>
+					<oa:LineNumber>${item.itemLine}</oa:LineNumber> 
+						<us:Item>
+							<oa:ItemID>
+								<oa:ID>${item.itemName}</oa:ID> 
+							</oa:ItemID>
+						</us:Item>
+					<oa:Quantity unitCode="${item.itemUOM}">${item.itemQuantity}</oa:Quantity> 
+					<oa:UnitPrice>
+						<oa:Amount currencyID="${data.purchaseOrder.currency}">${item.itemRate}</oa:Amount> 
+						<oa:PerQuantity /> 
+					</oa:UnitPrice>
+					<us:ADOTCode>${data.purchaseOrder.adot}</us:ADOTCode> 
+				</us:PurchaseOrderLine>
+			</#list>
+		</us:PurchaseOrder>
+	</us:DataArea>
+</us:ProcessPurchaseOrder>
