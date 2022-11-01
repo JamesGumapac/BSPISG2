@@ -199,14 +199,7 @@
       }
     }
 
-    let address = transactionRecord.getSubrecord({
-      fieldId: "shippingaddress",  
-    });
-    let aopd = address.getValue({fieldId:'custrecord_bsp_aopdvendor'});
-
-    log.debug('address', address);
-    log.debug('aopd', aopd);
-
+   
 
      /*--- Shipping method translation  ---*/
 
