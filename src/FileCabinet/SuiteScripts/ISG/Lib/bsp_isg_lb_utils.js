@@ -218,7 +218,7 @@
         "custrecord_bsp_isg_taxable"
       ],
     });
-
+    log.debug("settings on utils", settings);
     return settings;
   }
 
