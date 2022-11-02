@@ -1,0 +1,19 @@
+<deploy>
+    <configuration>
+        <path>~/AccountConfiguration/*</path>
+    </configuration>
+    <files>
+        <path>~/FileCabinet/SuiteScripts/*</path>
+    </files>
+    <objects>
+        <path>~/Objects/customrecord_bsp_isg_trading_partner.xml</path>
+        <path>~/Objects/customrecord_bsp_isg_account_number.xml</path>
+        <path>~/Objects/customrecord_bsp_isg_tp_adot_options.xml</path>
+        <path>~/Objects/customrecord_bsp_isg_tp_location.xml</path>
+        <path>~/Objects/customrecord_bsp_isg_tp_backord_option.xml</path> 
+        <path>~/Objects/custentity_bsp_isg_trading_part_settings.xml</path>
+    </objects>
+    <translationimports>
+        <path>~/Translations/*</path>
+    </translationimports>
+</deploy>

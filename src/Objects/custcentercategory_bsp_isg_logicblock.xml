@@ -21,11 +21,5 @@
       <linktasktype>LIST</linktasktype>
       <shortlist>F</shortlist>
     </link>
-    <link>
-      <linklabel>Orders imported</linklabel>
-      <linkobject>[scriptid=customsearch_bsp_isg_lb_so_imported]</linkobject>
-      <linktasktype>SRCH_RSLT</linktasktype>
-      <shortlist>F</shortlist>
-    </link>
   </links>
 </centercategory>

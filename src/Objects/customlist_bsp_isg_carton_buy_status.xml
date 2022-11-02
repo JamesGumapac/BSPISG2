@@ -1,0 +1,24 @@
+<customlist scriptid="customlist_bsp_isg_carton_buy_status">
+  <description></description>
+  <isinactive>F</isinactive>
+  <ismatrixoption>F</ismatrixoption>
+  <isordered>T</isordered>
+  <name>Carton Buy Item Process status</name>
+  <customvalues>
+    <customvalue scriptid="val_896887_t927173_582">
+      <abbreviation>N</abbreviation>
+      <isinactive>F</isinactive>
+      <value>Not Started</value>
+    </customvalue>
+    <customvalue scriptid="val_896888_t927173_705">
+      <abbreviation>I</abbreviation>
+      <isinactive>F</isinactive>
+      <value>In Progress</value>
+    </customvalue>
+    <customvalue scriptid="val_896889_t927173_556">
+      <abbreviation>C</abbreviation>
+      <isinactive>F</isinactive>
+      <value>Completed</value>
+    </customvalue>
+  </customvalues>
+</customlist>

@@ -38,13 +38,12 @@
   </scriptcustomfields>
   <scriptdeployments>
     <scriptdeployment scriptid="customdeploy_bsp_ue_send_order_details">
-      <allemployees>F</allemployees>
+      <allemployees>T</allemployees>
       <alllocalizationcontexts>T</alllocalizationcontexts>
-      <allpartners>F</allpartners>
-      <allroles>F</allroles>
-      <audemployee>[ACCOUNT_SPECIFIC_VALUE]</audemployee>
+      <allpartners>T</allpartners>
+      <allroles>T</allroles>
       <audslctrole></audslctrole>
-      <custscript_bsp_isg_elite_extra_settings>[scriptid=customrecord_bsp_isg_elite_extra_setting.val_928596_t927173_373]</custscript_bsp_isg_elite_extra_settings>
+      <custscript_bsp_isg_elite_extra_settings></custscript_bsp_isg_elite_extra_settings>
       <eventtype></eventtype>
       <executioncontext>ACTION|ADVANCEDREVREC|BANKCONNECTIVITY|BANKSTATEMENTPARSER|BUNDLEINSTALLATION|CLIENT|CONSOLRATEADJUSTOR|CSVIMPORT|CUSTOMGLLINES|CUSTOMMASSUPDATE|DATASETBUILDER|DEBUGGER|EMAILCAPTURE|FICONNECTIVITY|FIPARSER|MAPREDUCE|OTHER|PAYMENTGATEWAY|PAYMENTPOSTBACK|PLATFORMEXTENSION|PORTLET|PROMOTIONS|RECORDACTION|RESTLET|RESTWEBSERVICES|SCHEDULED|SDFINSTALLATION|SHIPPINGPARTNERS|SUITELET|TAXCALCULATION|USEREVENT|USERINTERFACE|WEBSERVICES|WORKBOOKBUILDER|WORKFLOW</executioncontext>
       <isdeployed>T</isdeployed>

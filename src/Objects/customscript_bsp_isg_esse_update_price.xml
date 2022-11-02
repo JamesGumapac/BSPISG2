@@ -178,8 +178,8 @@
       <custscript_bsp_isg_esse_up_acc_num></custscript_bsp_isg_esse_up_acc_num>
       <custscript_bsp_isg_esse_up_done_folder>11278</custscript_bsp_isg_esse_up_done_folder>
       <custscript_bsp_isg_esse_up_file_id></custscript_bsp_isg_esse_up_file_id>
-      <custscript_bsp_isg_esse_up_trdng_prtnr>[scriptid=customrecord_bsp_isg_trading_partner.val_864754_t927173_934]</custscript_bsp_isg_esse_up_trdng_prtnr>
-      <custscript_bsp_isg_esse_up_vendor>[ACCOUNT_SPECIFIC_VALUE]</custscript_bsp_isg_esse_up_vendor>
+      <custscript_bsp_isg_esse_up_trdng_prtnr></custscript_bsp_isg_esse_up_trdng_prtnr>
+      <custscript_bsp_isg_esse_up_vendor></custscript_bsp_isg_esse_up_vendor>
       <isdeployed>T</isdeployed>
       <loglevel>DEBUG</loglevel>
       <queueallstagesatonce>T</queueallstagesatonce>

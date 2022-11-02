@@ -9,11 +9,5 @@
       <linktasktype>LINK</linktasktype>
       <shortlist>F</shortlist>
     </link>
-    <link>
-      <linklabel>Purchase Orders</linklabel>
-      <linkobject>[scriptid=customsearch_bsp_isg_cb_po_created]</linkobject>
-      <linktasktype>SRCH_RSLT</linktasktype>
-      <shortlist>F</shortlist>
-    </link>
   </links>
 </centercategory>

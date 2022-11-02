@@ -23,7 +23,7 @@
     </link>
     <link>
       <linklabel>Elite Extra Settings</linklabel>
-      <linkobject>[scriptid=customrecord_elite_extra_setting]</linkobject>
+      <linkobject>[scriptid=customrecord_bsp_isg_elite_extra_setting]</linkobject>
       <linktasktype>LIST</linktasktype>
       <shortlist>F</shortlist>
     </link>

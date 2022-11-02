@@ -32,14 +32,14 @@
       <feature required="false">CREATESUITEBUNDLES</feature>
     </features>
     <objects>
-        <object>customrecord_bsp_isg_trading_partner</object>
-        <object>customrecord_bsp_isg_tp_location.custrecord_bsp_isg_parent_tp</object>
-        <object>customrecord_bsp_isg_tp_adot_options.custrecord_bsp_isg_adot_parent_tp</object>
-        <object>customrecord_bsp_isg_account_number.custrecord_bsp_isg_parent_trading_partn</object>
-        <object>customrecord_bsp_isg_tp_location</object>
-        <object>customrecord_bsp_isg_tp_adot_options</object>
-        <object>customrecord_bsp_isg_account_number</object>
-        <object>custentity_bsp_isg_trading_part_settings</object>
+      <object>customrecord_bsp_isg_trading_partner</object>
+      <object>customrecord_bsp_isg_tp_location.custrecord_bsp_isg_parent_tp</object>
+      <object>customrecord_bsp_isg_tp_adot_options.custrecord_bsp_isg_adot_parent_tp</object>
+      <object>customrecord_bsp_isg_account_number.custrecord_bsp_isg_parent_trading_partn</object>
+      <object>customrecord_bsp_isg_tp_location</object>
+      <object>customrecord_bsp_isg_tp_adot_options</object>
+      <object>customrecord_bsp_isg_account_number</object>
+      <object>custentity_bsp_isg_trading_part_settings</object>
     </objects>
     <files>
       <file></file>
