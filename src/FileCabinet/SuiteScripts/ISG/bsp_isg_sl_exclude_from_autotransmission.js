@@ -460,8 +460,8 @@ define(['N/runtime', 'N/record', 'N/url', 'N/ui/serverWidget', 'N/search', './Li
                     let routeCodeDesc = result.getValue({name: "custrecord_bsp_lb_route_code_desc", join: "CUSTBODY_BSP_ISG_ROUTE_CODE"});
                     let itemID = result.getValue("item");
                     let itemLineQuantity = result.getValue("quantity");
-                    let itemLineBackOrderQuantity = result.getValue(columns[6]);
-                    let soLineUniqueID = parseInt(result.getValue(columns[7]));
+                    let itemLineBackOrderQuantity = result.getValue(columns[7]);
+                    let soLineUniqueID = parseInt(result.getValue(columns[8]));
                     let itemIndex = findItemIndex(itemData, itemID);
                     if(itemIndex >= 0){
                         itemData[itemIndex].salesOrderLines.push({
