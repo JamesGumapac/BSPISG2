@@ -34,55 +34,57 @@
 								</thead>
 								<tbody>
 									<#list data.data as item>
-										<tr class="item-parent" style=${item.rowColor}>
-											<td>
-												<button type="button" class="btn btn-default btn-xs" data-toggle="collapse" data-target=${item.itemRowID}>
-													<span class="glyphicon glyphicon-eye-open"></span>
-												</button>
-											</td>
-											<td>${item.itemName}</td>
-											<td>${item.vendor}</td>
-											<td><#if item.itemRegularCost == "Not defined">${item.itemRegularCost}<#else>$${item.itemRegularCost}</#if></td>
-											<td><#if item.itemCartonCost == "Not defined">${item.itemCartonCost}<#else>$${item.itemCartonCost}</#if></td>
-											<td>${item.itemQuantity}</td>
-											<td>${item.itemBackOrderQuantity}</td>
-											<td>${item.itemMinQuantity}</td>
-											<td><input class="form-check-input" type="checkbox" /></td>
-										</tr>
-										<tr>
-											<td colspan="12" class="hiddenRow">
-												<div class="accordian-body collapse" id=${item.itemID}>
-													<table class="table table-striped">
-														<thead>
-															<tr class="info">
-																<th>Sales Order Number</th>
-																<th>Sales Order Date</th>
-																<th>Customer</th>
-																<th>Route Code</th>
-																<th>Route Code Desc</th>
-																<th>Quantity</th>
-																<th>Backorder Quantity</th>
-																<th>Select</th>
-															</tr>
-														</thead>
-														<tbody>
-															<#list item.salesOrderLines as itemLine>
-																<tr>
-																	<td><a style="color: rgb(37,85,153)" href=${itemLine.soURL} target="_blank" rel="noopener noreferrer">${itemLine.salesOrderNumber}</a></td>
-																	<td>${itemLine.salesOrderDate}</td>
-																	<td>${itemLine.customer}</td>
-																	<td>${itemLine.routeCode}</td>
-																	<td>${itemLine.routeCodeDesc}</td>
-																	<td>${itemLine.itemLineQuantity}</td>
-																	<td>${itemLine.itemLineBackOrderQuantity}</td>
-																	<td><input class="form-check-input" type="checkbox" value=${itemLine.rowValue} id=${itemLine.chkID} /></td>
+										<#if item.itemCartonCost?lower_case != "not defined">
+											<tr class="item-parent" style=${item.rowColor}>
+												<td>
+													<button type="button" class="btn btn-default btn-xs" data-toggle="collapse" data-target=${item.itemRowID}>
+														<span class="glyphicon glyphicon-eye-open"></span>
+													</button>
+												</td>
+												<td>${item.itemName}</td>
+												<td>${item.vendor}</td>
+												<td><#if item.itemRegularCost?lower_case == "not defined">${item.itemRegularCost}<#else>$${item.itemRegularCost}</#if></td>
+												<td><#if item.itemCartonCost?lower_case == "not defined">${item.itemCartonCost}<#else>$${item.itemCartonCost}</#if></td>
+												<td>${item.itemQuantity}</td>
+												<td>${item.itemBackOrderQuantity}</td>
+												<td>${item.itemMinQuantity}</td>
+												<td><input class="form-check-input" type="checkbox" /></td>
+											</tr>
+											<tr>
+												<td colspan="12" class="hiddenRow">
+													<div class="accordian-body collapse" id=${item.itemID}>
+														<table class="table table-striped">
+															<thead>
+																<tr class="info">
+																	<th>Sales Order Number</th>
+																	<th>Sales Order Date</th>
+																	<th>Customer</th>
+																	<th>Route Code</th>
+																	<th>Route Code Desc</th>
+																	<th>Quantity</th>
+																	<th>Backorder Quantity</th>
+																	<th>Select</th>
 																</tr>
-															</#list>
-														</tbody>
-													</table>
-												</div>
-											</td>
-										</tr>
+															</thead>
+															<tbody>
+																<#list item.salesOrderLines as itemLine>
+																	<tr>
+																		<td><a style="color: rgb(37,85,153)" href=${itemLine.soURL} target="_blank" rel="noopener noreferrer">${itemLine.salesOrderNumber}</a></td>
+																		<td>${itemLine.salesOrderDate}</td>
+																		<td>${itemLine.customer}</td>
+																		<td>${itemLine.routeCode}</td>
+																		<td>${itemLine.routeCodeDesc}</td>
+																		<td>${itemLine.itemLineQuantity}</td>
+																		<td>${itemLine.itemLineBackOrderQuantity}</td>
+																		<td><input class="form-check-input" type="checkbox" value=${itemLine.rowValue} id=${itemLine.chkID} /></td>
+																	</tr>
+																</#list>
+															</tbody>
+														</table>
+													</div>
+												</td>
+											</tr>
+										</#if>			
 									</#list>                              
 								</tbody>
 							</table>
