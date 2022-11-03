@@ -155,8 +155,10 @@ define(['N/runtime', 'N/record', 'N/url', 'N/ui/serverWidget', 'N/search', './Li
          */
         const getData = (params) => {
             let itemData = [];
-            let resultItemsData = getItems(params);
-            itemData = getSalesOrdersFromItems(resultItemsData);
+            if(params.vendorsData.length > 0){
+                let resultItemsData = getItems(params);
+                itemData = getSalesOrdersFromItems(resultItemsData);
+            }
             return {data:itemData, totalItems: itemData.length};
         }
 
@@ -534,34 +536,36 @@ define(['N/runtime', 'N/record', 'N/url', 'N/ui/serverWidget', 'N/search', './Li
                 return true;
             });
 
-            const accountNumberSearchObj = search.create({
-                type: "customrecord_bsp_isg_account_number",
-                filters:
-                [
-                   ["custrecord_bsp_isg_parent_trading_partn","anyof", vendors.map(v => v.tradingPartnerID)]
-                ],
-                columns:
-                [
-                   search.createColumn({name: "custrecord_bsp_isg_carton_buy_acct", label: "Carton Buy"}),
-                   search.createColumn({name: "custrecord_bsp_isg_parent_trading_partn", label: "Trading Partner"})
-                ]
-             });
-
-             accountNumberSearchObj.run().each(function(result){
-                let accountID = result.id;
-                let isCartonBuy = result.getValue({name: 'custrecord_bsp_isg_carton_buy_acct'});
-                let tradingPartnerID = result.getValue({name: 'custrecord_bsp_isg_parent_trading_partn'});
-                let vendorIndex = findVendorInListBy(vendors, tradingPartnerID, "tradingPartnerID");
-                if(vendorIndex >= 0){
-                    if(isCartonBuy){
-                        vendors[vendorIndex].accounts.cartonBuy.push(accountID);
-                    }else{
-                        vendors[vendorIndex].accounts.regularAccount.push(accountID);
+            if(vendors.length > 0){
+                const accountNumberSearchObj = search.create({
+                    type: "customrecord_bsp_isg_account_number",
+                    filters:
+                    [
+                       ["custrecord_bsp_isg_parent_trading_partn","anyof", vendors.map(v => v.tradingPartnerID)]
+                    ],
+                    columns:
+                    [
+                       search.createColumn({name: "custrecord_bsp_isg_carton_buy_acct", label: "Carton Buy"}),
+                       search.createColumn({name: "custrecord_bsp_isg_parent_trading_partn", label: "Trading Partner"})
+                    ]
+                 });
+    
+                 accountNumberSearchObj.run().each(function(result){
+                    let accountID = result.id;
+                    let isCartonBuy = result.getValue({name: 'custrecord_bsp_isg_carton_buy_acct'});
+                    let tradingPartnerID = result.getValue({name: 'custrecord_bsp_isg_parent_trading_partn'});
+                    let vendorIndex = findVendorInListBy(vendors, tradingPartnerID, "tradingPartnerID");
+                    if(vendorIndex >= 0){
+                        if(isCartonBuy){
+                            vendors[vendorIndex].accounts.cartonBuy.push(accountID);
+                        }else{
+                            vendors[vendorIndex].accounts.regularAccount.push(accountID);
+                        }
                     }
-                }
-                return true;
-            });
-
+                    return true;
+                });
+            }
+            
             return vendors;
         }
 

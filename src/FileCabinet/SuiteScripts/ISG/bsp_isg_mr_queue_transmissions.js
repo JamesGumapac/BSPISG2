@@ -40,7 +40,6 @@ define(['N/runtime', './Lib/bsp_isg_transmitions_util.js'],
             return transmitions;
         }
 
-        
         /**
          * Defines the function that is executed when the reduce entry point is triggered. This entry point is triggered
          * automatically when the associated map stage is complete. This function is applied to each group in the provided context.

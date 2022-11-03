@@ -1,8 +1,9 @@
 /**
  * @NApiVersion 2.1
  * @NScriptType Suitelet
- */
-define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N/search', 'N/task', './Lib/bsp_isg_transmitions_util.js', './Lib/bsp_isg_trading_partners.js'],
+*/
+
+define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N/search', 'N/task'],
     /**
      * @param{http} http
      * @param{runtime} runtime
@@ -12,7 +13,7 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
      * @param{search} search
      * @param{task} task
     */
-    (http, runtime, record, redirect, serverWidget, search, task, BSPUtil, BSPTradingPartnersUtil) => {
+    (http, runtime, record, redirect, serverWidget, search, task) => {
         /**
          * Defines the Suitelet script trigger point.
          * @param {Object} scriptContext
@@ -86,8 +87,10 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
 
             let vendors = getVendors();
             form = createHeaderFields(form, params, vendors);   
-            let items = getItems(params, vendors);
-            form = createItemSublist(form, items, params, vendors);
+            if(vendors.length > 0){
+                let items = getItems(params, vendors);
+                form = createItemSublist(form, items, params, vendors);
+            }
             return form;
         }
 
@@ -155,45 +158,47 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                 displayType: serverWidget.FieldDisplayType.INLINE
             }).defaultValue = `$${0.00}`;
 
-            let vendorSelected = null;
-            if(params.vendorSelected){
-                let vendorIndex = findVendorInListBy(vendors, params.vendorSelected, "id");
-                vendorSelected = {id: params.vendorSelected, name: vendors[vendorIndex].name, tradingPartnerID: vendors[vendorIndex].tradingPartnerID, accountNumbers: vendors[vendorIndex].accountNumbers};
-            }else{
-                vendorSelected = {id:  vendors[0].id, name:  vendors[0].name,  tradingPartnerID: vendors[0].tradingPartnerID, accountNumbers: vendors[0].accountNumbers}
-            }
-            let minAmountPO = BSPTradingPartnersUtil.getMinAmountCartonPO(vendorSelected.tradingPartnerID);
-            
-            let accountFieldIDs = [];
-            vendorSelected.accountNumbers.forEach(account => {
+            if(vendors.length > 0){
+                let vendorSelected = null;
+                if(params.vendorSelected){
+                    let vendorIndex = findVendorInListBy(vendors, params.vendorSelected, "id");
+                    vendorSelected = {id: params.vendorSelected, name: vendors[vendorIndex].name, tradingPartnerID: vendors[vendorIndex].tradingPartnerID, accountNumbers: vendors[vendorIndex].accountNumbers};
+                }else{
+                    vendorSelected = {id:  vendors[0].id, name:  vendors[0].name,  tradingPartnerID: vendors[0].tradingPartnerID, accountNumbers: vendors[0].accountNumbers}
+                }
+                let minAmountPO = getMinAmountCartonPO(vendorSelected.tradingPartnerID);
+                
+                let accountFieldIDs = [];
+                vendorSelected.accountNumbers.forEach(account => {
+                    form.addField({
+                        id: 'custpage_total_acct_'+account.id,
+                        type: serverWidget.FieldType.TEXT,
+                        label: 'Total for Account: ' + account.name,
+                        container: 'fieldgroup_po_info'
+                    }).updateDisplayType({
+                        displayType: serverWidget.FieldDisplayType.INLINE
+                    }).defaultValue = `$${0.00}`;
+                    accountFieldIDs.push({acctID: account.id, fieldID: `custpage_total_acct_${account.id}`});
+                });
+    
                 form.addField({
-                    id: 'custpage_total_acct_'+account.id,
+                    id: 'custpage_min_total_po_amount',
                     type: serverWidget.FieldType.TEXT,
-                    label: 'Total for Account: ' + account.name,
+                    label: 'Minimum Amount for Purchase Order',
                     container: 'fieldgroup_po_info'
                 }).updateDisplayType({
                     displayType: serverWidget.FieldDisplayType.INLINE
-                }).defaultValue = `$${0.00}`;
-                accountFieldIDs.push({acctID: account.id, fieldID: `custpage_total_acct_${account.id}`});
-            });
-
-            form.addField({
-                id: 'custpage_min_total_po_amount',
-                type: serverWidget.FieldType.TEXT,
-                label: 'Minimum Amount for Purchase Order',
-                container: 'fieldgroup_po_info'
-            }).updateDisplayType({
-                displayType: serverWidget.FieldDisplayType.INLINE
-            }).defaultValue = `$${minAmountPO}`;
-
-            form.addField({
-                id: 'custpage_acct_field_ids',
-                type: serverWidget.FieldType.LONGTEXT,
-                label: 'Account field IDs',
-                container: 'fieldgroup_po_info'
-            }).updateDisplayType({
-                displayType: serverWidget.FieldDisplayType.HIDDEN
-            }).defaultValue = `${JSON.stringify(accountFieldIDs)}`;
+                }).defaultValue = `$${minAmountPO}`;
+    
+                form.addField({
+                    id: 'custpage_acct_field_ids',
+                    type: serverWidget.FieldType.LONGTEXT,
+                    label: 'Account field IDs',
+                    container: 'fieldgroup_po_info'
+                }).updateDisplayType({
+                    displayType: serverWidget.FieldDisplayType.HIDDEN
+                }).defaultValue = `${JSON.stringify(accountFieldIDs)}`;
+            }
 
             /**
              * Field Group Item List
@@ -250,39 +255,41 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                 return true;
             });
 
-            const accountNumberSearchObj = search.create({
-                type: "customrecord_bsp_isg_account_number",
-                filters:
-                [
-                   ["custrecord_bsp_isg_parent_trading_partn","anyof", vendors.map(v => v.tradingPartnerID)],
-                   "AND", 
-                   ["custrecord_bsp_isg_carton_buy_acct","is","T"]
-                ],
-                columns:
-                [
-                   search.createColumn({
-                        name: "name",
-                        sort: search.Sort.ASC,
-                        label: "Name"
-                   }), 
-                   search.createColumn({name: "custrecord_bsp_isg_parent_trading_partn", label: "Trading Partner"})
-                ]
-             });
-
-             accountNumberSearchObj.run().each(function(result){
-                let accountID = result.id;
-                let accountName = result.getValue({name: 'name'});
-                let tradingPartnerID = result.getValue({name: 'custrecord_bsp_isg_parent_trading_partn'});
-
-                let vendorIndex = findVendorInListBy(vendors, tradingPartnerID, "tradingPartnerID");
-                if(vendorIndex >= 0){
-                    let accountNumberIndex = findAccountInList(vendors[vendorIndex].accountNumbers, tradingPartnerID, accountID);
-                    if(accountNumberIndex < 0){
-                        vendors[vendorIndex].accountNumbers.push({id: accountID, name: accountName});
-                    }             
-                }
-                return true;
-            });
+            if(vendors.length > 0){
+                const accountNumberSearchObj = search.create({
+                    type: "customrecord_bsp_isg_account_number",
+                    filters:
+                    [
+                       ["custrecord_bsp_isg_parent_trading_partn","anyof", vendors.map(v => v.tradingPartnerID)],
+                       "AND", 
+                       ["custrecord_bsp_isg_carton_buy_acct","is","T"]
+                    ],
+                    columns:
+                    [
+                       search.createColumn({
+                            name: "name",
+                            sort: search.Sort.ASC,
+                            label: "Name"
+                       }), 
+                       search.createColumn({name: "custrecord_bsp_isg_parent_trading_partn", label: "Trading Partner"})
+                    ]
+                 });
+    
+                 accountNumberSearchObj.run().each(function(result){
+                    let accountID = result.id;
+                    let accountName = result.getValue({name: 'name'});
+                    let tradingPartnerID = result.getValue({name: 'custrecord_bsp_isg_parent_trading_partn'});
+    
+                    let vendorIndex = findVendorInListBy(vendors, tradingPartnerID, "tradingPartnerID");
+                    if(vendorIndex >= 0){
+                        let accountNumberIndex = findAccountInList(vendors[vendorIndex].accountNumbers, tradingPartnerID, accountID);
+                        if(accountNumberIndex < 0){
+                            vendors[vendorIndex].accountNumbers.push({id: accountID, name: accountName});
+                        }             
+                    }
+                    return true;
+                });
+            }
 
             return vendors;
         }
@@ -720,7 +727,7 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                     ]
                 });
 
-                let resultSearch = BSPUtil.searchAll(carton_buy_item_soSearchObj);
+                let resultSearch = searchAll(carton_buy_item_soSearchObj);
                 resultSearch.forEach(element => {
                     let itemLineUniqueID = element.getValue("custrecord_bsp_isg_item_line_unique_id");
                     itemList = processItemsByUniqueID(itemList, itemLineUniqueID);
@@ -1090,6 +1097,66 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
         }
 
         /**
+         * Get all results from a saved search
+         * @param {*} objSavedSearch 
+         * @returns 
+        */
+        function searchAll(objSavedSearch) {
+            let title = "searchAll";
+            let arrReturnSearchResults = [];
+            try {
+                let objResultset = objSavedSearch.run();
+                let intSearchIndex = 0;
+                let objResultSlice = null;
+                let maxSearchReturn = 1000;
+
+                let maxResults = 0;
+
+                do {
+                    let start = intSearchIndex;
+                    let end = intSearchIndex + maxSearchReturn;
+                    if (maxResults && maxResults <= end) {
+                        end = maxResults;
+                    }
+                    objResultSlice = objResultset.getRange(start, end);
+
+                    if (!objResultSlice) {
+                        break;
+                    }
+
+                    arrReturnSearchResults = arrReturnSearchResults.concat(objResultSlice);
+                    intSearchIndex = intSearchIndex + objResultSlice.length;
+
+                    if (maxResults && maxResults == intSearchIndex) {
+                        break;
+                    }
+                } while (objResultSlice.length >= maxSearchReturn);
+            } catch (error) {
+                log.error(title, error.toString());
+            }
+            return arrReturnSearchResults;
+        }
+
+        /**
+         * It takes a trading partner ID and returns the minimum amount for a carton PO.
+         * @param tradingPartnerID - The ID of the trading partner record.
+         * @returns The value of the field custrecord_bsp_isg_min_amount_carton_po
+        */
+        function getMinAmountCartonPO(tradingPartnerID){
+            let minAmount = 0.00;
+
+            let tpFieldsObj = search.lookupFields({
+                type: "customrecord_bsp_isg_trading_partner",
+                id: tradingPartnerID,
+                columns: 'custrecord_bsp_isg_min_amount_carton_po'
+            });
+            if(tpFieldsObj && tpFieldsObj.custrecord_bsp_isg_min_amount_carton_po){
+                minAmount = tpFieldsObj.custrecord_bsp_isg_min_amount_carton_po;
+            }
+            return minAmount;
+        }
+
+        /**
          * It returns an object with the script parameters
          * @returns An object with two properties: script_client and suitelet_title
         */
@@ -1098,9 +1165,7 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
             let objParams = {
                 script_client: script.getParameter('custscript_bsp_isg_script_client'),
                 suitelet_title: script.getParameter('custscript_bsp_isg_suitelet_title')
-            }
-
-            
+            }     
             return objParams;
         }
 

@@ -6,26 +6,6 @@
         <path>~/FileCabinet/SuiteScripts/*</path>
     </files>
     <objects>
-        <path>~/Objects/customrecord_bsp_isg_trading_partner.xml</path>
-        <path>~/Objects/customrecord_bsp_isg_account_number.xml</path>
-        <path>~/Objects/customrecord_bsp_isg_tp_adot_options.xml</path>
-        <path>~/Objects/customrecord_bsp_isg_tp_location.xml</path>
-        <path>~/Objects/custentity_bsp_isg_trading_part_settings.xml</path>
-        <path>~/Objects/custbody_bsp_isg_aopd.xml</path>
-		<path>~/Objects/custbody_bsp_isg_lb_order_number.xml</path>
-		<path>~/Objects/custbody_bsp_isg_lb_payment_method.xml</path> 
-		<path>~/Objects/custbody_bsp_isg_lb_po_payment.xml</path>
-		<path>~/Objects/custbody_bsp_isg_lb_purchase_order_num.xml</path> 
-		<path>~/Objects/custcentertab_bsp_isg.xml</path>
-		<path>~/Objects/custcol_bsp_isg_lb_line_item_id.xml</path>
-		<path>~/Objects/custcol_bsp_isg_manual_po_id.xml</path>
-		<path>~/Objects/custentity_bsp_isg_acct_address.xml</path>
-		<path>~/Objects/custentity_bsp_isg_essendant_unique_id.xml</path>
-		<path>~/Objects/customlist_bsp_isg_account_numbers.xml</path>
-		<path>~/Objects/customlist_bsp_isg_order_type.xml</path>
-		<path>~/Objects/customlist_bsp_isg_po_transm_status.xml</path>
-		<path>~/Objects/customlist_bsp_isg_transm_group_status.xml</path> 
-		<path>~/Objects/customlist_bsp_isg_transm_options.xml</path>
 		<path>~/Objects/customscript_bsp_isg_mr_queue_transm_sch.xml</path>
 		<path>~/Objects/customscript_bsp_isg_create_item_price.xml</path>
 		<path>~/Objects/customscript_bsp_isg_esse_update_price.xml</path>
@@ -55,15 +35,6 @@
 		<path>~/Objects/customscript_bsp_isg_ue_tp_vendor_src.xml</path>
 		<path>~/Objects/customscript_bsp_isg_ue_upload_order.xml</path>
 		<path>~/Objects/customscript_bsp_isg_as2_tran_ack.xml</path>
-		<path>~/Objects/custbody_bsp_isg_aopd.xml</path>
-		<path>~/Objects/custbody_bsp_isg_lb_order_number.xml</path>
-		<path>~/Objects/custbody_bsp_isg_lb_payment_method.xml</path> 
-		<path>~/Objects/custbody_bsp_isg_lb_po_payment.xml</path>
-		<path>~/Objects/custbody_bsp_isg_lb_purchase_order_num.xml</path> 
-		<path>~/Objects/custcol_bsp_isg_lb_line_item_id.xml</path>
-		<path>~/Objects/custcol_bsp_isg_manual_po_id.xml</path>
-		<path>~/Objects/custentity_bsp_isg_acct_address.xml</path>
-		<path>~/Objects/custentity_bsp_isg_essendant_unique_id.xml</path>
     </objects>
     <translationimports>
         <path>~/Translations/*</path>

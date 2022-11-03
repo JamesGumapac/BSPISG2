@@ -51,11 +51,19 @@
 		<path>~/Objects/customlist_bsp_isg_po_transm_status.xml</path>
 		<path>~/Objects/customlist_bsp_isg_transm_group_status.xml</path> 
 		<path>~/Objects/customlist_bsp_isg_transm_options.xml</path>	
+		<path>~/Objects/custbody_bsp_isg_aopd.xml</path>
+		<path>~/Objects/custbody_bsp_isg_lb_order_number.xml</path>
+		<path>~/Objects/custbody_bsp_isg_lb_payment_method.xml</path> 
+		<path>~/Objects/custbody_bsp_isg_lb_po_payment.xml</path>
+		<path>~/Objects/custbody_bsp_isg_lb_purchase_order_num.xml</path> 
+		<path>~/Objects/custcol_bsp_isg_lb_line_item_id.xml</path>
+		<path>~/Objects/custcol_bsp_isg_manual_po_id.xml</path>
+		<path>~/Objects/custentity_bsp_isg_acct_address.xml</path>
+		<path>~/Objects/custentity_bsp_isg_essendant_unique_id.xml</path>
 		<path>~/Objects/customscript_bsp_isg_mr_queue_transm_sch.xml</path>
 		<path>~/Objects/customrecord_bsp_isg_transm_schedule.xml</path> 
 		<path>~/Objects/custcentercategory_bsp_isg_settings.xml</path>
 		<path>~/Objects/custcentercategory_bsp_isg_integration_recs.xml</path>
-
     </objects>
     <translationimports>
         <path>~/Translations/*</path>
