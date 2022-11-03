@@ -33,6 +33,9 @@ function(url) {
                 fieldId: 'custpage_trading_partner'
             });
 
+            let chkItemsCartonBuy = suitelet.getValue({
+                fieldId: 'custom_chk_items_wl_carton_buy'
+            });
             let chkItemsReachedMinQty = suitelet.getValue({
                 fieldId: 'custom_chk_reached_min_qty'
             });
@@ -43,7 +46,8 @@ function(url) {
                 custparam_selected_vendor: selectedVendorID,
                 custparam_selected_vendor_name: selectedVendorName,
                 custparam_chk_items_reached_min_qty: chkItemsReachedMinQty,
-                custparam_chk_items_closeto_min_qty: chkItemsCloseToMinQty
+                custparam_chk_items_closeto_min_qty: chkItemsCloseToMinQty,
+                custparam_chk_items_wl_carton_buy: chkItemsCartonBuy
             };
             let stSuiteletUrl = url.resolveScript({
                 scriptId: 'customscript_bsp_isg_sl_excl_from_autotr',

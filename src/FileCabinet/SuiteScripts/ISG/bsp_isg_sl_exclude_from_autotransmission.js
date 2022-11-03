@@ -30,9 +30,9 @@ define(['N/runtime', 'N/record', 'N/url', 'N/ui/serverWidget', 'N/search', './Li
                         },
                         vendorsData : vendorsData,
                         checkboxes : {
-                            chkAll : objParameters.custparam_chk_all,
                             chkItemsReachedMinQty : objParameters.custparam_chk_items_reached_min_qty,
-                            chkItemsCloseToMinQty : objParameters.custparam_chk_items_closeto_min_qty
+                            chkItemsCloseToMinQty : objParameters.custparam_chk_items_closeto_min_qty,
+                            chkItemsCartonBuy : objParameters.custparam_chk_items_wl_carton_buy
                         }
                     }
 
@@ -125,6 +125,16 @@ define(['N/runtime', 'N/record', 'N/url', 'N/ui/serverWidget', 'N/search', './Li
             });
       
             let checkboxes = params.checkboxes;
+            log.debug("checkboxes", JSON.stringify(checkboxes));
+            let fieldChkItemsCartonBuy = form.addField({
+                id: "custom_chk_items_wl_carton_buy",
+                type: serverWidget.FieldType.CHECKBOX,
+                label: "Show W&L assigned Carton buy items Only",
+                container: 'fieldgroup_filter_info'
+            });
+            if(isChecked(checkboxes, "chkItemsCartonBuy")){
+                fieldChkItemsCartonBuy.defaultValue = 'T';
+            }
 
             let fieldChkItemsReachedMinQty = form.addField({
                 id: "custom_chk_reached_min_qty",
