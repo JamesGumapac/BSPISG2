@@ -2,12 +2,4 @@
   <center>BASIC</center>
   <centertab>[scriptid=custcentertab_bsp_isg]</centertab>
   <label>Orders</label>
-  <links>
-    <link>
-      <linklabel>Sales Orders Not Processed</linklabel>
-      <linkobject>[scriptid=customsearch_bsp_isg_so_not_processed]</linkobject>
-      <linktasktype>SRCH_RSLT</linktasktype>
-      <shortlist>F</shortlist>
-    </link>
-  </links>
 </centercategory>

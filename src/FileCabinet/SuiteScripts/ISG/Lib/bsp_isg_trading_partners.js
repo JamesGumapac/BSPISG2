@@ -187,25 +187,6 @@
         });
     }
 
-    /**
-     * It takes a trading partner ID and returns the minimum amount for a carton PO.
-     * @param tradingPartnerID - The ID of the trading partner record.
-     * @returns The value of the field custrecord_bsp_isg_min_amount_carton_po
-    */
-    function getMinAmountCartonPO(tradingPartnerID){
-        let minAmount = 0.00;
-
-        let tpFieldsObj = search.lookupFields({
-            type: "customrecord_bsp_isg_trading_partner",
-            id: tradingPartnerID,
-            columns: 'custrecord_bsp_isg_min_amount_carton_po'
-        });
-        if(tpFieldsObj && tpFieldsObj.custrecord_bsp_isg_min_amount_carton_po){
-            minAmount = tpFieldsObj.custrecord_bsp_isg_min_amount_carton_po;
-        }
-        return minAmount;
-    }
-
     function getPricePlanID(itemID, supplier, account){
         let planID = null;
         const customrecord_bsp_isg_item_acct_dataSearchObj = search.create({

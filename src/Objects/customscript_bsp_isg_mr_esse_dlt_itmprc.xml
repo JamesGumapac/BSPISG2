@@ -150,8 +150,8 @@
       <custscript_bsp_isg_esse_pen_fol_id>11279</custscript_bsp_isg_esse_pen_fol_id>
       <custscript_bsp_isg_esse_script_id>customscript_bsp_isg_esse_update_price</custscript_bsp_isg_esse_script_id>
       <custscript_bsp_isg_esse_scrpt_dep>customdeploy_bsp_isg_esse_update_pricing</custscript_bsp_isg_esse_scrpt_dep>
-      <custscript_bsp_isg_esse_trading_partner>[scriptid=customrecord_bsp_isg_trading_partner.val_864754_t927173_934]</custscript_bsp_isg_esse_trading_partner>
-      <custscript_bsp_isg_esse_vendor>[ACCOUNT_SPECIFIC_VALUE]</custscript_bsp_isg_esse_vendor>
+      <custscript_bsp_isg_esse_trading_partner></custscript_bsp_isg_esse_trading_partner>
+      <custscript_bsp_isg_esse_vendor></custscript_bsp_isg_esse_vendor>
       <isdeployed>T</isdeployed>
       <loglevel>DEBUG</loglevel>
       <queueallstagesatonce>T</queueallstagesatonce>

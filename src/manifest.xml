@@ -29,26 +29,17 @@
       <feature required="true">UNITSOFMEASURE</feature>
       <feature required="false">WEBSERVICES</feature>
       <feature required="false">ISSUEDB</feature>
+      <feature required="false">CREATESUITEBUNDLES</feature>
     </features>
     <objects>
-      <object>customsearch_bsp_isg_lb_so_imported</object>
-      <object>customlist_bsp_isg_carton_buy_status</object>
-      <object>custbody_bsp_gdn_apply_sr_allowance</object>
-      <object>custbody_bsp_gdn_apply_sp_allowance</object>
-      <object>custbody_bsp_gdn_sp_allowance_amount</object>
-      <object>custtab_bsp_isg_item_information</object>
-      <object>custbody_online_quote_amount</object>
-      <object>customrecord_elite_extra_setting</object>
-      <object>customrole_bsp_isg_as2_service</object>
-      <object>customscript_bsp_isg_mr_queue_transm_sch</object>
-      <object>custbody_online_order_number</object>
-      <object>custbody_bsp_gdn_sr_allowance_amount</object>
-      <object>customsearch_bsp_isg_cb_po_created</object>
-      <object>custbody_bsp_gdn_recalc_allowance</object>
-      <object>custbody_bsp_so_vendor</object>
-      <object>custbody_bsp_gdn_sample_order</object>
-      <object>custbody_bsp_gdn_allowance_overridden</object>
-      <object>custbody_online_order_date</object>
+        <object>customrecord_bsp_isg_trading_partner</object>
+        <object>customrecord_bsp_isg_tp_location.custrecord_bsp_isg_parent_tp</object>
+        <object>customrecord_bsp_isg_tp_adot_options.custrecord_bsp_isg_adot_parent_tp</object>
+        <object>customrecord_bsp_isg_account_number.custrecord_bsp_isg_parent_trading_partn</object>
+        <object>customrecord_bsp_isg_tp_location</object>
+        <object>customrecord_bsp_isg_tp_adot_options</object>
+        <object>customrecord_bsp_isg_account_number</object>
+        <object>custentity_bsp_isg_trading_part_settings</object>
     </objects>
     <files>
       <file></file>

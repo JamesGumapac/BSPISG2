@@ -175,11 +175,11 @@
       <buffersize>1</buffersize>
       <concurrencylimit>2</concurrencylimit>
       <custscript_bsp_isg_spr_pending_folder>11281</custscript_bsp_isg_spr_pending_folder>
-      <custscript_bsp_isg_spr_up_acc_num>[scriptid=customrecord_bsp_isg_account_number.val_917106_t927173_927]</custscript_bsp_isg_spr_up_acc_num>
+      <custscript_bsp_isg_spr_up_acc_num></custscript_bsp_isg_spr_up_acc_num>
       <custscript_bsp_isg_spr_up_done_folder>11277</custscript_bsp_isg_spr_up_done_folder>
       <custscript_bsp_isg_spr_up_file_id></custscript_bsp_isg_spr_up_file_id>
-      <custscript_bsp_isg_spr_up_trdng_prtnr>[scriptid=customrecord_bsp_isg_trading_partner.val_872258_t927173_127]</custscript_bsp_isg_spr_up_trdng_prtnr>
-      <custscript_bsp_isg_spr_up_vendor>[ACCOUNT_SPECIFIC_VALUE]</custscript_bsp_isg_spr_up_vendor>
+      <custscript_bsp_isg_spr_up_trdng_prtnr></custscript_bsp_isg_spr_up_trdng_prtnr>
+      <custscript_bsp_isg_spr_up_vendor></custscript_bsp_isg_spr_up_vendor>
       <isdeployed>T</isdeployed>
       <loglevel>DEBUG</loglevel>
       <queueallstagesatonce>T</queueallstagesatonce>

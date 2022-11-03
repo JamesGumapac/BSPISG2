@@ -6,7 +6,64 @@
         <path>~/FileCabinet/SuiteScripts/*</path>
     </files>
     <objects>
-        <path>~/Objects/*</path>
+		<path>~/Objects/customlist_bsp_isg_transmition_status.xml</path>
+		<path>~/Objects/customlist_bsp_isg_lb_operation.xml</path>
+		<path>~/Objects/customlist_bsp_isg_lb_order_status.xml</path> 
+		<path>~/Objects/customrecord_bsp_isg_lb_error_logs.xml</path>
+		<path>~/Objects/customrecord_bsp_isg_lb_inbound_queue.xml</path>
+		<path>~/Objects/customrecord_bsp_isg_route_code.xml</path> 
+		<path>~/Objects/customrecord_bsp_isg_lb_integ_settings.xml</path>
+		<path>~/Objects/customrecord_bsp_isg_lb_mapped_keys.xml</path>
+		<path>~/Objects/customrecord_bsp_isg_lb_outbound_queue.xml</path> 
+		<path>~/Objects/customrecord_bsp_isg_lb_rec_mapper.xml</path> 
+		<path>~/Objects/customrecord_bsp_isg_lb_service_logs.xml</path> 
+		<path>~/Objects/customrecord_bsp_isg_transm_error_logs.xml</path> 
+		<path>~/Objects/customrecord_bsp_isg_transmission.xml</path> 
+		<path>~/Objects/customrecord_bsp_isg_transmission_group.xml</path> 
+		<path>~/Objects/customrecord_bsp_isg_transmission_queue.xml</path>
+		<path>~/Objects/customrecord_bsp_isg_elite_extra_setting.xml</path>
+		<path>~/Objects/customrecord_bsp_isg_carton_buy_item_so.xml</path>
+		<path>~/Objects/customlist_bsp_isg_carton_buy_status.xml</path> 
+		<path>~/Objects/customrecord_bsp_isg_cartonbuy_items_req.xml</path>
+		<path>~/Objects/customrecord_bsp_isg_cust_acct_override.xml</path> 
+		<path>~/Objects/customrecord_bsp_isg_deliveryzone.xml</path>
+		<path>~/Objects/customrecord_bsp_isg_edi_service_logs.xml</path> 
+		<path>~/Objects/customrecord_bsp_isg_edi_settings.xml</path>
+		<path>~/Objects/customrecord_bsp_isg_item_acct_data.xml</path>
+		<path>~/Objects/customsearch_bsp_isg_carton_buy_po.xml</path>
+		<path>~/Objects/custtab_bsp_isg_elite_extra.xml</path>
+		<path>~/Objects/custtab_bsp_isg_item_information.xml</path>
+		<path>~/Objects/custtab_bsp_isg_item_transmission.xml</path>
+		<path>~/Objects/custtab_bsp_isg_lb_item.xml</path>
+		<path>~/Objects/custtab_bsp_isg_lb_transaction.xml</path>
+		<path>~/Objects/custtab_bsp_isg_po_transmission.xml</path>
+		<path>~/Objects/custtab_bsp_isg_transmission.xml</path>
+		<path>~/Objects/custtab_bsp_isg_transmissions.xml</path>
+		<path>~/Objects/custlink_bsp_isg_carton_buy_create_po.xml</path>
+		<path>~/Objects/custlink_bsp_isg_items_pending_transmission.xml</path> 
+		<path>~/Objects/custcentertab_bsp_isg.xml</path> 
+		<path>~/Objects/custcentercategory_bsp_isg_carton_buy_program.xml</path>
+		<path>~/Objects/custcentercategory_bsp_isg_exclude_from_auto_transm.xml</path>
+		<path>~/Objects/custcentercategory_bsp_isg_logicblock.xml</path>
+		<path>~/Objects/custcentercategory_bsp_isg_so_not_processed.xml</path>
+		<path>~/Objects/custcentercategory_bsp_isg_transmissions_setup.xml</path>
+		<path>~/Objects/customlist_bsp_isg_order_type.xml</path>
+		<path>~/Objects/customlist_bsp_isg_po_transm_status.xml</path>
+		<path>~/Objects/customlist_bsp_isg_transm_group_status.xml</path> 
+		<path>~/Objects/customlist_bsp_isg_transm_options.xml</path>	
+		<path>~/Objects/custbody_bsp_isg_aopd.xml</path>
+		<path>~/Objects/custbody_bsp_isg_lb_order_number.xml</path>
+		<path>~/Objects/custbody_bsp_isg_lb_payment_method.xml</path> 
+		<path>~/Objects/custbody_bsp_isg_lb_po_payment.xml</path>
+		<path>~/Objects/custbody_bsp_isg_lb_purchase_order_num.xml</path> 
+		<path>~/Objects/custcol_bsp_isg_lb_line_item_id.xml</path>
+		<path>~/Objects/custcol_bsp_isg_manual_po_id.xml</path>
+		<path>~/Objects/custentity_bsp_isg_acct_address.xml</path>
+		<path>~/Objects/custentity_bsp_isg_essendant_unique_id.xml</path>
+		<path>~/Objects/customscript_bsp_isg_mr_queue_transm_sch.xml</path>
+		<path>~/Objects/customrecord_bsp_isg_transm_schedule.xml</path> 
+		<path>~/Objects/custcentercategory_bsp_isg_settings.xml</path>
+		<path>~/Objects/custcentercategory_bsp_isg_integration_recs.xml</path>
     </objects>
     <translationimports>
         <path>~/Translations/*</path>
