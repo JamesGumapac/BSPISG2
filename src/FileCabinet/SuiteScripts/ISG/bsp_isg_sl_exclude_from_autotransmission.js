@@ -30,9 +30,9 @@ define(['N/runtime', 'N/record', 'N/url', 'N/ui/serverWidget', 'N/search', './Li
                         },
                         vendorsData : vendorsData,
                         checkboxes : {
-                            chkAll : objParameters.custparam_chk_all,
                             chkItemsReachedMinQty : objParameters.custparam_chk_items_reached_min_qty,
-                            chkItemsCloseToMinQty : objParameters.custparam_chk_items_closeto_min_qty
+                            chkItemsCloseToMinQty : objParameters.custparam_chk_items_closeto_min_qty,
+                            chkItemsCartonBuy : objParameters.custparam_chk_items_wl_carton_buy
                         }
                     }
 
@@ -125,6 +125,15 @@ define(['N/runtime', 'N/record', 'N/url', 'N/ui/serverWidget', 'N/search', './Li
             });
       
             let checkboxes = params.checkboxes;
+            let fieldChkItemsCartonBuy = form.addField({
+                id: "custom_chk_items_wl_carton_buy",
+                type: serverWidget.FieldType.CHECKBOX,
+                label: "Show W&L assigned Carton buy items Only",
+                container: 'fieldgroup_filter_info'
+            });
+            if(isChecked(checkboxes, "chkItemsCartonBuy")){
+                fieldChkItemsCartonBuy.defaultValue = 'T';
+            }
 
             let fieldChkItemsReachedMinQty = form.addField({
                 id: "custom_chk_reached_min_qty",
@@ -157,7 +166,7 @@ define(['N/runtime', 'N/record', 'N/url', 'N/ui/serverWidget', 'N/search', './Li
             let itemData = [];
             if(params.vendorsData.length > 0){
                 let resultItemsData = getItems(params);
-                itemData = getSalesOrdersFromItems(resultItemsData);
+                itemData = getSalesOrdersFromItems(params, resultItemsData);
             }
             return {data:itemData, totalItems: itemData.length};
         }
@@ -180,20 +189,25 @@ define(['N/runtime', 'N/record', 'N/url', 'N/ui/serverWidget', 'N/search', './Li
                 vendor = {id:  vendorsData[0].id, name:  vendorsData[0].name, accounts: vendorsData[0].accounts}
             }
 
+            let itemFilters = [
+                ["type","anyof","SalesOrd"], 
+                "AND", 
+                ["mainline","is","F"], 
+                "AND", 
+                ["purchaseorder","anyof","@NONE@"], 
+                "AND", 
+                ["custcol_bsp_isg_exclude_auto_transm","anyof","1"],
+                "AND", 
+                ["formulanumeric: {quantity} - NVL({quantitycommitted}, 0)","greaterthan","0"]
+            ];
+
+            if(isChecked(checkboxes, "chkItemsCartonBuy")){
+                itemFilters.push("AND", ["custcol_bsp_order_shipment_type","anyof","2"]);
+            }
+
             const salesOrderSearchObj = search.create({
                 type: "salesorder",
-                filters:
-                [
-                    ["type","anyof","SalesOrd"], 
-                    "AND", 
-                    ["mainline","is","F"], 
-                    "AND", 
-                    ["purchaseorder","anyof","@NONE@"], 
-                    "AND", 
-                    ["custcol_bsp_isg_exclude_auto_transm","anyof","1"],
-                    "AND", 
-                    ["formulanumeric: {quantity} - NVL({quantitycommitted}, 0)","greaterthan","0"]
-                ],
+                filters: itemFilters,
                 columns:
                 [
                     search.createColumn({
@@ -240,7 +254,6 @@ define(['N/runtime', 'N/record', 'N/url', 'N/ui/serverWidget', 'N/search', './Li
             });
 
             if(itemData.length > 0) {
-
                 const item_acct_dataSearchObj = search.create({
                     type: "customrecord_bsp_isg_item_acct_data",
                     filters:
@@ -344,15 +357,15 @@ define(['N/runtime', 'N/record', 'N/url', 'N/ui/serverWidget', 'N/search', './Li
                 itemsPricingData.forEach(item => {
                     let itemID = item.itemID;
                     let vendorName = item.vendorName;
-                    let itemMinQuantity = item.accounts.cartonBuy.minQuantity || "Not Defined";
-                    let itemCartonCost = item.accounts.cartonBuy.itemCost || "Not Defined";
-                    let itemRegularCost = item.accounts.regularAccount.itemCost || "Not Defined";
+                    let itemMinQuantity = item.accounts.cartonBuy.minQuantity || "Not defined";
+                    let itemCartonCost = item.accounts.cartonBuy.itemCost || "Not defined";
+                    let itemRegularCost = item.accounts.regularAccount.itemCost || "Not defined";
                      
                     let itemIndex = findItemIndex(itemData, itemID);
                     if(itemIndex >= 0){
                         let itemMinQuantityPercent = ((itemData[itemIndex].itemBackOrderQuantity * 100) / itemMinQuantity);
-                        let closeToMinQty = (itemMinQuantityPercent >= parseFloat(minQuantityPercentage) && itemMinQuantityPercent < 100);
-                        let equalToMinQty = (parseInt(itemData[itemIndex].itemBackOrderQuantity) >= parseInt(itemMinQuantity));
+                        let closeToMinQty = itemMinQuantity == "Not defined" ? false :  (itemMinQuantityPercent >= parseFloat(minQuantityPercentage) && itemMinQuantityPercent < 100);
+                        let equalToMinQty = itemMinQuantity == "Not defined" ? false : (parseInt(itemData[itemIndex].itemBackOrderQuantity) >= parseInt(itemMinQuantity));
                         let rowColor = (equalToMinQty ? "background-color:#b5e7a0" : (closeToMinQty ? "background-color:yellow" : null));
                         
                         if(!isChecked(checkboxes, "chkItemsReachedMinQty") && !isChecked(checkboxes, "chkItemsCloseToMinQty")){
@@ -394,7 +407,28 @@ define(['N/runtime', 'N/record', 'N/url', 'N/ui/serverWidget', 'N/search', './Li
                         }
                     }
                 });
+                let parcialData = itemData;
+                log.debug("itemData", JSON.stringify(itemData));
+                if(isChecked(checkboxes, "chkItemsCartonBuy")){
+                    for (let index = itemData.length - 1; index >= 0 ; index--) {
+                        const element = itemData[index];
+                        if(element.itemCartonCost == "Not defined"){
+                            itemData.splice(index, 1)
+                        }
+                    }
+                }
+
+                if(isChecked(checkboxes, "chkItemsReachedMinQty") || isChecked(checkboxes, "chkItemsCloseToMinQty")){
+                    for (let index = itemData.length - 1; index >= 0 ; index--) {
+                        const element = parcialData[index];
+                        if(element.itemMinQuantity == "Not defined"){
+                            itemData.splice(index, 1)
+                        }
+                    }
+                }
+                log.debug("itemData", JSON.stringify(itemData));
             }
+            
             return itemData;
         }
 
@@ -404,25 +438,31 @@ define(['N/runtime', 'N/record', 'N/url', 'N/ui/serverWidget', 'N/search', './Li
          * @param resultItemsData - This is the result of the getItemsFromSearch function.
          * @returns An array of objects.
         */
-        const getSalesOrdersFromItems = (resultItemsData) => {
+        const getSalesOrdersFromItems = (params, resultItemsData) => {
             let itemData = resultItemsData;
+            let checkboxes = params.checkboxes;
             if(itemData.length > 0){
+                let itemFilters = [
+                    ["type","anyof","SalesOrd"], 
+                    "AND", 
+                    ["mainline","is","F"], 
+                    "AND", 
+                    ["purchaseorder","anyof","@NONE@"], 
+                    "AND", 
+                    ["custcol_bsp_isg_exclude_auto_transm","anyof","1"], 
+                    "AND",
+                    ["formulanumeric: {quantity} - NVL({quantitycommitted}, 0)","greaterthan","0"],
+                    "AND", 
+                    ["item","anyof", itemData.map(i => i.itemID)]
+                 ];
+    
+                if(isChecked(checkboxes, "chkItemsCartonBuy")){
+                    itemFilters.push("AND", ["custcol_bsp_order_shipment_type","anyof","2"]);
+                }
+
                 const salesOrderLinesSearchObj = search.create({
                     type: "salesorder",
-                    filters:
-                    [
-                       ["type","anyof","SalesOrd"], 
-                       "AND", 
-                       ["mainline","is","F"], 
-                       "AND", 
-                       ["purchaseorder","anyof","@NONE@"], 
-                       "AND", 
-                       ["custcol_bsp_isg_exclude_auto_transm","anyof","1"], 
-                       "AND",
-                       ["formulanumeric: {quantity} - NVL({quantitycommitted}, 0)","greaterthan","0"],
-                       "AND", 
-                       ["item","anyof", itemData.map(i => i.itemID)]
-                    ],
+                    filters: itemFilters,
                     columns:
                     [
                         search.createColumn({name: "tranid", label: "Document Number"}),

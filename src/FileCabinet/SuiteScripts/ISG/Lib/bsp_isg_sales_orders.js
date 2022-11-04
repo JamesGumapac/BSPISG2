@@ -131,6 +131,18 @@
         });
         lineData.push({fieldID: "custcol_bsp_isg_lb_line_item_id", fieldValue: logicblockID});
 
+        let transmissionTypeID = soRec.getCurrentSublistValue({
+            sublistId: 'item',
+            fieldId: 'custcol_bsp_isg_exclude_auto_transm'
+        });
+        lineData.push({fieldID: "custcol_bsp_isg_exclude_auto_transm", fieldValue: transmissionTypeID});
+
+        let shipmentTypeID = soRec.getCurrentSublistValue({
+            sublistId: 'item',
+            fieldId: 'custcol_bsp_order_shipment_type'
+        });
+        lineData.push({fieldID: "custcol_bsp_order_shipment_type", fieldValue: shipmentTypeID});
+
         return lineData;
     }
 
