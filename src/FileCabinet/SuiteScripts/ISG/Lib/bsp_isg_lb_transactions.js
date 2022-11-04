@@ -81,9 +81,10 @@
     let objCustomerFields = BSPLBEntities.getFieldsFromCustomer(
       customerRecordResult.nsID
     );
-    let routeCode = objCustomerFields.routeCode;
-    let accountNumber = objCustomerFields.accountNumber;
-    let aopdVendor = objCustomerFields.aopdVendor;
+
+    let routeCode = objCustomerFields.addressSubRecord[0].routeCode;
+    let accountNumber = objCustomerFields.addressSubRecord[0].accountNumber;
+    let aopdVendor = objCustomerFields.addressSubRecord[0].aopdVendor;
 
     if (BSPLBUtils.isEmpty(routeCode)) {
       routeCode = settings.custrecord_bsp_lb_default_route_code[0].value;
@@ -94,14 +95,14 @@
         value: routeCode,
       });
     }
-    log.debug('objCustomerFields',objCustomerFields);
+ 
     if(aopdVendor){
       transactionRecord.setValue({
         fieldId: "custbody_bsp_isg_aopd",
         value: true
       })
-
     }
+    let aopdChecker = aopdVendor ? transactionRecord.getValue({fieldId: 'custbody_bsp_isg_aopd'}) : '' ;
 
     if (accountNumber) {
       transactionRecord.setValue({
@@ -199,8 +200,6 @@
       }
     }
 
-   
-
      /*--- Shipping method translation  ---*/
 
       let shippingMethod = searchShippingItem(objFields.order);
@@ -241,13 +240,31 @@
       });
     }
 
+    if(shipmentType === BSPLBUtils.SHIPMENT_TYPE.dropship){
+    let checkShipAddr = BSPLBEntities.checkShippingAddress(customerRecordResult.nsID, objFields.order);
+    let checkBillAddr = BSPLBEntities.checkBillingAddress(customerRecordResult.nsID, objFields.order);
+    
+    let purchaseOrderRec = record.create({
+      type: record.Type.PURCHASE_ORDER,
+      isDynamic: true,
+      defaultValues: {
+          'soid' : order.Id,
+          'specord' : 'T',
+          'custid': objCustomerFields.accountNumber ? objCustomerFields.accountNumber: '',
+          'entity': ''   //get vendor here
+      }
+  });
+    }
+
+
     processTransactionLines(
       transactionRecord,
       objFields.order,
       objMappingFields,
       itemRecordsResult,
       shipmentType,
-      taxable
+      taxable,
+      aopdChecker
     );
     /**
      * Default values
@@ -283,7 +300,8 @@
     objMappingFields,
     itemRecordsResult,
     shipmentType,
-    taxable
+    taxable,
+    aopdChecker
   ) {
     let lineItems = [];
     if (
@@ -329,7 +347,7 @@
             "custitem_bsp_isg_excl_from_auto_transm"
           );
 
-          if (excludeItemFromTransmission) {
+          if (excludeItemFromTransmission || aopdChecker) {
             transactionRecord.setCurrentSublistValue({
               sublistId: strSublistID,
               fieldId: "custcol_bsp_isg_exclude_auto_transm",
