@@ -3,7 +3,7 @@
  * @NModuleScope Public
  */
 
- define(['N/record', './bsp_isg_lb_utils.js', './bsp_isg_lb_catalogservice_api.js'], function (record, BSPLBUtils, LBCatalogAPI) {
+ define(['N/record', 'N/search', './bsp_isg_lb_utils.js', './bsp_isg_lb_catalogservice_api.js'], function (record, search, BSPLBUtils, LBCatalogAPI) {
 
     /**
      * Create Vendor Record in NS
@@ -385,12 +385,36 @@
 
     }
 
+  /*  function getNSVendorId(lbVendorId){
+        let results = [];
+        var customrecord_bsp_isg_lb_mapped_keysSearchObj = search.create({
+            type: "customrecord_bsp_isg_lb_mapped_keys",
+            filters:
+            [
+               ["custrecord_bsp_lb_logicblock_id","startswith",lbVendorId], 
+               "AND", 
+               ["custrecord_bsp_lb_rec_type_ns","is","Vendor"]
+            ],
+            columns:
+            [
+               search.createColumn({name: "custrecord_bsp_lb_netsuite_id", label: "Internal NetSuite ID"}),
+               search.createColumn({name: "custrecord_bsp_lb_logicblock_id", label: "Logicblock Internal ID"}),
+               search.createColumn({name: "custrecord_bsp_lb_rec_type_ns", label: "Record Type NetSuite"})
+            ]
+         });
+         customrecord_bsp_isg_lb_mapped_keysSearchObj.run().each(function(result){     
+            let internalId= result.getValue({name: "custrecord_bsp_lb_netsuite_id"});
+            results.push({internalId});
+         });
+         return results;
+    } */
+
     return {
 		fetchVendors: fetchVendors,
         fetchCustomer: fetchCustomer,
         getFieldsFromCustomer: getFieldsFromCustomer,
         checkShippingAddress: checkShippingAddress,
-        checkBillingAddress: checkBillingAddress
+        checkBillingAddress: checkBillingAddress,
 	};
 
 });

@@ -239,22 +239,10 @@
         value: delZone[0].location,
       });
     }
-
+    log.debug('shipmentType',shipmentType);
     if(shipmentType === BSPLBUtils.SHIPMENT_TYPE.dropship){
     let checkShipAddr = BSPLBEntities.checkShippingAddress(customerRecordResult.nsID, objFields.order);
     let checkBillAddr = BSPLBEntities.checkBillingAddress(customerRecordResult.nsID, objFields.order);
-    
-    let purchaseOrderRec = record.create({
-      type: record.Type.PURCHASE_ORDER,
-      isDynamic: true,
-      defaultValues: {
-          'soid' : order.Id,
-          'specord' : 'T',
-          'custid': objCustomerFields.accountNumber ? objCustomerFields.accountNumber: '',
-          'entity': ''   //get vendor here
-      }
-  });
-    }
 
 
     processTransactionLines(
@@ -278,6 +266,26 @@
       objFields.order.Id,
       "Order"
     );
+
+    
+    if(aopdVendor){
+      let purchaseOrderRec = record.create({
+        type: record.Type.PURCHASE_ORDER,
+        isDynamic: true,
+        defaultValues: {
+            'soid': newRecordId,
+            'entity': aopdVendor,  
+            'dropship' : 'T',
+            'custid': objCustomerFields.accountNumber ? objCustomerFields.accountNumber: '',        
+        }
+     });
+     let recordId = purchaseOrderRec.save({
+      enableSourcing: false,
+      ignoreMandatoryFields: false
+       });
+      log.debug('PO created with ID: ', recordId)
+   }
+  }
 
     objResult = {
       status: status,
