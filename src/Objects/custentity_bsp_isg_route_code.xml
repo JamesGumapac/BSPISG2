@@ -47,5 +47,5 @@
   <sourcefrom></sourcefrom>
   <sourcelist></sourcelist>
   <storevalue>T</storevalue>
-  <subtab>ENTITYMAIN</subtab>
+  <subtab>[scriptid=custtab_bsp_isg_entity]</subtab>
 </entitycustomfield>

@@ -105,7 +105,7 @@
       <maxvalue></maxvalue>
       <minvalue></minvalue>
       <onparentdelete>SET_NULL</onparentdelete>
-      <parentsubtab></parentsubtab>
+      <parentsubtab>[scriptid=custtab_bsp_isg_transaction]</parentsubtab>
       <rolerestrict>F</rolerestrict>
       <searchcomparefield></searchcomparefield>
       <searchdefault></searchdefault>
@@ -183,7 +183,7 @@
       <maxvalue></maxvalue>
       <minvalue></minvalue>
       <onparentdelete>SET_NULL</onparentdelete>
-      <parentsubtab></parentsubtab>
+      <parentsubtab>[scriptid=custtab_bsp_isg_transaction]</parentsubtab>
       <rolerestrict>F</rolerestrict>
       <searchcomparefield></searchcomparefield>
       <searchdefault></searchdefault>

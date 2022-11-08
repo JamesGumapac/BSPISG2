@@ -119,6 +119,13 @@
       <subtab></subtab>
     </customrecordcustomfield>
   </customrecordcustomfields>
+  <permissions>
+    <permission>
+      <permittedlevel>FULL</permittedlevel>
+      <permittedrole>[scriptid=customrole_bsp_isg_as2_service]</permittedrole>
+      <restriction></restriction>
+    </permission>
+  </permissions>
   <subtabs>
     <subtab scriptid="tab_150_t927173_457">
       <tabparent></tabparent>

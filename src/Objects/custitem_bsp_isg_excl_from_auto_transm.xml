@@ -47,5 +47,5 @@
   <sourcefrom></sourcefrom>
   <sourcelist></sourcelist>
   <storevalue>T</storevalue>
-  <subtab>[scriptid=custtab_bsp_isg_item_transmission]</subtab>
+  <subtab>[scriptid=custtab_bsp_isg_item]</subtab>
 </itemcustomfield>
