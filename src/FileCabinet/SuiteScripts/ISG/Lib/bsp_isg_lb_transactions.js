@@ -902,7 +902,7 @@ define([
 
   function sendPOEmail(poId, AOPDvendor){
     let vendorData = BSPLBEntities.getVendorEmail(AOPDvendor);
-    let vendorEmail = vendorData[0].email ? vendorData[0].email : vendorData[0].altemail;
+    let vendorEmail = vendorData[0].email ? vendorData[0].email : vendorData[0].altemail ? vendorData[0].altemail : '';
 
     let senderId = -5;
             let recipientEmail = vendorEmail;
@@ -912,7 +912,7 @@ define([
                 entityId : poId,
                 printMode : render.PrintMode.PDF
             });
-          
+            log.debug
             email.send({
                 author: senderId,
                 recipients: recipientEmail,
