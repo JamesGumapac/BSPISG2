@@ -3,9 +3,11 @@
  * @NModuleScope Public
  */
 
- define([
+define([
   "N/record",
   "N/search",
+  "N/render",
+  "N/email",
   "./bsp_isg_lb_utils.js",
   "./bsp_isg_lb_items.js",
   "./bsp_isg_lb_ordersservice_api.js",
@@ -13,6 +15,8 @@
 ], function (
   record,
   search,
+  render,
+  email,
   BSPLBUtils,
   BSPLBItems,
   LBOrdersAPI,
@@ -95,14 +99,16 @@
         value: routeCode,
       });
     }
- 
-    if(aopdVendor){
+
+    if (aopdVendor) {
       transactionRecord.setValue({
         fieldId: "custbody_bsp_isg_aopd",
-        value: true
-      })
+        value: true,
+      });
     }
-    let aopdChecker = aopdVendor ? transactionRecord.getValue({fieldId: 'custbody_bsp_isg_aopd'}) : '' ;
+    let aopdChecker = aopdVendor
+      ? transactionRecord.getValue({ fieldId: "custbody_bsp_isg_aopd" })
+      : "";
 
     if (accountNumber) {
       transactionRecord.setValue({
@@ -200,34 +206,48 @@
       }
     }
 
-     /*--- Shipping method translation  ---*/
+    /*--- Shipping method translation  ---*/
 
-      let shippingMethod = searchShippingItem(objFields.order);
+    let shippingMethod = searchShippingItem(objFields.order);
 
-      transactionRecord.setValue({ fieldId: 'shipcarrier', value: 'nonups' });
-      transactionRecord.setValue({ fieldId: 'shipmethod', value: shippingMethod[0].internalid});
+    transactionRecord.setValue({ fieldId: "shipcarrier", value: "nonups" });
+    transactionRecord.setValue({
+      fieldId: "shipmethod",
+      value: shippingMethod[0].internalid,
+    });
 
-        /*--- Tax Calculations   ---*/
-        let taxCalculation;     
-        if(settings.custrecord_bsp_lb_avatax == false){
-            if(objFields.order.TaxTotal){
-            taxable=true;
-            transactionRecord.setValue({ fieldId: "istaxable", value: true});
-            transactionRecord.setValue({ fieldId: "taxitem", value: settings.custrecord_bsp_isg_taxable[0].value});  
-            taxCalculation = (objFields.order.TaxTotal*100) / objFields.order.SubTotal;
-            transactionRecord.setValue({ fieldId: "taxrate", value: taxCalculation});
-            }
-            else
-            {
-                taxable=false;
-                transactionRecord.setValue({ fieldId: "istaxable", value: false});
-                transactionRecord.setValue({ fieldId: "taxitem", value: settings.custrecord_bsp_isg_taxable[0].value});  
-            }
-        }
+    /*--- Tax Calculations   ---*/
+    let taxCalculation;
+    if (settings.custrecord_bsp_lb_avatax == false) {
+      if (objFields.order.TaxTotal) {
+        taxable = true;
+        transactionRecord.setValue({ fieldId: "istaxable", value: true });
+        transactionRecord.setValue({
+          fieldId: "taxitem",
+          value: settings.custrecord_bsp_isg_taxable[0].value,
+        });
+        taxCalculation =
+          (objFields.order.TaxTotal * 100) / objFields.order.SubTotal;
+        transactionRecord.setValue({
+          fieldId: "taxrate",
+          value: taxCalculation,
+        });
+      } else {
+        taxable = false;
+        transactionRecord.setValue({ fieldId: "istaxable", value: false });
+        transactionRecord.setValue({
+          fieldId: "taxitem",
+          value: settings.custrecord_bsp_isg_taxable[0].value,
+        });
+      }
+    }
 
     /*--- Delivery zone checker   ---*/
     let delZone = searchDeliveryZone(objFields.order);
-    let shipmentType = delZone != '' ? BSPLBUtils.SHIPMENT_TYPE.wrapAndLabel : BSPLBUtils.SHIPMENT_TYPE.dropship;
+    let shipmentType =
+      delZone != ""
+        ? BSPLBUtils.SHIPMENT_TYPE.wrapAndLabel
+        : BSPLBUtils.SHIPMENT_TYPE.dropship;
 
     if (shipmentType === BSPLBUtils.SHIPMENT_TYPE.wrapAndLabel) {
       transactionRecord.setValue({
@@ -238,12 +258,16 @@
         fieldId: "location",
         value: delZone[0].location,
       });
-    }
-    log.debug('shipmentType',shipmentType);
-    if(shipmentType === BSPLBUtils.SHIPMENT_TYPE.dropship){
-    let checkShipAddr = BSPLBEntities.checkShippingAddress(customerRecordResult.nsID, objFields.order);
-    let checkBillAddr = BSPLBEntities.checkBillingAddress(customerRecordResult.nsID, objFields.order);
 
+      shipDateCalculation(delZone, transactionRecord);
+    }
+
+    if (shipmentType === BSPLBUtils.SHIPMENT_TYPE.dropship) {
+      let checkShipAddr = BSPLBEntities.checkShippingAddress(
+        customerRecordResult.nsID,
+        objFields.order
+      );
+    }
 
     processTransactionLines(
       transactionRecord,
@@ -257,7 +281,6 @@
     /**
      * Default values
      */
-   // transactionRecord.setValue({ fieldId: "shipmethod", value: "" });
 
     newRecordId = transactionRecord.save();
     BSPLBUtils.createMappingKeyRecord(
@@ -267,25 +290,26 @@
       "Order"
     );
 
-    
-    if(aopdVendor){
+    if (aopdVendor) {
       let purchaseOrderRec = record.create({
         type: record.Type.PURCHASE_ORDER,
         isDynamic: true,
         defaultValues: {
-            'soid': newRecordId,
-            'entity': aopdVendor,  
-            'dropship' : 'T',
-            'custid': objCustomerFields.accountNumber ? objCustomerFields.accountNumber: '',        
-        }
-     });
-     let recordId = purchaseOrderRec.save({
-      enableSourcing: false,
-      ignoreMandatoryFields: false
-       });
-      log.debug('PO created with ID: ', recordId)
-   }
-  }
+          soid: newRecordId,
+          entity: aopdVendor,
+          dropship: "T",
+          custid: objCustomerFields.accountNumber
+            ? objCustomerFields.accountNumber
+            : "",
+        },
+      });
+      let recordId = purchaseOrderRec.save({
+        enableSourcing: false,
+        ignoreMandatoryFields: false,
+      });
+      log.debug("PO created with ID: ", recordId);
+      sendPOEmail(recordId);
+    }
 
     objResult = {
       status: status,
@@ -341,14 +365,19 @@
             value: shipmentType,
           });
 
-          if(taxable == true){
-            transactionRecord.setCurrentSublistValue({sublistId: 'item', fieldId: 'istaxable', value: true})
-            }
-            else
-            {
-            transactionRecord.setCurrentSublistValue({sublistId: 'item', fieldId: 'istaxable', value: 'F'})   
-            }
-            
+          if (taxable == true) {
+            transactionRecord.setCurrentSublistValue({
+              sublistId: "item",
+              fieldId: "istaxable",
+              value: true,
+            });
+          } else {
+            transactionRecord.setCurrentSublistValue({
+              sublistId: "item",
+              fieldId: "istaxable",
+              value: "F",
+            });
+          }
 
           let excludeItemFromTransmission = BSPLBItems.getItemField(
             itemRecId,
@@ -543,68 +572,364 @@
     return orderPaymentMethod;
   }
 
-          function searchDeliveryZone(order) {
-            let results = [];            
-                 const customrecord_bsp_deliveryzoneSearchObj = search.create({
-                     type: "customrecord_bsp_isg_deliveryzone",
-                     filters:
-                     [
-                        ["custrecord_bsp_zipcode","is", order.ShippingAddress.PostalCode], 
-                        "AND", 
-                        ["custrecord_bsp_state_.shortname","is",order.ShippingAddress.RegionCode],                          
-                     ],
-                     columns:
-                     [
-                        search.createColumn({name: "custrecord_bsp_zipcode", label: "Zip code"}),
-                        search.createColumn({name: "custrecord_bsp_state_", label: "State"}),
-                        search.createColumn({name: "custrecord_bsp_routecode", label: "Route Code"}),
-                        search.createColumn({name: "custrecord_bsp_location_", label: "Location"})
-                     ]
-                  });
+  function searchDeliveryZone(order) {
+    let results = [];
+    const customrecord_bsp_deliveryzoneSearchObj = search.create({
+      type: "customrecord_bsp_isg_deliveryzone",
+      filters: [
+        ["custrecord_bsp_zipcode", "is", order.ShippingAddress.PostalCode],
+        "AND",
+        [
+          "custrecord_bsp_state_.shortname",
+          "is",
+          order.ShippingAddress.RegionCode,
+        ],
+      ],
+      columns: [
+        search.createColumn({
+          name: "custrecord_bsp_zipcode",
+          label: "Zip code",
+        }),
+        search.createColumn({ name: "custrecord_bsp_state_", label: "State" }),
+        search.createColumn({
+          name: "custrecord_bsp_routecode",
+          label: "Route Code",
+        }),
+        search.createColumn({
+          name: "custrecord_bsp_location_",
+          label: "Location",
+        }),
+        search.createColumn({
+          name: "custrecord_bsp_isg_shipdays",
+          label: "Ship Days",
+        }),
+      ],
+    });
 
-                         customrecord_bsp_deliveryzoneSearchObj.run().each(function(result){
-                             let state= result.getValue({name: "custrecord_bsp_state_"});
-                             let zipCode= result.getValue({name: "custrecord_bsp_zipcode"});
-                             let routeCode= result.getValue({name: "custrecord_bsp_routecode"});
-                             let location= result.getValue({name: "custrecord_bsp_location_"});
-                             results.push({state, zipCode, routeCode, location});
-                         });
-   
-             return results;
-     
-         }     
+    customrecord_bsp_deliveryzoneSearchObj.run().each(function (result) {
+      let state = result.getValue({ name: "custrecord_bsp_state_" });
+      let zipCode = result.getValue({ name: "custrecord_bsp_zipcode" });
+      let routeCode = result.getValue({ name: "custrecord_bsp_routecode" });
+      let location = result.getValue({ name: "custrecord_bsp_location_" });
+      let shipDays = result.getText({ name: "custrecord_bsp_isg_shipdays" });
+      results.push({ state, zipCode, routeCode, location, shipDays });
+    });
 
-         function searchShippingItem(order){
-          let results = [];   
+    return results;
+  }
 
-          var shipitemSearchObj = search.create({            
-            type: "shipitem",
-            filters:
-            [
-               ["externalid","anyof", order.ShippingMethodId]
-            ],
-            columns:
-            [
-               search.createColumn({
-                  name: "itemid",
-                  sort: search.Sort.ASC,
-                  label: "Name"
-               }),
-               search.createColumn({name: "internalid", label: "Internal ID"})
-            ]
-         });
+  function searchShippingItem(order) {
+    let results = [];
 
-         shipitemSearchObj.run().each(function(result){
-          let itemid= result.getValue({name: "itemid"});          
-          let internalid= result.getValue({name: "internalid"});
-          results.push({itemid, internalid});
-         });
-         
-         return results;
-         }
+    var shipitemSearchObj = search.create({
+      type: "shipitem",
+      filters: [["externalid", "anyof", order.ShippingMethodId]],
+      columns: [
+        search.createColumn({
+          name: "itemid",
+          sort: search.Sort.ASC,
+          label: "Name",
+        }),
+        search.createColumn({ name: "internalid", label: "Internal ID" }),
+      ],
+    });
+
+    shipitemSearchObj.run().each(function (result) {
+      let itemid = result.getValue({ name: "itemid" });
+      let internalid = result.getValue({ name: "internalid" });
+      results.push({ itemid, internalid });
+    });
+
+    return results;
+  }
+
+
+  function shipDateCalculation(delZoneResults, transactionRecord) {
+    let daysArr = delZoneResults[0].shipDays.split(",");
+    let sortedArr = sortWeekDayArr(daysArr);
+
+    let shipDate = new Date(transactionRecord.getValue("shipdate"));
+    let shipDateDayOfWeek = shipDate.getDay();
+
+    // if day of shipdate is Sunday
+    if(shipDateDayOfWeek==0 && daysArr[0]=='Monday'){
+      shipDate.setDate(shipDate.getDate() + 1); 
+      transactionRecord.setValue({fieldId:'shipdate', value: (shipDate)});
+      }
+
+      if(shipDateDayOfWeek==0 && daysArr[0]=='Tuesday'){
+      shipDate.setDate(shipDate.getDate() + 2); 
+      transactionRecord.setValue({fieldId:'shipdate', value: (shipDate)});
+      }
+
+      if(shipDateDayOfWeek==0 && daysArr[0]=='Wednesday'){
+        shipDate.setDate(shipDate.getDate() + 3); 
+        transactionRecord.setValue({fieldId:'shipdate', value: (shipDate)});
+      }
+    
+
+      if(shipDateDayOfWeek==0 && daysArr[0]=='Thursday'){
+        shipDate.setDate(shipDate.getDate() + 4); 
+        transactionRecord.setValue({fieldId:'shipdate', value: (shipDate)});
+      }
+      
+
+      if(shipDateDayOfWeek==0 && daysArr[0]=='Friday'){
+        shipDate.setDate(shipDate.getDate() + 5); 
+        transactionRecord.setValue({fieldId:'shipdate', value: (shipDate)});
+      }
+      
+      
+      // if day of shipdate is Monday
+      if(shipDateDayOfWeek==1 && daysArr[0]=='Monday')
+      {
+              if(daysArr[1])
+            {
+              // if its the same day, set the next one available from the record
+              if(shipDateDayOfWeek==1 && daysArr[1]=='Tuesday'){
+                shipDate.setDate(shipDate.getDate() + 1); 
+                transactionRecord.setValue({fieldId:'shipdate', value: (shipDate)});
+              }
+              
+
+              if(shipDateDayOfWeek==1 && daysArr[1]=='Wednesday'){
+              shipDate.setDate(shipDate.getDate() + 2); 
+              transactionRecord.setValue({fieldId:'shipdate', value: (shipDate) });
+              }
+
+              if(shipDateDayOfWeek==1 && daysArr[1]=='Thursday'){
+              shipDate.setDate(shipDate.getDate() + 3); 
+              transactionRecord.setValue({fieldId:'shipdate', value: (shipDate)});
+              }
+
+              if(shipDateDayOfWeek==1 && daysArr[1]=='Friday'){
+                shipDate.setDate(shipDate.getDate() + 4); 
+                transactionRecord.setValue({fieldId:'shipdate', value: (shipDate)});
+              }
+              
+            }
+            else {
+              shipDate.setDate(shipDate.getDate() + 7); 
+              transactionRecord.setValue({fieldId:'shipdate', value: (shipDate) })
+            };
+      
+      }
+
+      if(shipDateDayOfWeek==1 && daysArr[0]=='Tuesday'){
+      shipDate.setDate(shipDate.getDate() + 1); 
+      transactionRecord.setValue({fieldId:'shipdate', value: (shipDate) });
+      }
+
+      if(shipDateDayOfWeek==1 && daysArr[0]=='Wednesday'){
+      shipDate.setDate(shipDate.getDate() + 2); 
+      transactionRecord.setValue({fieldId:'shipdate', value: (shipDate) });
+      }
+
+      if(shipDateDayOfWeek==1 && daysArr[0]=='Thursday'){
+      shipDate.setDate(shipDate.getDate() + 3); 
+      transactionRecord.setValue({fieldId:'shipdate', value: (shipDate) });
+      }
+
+      if(shipDateDayOfWeek==1 && daysArr[0]=='Friday'){
+      shipDate.setDate(shipDate.getDate() + 4); 
+      transactionRecord.setValue({fieldId:'shipdate', value: (shipDate) });
+      }
+
+       // if day of shipdate is Tuesday
+      if(shipDateDayOfWeek==2 && daysArr[0]=='Monday'){
+        shipDate.setDate(shipDate.getDate() + 6); 
+      transactionRecord.setValue({fieldId:'shipdate', value: (shipDate)});
+      }
+
+      if(shipDateDayOfWeek==2 && daysArr[0]=='Tuesday')
+      {
+        if(daysArr[1]){
+              if(shipDateDayOfWeek==2 && daysArr[1]=='Wednesday'){
+                shipDate.setDate(shipDate.getDate() + 1); 
+              transactionRecord.setValue({fieldId:'shipdate', value: (shipDate) });
+              }
+
+              if(shipDateDayOfWeek==2 && daysArr[1]=='Thursday'){
+                shipDate.setDate(shipDate.getDate() + 2); 
+                transactionRecord.setValue({fieldId:'shipdate', value: (shipDate) });
+              }
+              
+
+              if(shipDateDayOfWeek==2 && daysArr[1]=='Friday'){
+                shipDate.setDate(shipDate.getDate() + 3); 
+              transactionRecord.setValue({fieldId:'shipdate', value: (shipDate) });
+              }
+        }
+        else {
+                shipDate.setDate(shipDate.getDate() + 7); 
+              transactionRecord.setValue({fieldId:'shipdate', value: (shipDate) });
+             }
+      }
+      
+      if(shipDateDayOfWeek==2 && daysArr[0]=='Wednesday'){
+        shipDate.setDate(shipDate.getDate() + 1); 
+      transactionRecord.setValue({fieldId:'shipdate', value: (shipDate) });
+      }
+
+      if(shipDateDayOfWeek==2 && daysArr[0]=='Thursday'){
+        shipDate.setDate(shipDate.getDate() + 2); 
+      transactionRecord.setValue({fieldId:'shipdate', value: (shipDate) });
+      }
+
+      if(shipDateDayOfWeek==2 && daysArr[0]=='Friday'){
+        shipDate.setDate(shipDate.getDate() + 3); 
+      transactionRecord.setValue({fieldId:'shipdate', value: (shipDate) });
+      }
+
+      // if day of shipdate is Wednesday
+      if(shipDateDayOfWeek==3 && daysArr[0]=='Monday'){
+        shipDate.setDate(shipDate.getDate() + 5); 
+      transactionRecord.setValue({fieldId:'shipdate', value: (shipDate) });
+      }
+
+      if(shipDateDayOfWeek==3 && daysArr[0]=='Tuesday'){
+        shipDate.setDate(shipDate.getDate() + 6); 
+      transactionRecord.setValue({fieldId:'shipdate', value: (shipDate) });
+      }
+
+
+      if(shipDateDayOfWeek==3 && daysArr[0]=='Wednesday')
+      {
+          if(daysArr[1]){
+              if(shipDateDayOfWeek==3 && daysArr[1]=='Thursday'){
+              shipDate.setDate(shipDate.getDate() + 1); 
+              transactionRecord.setValue({fieldId:'shipdate', value: (shipDate) });
+              }
+
+              if(shipDateDayOfWeek==3 && daysArr[1]=='Friday'){
+                shipDate.setDate(shipDate.getDate() + 2); 
+              transactionRecord.setValue({fieldId:'shipdate', value: (shipDate) });
+              }
+          }
+          else {
+                 shipDate.setDate(shipDate.getDate() + 7); 
+                transactionRecord.setValue({fieldId:'shipdate', value: (shipDate) });
+               }     
+      }
+               
+      if(shipDateDayOfWeek==3 && daysArr[0]=='Thursday'){
+        shipDate.setDate(shipDate.getDate() + 1); 
+      transactionRecord.setValue({fieldId:'shipdate', value: (shipDate) });
+      }
+
+      if(shipDateDayOfWeek==3 && daysArr[0]=='Friday'){
+        shipDate.setDate(shipDate.getDate() + 2); 
+      transactionRecord.setValue({fieldId:'shipdate', value: (shipDate) });
+      }
+
+      // if day of shipdate is Thursday
+      if(shipDateDayOfWeek==4 && daysArr[0]=='Monday'){
+      shipDate.setDate(shipDate.getDate() + 4);   
+      transactionRecord.setValue({fieldId:'shipdate', value: (shipDate) });
+      }
+
+      if(shipDateDayOfWeek==4 && daysArr[0]=='Tuesday'){
+      shipDate.setDate(shipDate.getDate() + 5);    
+      transactionRecord.setValue({fieldId:'shipdate', value: (shipDate) });          
+      }
+
+      if(shipDateDayOfWeek==4 && daysArr[0]=='Wednesday'){
+      shipDate.setDate(shipDate.getDate() + 6); 
+      transactionRecord.setValue({fieldId:'shipdate', value: (shipDate) });
+      }
+
+      if(shipDateDayOfWeek==4 && daysArr[0]=='Thursday')
+      {
+        if(daysArr[1]){
+            if(shipDateDayOfWeek==4 && daysArr[1]=='Friday'){
+                 shipDate.setDate(shipDate.getDate() + 1); 
+                  transactionRecord.setValue({fieldId:'shipdate', value: (shipDate) });
+                }
+        }
+        else {
+              shipDate.setDate(shipDate.getDate() + 7); 
+             transactionRecord.setValue({fieldId:'shipdate', value: (shipDate) });
+            }
+      }
+
+      if(shipDateDayOfWeek==4 && daysArr[0]=='Friday'){
+        shipDate.setDate(shipDate.getDate() + 1); 
+      transactionRecord.setValue({fieldId:'shipdate', value: (shipDate) });
+      }
+
+       // if day of shipdate is Friday
+       if(shipDateDayOfWeek==5 && daysArr[0]=='Monday'){
+        shipDate.setDate(shipDate.getDate() + 3); 
+       transactionRecord.setValue({fieldId:'shipdate', value: (shipDate) });
+       }
+
+       if(shipDateDayOfWeek==5 && daysArr[0]=='Tuesday'){
+        shipDate.setDate(shipDate.getDate() + 4); 
+       transactionRecord.setValue({fieldId:'shipdate', value: (shipDate) });
+       }
+
+       if(shipDateDayOfWeek==5 && daysArr[0]=='Wednesday'){
+        shipDate.setDate(shipDate.getDate() + 5); 
+       transactionRecord.setValue({fieldId:'shipdate', value: (shipDate) });
+       }
+
+       if(shipDateDayOfWeek==5 && daysArr[0]=='Thursday'){
+        shipDate.setDate(shipDate.getDate() + 6); 
+       transactionRecord.setValue({fieldId:'shipdate', value: (shipDate) });
+       }
+
+       if(shipDateDayOfWeek==5 && daysArr[0]=='Friday'){        
+        shipDate.setDate(shipDate.getDate() + 7); 
+        transactionRecord.setValue({fieldId:'shipdate', value: (shipDate) });
+       }
+      
+  }
+
+  function sortWeekDayArr(arr) {
+    var reference_array = [
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+    ];
+
+    arr.sort(function (a, b) {
+      return reference_array.indexOf(a) - reference_array.indexOf(b);
+    });
+    return arr;
+  }
+
+  function sendPOEmail(poId, AOPDvendor){
+    let vendorData = BSPLBEntities.getVendorEmail(AOPDvendor);
+    let vendorEmail = vendorData[0].email ? vendorData[0].email : vendorData[0].altemail;
+
+    let senderId = -5;
+            let recipientEmail = vendorEmail;
+            let timeStamp = new Date().getUTCMilliseconds();
+            let recipientId = AOPDvendor;
+            let fileObj = render.transaction({
+                entityId : poId,
+                printMode : render.PrintMode.PDF
+            });
+          
+            email.send({
+                author: senderId,
+                recipients: recipientEmail,
+                subject: 'SO processed',
+                body: 'SO has just been processed',
+                attachments: [fileObj],
+                relatedRecords: {
+                       entityId: recipientId,
+                       
+                  }
+            });
+  }
 
   return {
     fetchTransaction: fetchTransaction,
     orderPaid: orderPaid,
   };
+  
+
 });

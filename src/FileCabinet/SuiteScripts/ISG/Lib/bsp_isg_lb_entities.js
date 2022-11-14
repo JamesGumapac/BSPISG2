@@ -326,63 +326,33 @@
 
     }
 
-    function checkBillingAddress(customerRecID, order){
+    function getVendorEmail(vendorId){
+        let results = [];
+        var vendorSearchObj = search.create({
+            type: "vendor",
+            filters:
+            [
+               ["internalid","anyof","26894"]
+            ],
+            columns:
+            [
+               search.createColumn({
+                  name: "entityid",
+                  sort: search.Sort.ASC,
+                  label: "Name"
+               }),
+               search.createColumn({name: "email", label: "Email"}),
+               search.createColumn({name: "altemail", label: "Alt. Email"})
+            ]
+         });
+         vendorSearchObj.run().each(function(result){
+            let internalid = result.getValue({ name: "internalid" });
+            let email = result.getValue({ name: "email" });
+            let altemail = result.getValue({ name: "altemail" });
+            results.push({ internalid, email, altemail});
+         });
 
-        let customerRec = record.load({
-            type: record.Type.CUSTOMER,
-            id: customerRecID,
-            isDynamic:true
-        });
-
-        order.BillingAddress.Line1 ?  order.BillingAddress.Line1 : '';
-        order.BillingAddress.City ?  order.BillingAddress.City : '';
-        order.BillingAddress.RegionCode ?  order.BillingAddress.RegionCode : '';
-        order.BillingAddress.PostalCode ?  order.BillingAddress.PostalCode : '';
-
-        let lineCount = customerRec.getLineCount({ sublistId: 'addressbook' });
-        let addressIsSet = false;
-
-        outerloop: for(i=0; i<lineCount; i++){
-                    customerRec.selectLine({sublistId: 'addressbook',
-                    line: i})
-                    let addressSubRecord = customerRec.getCurrentSublistSubrecord({
-                        sublistId: 'addressbook',
-                        fieldId: 'addressbookaddress'
-                    })           
-                    let addressaddr1 = addressSubRecord.getValue({sublistId: 'addressbook', fieldId: 'addr1'});
-                    let addressCity = addressSubRecord.getValue({sublistId: 'addressbook', fieldId: 'city'});
-                    let addressState = addressSubRecord.getValue({sublistId: 'addressbook', fieldId: 'state'});
-                    let addressZipcode= addressSubRecord.getValue({sublistId: 'addressbook', fieldId: 'zip'});
-
-                        if(((addressaddr1 == order.BillingAddress.Line1) &&  (addressCity == order.BillingAddress.City) && (addressState == order.BillingAddress.RegionCode) && (addressZipcode == order.BillingAddress.PostalCode)))
-                        {
-                            log.debug("Billing Address already exists");
-                            break outerloop;
-                        }
-                        else{
-                            customerRec.selectNewLine({
-                                sublistId: 'addressbook',
-                            });
-                            let newAddressSubRecord = customerRec.getCurrentSublistSubrecord({
-                                sublistId: 'addressbook',
-                                fieldId: 'addressbookaddress'
-                            })  
-
-                            newAddressSubRecord.setValue({sublistId: 'addressbook', fieldId: 'addr1', value: order.BillingAddress.Line1});
-                            newAddressSubRecord.setValue({sublistId: 'addressbook', fieldId: 'city', value: order.BillingAddress.City});
-                            newAddressSubRecord.setValue({sublistId: 'addressbook', fieldId: 'state', value: order.BillingAddress.RegionCode});
-                            newAddressSubRecord.setValue({sublistId: 'addressbook', fieldId: 'zip', value: order.BillingAddress.PostalCode});
-                            addressIsSet = true;
-                        }
-            
-        }
-        if(addressIsSet){
-            customerRec.commitLine({
-                sublistId: 'addressbook'
-            });
-        }
-        customerRec.save();
-
+         return results;
     }
 
     return {
@@ -390,7 +360,7 @@
         fetchCustomer: fetchCustomer,
         getFieldsFromCustomer: getFieldsFromCustomer,
         checkShippingAddress: checkShippingAddress,
-        checkBillingAddress: checkBillingAddress,
+        getVendorEmail,
 	};
 
 });
