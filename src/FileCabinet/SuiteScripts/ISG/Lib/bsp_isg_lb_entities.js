@@ -3,7 +3,7 @@
  * @NModuleScope Public
  */
 
- define(['N/record', './bsp_isg_lb_utils.js', './bsp_isg_lb_catalogservice_api.js'], function (record, BSPLBUtils, LBCatalogAPI) {
+ define(['N/record', 'N/search', './bsp_isg_lb_utils.js', './bsp_isg_lb_catalogservice_api.js'], function (record, search, BSPLBUtils, LBCatalogAPI) {
 
     /**
      * Create Vendor Record in NS
@@ -221,49 +221,146 @@
      * @returns 
      */
     function getFieldsFromCustomer(customerRecID){
-        let routeCode = null;
-        let accountNumber = null;
+        let addressSubRecord=[];  
+        let addrObj= {
+            routeCode: null,
+            accountNumber:null,
+            aopdVendor:null
+        };     
         let customerRec = record.load({
             type: record.Type.CUSTOMER,
-            id: customerRecID
+            id: customerRecID,
         });
+        let lineCount = customerRec.getLineCount({ sublistId: 'addressbook' });
 
-        let addressSubRecord = customerRec.getSublistSubrecord({
-            sublistId: 'addressbook',
-            fieldId: 'addressbookaddress',
-            line: 0
-        });
+        for(i=0; i<=lineCount; i++){
 
-        if(addressSubRecord){
-            routeCode = addressSubRecord.getValue({
-                fieldId: 'custrecord_bsp_isg_route_code'
-            });
-            accountNumber = addressSubRecord.getValue({
-                fieldId: 'custrecord_bsp_isg_acct_num_override'
-            });
-        }
-
-        if(BSPLBUtils.isEmpty(routeCode)){
+                    addrObj = customerRec.getSublistSubrecord({
+                    sublistId: 'addressbook',
+                    fieldId: 'addressbookaddress',
+                    line: i
+                    });
+              
+                    addressSubRecord.push({
+                        addrObj: addrObj,
+                        routeCode: addrObj.getValue('custrecord_bsp_isg_route_code'),
+                        accountNumber: addrObj.getValue('custrecord_bsp_isg_acct_num_override'),
+                        aopdVendor: addrObj.getValue('custrecord_bsp_isg_aopdvendor'),                                                             
+                    });
+        }   
+        if(BSPLBUtils.isEmpty(addressSubRecord[0].routeCode)){
             routeCode = customerRec.getValue({
                 fieldId: 'custentity_bsp_isg_route_code'
             });
         }   
-        if(BSPLBUtils.isEmpty(accountNumber)){
+  
+        if(BSPLBUtils.isEmpty(addressSubRecord[0].accountNumber)){
             accountNumber = customerRec.getValue({
                 fieldId: 'custentity_bsp_isg_acct_num_override'
             });
-        }      
+        }   
 
         return {
-            routeCode: routeCode,
-            accountNumber: accountNumber
+           addressSubRecord: addressSubRecord
         };
+    }
+
+    function checkShippingAddress(customerRecID, order){
+
+        let customerRec = record.load({
+            type: record.Type.CUSTOMER,
+            id: customerRecID,
+            isDynamic:true
+        });
+
+        order.ShippingAddress.Line1 ?  order.ShippingAddress.Line1 : '';
+        order.ShippingAddress.City ?  order.ShippingAddress.City : '';
+        order.ShippingAddress.RegionCode ?  order.ShippingAddress.RegionCode : '';
+        order.ShippingAddress.PostalCode ?  order.ShippingAddress.PostalCode : ''; 
+
+        let lineCount = customerRec.getLineCount({ sublistId: 'addressbook' });
+        let addressIsSet = false;
+
+      outerloop:  for(i=0; i<lineCount; i++){
+            log.debug('Iteration number: ', i);
+            customerRec.selectLine({sublistId: 'addressbook',
+            line: i})
+            let addressSubRecord = customerRec.getCurrentSublistSubrecord({
+                sublistId: 'addressbook',
+                fieldId: 'addressbookaddress'
+            })           
+            let addressaddr1 = addressSubRecord.getValue({sublistId: 'addressbook', fieldId: 'addr1'});
+            let addressCity = addressSubRecord.getValue({sublistId: 'addressbook', fieldId: 'city'});
+            let addressState = addressSubRecord.getValue({sublistId: 'addressbook', fieldId: 'state'});
+            let addressZipcode= addressSubRecord.getValue({sublistId: 'addressbook', fieldId: 'zip'});
+
+                if(((addressaddr1 == order.ShippingAddress.Line1) && (addressCity == order.ShippingAddress.City) && (addressState == order.ShippingAddress.RegionCode) && (addressZipcode == order.ShippingAddress.PostalCode)))    
+                {
+                    log.debug("Shipping Address already exists");   
+                    break outerloop;                     
+                }
+                else{
+                    customerRec.selectNewLine({
+                        sublistId: 'addressbook',
+                    });
+                    let newAddressSubRecord = customerRec.getCurrentSublistSubrecord({
+                        sublistId: 'addressbook',
+                        fieldId: 'addressbookaddress'
+                    })  
+                    newAddressSubRecord.setValue({sublistId: 'addressbook', fieldId: 'addr1', value: order.ShippingAddress.Line1});
+                    newAddressSubRecord.setValue({sublistId: 'addressbook', fieldId: 'city', value: order.ShippingAddress.City});
+                    newAddressSubRecord.setValue({sublistId: 'addressbook', fieldId: 'state', value: order.ShippingAddress.RegionCode});
+                    newAddressSubRecord.setValue({sublistId: 'addressbook', fieldId: 'zip', value: order.ShippingAddress.PostalCode});
+ 
+                    addressIsSet = true;
+                }  
+            
+        }
+               
+        if(addressIsSet){
+            customerRec.commitLine({
+                sublistId: 'addressbook'
+            });
+        }
+        customerRec.save();
+
+    }
+
+    function getVendorEmail(vendorId){
+        let results = [];
+        var vendorSearchObj = search.create({
+            type: "vendor",
+            filters:
+            [
+               ["internalid","anyof","26894"]
+            ],
+            columns:
+            [
+               search.createColumn({
+                  name: "entityid",
+                  sort: search.Sort.ASC,
+                  label: "Name"
+               }),
+               search.createColumn({name: "email", label: "Email"}),
+               search.createColumn({name: "altemail", label: "Alt. Email"})
+            ]
+         });
+         vendorSearchObj.run().each(function(result){
+            let internalid = result.getValue({ name: "internalid" });
+            let email = result.getValue({ name: "email" });
+            let altemail = result.getValue({ name: "altemail" });
+            results.push({ internalid, email, altemail});
+         });
+
+         return results;
     }
 
     return {
 		fetchVendors: fetchVendors,
         fetchCustomer: fetchCustomer,
-        getFieldsFromCustomer: getFieldsFromCustomer
+        getFieldsFromCustomer: getFieldsFromCustomer,
+        checkShippingAddress: checkShippingAddress,
+        getVendorEmail,
 	};
 
 });
