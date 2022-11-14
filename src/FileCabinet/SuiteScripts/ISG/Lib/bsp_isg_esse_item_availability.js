@@ -237,12 +237,17 @@ define(["N/record", "N/search", "N/https", "./xmlTojson.js","N/xml"]
    * @returns {boolean}
    */
   function isEmpty(stValue) {
-    return (stValue === "" ||
-        stValue == null || false || (stValue.constructor === Array && stValue.length === 0) || (stValue.constructor === Object &&
-            (function (v) {
-              for (let k in v) return false;
-              return true;
-            })(stValue)));
+    return (
+      stValue === "" ||
+      stValue == null ||
+      stValue == undefined ||
+      (stValue.constructor === Array && stValue.length == 0) ||
+      (stValue.constructor === Object &&
+        (function (v) {
+          for (var k in v) return false;
+          return true;
+        })(stValue))
+    );
   }
 
   return {

@@ -1,11 +1,11 @@
 /**
  * @NApiVersion 2.1
  */
-define(["N/record", "N/search", "N/http", "./xmlTojson.js", "N/xml"]
+define(["N/record", "N/search", "N/http", "./xmlTojson.js","N/xml"]
 	/**
 	 * @param{record} record
 	 * @param{search} search
-	 */, (record, search, http, xmlToJson, xml) => {
+	 */, (record, search,http,xmlToJson,xml) => {
 		
 		/**
 		 * This function get the item item availability list
@@ -24,9 +24,9 @@ define(["N/record", "N/search", "N/http", "./xmlTojson.js", "N/xml"]
 					columns: ["itemid"],
 				});
 				itemName = itemNameSearch["itemid"];
-				
+			
 				let showOutOfStock = "Y"
-				if (tpSettings[0].isShowOutOfStock === true || tpSettings[0].isShowOutOfStock === "T") {
+				if(tpSettings[0].isShowOutOfStock === true || tpSettings[0].isShowOutOfStock ==="T"){
 					showOutOfStock = "N"
 				}
 				const headers = {};
@@ -94,7 +94,6 @@ define(["N/record", "N/search", "N/http", "./xmlTojson.js", "N/xml"]
 				log.error("getSprItemAvailabilityList", e.message);
 			}
 		}
-		
 		/**
 		 * Get the trading partner Settings
 		 * @param tradingPartnerId
@@ -132,7 +131,6 @@ define(["N/record", "N/search", "N/http", "./xmlTojson.js", "N/xml"]
 				log.error("getTPSettings", e.message);
 			}
 		}
-		
 		return {
 			getSprItemAvailabilityList: getSprItemAvailabilityList
 		};
