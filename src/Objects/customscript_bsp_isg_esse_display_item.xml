@@ -1,0 +1,25 @@
+<suitelet scriptid="customscript_bsp_isg_esse_display_item">
+  <description></description>
+  <isinactive>F</isinactive>
+  <name>BSP | ISG | SL | ESSE |Item Avalblty</name>
+  <notifyadmins>F</notifyadmins>
+  <notifyemails></notifyemails>
+  <notifyowner>T</notifyowner>
+  <notifyuser>F</notifyuser>
+  <scriptfile>[/SuiteScripts/ISG/bsp_isg_sl_esse_display_item_availability.js]</scriptfile>
+  <scriptdeployments>
+    <scriptdeployment scriptid="customdeploy_bsp_isg_esse_display_item">
+      <allemployees>T</allemployees>
+      <allpartners>T</allpartners>
+      <allroles>T</allroles>
+      <audslctrole></audslctrole>
+      <eventtype></eventtype>
+      <isdeployed>T</isdeployed>
+      <isonline>F</isonline>
+      <loglevel>DEBUG</loglevel>
+      <runasrole></runasrole>
+      <status>TESTING</status>
+      <title>BSP | ISG | SL | ESSE |Item Avalblty</title>
+    </scriptdeployment>
+  </scriptdeployments>
+</suitelet>
