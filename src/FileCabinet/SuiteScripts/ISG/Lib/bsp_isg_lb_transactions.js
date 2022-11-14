@@ -912,7 +912,6 @@ define([
                 entityId : poId,
                 printMode : render.PrintMode.PDF
             });
-            log.debug
             email.send({
                 author: senderId,
                 recipients: recipientEmail,
