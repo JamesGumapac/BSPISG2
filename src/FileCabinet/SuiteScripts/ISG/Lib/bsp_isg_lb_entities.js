@@ -332,7 +332,7 @@
             type: "vendor",
             filters:
             [
-               ["internalid","anyof","26894"]
+               ["internalid","anyof", vendorId]
             ],
             columns:
             [
