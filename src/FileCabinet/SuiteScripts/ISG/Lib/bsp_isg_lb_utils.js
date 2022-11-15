@@ -1065,6 +1065,33 @@
       .reduce((prev, curr) => (prev ? prev[curr] : undefined), obj);
   }
 
+  function getHoliday(shipDate){
+    let formattedShipdate = format.format({type: format.Type.DATE, value: new Date(shipDate)});
+
+    let results = [];
+    let customrecord_bsp_isg_lb_holidaysSearchObj = search.create({
+      type: "customrecord_bsp_isg_lb_holidays",
+      filters:
+      [
+         ["custrecord_bsp_isg_lb_holidaydate","on", formattedShipdate],
+         "AND", 
+         ["isinactive","is","F"]
+      ],
+      columns:
+      [
+         search.createColumn({name: "custrecord_bsp_isg_lb_holidaytitle", label: "Holiday title"}),
+         search.createColumn({name: "custrecord_bsp_isg_lb_holidaydate", label: "Holiday date"})
+      ]
+   });
+    customrecord_bsp_isg_lb_holidaysSearchObj.run().each(function(result){
+      let title = result.getValue({ name: "custrecord_bsp_isg_lb_holidaytitle" }) ? result.getValue({ name: "custrecord_bsp_isg_lb_holidaytitle" }) : '';
+      let date = result.getValue({ name: "custrecord_bsp_isg_lb_holidaydate" }) ? result.getValue({ name: "custrecord_bsp_isg_lb_holidaydate" }) : '';
+      results.push({title, date});
+    });
+   return results;
+  }
+
+
   return {
     serverConstants: serverConstants,
     constants: constants,
@@ -1098,5 +1125,6 @@
     logicBlockOrderData: logicBlockOrderData,
     markQueueAsProcessed: markQueueAsProcessed,
     SHIPMENT_TYPE: SHIPMENT_TYPE,
+    getHoliday: getHoliday,
   };
 });

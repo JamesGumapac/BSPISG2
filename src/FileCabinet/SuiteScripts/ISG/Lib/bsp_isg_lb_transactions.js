@@ -259,7 +259,20 @@ define([
         value: delZone[0].location,
       });
 
-      shipDateCalculation(delZone, transactionRecord);
+
+    let shipDateCalc = shipDateCalculation(delZone, transactionRecord);
+    let shipDate = transactionRecord.getValue({fieldId: 'shipdate'});
+
+    loop : for(let i=0; i<20; i++){
+
+          if(BSPLBUtils.getHoliday(transactionRecord.getValue({fieldId: 'shipdate'})) != ''){
+          shipDateCalculation(delZone, transactionRecord);
+          }
+          else{
+            transactionRecord.setValue({fieldId: 'shipdate', value:(transactionRecord.getValue({fieldId: 'shipdate'}))});   
+            break loop;            
+          }
+      }
     }
 
     if (shipmentType === BSPLBUtils.SHIPMENT_TYPE.dropship) {
@@ -899,7 +912,6 @@ define([
     });
     return arr;
   }
-
   function sendPOEmail(poId, AOPDvendor){
     let vendorData = BSPLBEntities.getVendorEmail(AOPDvendor);
     let vendorEmail = vendorData[0].email ? vendorData[0].email : vendorData[0].altemail ? vendorData[0].altemail : '';
