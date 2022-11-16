@@ -225,12 +225,14 @@
         let addrObj= {
             routeCode: null,
             accountNumber:null,
-            aopdVendor:null
-        };     
+            aopdVendor:null,           
+        };   
+        let overrideSchedule;  
         let customerRec = record.load({
             type: record.Type.CUSTOMER,
             id: customerRecID,
         });
+        overrideSchedule = customerRec.getValue({fieldId: 'custentity_bsp_isg_lb_overrideschedule'});
         let lineCount = customerRec.getLineCount({ sublistId: 'addressbook' });
 
         for(i=0; i<=lineCount; i++){
@@ -261,7 +263,8 @@
         }   
 
         return {
-           addressSubRecord: addressSubRecord
+           addressSubRecord: addressSubRecord,
+           overrideSchedule: overrideSchedule,
         };
     }
 

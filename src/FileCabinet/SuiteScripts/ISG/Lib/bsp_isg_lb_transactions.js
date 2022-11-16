@@ -89,6 +89,7 @@ define([
     let routeCode = objCustomerFields.addressSubRecord[0].routeCode;
     let accountNumber = objCustomerFields.addressSubRecord[0].accountNumber;
     let aopdVendor = objCustomerFields.addressSubRecord[0].aopdVendor;
+    let flagged = objCustomerFields.overrideSchedule;
 
     if (BSPLBUtils.isEmpty(routeCode)) {
       routeCode = settings.custrecord_bsp_lb_default_route_code[0].value;
@@ -207,7 +208,6 @@ define([
     }
 
     /*--- Shipping method translation  ---*/
-
     let shippingMethod = searchShippingItem(objFields.order);
 
     transactionRecord.setValue({ fieldId: "shipcarrier", value: "nonups" });
@@ -259,8 +259,6 @@ define([
         value: delZone[0].location,
       });
 
-
-    let shipDateCalc = shipDateCalculation(delZone, transactionRecord);
     let shipDate = transactionRecord.getValue({fieldId: 'shipdate'});
 
     loop : for(let i=0; i<20; i++){
@@ -274,7 +272,16 @@ define([
           }
       }
     }
-
+    let shippingDate = transactionRecord.getValue({fieldId: 'shipdate'});
+    if(flagged == true){    
+        if(shippingDate.getDay() == 5){
+          shippingDate.setDate(shippingDate.getDate() + 3); 
+        }
+        else {
+          shippingDate.setDate(shippingDate.getDate() + 1);
+        }
+        transactionRecord.setValue({fieldId:'shipdate', value: shippingDate});
+    }
     if (shipmentType === BSPLBUtils.SHIPMENT_TYPE.dropship) {
       let checkShipAddr = BSPLBEntities.checkShippingAddress(
         customerRecordResult.nsID,
