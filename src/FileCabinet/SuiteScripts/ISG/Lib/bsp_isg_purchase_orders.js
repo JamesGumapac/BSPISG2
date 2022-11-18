@@ -695,7 +695,7 @@
             id: parseInt(poID),
             columns: ['custbody_bsp_isg_adot', 'custbody_bsp_isg_transmission_acct_num']
         });
-        if(poFields && poFields.custbody_bsp_isg_adot){
+        if(poFields && poFields.custbody_bsp_isg_adot && poFields.custbody_bsp_isg_adot[0]){
             fields.adot = poFields.custbody_bsp_isg_adot[0].text;
         }
         if(poFields && poFields.custbody_bsp_isg_transmission_acct_num){
@@ -783,7 +783,7 @@
             id: parseInt(poID),
             columns: 'custbody_bsp_isg_order_type'
         });
-        if(poFields && poFields.custbody_bsp_isg_order_type){
+        if(poFields && poFields.custbody_bsp_isg_order_type && poFields.custbody_bsp_isg_order_type[0]){
             return poFields.custbody_bsp_isg_order_type[0].text == "Dropship";
         }
         return false;

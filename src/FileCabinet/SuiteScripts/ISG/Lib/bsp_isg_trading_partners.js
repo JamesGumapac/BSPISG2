@@ -85,7 +85,37 @@
         }
         return bodID;
     }   
-     
+
+    /**
+     * It takes a vendor ID and returns the trading partner Delivery Time.
+     * @param vendor - The vendor ID of the vendor that you want to get the trading partner Delivery Time for.
+     * @returns The ID of the trading partner record.
+    */
+    function getTradingPartnerDeliveryTime(vendor){
+        let tradingPartnerDeliveryTime = null;
+        log.debug("getTradingPartnerID", "Vendor: " + vendor);
+
+        const trading_partnerSearchObj = search.create({
+            type: "customrecord_bsp_isg_trading_partner",
+            filters:
+            [
+                ["custrecord_bsp_isg_tp_vendor","anyof",vendor], 
+                "AND", 
+                ["isinactive","is","F"]
+            ],
+            columns:[
+                search.createColumn({name: "custrecord_bsp_isg_delivery_time", label: "Delivery Time"})
+            ]
+            });
+
+            trading_partnerSearchObj.run().each(function(result){
+                tradingPartnerDeliveryTime = result.getValue("custrecord_bsp_isg_delivery_time");
+                return true;
+            });
+
+        return tradingPartnerDeliveryTime;
+    }
+
     /**
      * This function takes a vendor ID and returns an object containing the trading partner settings for
      * that vendor.
@@ -270,7 +300,7 @@
         getTradingPartnerBODId: getTradingPartnerBODId,
         updateTradingPartnerBODId: updateTradingPartnerBODId,
         isTradingPartner: isTradingPartner,
-        getMinAmountCartonPO: getMinAmountCartonPO,
+        getTradingPartnerDeliveryTime: getTradingPartnerDeliveryTime,
         getPricePlanID: getPricePlanID,
         processPOAck: processPOAck,
         processInvoice: processInvoice,

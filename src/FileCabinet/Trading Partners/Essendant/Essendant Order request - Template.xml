@@ -42,17 +42,19 @@
 					<oa:PartyIDs>
 						<oa:ID><#if data.purchaseOrder.account.id?? && data.purchaseOrder.account.id?trim?has_content>${data.purchaseOrder.account.text}<#else>${data.transmissionData.accountNumber.text}</#if></oa:ID> 
 					</oa:PartyIDs>
-					<oa:Name>${data.purchaseOrder.customer.addressee}</oa:Name> 
-					<oa:Location>
-						<oa:Address type="<#if data.purchaseOrder.orderType == 'W&L'>W<#else>D</#if>">
-							<oa:LineOne>${data.purchaseOrder.customer.address1}</oa:LineOne> 
-							<oa:LineTwo>${data.purchaseOrder.customer.address2}</oa:LineTwo> 
-							<oa:LineThree>${data.purchaseOrder.customer.address3}</oa:LineThree> 
-							<oa:CityName>${data.purchaseOrder.customer.city}</oa:CityName> 
-							<oa:CountrySubDivisionCode>${data.purchaseOrder.customer.state}</oa:CountrySubDivisionCode> 
-							<oa:PostalCode>${data.purchaseOrder.customer.zipcode}</oa:PostalCode> 
-						</oa:Address>
-					</oa:Location>
+					<#if data.purchaseOrder.orderType != 'Stock'>
+						<oa:Name>${data.purchaseOrder.customer.addressee}</oa:Name> 
+						<oa:Location>
+							<oa:Address type="<#if data.purchaseOrder.orderType == 'Wrap and Label'>W<#else>D</#if>">
+								<oa:LineOne>${data.purchaseOrder.customer.address1}</oa:LineOne> 
+								<oa:LineTwo>${data.purchaseOrder.customer.address2}</oa:LineTwo> 
+								<oa:LineThree>${data.purchaseOrder.customer.address3}</oa:LineThree> 
+								<oa:CityName>${data.purchaseOrder.customer.city}</oa:CityName> 
+								<oa:CountrySubDivisionCode>${data.purchaseOrder.customer.state}</oa:CountrySubDivisionCode> 
+								<oa:PostalCode>${data.purchaseOrder.customer.zipcode}</oa:PostalCode> 
+							</oa:Address>
+						</oa:Location>
+					</#if>				
 				</oa:ShipToParty>
 				<us:ShippingIndicator>true</us:ShippingIndicator> 
 				<us:DealerRouteCode>${data.purchaseOrder.routeCode}</us:DealerRouteCode> 

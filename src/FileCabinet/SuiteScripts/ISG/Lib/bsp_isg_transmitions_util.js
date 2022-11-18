@@ -524,7 +524,7 @@
         log.debug("deleteQueue", `Queue ID ${queueID} has been deleted`);
     }
 
-    function buildTransmissionSavedSearch(transmitionSavedSearcObj){
+    function buildTransmissionSavedSearch(transmitionSavedSearcObj, vendor){
         let fixedFilters = [
             {
                name: "type",
@@ -595,6 +595,12 @@
             }
          ];
 
+        let deliveryTime = BSPTradingParnters.getTradingPartnerDeliveryTime(vendor);
+
+        if(deliveryTime){
+
+        }
+
         let fixedColumns = [
             search.createColumn({name: "custbody_bsp_isg_route_code", label: "Route Code"}),
             search.createColumn({name: "location", label: "Location"}),
@@ -613,6 +619,7 @@
             filters: combinedFilters,
             columns: fixedColumns
         });
+        log.debug("buildTransmissionSavedSearch", "Search filters: " + JSON.stringify(searchObj.filters))
         return searchObj;
     }
 
@@ -634,6 +641,7 @@
         getXMLDate: getXMLDate,
         getAccountNumber: getAccountNumber,
         checkTransmissionQueue: checkTransmissionQueue,
-        buildTransmissionSavedSearch: buildTransmissionSavedSearch
+        buildTransmissionSavedSearch: buildTransmissionSavedSearch,
+        deleteQueue: deleteQueue
 	};
 });

@@ -2,13 +2,13 @@
  * @NApiVersion 2.1
  * @NScriptType MapReduceScript
  */
-define(['N/runtime', 'N/search', 'N/task', './Lib/bsp_isg_transmitions_util.js', './Lib/bsp_isg_edi_settings.js', './Lib/bsp_isg_purchase_orders.js'],
+define(['N/runtime', 'N/search', 'N/task', './Lib/bsp_isg_purchase_orders.js', './Lib/bsp_isg_edi_settings.js', './Lib/bsp_isg_transmitions_util.js'],
     /**
     * @param{runtime} runtime
     * @param{search} search
     * @param{BSPTransmitionsUtil} BSPTransmitionsUtil
     */
-    (runtime, search, task, BSPTransmitionsUtil, BSP_EDISettingsUtil, BSP_POutil) => {
+    (runtime, search, task, BSP_POutil, BSP_EDISettingsUtil, BSPTransmitionsUtil) => {
         /**
          * Defines the function that is executed at the beginning of the map/reduce process and generates the input data.
          * @param {Object} inputContext
@@ -48,7 +48,7 @@ define(['N/runtime', 'N/search', 'N/task', './Lib/bsp_isg_transmitions_util.js',
                 let ediSettings = BSP_EDISettingsUtil.getEDIsettings(paramsObj.environment);
 
                 let paramTransmissionSavedSearchObj = search.load({id: transmitionSavedSearchID});
-                let transmissionSearchObj = BSPTransmitionsUtil.buildTransmissionSavedSearch(paramTransmissionSavedSearchObj);
+                let transmissionSearchObj = BSPTransmitionsUtil.buildTransmissionSavedSearch(paramTransmissionSavedSearchObj, vendor);
                 let resultSearch = BSPTransmitionsUtil.searchAll(transmissionSearchObj);
                 resultSearch.forEach(element => {
                     let salesOrderID = element.id;
