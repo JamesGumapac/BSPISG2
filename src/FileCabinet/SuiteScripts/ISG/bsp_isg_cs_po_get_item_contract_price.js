@@ -27,7 +27,6 @@ define(["N/record", "N/search", "./Lib/bsp_isg_get_item_contract_plan.js"], /**
 
       if (fieldId === "entity") {
         isTP = util.isTradingPartner(entity);
-        log.debug("isTradingPartner: ", isTP);
         if (isTP === true) {
           const tpRecId = util.getTradingPartnerID(entity);
           accountNumber = util.getTpAccountCartonBuy(tpRecId);
@@ -36,6 +35,7 @@ define(["N/record", "N/search", "./Lib/bsp_isg_get_item_contract_plan.js"], /**
               fieldId: "custbody_bsp_isg_transmission_acct_num",
               value: accountNumber,
             });
+   
         }
       }
 
