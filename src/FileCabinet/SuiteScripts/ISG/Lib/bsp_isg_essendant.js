@@ -80,6 +80,7 @@
             sublistId: 'item'
         });
 
+        let poRates = [];
         let linesPartiallyAcknowledged = [];
         for(let i = (itemCount - 1); i >= 0; i--){
             let item = purchaseOrderRec.getSublistText({
@@ -105,6 +106,8 @@
                     fieldId: 'item',
                     line: i
                 });
+
+                poRates.push({itemID: itemID, rate: rate});
 
                 updatePricePlan(itemID, vendor, account, rate);
                 log.debug("processPOline", `Price plan updated`);
@@ -143,6 +146,8 @@
                         value: parseInt(acknowledgmentItem.Facility.Quantity)
                     });
 
+                    poRates.push({itemID: itemID, rate: rate});
+
                     updatePricePlan(itemID, vendor, account, rate);    
                     log.debug("processPOline", `Price plan updated`);             
                 }
@@ -166,6 +171,10 @@
             BSP_POutil.deletePO(poID);
         }
 
+        if(poRates.length > 0){
+            BSP_SOUtil.updateSOItemPORates(soID, poRates);
+        }
+        
         if(linesPartiallyAcknowledged.length > 0){
             BSP_SOUtil.updateSOLinesPartiallyAcknowledged(soID, linesPartiallyAcknowledged);
         }
