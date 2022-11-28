@@ -146,8 +146,53 @@
         return lineData;
     }
 
+
+    function updateSOItemPORates(soID, poRates){
+        if(soID){
+            log.debug("updateSOItemPORates", `Update rates in SO ID ${soID}`);
+            if(poRates.length > 0){
+                log.debug("updateSOItemPORates", `Item rates ${JSON.stringify(poRates)}`);
+
+                let salesOrderRec = record.load({
+                    type: record.Type.SALES_ORDER,
+                    id: parseInt(soID),
+                    isDynamic: true
+                });
+        
+                for(let i = 0; i < poRates.length; i++){
+                    let item = poRates[i];
+                    let itemID = item.itemID;
+                    let rate = item.rate;
+
+                    let lineNum = salesOrderRec.findSublistLineWithValue({
+                        sublistId: 'item',
+                        fieldId: 'item',
+                        value: itemID
+                    });
+        
+                    salesOrderRec.selectLine({
+                        sublistId: 'item',
+                        line: lineNum
+                    });
+                         
+                    salesOrderRec.setCurrentSublistValue({
+                        sublistId: 'item',
+                        fieldId: 'rate',
+                        value: rate
+                    });
+                    salesOrderRec.commitLine({
+                        sublistId: "item",
+                    });
+                }
+                salesOrderRec.save();
+                log.debug("updateSOLines", `Sales Order updated`);
+            }     
+        }
+    }
+
     return {
         updateSOLinesPartiallyAcknowledged: updateSOLinesPartiallyAcknowledged,
-        updateSOLinesPartiallyShipped: updateSOLinesPartiallyShipped
+        updateSOLinesPartiallyShipped: updateSOLinesPartiallyShipped,
+        updateSOItemPORates: updateSOItemPORates
 	};
 });
