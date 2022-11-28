@@ -3,18 +3,20 @@
 		BuyerOrganizationCode="${data.transmissionData.accountNumber.text}"
 		EntryType="AS2"		
 		DraftOrderFlag="Y" 
-		OrderType="<#if data.purchaseOrder.orderType == 'W&L'>03<#else>04</#if>" 
+		OrderType="<#if data.purchaseOrder.orderType == 'Wrap and Label'>03<#elseif data.purchaseOrder.orderType == 'Dropship'>04<#else>01</#if>" 
 		IsShipComplete="${data.transmissionData.adot}" 
 		ShipNode="<#if data.purchaseOrder.adot == 'N'>${data.purchaseOrder.transmissionLocation.text}</#if>"
 		CancelOrderOnBackorder="N" 
 		CustomerPONo="${data.purchaseOrder.purchaseOrderNumber}">
-	<PersonInfoShipTo FirstName="${data.purchaseOrder.customer.companyName}" 
-					AddressLine1="${data.purchaseOrder.customer.address1}" 
-					City="${data.purchaseOrder.customer.city}"
-					State="${data.purchaseOrder.customer.state}" 
-					ZipCode="${data.purchaseOrder.customer.zipcode}" 
-					Country="${data.purchaseOrder.customer.countrycode}" />
-	<PersonInfoContact FirstName="${data.purchaseOrder.customer.addressee}" />
+	<#if data.purchaseOrder.orderType != 'Stock'>
+		<PersonInfoShipTo FirstName="${data.purchaseOrder.customer.companyName}" 
+				AddressLine1="${data.purchaseOrder.customer.address1}" 
+				City="${data.purchaseOrder.customer.city}"
+				State="${data.purchaseOrder.customer.state}" 
+				ZipCode="${data.purchaseOrder.customer.zipcode}" 
+				Country="${data.purchaseOrder.customer.countrycode}" />
+		<PersonInfoContact FirstName="${data.purchaseOrder.customer.addressee}" />
+	</#if>		
 	<OrderLines>
 		<#list data.purchaseOrder.items as item>
 			<OrderLine PrimeLineNo="${item.itemLine}" CustomerLinePONo="${item.itemLine}">

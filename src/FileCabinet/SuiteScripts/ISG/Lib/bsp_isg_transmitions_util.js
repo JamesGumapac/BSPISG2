@@ -603,7 +603,8 @@
             search.createColumn({name: "quantitycommitted", label: "Quantity Committed"}),
             search.createColumn({name: "entity", label: "Customer"}),
             search.createColumn({name: "shipaddress1", label: "Shipping Address 1"}),
-            search.createColumn({name: "custcol_bsp_order_shipment_type", label: "Order Shipment Type"})
+            search.createColumn({name: "custcol_bsp_order_shipment_type", label: "Order Shipment Type"}),
+            search.createColumn({name: "shipdate", label: "Ship Date"})
         ];
 
         let searchFilters = transmitionSavedSearcObj.filters;
@@ -614,6 +615,51 @@
             columns: fixedColumns
         });
         return searchObj;
+    }
+
+    /**
+     * "If today + (deliveryTime) is greater than or equals to shipdate, then return true"
+     * @param deliveryTime - 1, 2, or 3
+     * @param shipdate - "2019-01-01"
+     * @returns A boolean value.
+     */
+    function validShipDate(deliveryTime, shipdate){
+        // today + (deliveryTime) is greater than or equals to shipdate
+        let newDate = new Date();
+        let dayOfWeek = newDate.getDay();
+        let addDays = parseInt(deliveryTime);
+        
+        if(deliveryTime == 1){
+            if(dayOfWeek == 5){
+                addDays = parseInt(deliveryTime) + 2;
+            }
+        }
+
+        if(deliveryTime == 2){
+            if(dayOfWeek == 4){
+                addDays = parseInt(deliveryTime) + 2;
+            }
+            if(dayOfWeek == 5){
+                addDays = parseInt(deliveryTime) + 2;
+            }
+        }
+
+        if(deliveryTime == 3){
+            if(dayOfWeek == 3){
+                addDays = parseInt(deliveryTime) + 2;
+            }
+            if(dayOfWeek == 4){
+                addDays = parseInt(deliveryTime) + 2;
+            }
+            if(dayOfWeek == 5){
+                addDays = parseInt(deliveryTime) + 2;
+            }
+        }
+
+        newDate.setDate(parseInt(newDate.getDate()) + addDays);
+        let objShipDate = new Date(shipdate);
+        
+        return (newDate >= objShipDate);
     }
 
     return {
@@ -634,6 +680,8 @@
         getXMLDate: getXMLDate,
         getAccountNumber: getAccountNumber,
         checkTransmissionQueue: checkTransmissionQueue,
-        buildTransmissionSavedSearch: buildTransmissionSavedSearch
+        buildTransmissionSavedSearch: buildTransmissionSavedSearch,
+        validShipDate: validShipDate,
+        deleteQueue: deleteQueue
 	};
 });

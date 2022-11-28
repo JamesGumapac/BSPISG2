@@ -63,25 +63,43 @@ function(message, url, record) {
             type: record.Type.PURCHASE_ORDER,
             id: parseInt(purchaseOrderRecID)
         });
-        let itemCount = poRec.getLineCount({
-            sublistId: 'item'
-        });
-        for(let i = 0; i < itemCount; i++){
-            let customer = poRec.getSublistValue({
-                sublistId: 'item',
-                fieldId: 'customer',
-                line: i
-            }) 
-            if(!customer){
-                alert("Customer information is missing in one of the item lines");
-                return false;
+
+        let orderType = poRec.getValue('custbody_bsp_isg_order_type');
+        if(orderType == 1 || orderType == 2){
+            let itemCount = poRec.getLineCount({
+                sublistId: 'item'
+            });
+            for(let i = 0; i < itemCount; i++){
+                let customer = poRec.getSublistValue({
+                    sublistId: 'item',
+                    fieldId: 'customer',
+                    line: i
+                }) 
+                if(!customer){
+                    alert("Customer information is missing in one of the item lines");
+                    return false;
+                }
             }
         }
-
+       
         let account = poRec.getValue('custbody_bsp_isg_transmission_acct_num');
         if(!account){
             alert("Please select an Account Number to transmit this PO");
             return false;
+        }
+
+        let adot = poRec.getText('custbody_bsp_isg_adot');
+        if(!adot){
+            alert("Please select an option under the ADOT field to transmit this PO");
+            return false;
+        }else{
+            if(adot == "N"){
+                let transmissionLocation = poRec.getValue('custbody_bsp_isg_transmission_loc');
+                if(!transmissionLocation){
+                    alert("Please select a Transmission location for the selected Trading Partner");
+                    return false;
+                }
+            }
         }
 
         return true;
