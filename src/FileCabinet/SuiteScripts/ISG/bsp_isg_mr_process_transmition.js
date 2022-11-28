@@ -2,13 +2,13 @@
  * @NApiVersion 2.1
  * @NScriptType MapReduceScript
  */
-define(['N/runtime', 'N/search', 'N/task', './Lib/bsp_isg_purchase_orders.js', './Lib/bsp_isg_edi_settings.js', './Lib/bsp_isg_transmitions_util.js'],
+define(['N/runtime', 'N/record', 'N/search', 'N/task', './Lib/bsp_isg_purchase_orders.js', './Lib/bsp_isg_edi_settings.js', './Lib/bsp_isg_transmitions_util.js', './Lib/bsp_isg_trading_partners.js'],
     /**
     * @param{runtime} runtime
     * @param{search} search
     * @param{BSPTransmitionsUtil} BSPTransmitionsUtil
     */
-    (runtime, search, task, BSP_POutil, BSP_EDISettingsUtil, BSPTransmitionsUtil) => {
+    (runtime, record, search, task, BSP_POutil, BSP_EDISettingsUtil, BSPTransmitionsUtil, BSPTradingParnters) => {
         /**
          * Defines the function that is executed at the beginning of the map/reduce process and generates the input data.
          * @param {Object} inputContext
@@ -48,7 +48,8 @@ define(['N/runtime', 'N/search', 'N/task', './Lib/bsp_isg_purchase_orders.js', '
                 let ediSettings = BSP_EDISettingsUtil.getEDIsettings(paramsObj.environment);
 
                 let paramTransmissionSavedSearchObj = search.load({id: transmitionSavedSearchID});
-                let transmissionSearchObj = BSPTransmitionsUtil.buildTransmissionSavedSearch(paramTransmissionSavedSearchObj, vendor);
+                let deliveryTime = BSPTradingParnters.getTradingPartnerDeliveryTime(vendor);
+                let transmissionSearchObj = BSPTransmitionsUtil.buildTransmissionSavedSearch(paramTransmissionSavedSearchObj);
                 let resultSearch = BSPTransmitionsUtil.searchAll(transmissionSearchObj);
                 resultSearch.forEach(element => {
                     let salesOrderID = element.id;
@@ -61,6 +62,7 @@ define(['N/runtime', 'N/search', 'N/task', './Lib/bsp_isg_purchase_orders.js', '
                     let customer = element.getValue("entity");
                     let shipaddress1 = element.getValue("shipaddress1");
                     let shipmentType = element.getValue("custcol_bsp_order_shipment_type");
+
                     transmitionData.push({
                         transactionForm: ediSettings.transactionForm,
                         transmitionRecID: transmitionRecID,
@@ -77,8 +79,10 @@ define(['N/runtime', 'N/search', 'N/task', './Lib/bsp_isg_purchase_orders.js', '
                         autoreceive: autoreceive,
                         adot: adot,
                         account: account,
-                        transmissionLocation: transmissionLocation
-                    });           
+                        transmissionLocation: transmissionLocation,
+                        deliveryTime: deliveryTime
+                    });                       
+                         
                 });  
             } catch (error)
             {
@@ -136,35 +140,54 @@ define(['N/runtime', 'N/search', 'N/task', './Lib/bsp_isg_purchase_orders.js', '
                 let salesOrderID = reduceContext.key;
                 let itemData = reduceContext.values;
                 let commonData = JSON.parse(reduceContext.values[0]);
-                let transmitionQueueID = commonData.transmitionQueueID;
-                let customer =  commonData.customer;
-                let shipaddress1 = commonData.shipaddress1;
-                let vendor = commonData.vendor;
-                let account = BSPTransmitionsUtil.getAccountNumber(customer, vendor, shipaddress1, commonData.account);
-                let routeCode = commonData.routeCodeID;
-                let location = commonData.location;
-                let autoreceive = commonData.autoreceive;
-                let adot = commonData.adot;
-                let transmissionLocation = commonData.transmissionLocation;
-                let transactionForm = commonData.transactionForm;
-                let poData = {
-                    transactionForm: transactionForm,
-                    transmitionQueueID: transmitionQueueID, 
-                    salesOrderID:salesOrderID, 
-                    customer:customer, 
-                    vendor:vendor, 
-                    routeCode: routeCode,
-                    location: location,
-                    autoreceive: autoreceive, 
-                    account: account,
-                    adot: adot,
-                    transmissionLocation: transmissionLocation,
-                    itemData: itemData
-                };
-                log.debug(functionName, `Working with SO data: ${JSON.stringify(poData)}`);
+                let deliveryTime = commonData.deliveryTime;
 
-                let purchaseOrders = BSP_POutil.createPurchaseOrders(poData);
-                log.debug(functionName, `POs Created: ${purchaseOrders}`);
+                let soField = search.lookupFields({
+                    type: record.Type.SALES_ORDER,
+                    id: parseInt(salesOrderID),
+                    columns: 'shipdate'
+                });
+                log.debug(functionName, JSON.stringify(soField));
+                let shipdate = null;
+                if(soField && soField.shipdate){
+                    shipdate = soField.shipdate;
+                }
+
+                if(!deliveryTime || 
+                    (deliveryTime && BSPTransmitionsUtil.validShipDate(deliveryTime, shipdate))){
+
+                    let transmitionQueueID = commonData.transmitionQueueID;
+                    let customer =  commonData.customer;
+                    let shipaddress1 = commonData.shipaddress1;
+                    let vendor = commonData.vendor;
+                    let account = BSPTransmitionsUtil.getAccountNumber(customer, vendor, shipaddress1, commonData.account);
+                    let routeCode = commonData.routeCodeID;
+                    let location = commonData.location;
+                    let autoreceive = commonData.autoreceive;
+                    let adot = commonData.adot;
+                    let transmissionLocation = commonData.transmissionLocation;
+                    let transactionForm = commonData.transactionForm;
+                    let poData = {
+                        transactionForm: transactionForm,
+                        transmitionQueueID: transmitionQueueID, 
+                        salesOrderID:salesOrderID, 
+                        customer:customer, 
+                        vendor:vendor, 
+                        routeCode: routeCode,
+                        location: location,
+                        autoreceive: autoreceive, 
+                        account: account,
+                        adot: adot,
+                        transmissionLocation: transmissionLocation,
+                        itemData: itemData
+                    };
+                    log.debug(functionName, `Working with SO data: ${JSON.stringify(poData)}`);
+
+                    let purchaseOrders = BSP_POutil.createPurchaseOrders(poData);
+                    log.debug(functionName, `POs Created: ${purchaseOrders}`);
+                }
+
+                
 
             }catch (error)
             {
