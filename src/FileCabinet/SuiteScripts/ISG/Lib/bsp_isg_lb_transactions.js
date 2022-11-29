@@ -328,7 +328,7 @@ define([
         ignoreMandatoryFields: false,
       });
       log.debug("PO created with ID: ", recordId);
-      sendPOEmail(recordId);
+      sendPOEmail(recordId, aopdVendor);
     }
 
     objResult = {
