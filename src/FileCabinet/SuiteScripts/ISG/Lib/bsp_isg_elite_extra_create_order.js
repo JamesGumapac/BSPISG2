@@ -134,6 +134,11 @@ define([
 							fieldId: "location",
 							line: i,
 						}),
+						poVendor :ifRec.getSublistValue({
+							sublistId: "item",
+							fieldId: "custcol_bsp_isg_po_vendor_display",
+							line: i,
+						}),
 					});
 				}
 			}
@@ -166,7 +171,7 @@ define([
                   <cost>${lineItem.amount}</cost>
                   <part>
                       <number>${lineItem.number}</number>
-                      <description></description>
+                      <description>${lineItem.description} - ${lineItem.poVendor}</description>
                   </part>
                   <weight></weight>
                   <length></length>
@@ -284,7 +289,7 @@ define([
     <phone_number></phone_number>
     <duration></duration>
 </order>`;
-			
+			log.debug("orderXML", orderXML)
 			const eliteExtraSettings = getEliteExtraSettings(eliteExtraId);
 			return BSPEliteExtraAPIService.uploadOrder(
 				ifId,
