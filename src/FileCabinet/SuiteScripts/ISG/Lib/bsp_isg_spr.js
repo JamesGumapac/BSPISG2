@@ -3,7 +3,7 @@
  * @NModuleScope Public
  */
 
- define(['N/record','./bsp_isg_purchase_orders.js', './bsp_isg_sales_orders.js', './bsp_isg_trading_partners'], function (record, BSP_POutil, BSP_SOUtil, BSP_TradingPartner) {
+ define(['N/record', 'N/search', './bsp_isg_purchase_orders.js', './bsp_isg_sales_orders.js'], function (record, search, BSP_POutil, BSP_SOUtil) {
 
     /**
      *  'A' = accepted
@@ -260,7 +260,7 @@
     }
 
     function updatePricePlan(itemID, vendor, account, rate){
-        let pricePlanRecID = BSP_TradingPartner.getPricePlanID(itemID, vendor, account);
+        let pricePlanRecID = getPricePlanID(itemID, vendor, account);
         if(pricePlanRecID){
             record.submitFields({
                 type: "customrecord_bsp_isg_item_acct_data",
@@ -274,6 +274,45 @@
                 }           
             });
         }
+    }
+
+    function updatePricePlan(itemID, vendor, account, rate){
+        let pricePlanRecID = getPricePlanID(itemID, vendor, account);
+        if(pricePlanRecID){
+            record.submitFields({
+                type: "customrecord_bsp_isg_item_acct_data",
+                id: pricePlanRecID,
+                values: {
+                    custrecord_bsp_isg_item_cost: rate
+                },
+                options: {        
+                    enableSourcing: false,        
+                    ignoreMandatoryFields : true    
+                }           
+            });
+        }
+    }
+
+    function getPricePlanID(itemID, supplier, account){
+        let planID = null;
+        const customrecord_bsp_isg_item_acct_dataSearchObj = search.create({
+            type: "customrecord_bsp_isg_item_acct_data",
+            filters:
+            [
+               ["custrecord_bsp_isg_parent_item","anyof",itemID], 
+               "AND", 
+               ["custrecord_bsp_isg_item_supplier","anyof",supplier], 
+               "AND", 
+               ["custrecord_bsp_isg_account_number","anyof",account]
+            ],
+            columns:[]
+         });
+
+        customrecord_bsp_isg_item_acct_dataSearchObj.run().each(function(result){
+            planID = result.id;
+            return true;
+        });
+        return planID;
     }
 
     /************************************************************
@@ -302,7 +341,7 @@
             if(dropShipPO(poID)){
                 let itemFulfillmentRec = BSP_POutil.createItemFulfillmentFromPO(soID);
                 if(itemFulfillmentRec){
-                    result = processItemFulfillment(itemFulfillmentRec, jsonObjResponse, poID, soID, result);
+                    result = processItemFulfillment(itemFulfillmentRec, jsonObjResponse, poID, soID, result, "C");
                     if(result.itemFulfillmentRecID){
                         BSP_POutil.updatePOtransmissionStatus(poID, BSP_POutil.transmitionPOStatus().shipmentConfirmed);
                         result.status = "Ok";
@@ -312,13 +351,24 @@
                 }else{
                     result.status = "Error";
                 }
-            }else{
+            }else if(wrapAndLabelPO(poID)){
                 let itemReceiptRec = BSP_POutil.createItemReceiptFromPO(poID);
                 if(itemReceiptRec){
                     result = processItemReceipt(itemReceiptRec, jsonObjResponse, poID, soID, result);
                     if(result.itemReceiptRecID){
                         BSP_POutil.updatePOtransmissionStatus(poID, BSP_POutil.transmitionPOStatus().shipmentConfirmed);
                         result.status = "Ok";
+
+                        /**
+                         * Create Item Fulfillment for W&L
+                        */
+                        let itemFulfillmentRec = BSP_POutil.createItemFulfillmentFromPO(soID);
+                        if(itemFulfillmentRec){
+                            result = processItemFulfillment(itemFulfillmentRec, jsonObjResponse, poID, soID, result, "B");
+                            result.status = "Ok";
+                        }else{
+                            result.status = "Error";
+                        }
                     }else{
                         result.status = "Error";
                     }
@@ -346,7 +396,7 @@
      * @param resultObj - This is the object that will be returned to the client.
      * @returns The resultObj is being returned.
     */
-    function processItemFulfillment(itemFulfillmentRec, jsonObjResponse, poID, soID, resultObj){
+    function processItemFulfillment(itemFulfillmentRec, jsonObjResponse, poID, soID, resultObj, status){
         let shipmentlines = getShipmentlines(jsonObjResponse);
         log.debug("processItemFulfillment", `shipmentlines ${JSON.stringify(shipmentlines)}`);
 
@@ -398,7 +448,7 @@
         }
 
         try{
-            itemFulfillmentRec.setValue('shipstatus', "C");
+            itemFulfillmentRec.setValue('shipstatus', status);
             let recID = itemFulfillmentRec.save();
             resultObj.itemFulfillmentRecID = recID;    
             BSP_SOUtil.updateSOLinesPartiallyShipped(soID, linesPartiallyShipped);  
@@ -513,6 +563,16 @@
     */
     function dropShipPO(poID){
         return BSP_POutil.isDropShip(poID);
+    }
+
+    /**
+     * This function returns a boolean value of true or false based on whether the PO is a W&L PO or
+     * not.
+     * @param poID - The internal ID of the Purchase Order
+     * @returns A boolean value.
+    */
+    function wrapAndLabelPO(poID){
+        return BSP_POutil.isWrapAndLabel(poID);
     }
 
     function getShipmentHeaderFieldValue(jsonObjResponse, field){

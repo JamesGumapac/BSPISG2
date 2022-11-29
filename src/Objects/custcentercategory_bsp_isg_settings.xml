@@ -16,14 +16,14 @@
       <shortlist>F</shortlist>
     </link>
     <link>
-      <linklabel>Account Numbers</linklabel>
-      <linkobject>[scriptid=customrecord_bsp_isg_account_number]</linkobject>
+      <linklabel>Elite Extra Settings</linklabel>
+      <linkobject>[scriptid=customrecord_bsp_isg_elite_extra_setting]</linkobject>
       <linktasktype>LIST</linktasktype>
       <shortlist>F</shortlist>
     </link>
     <link>
-      <linklabel>Elite Extra Settings</linklabel>
-      <linkobject>[scriptid=customrecord_bsp_isg_elite_extra_setting]</linkobject>
+      <linklabel>Delivery Zones</linklabel>
+      <linkobject>[scriptid=customrecord_bsp_isg_deliveryzone]</linkobject>
       <linktasktype>LIST</linktasktype>
       <shortlist>F</shortlist>
     </link>
