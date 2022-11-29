@@ -790,6 +790,24 @@
     }
 
     /**
+     * If the PO has a value in the custom field "custbody_bsp_isg_order_type" and that value is
+     * "WrapAndLabel", then return true. Otherwise, return false.
+     * @param poID - The internal ID of the Purchase Order
+     * @returns a boolean value.
+    */
+    function isWrapAndLabel(poID){
+        let poFields = search.lookupFields({
+            type: record.Type.PURCHASE_ORDER,
+            id: parseInt(poID),
+            columns: 'custbody_bsp_isg_order_type'
+        });
+        if(poFields && poFields.custbody_bsp_isg_order_type && poFields.custbody_bsp_isg_order_type[0]){
+            return poFields.custbody_bsp_isg_order_type[0].text == "Wrap and Label";
+        }
+        return false;
+    }
+
+    /**
      * If the PO has a value in the custom field "custbody_bsp_isg_autoreceived" and that value is
      * "true", then return true. Otherwise, return false.
      * @param poID - The internal ID of the Purchase Order
@@ -982,6 +1000,7 @@
         getVendor: getVendor,
         getTransmissionFields: getTransmissionFields,
         isDropShip: isDropShip,
+        isWrapAndLabel: isWrapAndLabel,
         isAutoreceive: isAutoreceive,
         getSalesOrderID: getSalesOrderID,
         createBillFromPO: createBillFromPO,

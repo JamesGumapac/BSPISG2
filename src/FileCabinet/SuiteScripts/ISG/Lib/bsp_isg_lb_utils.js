@@ -378,8 +378,15 @@
    * @param {*} settingRecID
    */
   function updateLastRuntimeExecution(settingRecID) {
+
+    let hourDiff = search.lookupFields({
+      type: "customrecord_bsp_isg_lb_integ_settings",
+      id: settingRecID,
+      columns: "custrecord_bsp_isg_lb_tz_hour_diff",
+    }).custrecord_bsp_isg_lb_tz_hour_diff;
+
     let date = new Date();
-    date.setHours(date.getHours() - 5);
+    date.setHours(date.getHours() - hourDiff);
     let lastRuntimeExecutionDate = date.toISOString();
 
     record.submitFields({
