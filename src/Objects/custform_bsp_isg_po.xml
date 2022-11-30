@@ -1,8 +1,8 @@
-<transactionForm scriptid="custform_bsp_lb_sales_orders" standard="STANDARDSALESORDER">
-  <name>BSP | ISG | Logicblock | Sales Order</name>
-  <recordType>SALESORDER</recordType>
+<transactionForm scriptid="custform_bsp_isg_po" standard="STANDARDDROPSHIPPURCHASEORDER">
+  <name>BSP | ISG | Purchase Order</name>
+  <recordType>PURCHASEORDER</recordType>
   <inactive>F</inactive>
-  <preferred>F</preferred>
+  <preferred>T</preferred>
   <mainFields>
     <fieldGroup scriptid="primaryinformation">
       <label>Primary Information</label>
@@ -20,9 +20,9 @@
           <sameRowAsPrevious>F</sameRowAsPrevious>
         </field>
         <field>
-          <id>TRANID</id>
-          <label>Order #</label>
-          <visible>T</visible>
+          <id>OTHERREFNUM</id>
+          <label>Vendor #</label>
+          <visible>F</visible>
           <mandatory>F</mandatory>
           <displayType>NORMAL</displayType>
           <columnBreak>F</columnBreak>
@@ -30,9 +30,46 @@
         </field>
         <field>
           <id>ENTITY</id>
-          <label>Customer:Project</label>
+          <label>Vendor</label>
           <visible>T</visible>
           <mandatory>T</mandatory>
+          <displayType>NORMAL</displayType>
+          <columnBreak>F</columnBreak>
+          <sameRowAsPrevious>F</sameRowAsPrevious>
+        </field>
+        <field>
+          <id>EMPLOYEE</id>
+          <label>Employee</label>
+          <visible>F</visible>
+          <mandatory>F</mandatory>
+          <displayType>NORMAL</displayType>
+          <columnBreak>F</columnBreak>
+          <sameRowAsPrevious>F</sameRowAsPrevious>
+        </field>
+        <field>
+          <id>SUPERVISORAPPROVAL</id>
+          <label>Supervisor Approval</label>
+          <visible>F</visible>
+          <mandatory>F</mandatory>
+          <displayType>NORMAL</displayType>
+          <columnBreak>F</columnBreak>
+          <sameRowAsPrevious>F</sameRowAsPrevious>
+          <checkBoxDefault>USE_FIELD_DEFAULT</checkBoxDefault>
+        </field>
+        <field>
+          <id>CREATEDFROM</id>
+          <label>Created From</label>
+          <visible>T</visible>
+          <mandatory>F</mandatory>
+          <displayType>DISABLED</displayType>
+          <columnBreak>F</columnBreak>
+          <sameRowAsPrevious>F</sameRowAsPrevious>
+        </field>
+        <field>
+          <id>DUEDATE</id>
+          <label>Receive By</label>
+          <visible>T</visible>
+          <mandatory>F</mandatory>
           <displayType>NORMAL</displayType>
           <columnBreak>F</columnBreak>
           <sameRowAsPrevious>F</sameRowAsPrevious>
@@ -47,34 +84,7 @@
           <sameRowAsPrevious>F</sameRowAsPrevious>
         </field>
         <field>
-          <id>ORDERSTATUS</id>
-          <label>Status</label>
-          <visible>T</visible>
-          <mandatory>T</mandatory>
-          <displayType>NORMAL</displayType>
-          <columnBreak>F</columnBreak>
-          <sameRowAsPrevious>F</sameRowAsPrevious>
-        </field>
-        <field>
-          <id>STARTDATE</id>
-          <label>Start Date</label>
-          <visible>F</visible>
-          <mandatory>F</mandatory>
-          <displayType>NORMAL</displayType>
-          <columnBreak>F</columnBreak>
-          <sameRowAsPrevious>F</sameRowAsPrevious>
-        </field>
-        <field>
-          <id>ENDDATE</id>
-          <label>End Date</label>
-          <visible>F</visible>
-          <mandatory>F</mandatory>
-          <displayType>NORMAL</displayType>
-          <columnBreak>F</columnBreak>
-          <sameRowAsPrevious>F</sameRowAsPrevious>
-        </field>
-        <field>
-          <id>OTHERREFNUM</id>
+          <id>TRANID</id>
           <label>PO #</label>
           <visible>T</visible>
           <mandatory>F</mandatory>
@@ -83,8 +93,36 @@
           <sameRowAsPrevious>F</sameRowAsPrevious>
         </field>
         <field>
+          <id>FIRMED</id>
+          <label>Firmed</label>
+          <visible>F</visible>
+          <mandatory>F</mandatory>
+          <displayType>NORMAL</displayType>
+          <columnBreak>F</columnBreak>
+          <sameRowAsPrevious>F</sameRowAsPrevious>
+          <checkBoxDefault>USE_FIELD_DEFAULT</checkBoxDefault>
+        </field>
+        <field>
           <id>MEMO</id>
           <label>Memo</label>
+          <visible>F</visible>
+          <mandatory>F</mandatory>
+          <displayType>NORMAL</displayType>
+          <columnBreak>F</columnBreak>
+          <sameRowAsPrevious>F</sameRowAsPrevious>
+        </field>
+        <field>
+          <id>APPROVALSTATUS</id>
+          <label>Approval Status</label>
+          <visible>F</visible>
+          <mandatory>F</mandatory>
+          <displayType>NORMAL</displayType>
+          <columnBreak>F</columnBreak>
+          <sameRowAsPrevious>F</sameRowAsPrevious>
+        </field>
+        <field>
+          <id>NEXTAPPROVER</id>
+          <label>Next Approver</label>
           <visible>F</visible>
           <mandatory>F</mandatory>
           <displayType>NORMAL</displayType>
@@ -110,108 +148,10 @@
           <sameRowAsPrevious>F</sameRowAsPrevious>
           <checkBoxDefault>UNCHECKED</checkBoxDefault>
         </field>
-      </fields>
-    </fieldGroup>
-    <fieldGroup scriptid="salesinformation">
-      <label>Sales Information</label>
-      <visible>T</visible>
-      <showTitle>T</showTitle>
-      <singleColumn>F</singleColumn>
-      <fields position="MIDDLE">
         <field>
-          <id>SALESREP</id>
-          <label>Sales Rep</label>
+          <id>AVAILABLEVENDORCREDIT</id>
+          <label>Available Vendor Credit</label>
           <visible>F</visible>
-          <mandatory>F</mandatory>
-          <displayType>NORMAL</displayType>
-          <columnBreak>F</columnBreak>
-          <sameRowAsPrevious>F</sameRowAsPrevious>
-        </field>
-        <field>
-          <id>OPPORTUNITY</id>
-          <label>Opportunity</label>
-          <visible>T</visible>
-          <mandatory>F</mandatory>
-          <displayType>NORMAL</displayType>
-          <columnBreak>F</columnBreak>
-          <sameRowAsPrevious>F</sameRowAsPrevious>
-        </field>
-        <field>
-          <id>SALESEFFECTIVEDATE</id>
-          <label>Sales Effective Date</label>
-          <visible>F</visible>
-          <mandatory>F</mandatory>
-          <displayType>NORMAL</displayType>
-          <columnBreak>F</columnBreak>
-          <sameRowAsPrevious>F</sameRowAsPrevious>
-        </field>
-        <field>
-          <id>EXCLUDECOMMISSION</id>
-          <label>Exclude Commissions</label>
-          <visible>F</visible>
-          <mandatory>F</mandatory>
-          <displayType>NORMAL</displayType>
-          <columnBreak>F</columnBreak>
-          <sameRowAsPrevious>F</sameRowAsPrevious>
-          <checkBoxDefault>USE_FIELD_DEFAULT</checkBoxDefault>
-        </field>
-        <field>
-          <id>CREATEDFROM</id>
-          <label>Created From</label>
-          <visible>F</visible>
-          <mandatory>F</mandatory>
-          <displayType>DISABLED</displayType>
-          <columnBreak>F</columnBreak>
-          <sameRowAsPrevious>F</sameRowAsPrevious>
-        </field>
-        <field>
-          <id>LEADSOURCE</id>
-          <label>Lead Source</label>
-          <visible>F</visible>
-          <mandatory>F</mandatory>
-          <displayType>NORMAL</displayType>
-          <columnBreak>F</columnBreak>
-          <sameRowAsPrevious>F</sameRowAsPrevious>
-        </field>
-        <field>
-          <id>SOURCE</id>
-          <label>Source</label>
-          <visible>F</visible>
-          <mandatory>F</mandatory>
-          <displayType>NORMAL</displayType>
-          <columnBreak>F</columnBreak>
-          <sameRowAsPrevious>F</sameRowAsPrevious>
-        </field>
-        <field>
-          <id>PARTNER</id>
-          <label>Partner</label>
-          <visible>F</visible>
-          <mandatory>F</mandatory>
-          <displayType>NORMAL</displayType>
-          <columnBreak>F</columnBreak>
-          <sameRowAsPrevious>F</sameRowAsPrevious>
-        </field>
-      </fields>
-    </fieldGroup>
-    <fieldGroup scriptid="fieldgroup_1_t927173_205">
-      <label>Billing / Shippiing Information</label>
-      <visible>T</visible>
-      <showTitle>T</showTitle>
-      <singleColumn>F</singleColumn>
-      <fields position="MIDDLE">
-        <field>
-          <id>BILLADDRESS</id>
-          <label>Bill To</label>
-          <visible>T</visible>
-          <mandatory>F</mandatory>
-          <displayType>NORMAL</displayType>
-          <columnBreak>F</columnBreak>
-          <sameRowAsPrevious>F</sameRowAsPrevious>
-        </field>
-        <field>
-          <id>SHIPADDRESS</id>
-          <label>Ship To</label>
-          <visible>T</visible>
           <mandatory>F</mandatory>
           <displayType>NORMAL</displayType>
           <columnBreak>F</columnBreak>
@@ -263,67 +203,19 @@
         </field>
       </fields>
     </fieldGroup>
+    <fieldGroup scriptid="intercompanymanagement">
+      <label>Intercompany Management</label>
+      <visible>T</visible>
+      <showTitle>T</showTitle>
+      <singleColumn>F</singleColumn>
+    </fieldGroup>
     <defaultFieldGroup>
       <fields position="MIDDLE">
         <field>
-          <id>DRACCOUNT</id>
-          <label>Deferred Revenue Reclassification Account</label>
+          <id>CURRENCY</id>
+          <label>Currency</label>
           <visible>F</visible>
-          <mandatory>F</mandatory>
-          <displayType>NORMAL</displayType>
-          <columnBreak>F</columnBreak>
-          <sameRowAsPrevious>F</sameRowAsPrevious>
-        </field>
-        <field>
-          <id>FXACCOUNT</id>
-          <label>Foreign Currency Adjustment Revenue Account</label>
-          <visible>F</visible>
-          <mandatory>F</mandatory>
-          <displayType>NORMAL</displayType>
-          <columnBreak>F</columnBreak>
-          <sameRowAsPrevious>F</sameRowAsPrevious>
-        </field>
-        <field>
-          <id>ONETIME</id>
-          <label>One Time</label>
-          <visible>F</visible>
-          <mandatory>F</mandatory>
-          <displayType>NORMAL</displayType>
-          <columnBreak>F</columnBreak>
-          <sameRowAsPrevious>F</sameRowAsPrevious>
-        </field>
-        <field>
-          <id>RECURWEEKLY</id>
-          <label>Weekly</label>
-          <visible>F</visible>
-          <mandatory>F</mandatory>
-          <displayType>NORMAL</displayType>
-          <columnBreak>F</columnBreak>
-          <sameRowAsPrevious>F</sameRowAsPrevious>
-        </field>
-        <field>
-          <id>RECURMONTHLY</id>
-          <label>Monthly</label>
-          <visible>F</visible>
-          <mandatory>F</mandatory>
-          <displayType>NORMAL</displayType>
-          <columnBreak>F</columnBreak>
-          <sameRowAsPrevious>F</sameRowAsPrevious>
-        </field>
-        <field>
-          <id>RECURQUARTERLY</id>
-          <label>Quarterly</label>
-          <visible>F</visible>
-          <mandatory>F</mandatory>
-          <displayType>NORMAL</displayType>
-          <columnBreak>F</columnBreak>
-          <sameRowAsPrevious>F</sameRowAsPrevious>
-        </field>
-        <field>
-          <id>RECURANNUALLY</id>
-          <label>Annually</label>
-          <visible>F</visible>
-          <mandatory>F</mandatory>
+          <mandatory>T</mandatory>
           <displayType>NORMAL</displayType>
           <columnBreak>F</columnBreak>
           <sameRowAsPrevious>F</sameRowAsPrevious>
@@ -544,7 +436,7 @@
         </field>
         <field>
           <id>[scriptid=custbody_location_ffl]</id>
-          <label>To Location FFL</label>
+          <label>New Location FFL</label>
           <visible>F</visible>
           <mandatory>F</mandatory>
           <displayType>NORMAL</displayType>
@@ -708,46 +600,10 @@
         <defaultFieldGroup>
           <fields position="MIDDLE">
             <field>
-              <id>COUPONCODE</id>
-              <label>Coupon Code</label>
+              <id>EXCHANGERATE</id>
+              <label>Exchange rate</label>
               <visible>F</visible>
-              <mandatory>F</mandatory>
-              <displayType>NORMAL</displayType>
-              <columnBreak>F</columnBreak>
-              <sameRowAsPrevious>F</sameRowAsPrevious>
-            </field>
-            <field>
-              <id>PROMOCODE</id>
-              <label>Promotion</label>
-              <visible>F</visible>
-              <mandatory>F</mandatory>
-              <displayType>NORMAL</displayType>
-              <columnBreak>F</columnBreak>
-              <sameRowAsPrevious>F</sameRowAsPrevious>
-            </field>
-            <field>
-              <id>DISCOUNTITEM</id>
-              <label>Discount Item</label>
-              <visible>F</visible>
-              <mandatory>F</mandatory>
-              <displayType>NORMAL</displayType>
-              <columnBreak>F</columnBreak>
-              <sameRowAsPrevious>F</sameRowAsPrevious>
-            </field>
-            <field>
-              <id>DISCOUNTRATE</id>
-              <label>Rate</label>
-              <visible>F</visible>
-              <mandatory>F</mandatory>
-              <displayType>NORMAL</displayType>
-              <columnBreak>F</columnBreak>
-              <sameRowAsPrevious>F</sameRowAsPrevious>
-            </field>
-            <field>
-              <id>GIFTCERT</id>
-              <label>Gift Certificate</label>
-              <visible>F</visible>
-              <mandatory>F</mandatory>
+              <mandatory>T</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
               <sameRowAsPrevious>F</sameRowAsPrevious>
@@ -761,33 +617,13 @@
           <neverEmpty>F</neverEmpty>
           <columns>
             <column>
-              <id>JOB</id>
-              <label>Project</label>
-              <visible>F</visible>
-            </column>
-            <column>
               <id>ITEM</id>
               <label>Item</label>
               <visible>T</visible>
             </column>
             <column>
-              <id>DESCRIPTION</id>
-              <label>Description</label>
-              <visible>T</visible>
-            </column>
-            <column>
-              <id>QUANTITYCOMMITTED</id>
-              <label>Committed</label>
-              <visible>F</visible>
-            </column>
-            <column>
-              <id>QUANTITYFULFILLED</id>
-              <label>Fulfilled</label>
-              <visible>T</visible>
-            </column>
-            <column>
-              <id>QUANTITYBACKORDERED</id>
-              <label>Back Ordered</label>
+              <id>QUANTITYRECEIVED</id>
+              <label>Received</label>
               <visible>T</visible>
             </column>
             <column>
@@ -816,6 +652,21 @@
               <visible>T</visible>
             </column>
             <column>
+              <id>UNITS</id>
+              <label>Units</label>
+              <visible>T</visible>
+            </column>
+            <column>
+              <id>INVENTORYDETAIL</id>
+              <label>Inventory Detail</label>
+              <visible>T</visible>
+            </column>
+            <column>
+              <id>DESCRIPTION</id>
+              <label>Description</label>
+              <visible>F</visible>
+            </column>
+            <column>
               <id>RATE</id>
               <label>Rate</label>
               <visible>T</visible>
@@ -826,109 +677,9 @@
               <visible>T</visible>
             </column>
             <column>
-              <id>COSTESTIMATE</id>
-              <label>Est. Extended Cost</label>
-              <visible>T</visible>
-            </column>
-            <column>
-              <id>ESTGROSSPROFIT</id>
-              <label>Est. Gross Profit</label>
-              <visible>T</visible>
-            </column>
-            <column>
-              <id>ESTGROSSPROFITPERCENT</id>
-              <label>Est. Gross Profit Percent</label>
-              <visible>T</visible>
-            </column>
-            <column>
-              <id>[scriptid=custcol_bsp_isg_lb_line_item_id]</id>
-              <label>Logicblock Line Item ID</label>
-              <visible>T</visible>
-            </column>
-            <column>
-              <id>[scriptid=custcol_bsp_csi_unit_cost]</id>
-              <label>Unit Cost</label>
-              <visible>F</visible>
-            </column>
-            <column>
-              <id>UNITS</id>
-              <label>Units</label>
-              <visible>F</visible>
-            </column>
-            <column>
-              <id>INVENTORYDETAIL</id>
-              <label>Inventory Detail</label>
-              <visible>F</visible>
-            </column>
-            <column>
-              <id>PRICE</id>
-              <label>Price Level</label>
-              <visible>F</visible>
-            </column>
-            <column>
-              <id>REVRECSCHEDULE</id>
-              <label>Rev. Rec. Schedule</label>
-              <visible>F</visible>
-            </column>
-            <column>
-              <id>REVRECSTARTDATE</id>
-              <label>Rev. Rec. Start Date</label>
-              <visible>F</visible>
-            </column>
-            <column>
-              <id>TERMINMONTHS</id>
-              <label>Rev. Term In Months</label>
-              <visible>F</visible>
-            </column>
-            <column>
-              <id>REVRECENDDATE</id>
-              <label>Rev. Rec. End Date</label>
-              <visible>F</visible>
-            </column>
-            <column>
-              <id>COMMITINVENTORY</id>
-              <label>Commit</label>
-              <visible>T</visible>
-            </column>
-            <column>
-              <id>DEFERREVREC</id>
-              <label>Hold Revenue Recognition</label>
-              <visible>F</visible>
-            </column>
-            <column>
-              <id>CATCHUPPERIOD</id>
-              <label>Catch Up Period</label>
-              <visible>F</visible>
-            </column>
-            <column>
-              <id>COMMITMENTFIRM</id>
-              <label>Commitment Confirmed</label>
-              <visible>F</visible>
-            </column>
-            <column>
-              <id>ORDERPRIORITY</id>
-              <label>Order Priority</label>
-              <visible>F</visible>
-            </column>
-            <column>
-              <id>ISTAXABLE</id>
-              <label>Tax</label>
-              <visible>T</visible>
-            </column>
-            <column>
               <id>OPTIONS</id>
               <label>Options</label>
               <visible>T</visible>
-            </column>
-            <column>
-              <id>TOBEFULFILLED</id>
-              <label>To Be Fulfilled</label>
-              <visible>F</visible>
-            </column>
-            <column>
-              <id>GIFTCERTFIELDS</id>
-              <label>Gift Certificate</label>
-              <visible>F</visible>
             </column>
             <column>
               <id>DEPARTMENT</id>
@@ -941,79 +692,39 @@
               <visible>F</visible>
             </column>
             <column>
+              <id>LANDEDCOSTCATEGORY</id>
+              <label>Landed Cost Category</label>
+              <visible>F</visible>
+            </column>
+            <column>
               <id>LOCATION</id>
               <label>Location</label>
               <visible>F</visible>
             </column>
             <column>
-              <id>BILLINGSCHEDULE</id>
-              <label>Billing Schedule</label>
-              <visible>F</visible>
-            </column>
-            <column>
-              <id>CREATEPO</id>
-              <label>Create PO</label>
+              <id>CUSTOMER</id>
+              <label>Customer:Project</label>
               <visible>T</visible>
             </column>
             <column>
-              <id>POVENDOR</id>
-              <label>PO Vendor</label>
+              <id>ISBILLABLE</id>
+              <label>Billable</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>MATCHBILLTORECEIPT</id>
+              <label>Match Bill To Receipt</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>TOBERECEIVED</id>
+              <label>To Be Received</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>EXPECTEDRECEIPTDATE</id>
+              <label>Expected Receipt Date</label>
               <visible>T</visible>
-            </column>
-            <column>
-              <id>[scriptid=custcol_bsp_aab_allocate_po]</id>
-              <label>Link PO to SO</label>
-              <visible>F</visible>
-            </column>
-            <column>
-              <id>[scriptid=custcol_bsp_gpo_so_po_link]</id>
-              <label>SO PO Link ID</label>
-              <visible>F</visible>
-            </column>
-            <column>
-              <id>[scriptid=custcol_bsp_gpo_allocatepo]</id>
-              <label>GPO Allocate PO</label>
-              <visible>F</visible>
-            </column>
-            <column>
-              <id>[scriptid=custcol_bsp_gpo_linkedso]</id>
-              <label>GPO Linked SO</label>
-              <visible>F</visible>
-            </column>
-            <column>
-              <id>[scriptid=custcol_bsp_gpo_linkedpo]</id>
-              <label>GPO Linked PO</label>
-              <visible>F</visible>
-            </column>
-            <column>
-              <id>[scriptid=custcol_bsp_cur_sfponum]</id>
-              <label>PO No.</label>
-              <visible>F</visible>
-            </column>
-            <column>
-              <id>ALTSALESAMT</id>
-              <label>Alt. Sales</label>
-              <visible>F</visible>
-            </column>
-            <column>
-              <id>PORATE</id>
-              <label>PO Rate</label>
-              <visible>F</visible>
-            </column>
-            <column>
-              <id>EXPECTEDSHIPDATE</id>
-              <label>Expected Ship Date</label>
-              <visible>T</visible>
-            </column>
-            <column>
-              <id>CREATEWO</id>
-              <label>Create WO</label>
-              <visible>F</visible>
-            </column>
-            <column>
-              <id>EXCLUDEFROMRATEREQUEST</id>
-              <label>Exclude Item from Rate Request</label>
-              <visible>F</visible>
             </column>
             <column>
               <id>ISCLOSED</id>
@@ -1021,23 +732,8 @@
               <visible>T</visible>
             </column>
             <column>
-              <id>AMOUNTRECOGNIZED</id>
-              <label>Amount Recognized</label>
-              <visible>F</visible>
-            </column>
-            <column>
-              <id>COSTESTIMATETYPE</id>
-              <label>Cost Estimate Type</label>
-              <visible>T</visible>
-            </column>
-            <column>
-              <id>COSTESTIMATERATE</id>
-              <label>Est. Unit Cost</label>
-              <visible>F</visible>
-            </column>
-            <column>
-              <id>FREEGIFTPROMOTION</id>
-              <label>Free Gift Promotion</label>
+              <id>BILLVARIANCESTATUS</id>
+              <label>Bill Variance Status</label>
               <visible>F</visible>
             </column>
             <column>
@@ -1053,7 +749,7 @@
             <column>
               <id>[scriptid=custcol_bsp_csi_print]</id>
               <label>Print</label>
-              <visible>T</visible>
+              <visible>F</visible>
             </column>
             <column>
               <id>[scriptid=custcol_bsp_aab_remarks]</id>
@@ -1068,6 +764,11 @@
             <column>
               <id>[scriptid=custcol_bsp_aab_bg_backordered]</id>
               <label>BG Back Ordered</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_csi_unit_cost]</id>
+              <label>Unit Cost</label>
               <visible>F</visible>
             </column>
             <column>
@@ -1256,6 +957,11 @@
               <visible>F</visible>
             </column>
             <column>
+              <id>[scriptid=custcol_bsp_aab_allocate_po]</id>
+              <label>Link PO to SO</label>
+              <visible>F</visible>
+            </column>
+            <column>
               <id>[scriptid=custcol_bsp_aab_cost_category]</id>
               <label>Cost Category</label>
               <visible>F</visible>
@@ -1266,13 +972,13 @@
               <visible>F</visible>
             </column>
             <column>
-              <id>[scriptid=custcol_bsp_aab_viewrebate]</id>
-              <label>Has Rebate</label>
+              <id>[scriptid=custcol_bsp_aab_delivered_on]</id>
+              <label>Delivered On</label>
               <visible>F</visible>
             </column>
             <column>
-              <id>[scriptid=custcol_bsp_aab_delivered_on]</id>
-              <label>Delivered On</label>
+              <id>[scriptid=custcol_bsp_aab_viewrebate]</id>
+              <label>Has Rebate</label>
               <visible>F</visible>
             </column>
             <column>
@@ -1323,6 +1029,21 @@
             <column>
               <id>[scriptid=custcol_bsp_persname]</id>
               <label>Name Personalization</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_gpo_allocatepo]</id>
+              <label>GPO Allocate PO</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_gpo_linkedso]</id>
+              <label>GPO Linked SO</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_gpo_linkedpo]</id>
+              <label>GPO Linked PO</label>
               <visible>F</visible>
             </column>
             <column>
@@ -1413,6 +1134,11 @@
             <column>
               <id>[scriptid=custcol_bsp_aab_pai_vehicle_id]</id>
               <label>Vehicle ID</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_gpo_so_po_link]</id>
+              <label>SO PO Link ID</label>
               <visible>F</visible>
             </column>
             <column>
@@ -1551,13 +1277,8 @@
               <visible>F</visible>
             </column>
             <column>
-              <id>[type=transactioncolumncustomfield, scriptid=cseg1]</id>
-              <label>Business Units</label>
-              <visible>F</visible>
-            </column>
-            <column>
-              <id>PERCENTCOMPLETE</id>
-              <label>% Complete</label>
+              <id>[scriptid=custcol_bsp_isg_lb_line_item_id]</id>
+              <label>Logicblock Line Item ID</label>
               <visible>F</visible>
             </column>
             <column>
@@ -1583,6 +1304,11 @@
             <column>
               <id>[scriptid=custcol_bsp_cur_sforigordprod]</id>
               <label>SF Original Order Product</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_cur_sfponum]</id>
+              <label>PO No.</label>
               <visible>F</visible>
             </column>
             <column>
@@ -1638,16 +1364,727 @@
             <column>
               <id>[scriptid=custcol_bsp_isg_exclude_auto_transm]</id>
               <label>Transmisison</label>
-              <visible>T</visible>
+              <visible>F</visible>
             </column>
             <column>
-              <id>[scriptid=custcol_bsp_order_shipment_type]</id>
-              <label>Order Shipment Type</label>
-              <visible>T</visible>
+              <id>[type=transactioncolumncustomfield, scriptid=cseg1]</id>
+              <label>Business Units</label>
+              <visible>F</visible>
             </column>
             <column>
               <id>[scriptid=custcol7]</id>
               <label>Billing Date</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_order_shipment_type]</id>
+              <label>Order Shipment Type</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_mm_placement_id]</id>
+              <label>BSP | MM | Placement id</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_isg_po_vendor]</id>
+              <label>PO Vendor</label>
+              <visible>F</visible>
+            </column>
+          </columns>
+        </subList>
+        <subList>
+          <id>EXPENSE</id>
+          <neverEmpty>F</neverEmpty>
+          <columns>
+            <column>
+              <id>CATEGORY</id>
+              <label>Category</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>ACCOUNT</id>
+              <label>Account</label>
+              <visible>T</visible>
+            </column>
+            <column>
+              <id>AMOUNT</id>
+              <label>Amount</label>
+              <visible>T</visible>
+            </column>
+            <column>
+              <id>MEMO</id>
+              <label>Memo</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>DEPARTMENT</id>
+              <label>Department</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>CLASS</id>
+              <label>Class</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>LOCATION</id>
+              <label>Location</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>CUSTOMER</id>
+              <label>Customer:Project</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>ISBILLABLE</id>
+              <label>Billable</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol2]</id>
+              <label>Store Wrnty Avail</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_filtered_items]</id>
+              <label>Vendor Items</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_csi_print]</id>
+              <label>Print</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_aab_remarks]</id>
+              <label>Remarks</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_aab_bg_allocated]</id>
+              <label>BG Allocated</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_aab_bg_backordered]</id>
+              <label>BG Back Ordered</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_csi_unit_cost]</id>
+              <label>Unit Cost</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_csi_gp_percent]</id>
+              <label>Gross Profit %</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_mg_item_id]</id>
+              <label>[BSP] Item Id</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol4]</id>
+              <label>STATUS</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_service_description]</id>
+              <label>Service Description</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_imageurl]</id>
+              <label>Image URL</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_amzn_line_id]</id>
+              <label>BSP | Amzn | Line ID</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_amzn_item_code]</id>
+              <label>Amazon Item Code</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_go_block_itemfulfillment]</id>
+              <label>IF Block?</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_fulfillment_location]</id>
+              <label>Fulfill Location</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_wt_line_id]</id>
+              <label>LINE ID</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_reason_code]</id>
+              <label>Reason Code</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_bill_freight_to_customer]</id>
+              <label>Bill Freight to Customer</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_aab_required_item_for]</id>
+              <label>Bundled With Item</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_aab_required_item_line]</id>
+              <label>Bundle Id</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_aab_main_line_flag]</id>
+              <label>Primary Item</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_aab_optional_item_flag]</id>
+              <label>Optional Item</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_aab_main_line_item_index]</id>
+              <label>Primary Bundle Id</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_line_remove]</id>
+              <label>Remove</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_aab_bgeom]</id>
+              <label>BG EOM</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_aab_bonuseom]</id>
+              <label>BG Bonus EOM</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_aab_neteom]</id>
+              <label>BG Net EOM</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_aab_itemhasrebate]</id>
+              <label>BG Item has Rebate</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_aab_warranty_detail]</id>
+              <label>Ext Warranty Detail</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_aab_itemextwarrantygrp]</id>
+              <label>Item Ext Warranty Group</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_aab_ext_warranty_txn]</id>
+              <label>Ext Warranty Transaction</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_aab_createextwarrantysale]</id>
+              <label>Add Ext Warranty Sale</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_so_item_rate]</id>
+              <label>SO Item Rate</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_so_line_id]</id>
+              <label>SO Line ID</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_aab_manufacturer_warrtypd]</id>
+              <label>Manufacturer Warranty Period (Months)</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_aab_instant_rebate]</id>
+              <label>Instant Rebate</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_web_auto_fultill]</id>
+              <label>Web Auto Fulfill</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_aab_add_componentitem]</id>
+              <label>Add Component Item</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_aab_bgqtyavailable]</id>
+              <label>BG Quantity Available</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_aab_add_bg_item]</id>
+              <label>Add BG Item</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_aab_pai_viewdelivery]</id>
+              <label>View Delivery</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_aab_itemcondition]</id>
+              <label>Item Condition</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_aab_expectedshipdate]</id>
+              <label>Expected Ship Date</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_aab_allocate_po]</id>
+              <label>Link PO to SO</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_aab_cost_category]</id>
+              <label>Cost Category</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_aab_linkedso]</id>
+              <label>Linked SO</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_aab_delivered_on]</id>
+              <label>Delivered On</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_aab_viewrebate]</id>
+              <label>Has Rebate</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_aab_linkedpo]</id>
+              <label>Linked Purchase Order</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_custom_name]</id>
+              <label>Custom Name</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_logo_check]</id>
+              <label>Company Logo</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_name_check]</id>
+              <label>Customer Name</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_mainitem]</id>
+              <label>Main Item</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_groupid]</id>
+              <label>Group Id</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_canbepersonalized]</id>
+              <label>Can be Personalized?</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_item_classification]</id>
+              <label>Item Classification</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_perslogo]</id>
+              <label>Logo Personalization</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_persname]</id>
+              <label>Name Personalization</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_gpo_allocatepo]</id>
+              <label>GPO Allocate PO</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_gpo_linkedso]</id>
+              <label>GPO Linked SO</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_gpo_linkedpo]</id>
+              <label>GPO Linked PO</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_aab_promorebate]</id>
+              <label>Promo Rebate</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_aab_prmainline]</id>
+              <label>Rebate Main Line</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_aab_store_pickup]</id>
+              <label>Pick Up In Store</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_aab_emailedpickupqty]</id>
+              <label>Emailed Pick Up Quantity</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_aab_selected_warranty]</id>
+              <label>BSP | AAB |Selected Warranty</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_aab_prim_bundle_id]</id>
+              <label>BSP | AAB | Primary Bundle Id</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_aab_add_on_relationship]</id>
+              <label>BSP | AAB | Add On Relationship</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_aab_scheduled_delivery]</id>
+              <label>Scheduled Delivery</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_aab_expected_receipt_date]</id>
+              <label>Expected Receipt Date</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_go_billed]</id>
+              <label>Billed</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_adme_br_schedule_key]</id>
+              <label>Blanket Schedule Key</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_adme_blanket_schedule]</id>
+              <label>Blanket Schedule</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_adme_release_date]</id>
+              <label>Release Date</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_adme_manufacturer]</id>
+              <label>Manufacturer</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_adme_comment]</id>
+              <label>Comment</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_aab_addextwar_optitem]</id>
+              <label>Add Ext Warranty and Optional Items</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_aab_pai_driver_name]</id>
+              <label>Driver Name</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_aab_pai_vehicle_id]</id>
+              <label>Vehicle ID</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_gpo_so_po_link]</id>
+              <label>SO PO Link ID</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_aab_createextwarranty]</id>
+              <label>Add Ext Warranty</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_jei_check]</id>
+              <label>Checkbox test</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_aab_add_warranty]</id>
+              <label>Add Warranty</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_aab_pobrand]</id>
+              <label>Brand</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_pers_notes]</id>
+              <label>Personalization Notes</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_perslogotype]</id>
+              <label>Logo Type</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_perspatchtype]</id>
+              <label>Patch Type</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_htg_cogstype_trxline]</id>
+              <label>COGS Type</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_miva_line_id]</id>
+              <label>MIVA Line ID</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_sap_date]</id>
+              <label>Transaction Date</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_sap_business_purpose]</id>
+              <label>Business Purpose</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_sap_vendor]</id>
+              <label>Vendor Name</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_sap_payment_type]</id>
+              <label>Payment Type</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_sap_approved_amount]</id>
+              <label>Approved Amount</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_sap_personal_expense]</id>
+              <label>Personal Expense (do not reimburse)</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_sap_gama_trip_type]</id>
+              <label>Gama Trip Type</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_sap_tail_num]</id>
+              <label>Wheels Up Tail #</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_sap_gl1]</id>
+              <label>GL1 - Natural - VAL field update - Org Unit 1</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_sap_gl2]</id>
+              <label>GL2 - Cost Center - VAL field update - Org Unit 2</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_sap_gl3]</id>
+              <label>GL3 - Department - VAL field update - Org Unit 3</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_sap_bu]</id>
+              <label>BU</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_sap_sub_bu]</id>
+              <label>SubBu</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_sap_sub_department]</id>
+              <label>Sub Department</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_sap_entry_amount]</id>
+              <label>Entry Amount</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol5]</id>
+              <label>Tail</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol6]</id>
+              <label>Business Unit 2</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_ca_expense_report_id]</id>
+              <label>Expense Report ID</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_isg_lb_line_item_id]</id>
+              <label>Logicblock Line Item ID</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_cu_sf_order_number]</id>
+              <label>SF Order Number</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_cur_nsprodcode]</id>
+              <label>NS Product Code</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_cur_sforddate_linetrx]</id>
+              <label>SF Order Date</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_cur_sfordnum_linetrx]</id>
+              <label>SF Order No.</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_cur_sforigordprod]</id>
+              <label>SF Original Order Product</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_cur_sfponum]</id>
+              <label>PO No.</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_cur_sfqtlindesc]</id>
+              <label>SF Quote Line Description</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_cur_sfreqby]</id>
+              <label>SF Required By</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_cur_sfsegyr_fld]</id>
+              <label>Segment Label</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_cur_sfprodentity]</id>
+              <label>SF Product Entity</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_cur_sfamendreason_fld]</id>
+              <label>SF Amendment Reason</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_cur_sfdelfreq_fld]</id>
+              <label>SF Delivery Frequency</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_cur_sfdelmthd_fld]</id>
+              <label>SF Delivery Method</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_cur_sfprodtier]</id>
+              <label>Product Tier</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_cur_sfservprodtype_fld]</id>
+              <label>SF Service (Product) Type</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_cur_substype]</id>
+              <label>SF Subscription Type</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_isg_exclude_auto_transm]</id>
+              <label>Exclude from Automatic Transmisison</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[type=transactioncolumncustomfield, scriptid=cseg1]</id>
+              <label>Business Units</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol7]</id>
+              <label>Billing Date</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_order_shipment_type]</id>
+              <label>Order Shipment Type</label>
               <visible>F</visible>
             </column>
             <column>
@@ -1663,15 +2100,6 @@
           </columns>
         </subList>
       </subItems>
-    </tab>
-    <tab>
-      <id>PROMOTIONSTAB</id>
-      <label>Promotions</label>
-      <visible>T</visible>
-      <fieldGroups>
-        <defaultFieldGroup/>
-      </fieldGroups>
-      <subItems/>
     </tab>
     <tab>
       <id>TRANSACTIONSHIPPING</id>
@@ -1694,15 +2122,6 @@
               <sameRowAsPrevious>F</sameRowAsPrevious>
             </field>
             <field>
-              <id>ACTUALSHIPDATE</id>
-              <label>Actual</label>
-              <visible>T</visible>
-              <mandatory>F</mandatory>
-              <displayType>NORMAL</displayType>
-              <columnBreak>F</columnBreak>
-              <sameRowAsPrevious>T</sameRowAsPrevious>
-            </field>
-            <field>
               <id>SHIPCARRIER</id>
               <label>Shipping Carrier</label>
               <visible>T</visible>
@@ -1714,24 +2133,6 @@
             <field>
               <id>SHIPMETHOD</id>
               <label>Shipping Method</label>
-              <visible>T</visible>
-              <mandatory>F</mandatory>
-              <displayType>NORMAL</displayType>
-              <columnBreak>F</columnBreak>
-              <sameRowAsPrevious>F</sameRowAsPrevious>
-            </field>
-            <field>
-              <id>SHIPPINGCOST</id>
-              <label>Shipping Cost</label>
-              <visible>T</visible>
-              <mandatory>F</mandatory>
-              <displayType>NORMAL</displayType>
-              <columnBreak>F</columnBreak>
-              <sameRowAsPrevious>F</sameRowAsPrevious>
-            </field>
-            <field>
-              <id>HANDLINGCOST</id>
-              <label>Handling Cost</label>
               <visible>T</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
@@ -1752,24 +2153,14 @@
               <label>Tracking #</label>
               <visible>F</visible>
               <mandatory>F</mandatory>
-              <displayType>DISABLED</displayType>
-              <columnBreak>F</columnBreak>
-              <sameRowAsPrevious>F</sameRowAsPrevious>
-            </field>
-            <field>
-              <id>SHIPCOMPLETE</id>
-              <label>Ship Complete</label>
-              <visible>F</visible>
-              <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
               <sameRowAsPrevious>F</sameRowAsPrevious>
-              <checkBoxDefault>USE_FIELD_DEFAULT</checkBoxDefault>
             </field>
             <field>
               <id>SHIPPINGTAXCODE</id>
               <label>Shipping Tax Code</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>T</columnBreak>
@@ -1778,7 +2169,7 @@
             <field>
               <id>SHIPPINGTAX1RATE</id>
               <label>Shipping Tax Rate</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1819,13 +2210,25 @@
               <columnBreak>F</columnBreak>
               <sameRowAsPrevious>F</sameRowAsPrevious>
             </field>
+            <field>
+              <id>SHIPADDRESS</id>
+              <label>Ship To</label>
+              <visible>F</visible>
+              <mandatory>F</mandatory>
+              <displayType>NORMAL</displayType>
+              <columnBreak>F</columnBreak>
+              <sameRowAsPrevious>F</sameRowAsPrevious>
+            </field>
+            <field>
+              <id>SHIPTO</id>
+              <label>Ship To</label>
+              <visible>T</visible>
+              <mandatory>F</mandatory>
+              <displayType>NORMAL</displayType>
+              <columnBreak>F</columnBreak>
+              <sameRowAsPrevious>F</sameRowAsPrevious>
+            </field>
           </fields>
-        </fieldGroup>
-        <fieldGroup scriptid="fulfillments">
-          <label>Fulfillments</label>
-          <visible>T</visible>
-          <showTitle>T</showTitle>
-          <singleColumn>T</singleColumn>
         </fieldGroup>
         <defaultFieldGroup>
           <fields position="MIDDLE">
@@ -1864,33 +2267,6 @@
           <singleColumn>T</singleColumn>
           <fields position="MIDDLE">
             <field>
-              <id>UNBILLEDORDERS</id>
-              <label>Unbilled Orders</label>
-              <visible>F</visible>
-              <mandatory>F</mandatory>
-              <displayType>NORMAL</displayType>
-              <columnBreak>F</columnBreak>
-              <sameRowAsPrevious>F</sameRowAsPrevious>
-            </field>
-            <field>
-              <id>BALANCE</id>
-              <label>Balance</label>
-              <visible>F</visible>
-              <mandatory>F</mandatory>
-              <displayType>INLINETEXT</displayType>
-              <columnBreak>F</columnBreak>
-              <sameRowAsPrevious>F</sameRowAsPrevious>
-            </field>
-            <field>
-              <id>CONSOLIDATEBALANCE</id>
-              <label>Consolidated Balance</label>
-              <visible>F</visible>
-              <mandatory>F</mandatory>
-              <displayType>INLINETEXT</displayType>
-              <columnBreak>F</columnBreak>
-              <sameRowAsPrevious>T</sameRowAsPrevious>
-            </field>
-            <field>
               <id>TERMS</id>
               <label>Terms</label>
               <visible>F</visible>
@@ -1900,8 +2276,8 @@
               <sameRowAsPrevious>F</sameRowAsPrevious>
             </field>
             <field>
-              <id>BILLINGSCHEDULE</id>
-              <label>Billing Schedule</label>
+              <id>INCOTERM</id>
+              <label>Incoterm</label>
               <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
@@ -1918,7 +2294,16 @@
           <fields position="MIDDLE">
             <field>
               <id>BILLADDRESSLIST</id>
-              <label>Bill To Select</label>
+              <label>Vendor Select</label>
+              <visible>F</visible>
+              <mandatory>F</mandatory>
+              <displayType>NORMAL</displayType>
+              <columnBreak>F</columnBreak>
+              <sameRowAsPrevious>F</sameRowAsPrevious>
+            </field>
+            <field>
+              <id>BILLADDRESS</id>
+              <label>Vendor</label>
               <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
@@ -1950,265 +2335,12 @@
           </fields>
         </defaultFieldGroup>
       </fieldGroups>
-      <subItems>
-        <subTab>
-          <id>TRANSACTIONPAYMENT</id>
-          <label>Payment</label>
-          <visible>T</visible>
-          <fieldGroups>
-            <defaultFieldGroup>
-              <fields position="MIDDLE">
-                <field>
-                  <id>PAYMENTSESSIONAMOUNT</id>
-                  <label>Payment Amount</label>
-                  <visible>F</visible>
-                  <mandatory>F</mandatory>
-                  <displayType>NORMAL</displayType>
-                  <columnBreak>F</columnBreak>
-                  <sameRowAsPrevious>F</sameRowAsPrevious>
-                </field>
-                <field>
-                  <id>PAYMENTMETHOD</id>
-                  <label>Payment Method</label>
-                  <visible>F</visible>
-                  <mandatory>F</mandatory>
-                  <displayType>NORMAL</displayType>
-                  <columnBreak>F</columnBreak>
-                  <sameRowAsPrevious>F</sameRowAsPrevious>
-                </field>
-                <field>
-                  <id>CREDITCARD</id>
-                  <label>Credit Card Select</label>
-                  <visible>F</visible>
-                  <mandatory>F</mandatory>
-                  <displayType>NORMAL</displayType>
-                  <columnBreak>F</columnBreak>
-                  <sameRowAsPrevious>F</sameRowAsPrevious>
-                </field>
-                <field>
-                  <id>CCNUMBER</id>
-                  <label>Credit Card #</label>
-                  <visible>F</visible>
-                  <mandatory>F</mandatory>
-                  <displayType>NORMAL</displayType>
-                  <columnBreak>F</columnBreak>
-                  <sameRowAsPrevious>F</sameRowAsPrevious>
-                </field>
-                <field>
-                  <id>CCSECURITYCODE</id>
-                  <label>CSC</label>
-                  <visible>F</visible>
-                  <mandatory>F</mandatory>
-                  <displayType>NORMAL</displayType>
-                  <columnBreak>F</columnBreak>
-                  <sameRowAsPrevious>F</sameRowAsPrevious>
-                </field>
-                <field>
-                  <id>CCEXPIREDATE</id>
-                  <label>Expires (MM/YYYY)</label>
-                  <visible>F</visible>
-                  <mandatory>F</mandatory>
-                  <displayType>NORMAL</displayType>
-                  <columnBreak>F</columnBreak>
-                  <sameRowAsPrevious>F</sameRowAsPrevious>
-                </field>
-                <field>
-                  <id>CARDDATAPROVIDED</id>
-                  <label>Card Data Provided</label>
-                  <visible>F</visible>
-                  <mandatory>F</mandatory>
-                  <displayType>NORMAL</displayType>
-                  <columnBreak>F</columnBreak>
-                  <sameRowAsPrevious>F</sameRowAsPrevious>
-                </field>
-                <field>
-                  <id>CCNAME</id>
-                  <label>Name on Card</label>
-                  <visible>F</visible>
-                  <mandatory>F</mandatory>
-                  <displayType>NORMAL</displayType>
-                  <columnBreak>F</columnBreak>
-                  <sameRowAsPrevious>F</sameRowAsPrevious>
-                </field>
-                <field>
-                  <id>CCSTREET</id>
-                  <label>Card Street</label>
-                  <visible>F</visible>
-                  <mandatory>F</mandatory>
-                  <displayType>NORMAL</displayType>
-                  <columnBreak>F</columnBreak>
-                  <sameRowAsPrevious>F</sameRowAsPrevious>
-                </field>
-                <field>
-                  <id>CCZIPCODE</id>
-                  <label>Card Zip Code</label>
-                  <visible>F</visible>
-                  <mandatory>F</mandatory>
-                  <displayType>NORMAL</displayType>
-                  <columnBreak>F</columnBreak>
-                  <sameRowAsPrevious>F</sameRowAsPrevious>
-                </field>
-                <field>
-                  <id>CUSTOMERCODE</id>
-                  <label>Customer Code</label>
-                  <visible>F</visible>
-                  <mandatory>F</mandatory>
-                  <displayType>NORMAL</displayType>
-                  <columnBreak>F</columnBreak>
-                  <sameRowAsPrevious>F</sameRowAsPrevious>
-                </field>
-                <field>
-                  <id>CREDITCARDPROCESSOR</id>
-                  <label>Payment Processing Profile</label>
-                  <visible>F</visible>
-                  <mandatory>F</mandatory>
-                  <displayType>NORMAL</displayType>
-                  <columnBreak>F</columnBreak>
-                  <sameRowAsPrevious>F</sameRowAsPrevious>
-                </field>
-                <field>
-                  <id>GETAUTH</id>
-                  <label>Get Authorization</label>
-                  <visible>F</visible>
-                  <mandatory>F</mandatory>
-                  <displayType>NORMAL</displayType>
-                  <columnBreak>F</columnBreak>
-                  <sameRowAsPrevious>F</sameRowAsPrevious>
-                  <checkBoxDefault>USE_FIELD_DEFAULT</checkBoxDefault>
-                </field>
-                <field>
-                  <id>CCAPPROVED</id>
-                  <label>Credit Card Approved</label>
-                  <visible>F</visible>
-                  <mandatory>F</mandatory>
-                  <displayType>NORMAL</displayType>
-                  <columnBreak>F</columnBreak>
-                  <sameRowAsPrevious>F</sameRowAsPrevious>
-                  <checkBoxDefault>USE_FIELD_DEFAULT</checkBoxDefault>
-                </field>
-                <field>
-                  <id>PNREFNUM</id>
-                  <label>P/N Ref.</label>
-                  <visible>F</visible>
-                  <mandatory>F</mandatory>
-                  <displayType>NORMAL</displayType>
-                  <columnBreak>F</columnBreak>
-                  <sameRowAsPrevious>F</sameRowAsPrevious>
-                </field>
-                <field>
-                  <id>AUTHCODE</id>
-                  <label>Auth. Code</label>
-                  <visible>F</visible>
-                  <mandatory>F</mandatory>
-                  <displayType>NORMAL</displayType>
-                  <columnBreak>F</columnBreak>
-                  <sameRowAsPrevious>F</sameRowAsPrevious>
-                </field>
-                <field>
-                  <id>CCAVSSTREETMATCH</id>
-                  <label>AVS Street Match</label>
-                  <visible>F</visible>
-                  <mandatory>F</mandatory>
-                  <displayType>NORMAL</displayType>
-                  <columnBreak>F</columnBreak>
-                  <sameRowAsPrevious>F</sameRowAsPrevious>
-                </field>
-                <field>
-                  <id>CCAVSZIPMATCH</id>
-                  <label>AVS Zip Match</label>
-                  <visible>F</visible>
-                  <mandatory>F</mandatory>
-                  <displayType>NORMAL</displayType>
-                  <columnBreak>F</columnBreak>
-                  <sameRowAsPrevious>F</sameRowAsPrevious>
-                </field>
-                <field>
-                  <id>CCSECURITYCODEMATCH</id>
-                  <label>CSC Match</label>
-                  <visible>F</visible>
-                  <mandatory>F</mandatory>
-                  <displayType>NORMAL</displayType>
-                  <columnBreak>F</columnBreak>
-                  <sameRowAsPrevious>F</sameRowAsPrevious>
-                </field>
-                <field>
-                  <id>IGNORECSC</id>
-                  <label>Ignore CSC</label>
-                  <visible>F</visible>
-                  <mandatory>F</mandatory>
-                  <displayType>NORMAL</displayType>
-                  <columnBreak>F</columnBreak>
-                  <sameRowAsPrevious>F</sameRowAsPrevious>
-                </field>
-                <field>
-                  <id>CCISPURCHASECARDBIN</id>
-                  <label>Purchase Card BIN</label>
-                  <visible>F</visible>
-                  <mandatory>F</mandatory>
-                  <displayType>DISABLED</displayType>
-                  <columnBreak>F</columnBreak>
-                  <sameRowAsPrevious>F</sameRowAsPrevious>
-                </field>
-                <field>
-                  <id>CCPROCESSASPURCHASECARD</id>
-                  <label>Send Line-Level Data</label>
-                  <visible>F</visible>
-                  <mandatory>F</mandatory>
-                  <displayType>NORMAL</displayType>
-                  <columnBreak>F</columnBreak>
-                  <sameRowAsPrevious>F</sameRowAsPrevious>
-                </field>
-                <field>
-                  <id>ISRECURRINGPAYMENT</id>
-                  <label>Recurring Payment</label>
-                  <visible>F</visible>
-                  <mandatory>F</mandatory>
-                  <displayType>NORMAL</displayType>
-                  <columnBreak>F</columnBreak>
-                  <sameRowAsPrevious>F</sameRowAsPrevious>
-                </field>
-                <field>
-                  <id>SOFTDESCRIPTOR</id>
-                  <label>Soft Descriptor</label>
-                  <visible>F</visible>
-                  <mandatory>F</mandatory>
-                  <displayType>NORMAL</displayType>
-                  <columnBreak>F</columnBreak>
-                  <sameRowAsPrevious>F</sameRowAsPrevious>
-                </field>
-                <field>
-                  <id>PAYMENTOPERATION</id>
-                  <label>Payment Operation</label>
-                  <visible>F</visible>
-                  <mandatory>F</mandatory>
-                  <displayType>NORMAL</displayType>
-                  <columnBreak>F</columnBreak>
-                  <sameRowAsPrevious>F</sameRowAsPrevious>
-                </field>
-              </fields>
-            </defaultFieldGroup>
-          </fieldGroups>
-          <subLists>
-            <subList>
-              <id>GIFTCERTREDEMPTION</id>
-              <label>Gift Certificate</label>
-              <visible>F</visible>
-              <neverEmpty>F</neverEmpty>
-            </subList>
-          </subLists>
-        </subTab>
-        <subList>
-          <id>BILLINGSCHEDULE</id>
-          <label>Schedule</label>
-          <visible>F</visible>
-          <neverEmpty>F</neverEmpty>
-        </subList>
-      </subItems>
+      <subItems/>
     </tab>
     <tab>
       <id>TRANSACTIONACCOUNTING</id>
       <label>Accounting</label>
-      <visible>T</visible>
+      <visible>F</visible>
       <fieldGroups>
         <fieldGroup scriptid="accountinformation">
           <label>Account Information</label>
@@ -2217,19 +2349,10 @@
           <singleColumn>T</singleColumn>
           <fields position="MIDDLE">
             <field>
-              <id>CURRENCY</id>
-              <label>Currency</label>
-              <visible>T</visible>
-              <mandatory>T</mandatory>
-              <displayType>NORMAL</displayType>
-              <columnBreak>F</columnBreak>
-              <sameRowAsPrevious>F</sameRowAsPrevious>
-            </field>
-            <field>
-              <id>EXCHANGERATE</id>
-              <label>Exchange Rate</label>
-              <visible>T</visible>
-              <mandatory>T</mandatory>
+              <id>ACCOUNT</id>
+              <label>Account</label>
+              <visible>F</visible>
+              <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
               <sameRowAsPrevious>F</sameRowAsPrevious>
@@ -2241,152 +2364,6 @@
           <visible>T</visible>
           <showTitle>T</showTitle>
           <singleColumn>T</singleColumn>
-          <fields position="MIDDLE">
-            <field>
-              <id>ISTAXABLE</id>
-              <label>Taxable</label>
-              <visible>T</visible>
-              <mandatory>F</mandatory>
-              <displayType>NORMAL</displayType>
-              <columnBreak>F</columnBreak>
-              <sameRowAsPrevious>F</sameRowAsPrevious>
-              <checkBoxDefault>USE_FIELD_DEFAULT</checkBoxDefault>
-            </field>
-            <field>
-              <id>TAXITEM</id>
-              <label>Tax</label>
-              <visible>T</visible>
-              <mandatory>F</mandatory>
-              <displayType>NORMAL</displayType>
-              <columnBreak>F</columnBreak>
-              <sameRowAsPrevious>F</sameRowAsPrevious>
-            </field>
-            <field>
-              <id>TAXRATE</id>
-              <label>Tax %</label>
-              <visible>T</visible>
-              <mandatory>F</mandatory>
-              <displayType>NORMAL</displayType>
-              <columnBreak>F</columnBreak>
-              <sameRowAsPrevious>F</sameRowAsPrevious>
-            </field>
-          </fields>
-        </fieldGroup>
-        <fieldGroup scriptid="revenue">
-          <label>Revenue</label>
-          <visible>T</visible>
-          <showTitle>T</showTitle>
-          <singleColumn>T</singleColumn>
-          <fields position="MIDDLE">
-            <field>
-              <id>REVRECONREVCOMMITMENT</id>
-              <label>Rev Rec on Rev Commit.</label>
-              <visible>T</visible>
-              <mandatory>F</mandatory>
-              <displayType>NORMAL</displayType>
-              <columnBreak>F</columnBreak>
-              <sameRowAsPrevious>F</sameRowAsPrevious>
-              <checkBoxDefault>USE_FIELD_DEFAULT</checkBoxDefault>
-            </field>
-            <field>
-              <id>REVENUESTATUS</id>
-              <label>Revenue Status</label>
-              <visible>T</visible>
-              <mandatory>F</mandatory>
-              <displayType>NORMAL</displayType>
-              <columnBreak>F</columnBreak>
-              <sameRowAsPrevious>F</sameRowAsPrevious>
-            </field>
-            <field>
-              <id>REVCOMMITSTATUS</id>
-              <label>Rev. Commit. Status</label>
-              <visible>T</visible>
-              <mandatory>F</mandatory>
-              <displayType>NORMAL</displayType>
-              <columnBreak>F</columnBreak>
-              <sameRowAsPrevious>F</sameRowAsPrevious>
-            </field>
-            <field>
-              <id>RECOGNIZEDREVENUE</id>
-              <label>Recognized Revenue</label>
-              <visible>T</visible>
-              <mandatory>F</mandatory>
-              <displayType>NORMAL</displayType>
-              <columnBreak>F</columnBreak>
-              <sameRowAsPrevious>F</sameRowAsPrevious>
-            </field>
-            <field>
-              <id>DEFERREDREVENUE</id>
-              <label>Deferred Revenue</label>
-              <visible>T</visible>
-              <mandatory>F</mandatory>
-              <displayType>NORMAL</displayType>
-              <columnBreak>F</columnBreak>
-              <sameRowAsPrevious>F</sameRowAsPrevious>
-            </field>
-            <field>
-              <id>REVRECSCHEDULE</id>
-              <label>Rev. Rec. Schedule</label>
-              <visible>F</visible>
-              <mandatory>F</mandatory>
-              <displayType>NORMAL</displayType>
-              <columnBreak>F</columnBreak>
-              <sameRowAsPrevious>F</sameRowAsPrevious>
-            </field>
-            <field>
-              <id>REVRECSTARTDATE</id>
-              <label>Rev. Rec. Start Date</label>
-              <visible>F</visible>
-              <mandatory>F</mandatory>
-              <displayType>NORMAL</displayType>
-              <columnBreak>F</columnBreak>
-              <sameRowAsPrevious>F</sameRowAsPrevious>
-            </field>
-            <field>
-              <id>REVRECENDDATE</id>
-              <label>Rev. Rec. End Date</label>
-              <visible>F</visible>
-              <mandatory>F</mandatory>
-              <displayType>NORMAL</displayType>
-              <columnBreak>F</columnBreak>
-              <sameRowAsPrevious>F</sameRowAsPrevious>
-            </field>
-          </fields>
-        </fieldGroup>
-        <fieldGroup scriptid="grossprofit">
-          <label>Gross Profit</label>
-          <visible>T</visible>
-          <showTitle>T</showTitle>
-          <singleColumn>T</singleColumn>
-          <fields position="MIDDLE">
-            <field>
-              <id>TOTALCOSTESTIMATE</id>
-              <label>Est. Extended Cost</label>
-              <visible>T</visible>
-              <mandatory>F</mandatory>
-              <displayType>NORMAL</displayType>
-              <columnBreak>F</columnBreak>
-              <sameRowAsPrevious>F</sameRowAsPrevious>
-            </field>
-            <field>
-              <id>ESTGROSSPROFIT</id>
-              <label>Est. Gross Profit</label>
-              <visible>T</visible>
-              <mandatory>F</mandatory>
-              <displayType>NORMAL</displayType>
-              <columnBreak>F</columnBreak>
-              <sameRowAsPrevious>F</sameRowAsPrevious>
-            </field>
-            <field>
-              <id>ESTGROSSPROFITPERCENT</id>
-              <label>Est. Gross Profit Percent</label>
-              <visible>T</visible>
-              <mandatory>F</mandatory>
-              <displayType>NORMAL</displayType>
-              <columnBreak>F</columnBreak>
-              <sameRowAsPrevious>F</sameRowAsPrevious>
-            </field>
-          </fields>
         </fieldGroup>
         <defaultFieldGroup/>
       </fieldGroups>
@@ -2403,12 +2380,6 @@
         <subList>
           <id>CRMCONTACTS</id>
           <label>Contacts</label>
-          <visible>T</visible>
-          <neverEmpty>F</neverEmpty>
-        </subList>
-        <subList>
-          <id>PARTNERS</id>
-          <label>Partners</label>
           <visible>T</visible>
           <neverEmpty>F</neverEmpty>
         </subList>
@@ -2483,7 +2454,7 @@
                 </field>
                 <field>
                   <id>MESSAGE</id>
-                  <label>Customer Message</label>
+                  <label>Vendor Message</label>
                   <visible>F</visible>
                   <mandatory>F</mandatory>
                   <displayType>NORMAL</displayType>
@@ -2550,7 +2521,13 @@
       <subItems>
         <subList>
           <id>LINKS</id>
-          <label>Related Records</label>
+          <label>Receipts &amp; Bills</label>
+          <visible>T</visible>
+          <neverEmpty>F</neverEmpty>
+        </subList>
+        <subList>
+          <id>APPROVALS</id>
+          <label>Approvals</label>
           <visible>T</visible>
           <neverEmpty>F</neverEmpty>
         </subList>
@@ -2567,15 +2544,6 @@
           <neverEmpty>F</neverEmpty>
         </subList>
       </subItems>
-    </tab>
-    <tab>
-      <id>MILESTONES</id>
-      <label>Milestones</label>
-      <visible>F</visible>
-      <fieldGroups>
-        <defaultFieldGroup/>
-      </fieldGroups>
-      <subItems/>
     </tab>
     <tab>
       <id>TRANSACTIONSYSTEMINFORMATION</id>
@@ -2615,18 +2583,9 @@
       <subItems/>
     </tab>
     <tab>
-      <id>MULTIPARTNER</id>
-      <label>Partners</label>
-      <visible>F</visible>
-      <fieldGroups>
-        <defaultFieldGroup/>
-      </fieldGroups>
-      <subItems/>
-    </tab>
-    <tab>
       <id>CUSTOM</id>
       <label>Custom</label>
-      <visible>T</visible>
+      <visible>F</visible>
       <fieldGroups>
         <defaultFieldGroup>
           <fields position="MIDDLE">
@@ -4078,7 +4037,7 @@
     <tab>
       <id>[scriptid=custtab_bsp_sms]</id>
       <label>SMS</label>
-      <visible>T</visible>
+      <visible>F</visible>
       <fieldGroups>
         <defaultFieldGroup>
           <fields position="MIDDLE">
@@ -4296,148 +4255,29 @@
       <subItems/>
     </tab>
     <tab>
+      <id>[scriptid=custtab_bsp_cu_sf_logs_tab]</id>
+      <label>BSP | CU | Processed Logs</label>
+      <visible>F</visible>
+      <fieldGroups>
+        <defaultFieldGroup/>
+      </fieldGroups>
+      <subItems/>
+    </tab>
+    <tab>
       <id>[scriptid=custtab_bsp_isg_transaction]</id>
       <label>BSP | ISG</label>
       <visible>T</visible>
       <fieldGroups>
-        <fieldGroup scriptid="fieldgroup_2_t927173_348">
-          <label>Logicblock</label>
+        <fieldGroup scriptid="fieldgroup_3_t927173_169">
+          <label>Settings</label>
           <visible>T</visible>
           <showTitle>T</showTitle>
           <singleColumn>F</singleColumn>
-          <fields position="MIDDLE">
-            <field>
-              <id>[scriptid=custbody_bsp_isg_lb_order_number]</id>
-              <label>Logicblock Order #</label>
-              <visible>T</visible>
-              <mandatory>F</mandatory>
-              <displayType>NORMAL</displayType>
-              <columnBreak>F</columnBreak>
-              <sameRowAsPrevious>F</sameRowAsPrevious>
-            </field>
-            <field>
-              <id>[scriptid=custbody_bsp_isg_lb_shipping_prov_id]</id>
-              <label>Logicblock Shipping Provider Id</label>
-              <visible>T</visible>
-              <mandatory>F</mandatory>
-              <displayType>NORMAL</displayType>
-              <columnBreak>F</columnBreak>
-              <sameRowAsPrevious>F</sameRowAsPrevious>
-            </field>
-            <field>
-              <id>[scriptid=custbody_bsp_isg_lb_prov_service_code]</id>
-              <label>Logicblock Shipping Provider Service Code</label>
-              <visible>T</visible>
-              <mandatory>F</mandatory>
-              <displayType>NORMAL</displayType>
-              <columnBreak>F</columnBreak>
-              <sameRowAsPrevious>F</sameRowAsPrevious>
-            </field>
-            <field>
-              <id>[scriptid=custbody_bsp_isg_lb_shipping_method_id]</id>
-              <label>Logicblock Shipping Method Id</label>
-              <visible>T</visible>
-              <mandatory>F</mandatory>
-              <displayType>NORMAL</displayType>
-              <columnBreak>F</columnBreak>
-              <sameRowAsPrevious>F</sameRowAsPrevious>
-            </field>
-            <field>
-              <id>[scriptid=custbody_bsp_isg_lb_payment_method]</id>
-              <label>Logicblock Payment Method</label>
-              <visible>T</visible>
-              <mandatory>F</mandatory>
-              <displayType>NORMAL</displayType>
-              <columnBreak>F</columnBreak>
-              <sameRowAsPrevious>F</sameRowAsPrevious>
-            </field>
-            <field>
-              <id>[scriptid=custbody_bsp_isg_lb_purchase_order_num]</id>
-              <label>Logicblock Puchase Order #</label>
-              <visible>T</visible>
-              <mandatory>F</mandatory>
-              <displayType>NORMAL</displayType>
-              <columnBreak>F</columnBreak>
-              <sameRowAsPrevious>F</sameRowAsPrevious>
-            </field>
-          </fields>
-        </fieldGroup>
-        <fieldGroup scriptid="fieldgroup_3_t927173_117">
-          <label>Elite Extra</label>
-          <visible>T</visible>
-          <showTitle>T</showTitle>
-          <singleColumn>F</singleColumn>
-          <fields position="MIDDLE">
-            <field>
-              <id>[scriptid=custbody_bsp_isg_tracking_number]</id>
-              <label>Tracking Number</label>
-              <visible>T</visible>
-              <mandatory>F</mandatory>
-              <displayType>INLINETEXT</displayType>
-              <columnBreak>F</columnBreak>
-              <sameRowAsPrevious>F</sameRowAsPrevious>
-            </field>
-            <field>
-              <id>[scriptid=custbody_bsp_isg_tracking_link]</id>
-              <label>Tracking Link</label>
-              <visible>T</visible>
-              <mandatory>F</mandatory>
-              <displayType>INLINETEXT</displayType>
-              <columnBreak>F</columnBreak>
-              <sameRowAsPrevious>F</sameRowAsPrevious>
-            </field>
-          </fields>
-        </fieldGroup>
-        <fieldGroup scriptid="fieldgroup_4_t927173_437">
-          <label>AOPD</label>
-          <visible>T</visible>
-          <showTitle>T</showTitle>
-          <singleColumn>F</singleColumn>
-          <fields position="MIDDLE">
-            <field>
-              <id>[scriptid=custbody_bsp_isg_aopd]</id>
-              <label>AOPD</label>
-              <visible>T</visible>
-              <mandatory>F</mandatory>
-              <displayType>NORMAL</displayType>
-              <columnBreak>F</columnBreak>
-              <sameRowAsPrevious>F</sameRowAsPrevious>
-              <checkBoxDefault>USE_FIELD_DEFAULT</checkBoxDefault>
-            </field>
-          </fields>
-        </fieldGroup>
-        <fieldGroup scriptid="fieldgroup_5_t927173_871">
-          <label>Customer Info</label>
-          <visible>T</visible>
-          <showTitle>T</showTitle>
-          <singleColumn>F</singleColumn>
-          <fields position="MIDDLE">
-            <field>
-              <id>[scriptid=custbody_bsp_isg_route_code]</id>
-              <label>Route Code</label>
-              <visible>T</visible>
-              <mandatory>F</mandatory>
-              <displayType>NORMAL</displayType>
-              <columnBreak>F</columnBreak>
-              <sameRowAsPrevious>F</sameRowAsPrevious>
-            </field>
-            <field>
-              <id>[scriptid=custbody_bsp_isg_cust_account_number]</id>
-              <label>Customer Account Number</label>
-              <visible>T</visible>
-              <mandatory>F</mandatory>
-              <displayType>NORMAL</displayType>
-              <columnBreak>F</columnBreak>
-              <sameRowAsPrevious>F</sameRowAsPrevious>
-            </field>
-          </fields>
-        </fieldGroup>
-        <defaultFieldGroup>
           <fields position="MIDDLE">
             <field>
               <id>[scriptid=custbody_bsp_isg_autoreceived]</id>
               <label>Autoreceived</label>
-              <visible>F</visible>
+              <visible>T</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -4445,9 +4285,44 @@
               <checkBoxDefault>USE_FIELD_DEFAULT</checkBoxDefault>
             </field>
             <field>
-              <id>[scriptid=custbody_bsp_order_url_link]</id>
-              <label>Order URL link</label>
-              <visible>F</visible>
+              <id>[scriptid=custbody_bsp_isg_order_type]</id>
+              <label>Type</label>
+              <visible>T</visible>
+              <mandatory>F</mandatory>
+              <displayType>NORMAL</displayType>
+              <columnBreak>F</columnBreak>
+              <sameRowAsPrevious>F</sameRowAsPrevious>
+            </field>
+          </fields>
+        </fieldGroup>
+        <fieldGroup scriptid="fieldgroup_4_t927173_733">
+          <label>Transmission values</label>
+          <visible>T</visible>
+          <showTitle>T</showTitle>
+          <singleColumn>F</singleColumn>
+          <fields position="MIDDLE">
+            <field>
+              <id>[scriptid=custbody_bsp_isg_transmission_acct_num]</id>
+              <label>Account Number</label>
+              <visible>T</visible>
+              <mandatory>F</mandatory>
+              <displayType>NORMAL</displayType>
+              <columnBreak>F</columnBreak>
+              <sameRowAsPrevious>F</sameRowAsPrevious>
+            </field>
+            <field>
+              <id>[scriptid=custbody_bsp_isg_transmission_loc]</id>
+              <label>Transmission Location</label>
+              <visible>T</visible>
+              <mandatory>F</mandatory>
+              <displayType>NORMAL</displayType>
+              <columnBreak>F</columnBreak>
+              <sameRowAsPrevious>F</sameRowAsPrevious>
+            </field>
+            <field>
+              <id>[scriptid=custbody_bsp_isg_adot]</id>
+              <label>ADOT</label>
+              <visible>T</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -4456,6 +4331,55 @@
             <field>
               <id>[scriptid=custbody_bsp_isg_transm_queue_id]</id>
               <label>Transmission Queue ID</label>
+              <visible>T</visible>
+              <mandatory>F</mandatory>
+              <displayType>INLINETEXT</displayType>
+              <columnBreak>F</columnBreak>
+              <sameRowAsPrevious>F</sameRowAsPrevious>
+            </field>
+            <field>
+              <id>[scriptid=custbody_bsp_isg_transmission_msg_id]</id>
+              <label>Message ID</label>
+              <visible>T</visible>
+              <mandatory>F</mandatory>
+              <displayType>NORMAL</displayType>
+              <columnBreak>F</columnBreak>
+              <sameRowAsPrevious>F</sameRowAsPrevious>
+            </field>
+            <field>
+              <id>[scriptid=custbody_bsp_isg_po_transm_status]</id>
+              <label>Transmission Status</label>
+              <visible>T</visible>
+              <mandatory>F</mandatory>
+              <displayType>NORMAL</displayType>
+              <columnBreak>F</columnBreak>
+              <sameRowAsPrevious>F</sameRowAsPrevious>
+            </field>
+          </fields>
+        </fieldGroup>
+        <fieldGroup scriptid="fieldgroup_5_t927173_482">
+          <label>Carton buy</label>
+          <visible>T</visible>
+          <showTitle>T</showTitle>
+          <singleColumn>F</singleColumn>
+          <fields position="MIDDLE">
+            <field>
+              <id>[scriptid=custbody_bsp_isg_is_carton_buy]</id>
+              <label>PO Created from Carton Buy screen</label>
+              <visible>T</visible>
+              <mandatory>F</mandatory>
+              <displayType>DISABLED</displayType>
+              <columnBreak>F</columnBreak>
+              <sameRowAsPrevious>F</sameRowAsPrevious>
+              <checkBoxDefault>USE_FIELD_DEFAULT</checkBoxDefault>
+            </field>
+          </fields>
+        </fieldGroup>
+        <defaultFieldGroup>
+          <fields position="MIDDLE">
+            <field>
+              <id>[scriptid=custbody_bsp_order_url_link]</id>
+              <label>Order URL link</label>
               <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
@@ -4472,8 +4396,8 @@
               <sameRowAsPrevious>F</sameRowAsPrevious>
             </field>
             <field>
-              <id>[scriptid=custbody_bsp_isg_transmission_acct_num]</id>
-              <label>Account Number</label>
+              <id>[scriptid=custbody_bsp_isg_lb_shipping_prov_id]</id>
+              <label>Logicblock Shipping Provider Id</label>
               <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
@@ -4481,8 +4405,17 @@
               <sameRowAsPrevious>F</sameRowAsPrevious>
             </field>
             <field>
-              <id>[scriptid=custbody_bsp_isg_transmission_loc]</id>
-              <label>Transmission Location</label>
+              <id>[scriptid=custbody_bsp_isg_tracking_number]</id>
+              <label>Tracking Number</label>
+              <visible>F</visible>
+              <mandatory>F</mandatory>
+              <displayType>INLINETEXT</displayType>
+              <columnBreak>F</columnBreak>
+              <sameRowAsPrevious>F</sameRowAsPrevious>
+            </field>
+            <field>
+              <id>[scriptid=custbody_bsp_isg_lb_shipping_method_id]</id>
+              <label>Logicblock Shipping Method Id</label>
               <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
@@ -4490,8 +4423,8 @@
               <sameRowAsPrevious>F</sameRowAsPrevious>
             </field>
             <field>
-              <id>[scriptid=custbody_bsp_isg_po_transm_status]</id>
-              <label>Transmission Status</label>
+              <id>[scriptid=custbody_bsp_isg_lb_prov_service_code]</id>
+              <label>Logicblock Shipping Provider Service Code</label>
               <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
@@ -4499,8 +4432,8 @@
               <sameRowAsPrevious>F</sameRowAsPrevious>
             </field>
             <field>
-              <id>[scriptid=custbody_bsp_isg_transmission_msg_id]</id>
-              <label>Message ID</label>
+              <id>[scriptid=custbody_bsp_isg_lb_order_number]</id>
+              <label>Logicblock Order #</label>
               <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
@@ -4508,8 +4441,8 @@
               <sameRowAsPrevious>F</sameRowAsPrevious>
             </field>
             <field>
-              <id>[scriptid=custbody_bsp_isg_adot]</id>
-              <label>Essendant ADOT</label>
+              <id>[scriptid=custbody_bsp_isg_lb_payment_method]</id>
+              <label>Logicblock Payment Method</label>
               <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
@@ -4517,18 +4450,26 @@
               <sameRowAsPrevious>F</sameRowAsPrevious>
             </field>
             <field>
-              <id>[scriptid=custbody_bsp_isg_is_carton_buy]</id>
-              <label>Carton Buy</label>
+              <id>[scriptid=custbody_bsp_isg_lb_purchase_order_num]</id>
+              <label>Logicblock Puchase Order #</label>
               <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
               <sameRowAsPrevious>F</sameRowAsPrevious>
-              <checkBoxDefault>USE_FIELD_DEFAULT</checkBoxDefault>
             </field>
             <field>
-              <id>[scriptid=custbody_bsp_isg_order_type]</id>
-              <label>Type</label>
+              <id>[scriptid=custbody_bsp_isg_route_code]</id>
+              <label>Route Code</label>
+              <visible>F</visible>
+              <mandatory>F</mandatory>
+              <displayType>NORMAL</displayType>
+              <columnBreak>F</columnBreak>
+              <sameRowAsPrevious>F</sameRowAsPrevious>
+            </field>
+            <field>
+              <id>[scriptid=custbody_bsp_isg_cust_account_number]</id>
+              <label>Customer Account Number</label>
               <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
@@ -4544,50 +4485,33 @@
               <columnBreak>F</columnBreak>
               <sameRowAsPrevious>F</sameRowAsPrevious>
             </field>
+            <field>
+              <id>[scriptid=custbody_bsp_isg_tracking_link]</id>
+              <label>Tracking Link</label>
+              <visible>F</visible>
+              <mandatory>F</mandatory>
+              <displayType>INLINETEXT</displayType>
+              <columnBreak>F</columnBreak>
+              <sameRowAsPrevious>F</sameRowAsPrevious>
+            </field>
+            <field>
+              <id>[scriptid=custbody_bsp_isg_aopd]</id>
+              <label>AOPD</label>
+              <visible>F</visible>
+              <mandatory>F</mandatory>
+              <displayType>NORMAL</displayType>
+              <columnBreak>F</columnBreak>
+              <sameRowAsPrevious>F</sameRowAsPrevious>
+              <checkBoxDefault>USE_FIELD_DEFAULT</checkBoxDefault>
+            </field>
           </fields>
         </defaultFieldGroup>
       </fieldGroups>
       <subItems/>
     </tab>
-    <tab>
-      <id>[scriptid=custtab_bsp_cu_sf_logs_tab]</id>
-      <label>BSP | CU | Processed Logs</label>
-      <visible>F</visible>
-      <fieldGroups>
-        <defaultFieldGroup/>
-      </fieldGroups>
-      <subItems/>
-    </tab>
   </tabs>
-  <quickViewFields>
-    <field>
-      <id>ENTITY</id>
-    </field>
-    <field>
-      <id>TOTAL</id>
-    </field>
-    <field>
-      <id>ORDERSTATUS</id>
-    </field>
-    <field>
-      <id>TRANDATE</id>
-    </field>
-    <field>
-      <id>SALESREP</id>
-    </field>
-  </quickViewFields>
   <actionbar>
     <buttons>
-      <button>
-        <id>ALLOCATESALESORDER</id>
-        <label>Allocate</label>
-        <visible>T</visible>
-      </button>
-      <button>
-        <id>APPROVE</id>
-        <label>Approve</label>
-        <visible>T</visible>
-      </button>
       <button>
         <id>RETURN</id>
         <label>Authorize Return</label>
@@ -4596,22 +4520,12 @@
       <button>
         <id>AUTOFILL</id>
         <label>Auto Fill</label>
-        <visible>F</visible>
-      </button>
-      <button>
-        <id>BILLREMAINING</id>
-        <label>Bill Remaining</label>
         <visible>T</visible>
       </button>
       <button>
-        <id>CANCELORDER</id>
-        <label>Cancel Order</label>
+        <id>BILL</id>
+        <label>Bill</label>
         <visible>T</visible>
-      </button>
-      <button>
-        <id>CLEARSPLITS</id>
-        <label>Clear Splits</label>
-        <visible>F</visible>
       </button>
       <button>
         <id>CLOSEREMAINING</id>
@@ -4619,69 +4533,9 @@
         <visible>T</visible>
       </button>
       <button>
-        <id>REVCOMM</id>
-        <label>Commit Revenue</label>
+        <id>ENTERPREPAYMENT</id>
+        <label>Enter Prepayment</label>
         <visible>T</visible>
-      </button>
-      <button>
-        <id>CREATEDEPOSIT</id>
-        <label>Create Deposit</label>
-        <visible>T</visible>
-      </button>
-      <button>
-        <id>CREATEAUTHORIZATION</id>
-        <label>Create Payment Authorization</label>
-        <visible>T</visible>
-      </button>
-      <button>
-        <id>CREATEPICKUP</id>
-        <label>Create Pickup</label>
-        <visible>F</visible>
-      </button>
-      <button>
-        <id>PROCESS</id>
-        <label>Fulfill</label>
-        <visible>T</visible>
-      </button>
-      <button>
-        <id>UPDATEREVREC</id>
-        <label>Manage Revenue Recognition</label>
-        <visible>F</visible>
-      </button>
-      <button>
-        <id>NEXTBILL</id>
-        <label>Next Bill</label>
-        <visible>T</visible>
-      </button>
-      <button>
-        <id>ITEM_ADDPROJECTITEMS</id>
-        <label>Refresh Items from Project</label>
-        <visible>F</visible>
-      </button>
-      <button>
-        <id>REJECT</id>
-        <label>Reject</label>
-        <visible>T</visible>
-      </button>
-      <button>
-        <id>REQUESTFULFILLMENT</id>
-        <label>Request Fulfillment</label>
-        <visible>T</visible>
-      </button>
-      <button>
-        <id>RESETTER</id>
-        <label>Reset</label>
-        <visible>T</visible>
-      </button>
-      <button>
-        <id>SUBMITACCEPTPAYMENTAUTHORIZATION</id>
-        <label>Save &amp; Accept Payment Authorization</label>
-        <visible>T</visible>
-      </button>
-      <button>
-        <id>UPDATEVSOE</id>
-        <label>Update VSOE</label>
-        <visible>F</visible>
       </button>
     </buttons>
     <menu>
@@ -4741,23 +4595,8 @@
         <visible>T</visible>
       </menuitem>
       <menuitem>
-        <id>PRINTPICKTICK</id>
-        <label>Print Picking Ticket</label>
-        <visible>T</visible>
-      </menuitem>
-      <menuitem>
-        <id>SUBMITACCEPTDEPOSIT</id>
-        <label>Save &amp; Accept Deposit</label>
-        <visible>T</visible>
-      </menuitem>
-      <menuitem>
         <id>SAVEEMAIL</id>
         <label>Save &amp; Email</label>
-        <visible>T</visible>
-      </menuitem>
-      <menuitem>
-        <id>SUBMITFULFILL</id>
-        <label>Save &amp; Fulfill</label>
         <visible>T</visible>
       </menuitem>
       <menuitem>
@@ -4773,7 +4612,7 @@
       <menuitem>
         <id>ACTIVITYHISTORY</id>
         <label>Show Activity</label>
-        <visible>F</visible>
+        <visible>T</visible>
       </menuitem>
     </menu>
   </actionbar>
@@ -4783,8 +4622,8 @@
   <emailMessageTemplate>USE_DEFAULT</emailMessageTemplate>
   <printingType>
     <advanced>
-      <printTemplate>STDTMPLSALESORD</printTemplate>
-      <emailTemplate>STDTMPLSALESORD</emailTemplate>
+      <printTemplate>STDTMPLPURCHORD</printTemplate>
+      <emailTemplate>STDTMPLPURCHORD</emailTemplate>
     </advanced>
   </printingType>
   <totalBox>
@@ -4801,49 +4640,21 @@
   </totalBox>
   <linkedForms>
     <linkedForm>
-      <type>SALES_ORDER_CASH_SALE_TRANSACTION</type>
+      <type>PURCHASE_ORDER_BILL_TRANSACTION</type>
       <form>USE_DEFAULT</form>
     </linkedForm>
     <linkedForm>
-      <type>SALES_ORDER_INVOICE_TRANSACTION</type>
+      <type>PURCHASE_ORDER_ITEM_RECEIPT_TRANSACTION</type>
       <form>USE_DEFAULT</form>
     </linkedForm>
     <linkedForm>
-      <type>SALES_ORDER_ITEM_FULFILLMENT_TRANSACTION</type>
-      <form>USE_DEFAULT</form>
-    </linkedForm>
-    <linkedForm>
-      <type>SALES_ORDER_INVOICE_PACKING_SLIP</type>
-      <form>USE_DEFAULT</form>
-    </linkedForm>
-    <linkedForm>
-      <type>SALES_ORDER_INVOICE_PICKING_TICKET</type>
-      <form>USE_DEFAULT</form>
-    </linkedForm>
-    <linkedForm>
-      <type>SALES_ORDER_PURCHASE_ORDER_DROP_SHIPMENT_TRANSACTION</type>
-      <form>USE_DEFAULT</form>
-    </linkedForm>
-    <linkedForm>
-      <type>SALES_ORDER_PURCHASE_ORDER_SPECIAL_ORDER_TRANSACTION</type>
-      <form>USE_DEFAULT</form>
-    </linkedForm>
-    <linkedForm>
-      <type>SALES_ORDER_RETURN_AUTHORIZATION_TRANSACTION</type>
-      <form>USE_DEFAULT</form>
-    </linkedForm>
-    <linkedForm>
-      <type>SALES_ORDER_REVENUE_COMMITMENT_TRANSACTION</type>
-      <form>USE_DEFAULT</form>
-    </linkedForm>
-    <linkedForm>
-      <type>SALES_ORDER_WORK_ORDER_TRANSACTION</type>
+      <type>PURCHASE_ORDER_VENDOR_RETURN_AUTHORIZATION_TRANSACTION</type>
       <form>USE_DEFAULT</form>
     </linkedForm>
   </linkedForms>
   <roles>
     <role>
-      <id>AR_CLERK</id>
+      <id>AP_CLERK</id>
       <preferred>F</preferred>
     </role>
     <role>
@@ -4867,10 +4678,6 @@
       <preferred>F</preferred>
     </role>
     <role>
-      <id>[scriptid=customrole1022]</id>
-      <preferred>F</preferred>
-    </role>
-    <role>
       <id>[scriptid=customrole_bsp_isg_as2_service]</id>
       <preferred>F</preferred>
     </role>
@@ -4880,6 +4687,10 @@
     </role>
     <role>
       <id>BOOKKEEPER</id>
+      <preferred>F</preferred>
+    </role>
+    <role>
+      <id>BUYER</id>
       <preferred>F</preferred>
     </role>
     <role>
@@ -4903,7 +4714,7 @@
       <preferred>F</preferred>
     </role>
     <role>
-      <id>CUSTOMER_CENTER</id>
+      <id>[scriptid=customrole1014]</id>
       <preferred>F</preferred>
     </role>
     <role>
@@ -4915,6 +4726,10 @@
       <preferred>F</preferred>
     </role>
     <role>
+      <id>EMPLOYEE_CENTER</id>
+      <preferred>F</preferred>
+    </role>
+    <role>
       <id>FULL_ACCESS</id>
       <preferred>F</preferred>
     </role>
@@ -4923,55 +4738,11 @@
       <preferred>F</preferred>
     </role>
     <role>
-      <id>[scriptid=customrole_bsp_integration_role]</id>
-      <preferred>F</preferred>
-    </role>
-    <role>
-      <id>[scriptid=customrole_ccp_gateway_admin]</id>
-      <preferred>F</preferred>
-    </role>
-    <role>
-      <id>PRODUCT_MANAGER</id>
-      <preferred>F</preferred>
-    </role>
-    <role>
       <id>[scriptid=customrole1010]</id>
       <preferred>F</preferred>
     </role>
     <role>
-      <id>[scriptid=customrole1006]</id>
-      <preferred>F</preferred>
-    </role>
-    <role>
       <id>CUSTOMROLE42</id>
-      <preferred>F</preferred>
-    </role>
-    <role>
-      <id>CUSTOMROLE43</id>
-      <preferred>F</preferred>
-    </role>
-    <role>
-      <id>SALES_ADMINISTRATOR</id>
-      <preferred>F</preferred>
-    </role>
-    <role>
-      <id>[scriptid=customrole1012]</id>
-      <preferred>F</preferred>
-    </role>
-    <role>
-      <id>SALES_MANAGER</id>
-      <preferred>F</preferred>
-    </role>
-    <role>
-      <id>SALES_PERSON</id>
-      <preferred>F</preferred>
-    </role>
-    <role>
-      <id>[scriptid=customrole1005]</id>
-      <preferred>F</preferred>
-    </role>
-    <role>
-      <id>SALES_VICE_PRESIDENT</id>
       <preferred>F</preferred>
     </role>
     <role>
@@ -4983,15 +4754,15 @@
       <preferred>F</preferred>
     </role>
     <role>
-      <id>[scriptid=customrole1013]</id>
-      <preferred>F</preferred>
-    </role>
-    <role>
-      <id>WAREHOUSE_MANAGER</id>
+      <id>VENDOR_CENTER</id>
       <preferred>F</preferred>
     </role>
     <role>
       <id>[scriptid=customrole1007]</id>
+      <preferred>F</preferred>
+    </role>
+    <role>
+      <id>WAREHOUSE_MANAGER</id>
       <preferred>F</preferred>
     </role>
   </roles>

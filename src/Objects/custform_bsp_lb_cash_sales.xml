@@ -1,5 +1,5 @@
 <transactionForm scriptid="custform_bsp_lb_cash_sales" standard="STANDARDCASHSALE">
-  <name>BSP | ISG |  Logicblock | Cash Sale</name>
+  <name>BSP | ISG | Logicblock | Cash Sale</name>
   <recordType>CASHSALE</recordType>
   <inactive>F</inactive>
   <preferred>F</preferred>
@@ -121,7 +121,7 @@
         <field>
           <id>SALESREP</id>
           <label>Sales Rep</label>
-          <visible>T</visible>
+          <visible>F</visible>
           <mandatory>F</mandatory>
           <displayType>NORMAL</displayType>
           <columnBreak>F</columnBreak>
@@ -139,7 +139,7 @@
         <field>
           <id>SALESEFFECTIVEDATE</id>
           <label>Sales Effective Date</label>
-          <visible>T</visible>
+          <visible>F</visible>
           <mandatory>F</mandatory>
           <displayType>NORMAL</displayType>
           <columnBreak>F</columnBreak>
@@ -148,7 +148,7 @@
         <field>
           <id>EXCLUDECOMMISSION</id>
           <label>Exclude Commissions</label>
-          <visible>T</visible>
+          <visible>F</visible>
           <mandatory>F</mandatory>
           <displayType>NORMAL</displayType>
           <columnBreak>F</columnBreak>
@@ -158,7 +158,7 @@
         <field>
           <id>CREATEDFROM</id>
           <label>Created From</label>
-          <visible>T</visible>
+          <visible>F</visible>
           <mandatory>F</mandatory>
           <displayType>DISABLED</displayType>
           <columnBreak>F</columnBreak>
@@ -167,7 +167,7 @@
         <field>
           <id>LEADSOURCE</id>
           <label>Lead Source</label>
-          <visible>T</visible>
+          <visible>F</visible>
           <mandatory>F</mandatory>
           <displayType>NORMAL</displayType>
           <columnBreak>F</columnBreak>
@@ -176,7 +176,7 @@
         <field>
           <id>SOURCE</id>
           <label>Source</label>
-          <visible>T</visible>
+          <visible>F</visible>
           <mandatory>F</mandatory>
           <displayType>INLINETEXT</displayType>
           <columnBreak>F</columnBreak>
@@ -185,7 +185,7 @@
         <field>
           <id>PARTNER</id>
           <label>Partner</label>
-          <visible>T</visible>
+          <visible>F</visible>
           <mandatory>F</mandatory>
           <displayType>NORMAL</displayType>
           <columnBreak>F</columnBreak>
@@ -262,12 +262,6 @@
           <sameRowAsPrevious>F</sameRowAsPrevious>
         </field>
       </fields>
-    </fieldGroup>
-    <fieldGroup scriptid="intercompanymanagement">
-      <label>Intercompany Management</label>
-      <visible>T</visible>
-      <showTitle>T</showTitle>
-      <singleColumn>F</singleColumn>
     </fieldGroup>
     <defaultFieldGroup>
       <fields position="MIDDLE">
@@ -653,7 +647,7 @@
             <field>
               <id>COUPONCODE</id>
               <label>Coupon Code</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -662,7 +656,7 @@
             <field>
               <id>PROMOCODE</id>
               <label>Promotion</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -671,7 +665,7 @@
             <field>
               <id>DISCOUNTITEM</id>
               <label>Discount Item</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -680,7 +674,7 @@
             <field>
               <id>DISCOUNTRATE</id>
               <label>Rate</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -689,7 +683,7 @@
             <field>
               <id>GIFTCERT</id>
               <label>Gift Certificate</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -793,7 +787,7 @@
             <column>
               <id>GIFTCERTFIELDS</id>
               <label>Gift Certificate</label>
-              <visible>T</visible>
+              <visible>F</visible>
             </column>
             <column>
               <id>REVRECSCHEDULE</id>
@@ -918,12 +912,12 @@
             <column>
               <id>[scriptid=custcol_bsp_csi_unit_cost]</id>
               <label>Unit Cost</label>
-              <visible>T</visible>
+              <visible>F</visible>
             </column>
             <column>
               <id>[scriptid=custcol_bsp_csi_gp_percent]</id>
               <label>Gross Profit %</label>
-              <visible>T</visible>
+              <visible>F</visible>
             </column>
             <column>
               <id>[scriptid=custcol_bsp_mg_item_id]</id>
@@ -1555,6 +1549,16 @@
               <label>Order Shipment Type</label>
               <visible>T</visible>
             </column>
+            <column>
+              <id>[scriptid=custcol_bsp_mm_placement_id]</id>
+              <label>BSP | MM | Placement id</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_isg_po_vendor]</id>
+              <label>PO Vendor</label>
+              <visible>F</visible>
+            </column>
           </columns>
         </subList>
         <subList>
@@ -1681,7 +1685,7 @@
             <field>
               <id>HANDLINGTAXCODE</id>
               <label>Handling Tax Code</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1690,7 +1694,7 @@
             <field>
               <id>HANDLINGTAX1RATE</id>
               <label>Handling Tax Rate</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1720,7 +1724,7 @@
             <field>
               <id>[scriptid=custbody_shipment_date]</id>
               <label>Shipment Date</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1729,7 +1733,7 @@
             <field>
               <id>[scriptid=custbody_bsp_oae_ship_ffl]</id>
               <label>FFL (Customer Address)</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1754,7 +1758,7 @@
             <field>
               <id>BILLADDRESSLIST</id>
               <label>Bill To Select</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1767,7 +1771,7 @@
             <field>
               <id>[scriptid=custbody_bsp_cur_sfbillcontname]</id>
               <label>SF Billing Contact Name</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1776,7 +1780,7 @@
             <field>
               <id>[scriptid=custbody_bsp_cur_sfbilltocontemail]</id>
               <label>SF Bill-to Contact Email</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1796,7 +1800,7 @@
                 <field>
                   <id>PAYMENTMETHOD</id>
                   <label>Payment Method</label>
-                  <visible>T</visible>
+                  <visible>F</visible>
                   <mandatory>F</mandatory>
                   <displayType>NORMAL</displayType>
                   <columnBreak>F</columnBreak>
@@ -1805,7 +1809,7 @@
                 <field>
                   <id>CREDITCARD</id>
                   <label>Credit Card Select</label>
-                  <visible>T</visible>
+                  <visible>F</visible>
                   <mandatory>F</mandatory>
                   <displayType>NORMAL</displayType>
                   <columnBreak>F</columnBreak>
@@ -1814,7 +1818,7 @@
                 <field>
                   <id>CCNUMBER</id>
                   <label>Credit Card #</label>
-                  <visible>T</visible>
+                  <visible>F</visible>
                   <mandatory>F</mandatory>
                   <displayType>NORMAL</displayType>
                   <columnBreak>F</columnBreak>
@@ -1823,7 +1827,7 @@
                 <field>
                   <id>CCSECURITYCODE</id>
                   <label>CSC</label>
-                  <visible>T</visible>
+                  <visible>F</visible>
                   <mandatory>F</mandatory>
                   <displayType>NORMAL</displayType>
                   <columnBreak>F</columnBreak>
@@ -1832,7 +1836,7 @@
                 <field>
                   <id>CCEXPIREDATE</id>
                   <label>Expires (MM/YYYY)</label>
-                  <visible>T</visible>
+                  <visible>F</visible>
                   <mandatory>F</mandatory>
                   <displayType>NORMAL</displayType>
                   <columnBreak>F</columnBreak>
@@ -1850,7 +1854,7 @@
                 <field>
                   <id>CCNAME</id>
                   <label>Name on Card</label>
-                  <visible>T</visible>
+                  <visible>F</visible>
                   <mandatory>F</mandatory>
                   <displayType>NORMAL</displayType>
                   <columnBreak>F</columnBreak>
@@ -1859,7 +1863,7 @@
                 <field>
                   <id>CCSTREET</id>
                   <label>Card Street</label>
-                  <visible>T</visible>
+                  <visible>F</visible>
                   <mandatory>F</mandatory>
                   <displayType>NORMAL</displayType>
                   <columnBreak>F</columnBreak>
@@ -1868,7 +1872,7 @@
                 <field>
                   <id>CCZIPCODE</id>
                   <label>Card Zip Code</label>
-                  <visible>T</visible>
+                  <visible>F</visible>
                   <mandatory>F</mandatory>
                   <displayType>NORMAL</displayType>
                   <columnBreak>F</columnBreak>
@@ -1877,7 +1881,7 @@
                 <field>
                   <id>CUSTOMERCODE</id>
                   <label>Customer Code</label>
-                  <visible>T</visible>
+                  <visible>F</visible>
                   <mandatory>F</mandatory>
                   <displayType>NORMAL</displayType>
                   <columnBreak>F</columnBreak>
@@ -1886,7 +1890,7 @@
                 <field>
                   <id>CREDITCARDPROCESSOR</id>
                   <label>Payment Processing Profile</label>
-                  <visible>T</visible>
+                  <visible>F</visible>
                   <mandatory>F</mandatory>
                   <displayType>NORMAL</displayType>
                   <columnBreak>F</columnBreak>
@@ -1895,7 +1899,7 @@
                 <field>
                   <id>CCAPPROVED</id>
                   <label>Credit Card Approved</label>
-                  <visible>T</visible>
+                  <visible>F</visible>
                   <mandatory>F</mandatory>
                   <displayType>NORMAL</displayType>
                   <columnBreak>F</columnBreak>
@@ -1905,7 +1909,7 @@
                 <field>
                   <id>CHARGEIT</id>
                   <label>Charge Credit Card</label>
-                  <visible>T</visible>
+                  <visible>F</visible>
                   <mandatory>F</mandatory>
                   <displayType>NORMAL</displayType>
                   <columnBreak>F</columnBreak>
@@ -1914,7 +1918,7 @@
                 <field>
                   <id>PNREFNUM</id>
                   <label>P/N Ref.</label>
-                  <visible>T</visible>
+                  <visible>F</visible>
                   <mandatory>F</mandatory>
                   <displayType>NORMAL</displayType>
                   <columnBreak>F</columnBreak>
@@ -1923,7 +1927,7 @@
                 <field>
                   <id>AUTHCODE</id>
                   <label>Auth. Code</label>
-                  <visible>T</visible>
+                  <visible>F</visible>
                   <mandatory>F</mandatory>
                   <displayType>NORMAL</displayType>
                   <columnBreak>F</columnBreak>
@@ -1932,7 +1936,7 @@
                 <field>
                   <id>CCAVSSTREETMATCH</id>
                   <label>AVS Street Match</label>
-                  <visible>T</visible>
+                  <visible>F</visible>
                   <mandatory>F</mandatory>
                   <displayType>NORMAL</displayType>
                   <columnBreak>F</columnBreak>
@@ -1941,7 +1945,7 @@
                 <field>
                   <id>CCAVSZIPMATCH</id>
                   <label>AVS Zip Match</label>
-                  <visible>T</visible>
+                  <visible>F</visible>
                   <mandatory>F</mandatory>
                   <displayType>NORMAL</displayType>
                   <columnBreak>F</columnBreak>
@@ -1950,7 +1954,7 @@
                 <field>
                   <id>IGNOREAVS</id>
                   <label>Ignore AVS</label>
-                  <visible>T</visible>
+                  <visible>F</visible>
                   <mandatory>F</mandatory>
                   <displayType>NORMAL</displayType>
                   <columnBreak>F</columnBreak>
@@ -1959,7 +1963,7 @@
                 <field>
                   <id>CCSECURITYCODEMATCH</id>
                   <label>CSC Match</label>
-                  <visible>T</visible>
+                  <visible>F</visible>
                   <mandatory>F</mandatory>
                   <displayType>NORMAL</displayType>
                   <columnBreak>F</columnBreak>
@@ -1968,7 +1972,7 @@
                 <field>
                   <id>IGNORECSC</id>
                   <label>Ignore CSC</label>
-                  <visible>T</visible>
+                  <visible>F</visible>
                   <mandatory>F</mandatory>
                   <displayType>NORMAL</displayType>
                   <columnBreak>F</columnBreak>
@@ -1995,7 +1999,7 @@
                 <field>
                   <id>ISRECURRINGPAYMENT</id>
                   <label>Recurring Payment</label>
-                  <visible>T</visible>
+                  <visible>F</visible>
                   <mandatory>F</mandatory>
                   <displayType>NORMAL</displayType>
                   <columnBreak>F</columnBreak>
@@ -2004,7 +2008,7 @@
                 <field>
                   <id>SOFTDESCRIPTOR</id>
                   <label>Soft Descriptor</label>
-                  <visible>T</visible>
+                  <visible>F</visible>
                   <mandatory>F</mandatory>
                   <displayType>NORMAL</displayType>
                   <columnBreak>F</columnBreak>
@@ -2013,7 +2017,7 @@
                 <field>
                   <id>PAYMENTOPERATION</id>
                   <label>Payment Operation</label>
-                  <visible>T</visible>
+                  <visible>F</visible>
                   <mandatory>F</mandatory>
                   <displayType>NORMAL</displayType>
                   <columnBreak>F</columnBreak>
@@ -2026,7 +2030,7 @@
             <subList>
               <id>GIFTCERTREDEMPTION</id>
               <label>Gift Certificate</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <neverEmpty>F</neverEmpty>
             </subList>
           </subLists>
@@ -2246,7 +2250,20 @@
       <label>Communication</label>
       <visible>T</visible>
       <fieldGroups>
-        <defaultFieldGroup/>
+        <defaultFieldGroup>
+          <fields position="MIDDLE">
+            <field>
+              <id>[scriptid=custbody_bsp_mm_send_email]</id>
+              <label>BSP | MM | Send Email</label>
+              <visible>F</visible>
+              <mandatory>F</mandatory>
+              <displayType>NORMAL</displayType>
+              <columnBreak>F</columnBreak>
+              <sameRowAsPrevious>F</sameRowAsPrevious>
+              <checkBoxDefault>USE_FIELD_DEFAULT</checkBoxDefault>
+            </field>
+          </fields>
+        </defaultFieldGroup>
       </fieldGroups>
       <subItems>
         <subTab>
@@ -2259,7 +2276,7 @@
                 <field>
                   <id>TOBEPRINTED</id>
                   <label>To Be Printed</label>
-                  <visible>T</visible>
+                  <visible>F</visible>
                   <mandatory>F</mandatory>
                   <displayType>NORMAL</displayType>
                   <columnBreak>F</columnBreak>
@@ -2279,7 +2296,7 @@
                 <field>
                   <id>TOBEFAXED</id>
                   <label>To Be Faxed</label>
-                  <visible>T</visible>
+                  <visible>F</visible>
                   <mandatory>F</mandatory>
                   <displayType>NORMAL</displayType>
                   <columnBreak>F</columnBreak>
@@ -2289,7 +2306,7 @@
                 <field>
                   <id>MESSAGESEL</id>
                   <label>Select Message</label>
-                  <visible>T</visible>
+                  <visible>F</visible>
                   <mandatory>F</mandatory>
                   <displayType>NORMAL</displayType>
                   <columnBreak>F</columnBreak>
@@ -2298,7 +2315,7 @@
                 <field>
                   <id>MESSAGE</id>
                   <label>Customer Message</label>
-                  <visible>T</visible>
+                  <visible>F</visible>
                   <mandatory>F</mandatory>
                   <displayType>NORMAL</displayType>
                   <columnBreak>F</columnBreak>
@@ -2432,7 +2449,7 @@
             <field>
               <id>[scriptid=custbody1]</id>
               <label>Customer Phone</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>DISABLED</displayType>
               <columnBreak>F</columnBreak>
@@ -2441,7 +2458,7 @@
             <field>
               <id>[scriptid=custbody2]</id>
               <label>Delivery Instructions</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -2450,7 +2467,7 @@
             <field>
               <id>[scriptid=custbody_bsp_is_so_exported]</id>
               <label>[BSP] SO Exported</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>INLINETEXT</displayType>
               <columnBreak>F</columnBreak>
@@ -2460,7 +2477,7 @@
             <field>
               <id>[scriptid=custbody_bill_at_beginning]</id>
               <label>Bill at Beginning of Period</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -2470,7 +2487,7 @@
             <field>
               <id>[scriptid=custbody_policy_application]</id>
               <label>Policy Application</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -2579,7 +2596,7 @@
             <field>
               <id>[scriptid=custbody_test_text_field]</id>
               <label>Test Text Field</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -2588,7 +2605,7 @@
             <field>
               <id>[scriptid=custbody_bsp_go_whs_source_block]</id>
               <label>Warehouse Sourcing Block</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -2598,7 +2615,7 @@
             <field>
               <id>[scriptid=custbody_bsp_go_autoallocate_block]</id>
               <label>Auto Allocation Block?</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -2608,7 +2625,7 @@
             <field>
               <id>[scriptid=custbody_bsp_miva_orderid]</id>
               <label>Miva Order Id</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -2617,7 +2634,7 @@
             <field>
               <id>[scriptid=custbody_bsp_miva_queued]</id>
               <label>Queued for Miva</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -2627,7 +2644,7 @@
             <field>
               <id>[scriptid=custbody_bsp_miva_total]</id>
               <label>Miva Total</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -2655,7 +2672,7 @@
             <field>
               <id>[scriptid=custbody3]</id>
               <label>Ship To Country</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -2664,7 +2681,7 @@
             <field>
               <id>[scriptid=custbody_bsp_flight_billing_id]</id>
               <label>Flight Billing ID</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -2682,7 +2699,7 @@
             <field>
               <id>[scriptid=custbody_bsp_membership_billing_id]</id>
               <label>Membership Billing ID</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -2691,7 +2708,7 @@
             <field>
               <id>[scriptid=custbody_bsp_infqs_subscription]</id>
               <label>Subscription</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -2710,7 +2727,7 @@
             <field>
               <id>[scriptid=custbody_bsp_infqs_overdue_notice_sent]</id>
               <label>BSP | InfQS | Overdue Notice Sent</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -2720,7 +2737,7 @@
             <field>
               <id>[scriptid=custbody_weightrack_id]</id>
               <label>WeighTrac ID</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -2805,7 +2822,7 @@
             <field>
               <id>[scriptid=custbody_bsp_miva_zonos_order]</id>
               <label>BSP | Miva | Zonos Order</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -2815,7 +2832,7 @@
             <field>
               <id>[scriptid=custbody_bsp_vendor_bill_processed]</id>
               <label>Vendor Bill Processed</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -2834,7 +2851,7 @@
             <field>
               <id>[scriptid=custbody_bsp_ctmr_phone_no]</id>
               <label>Customer Phone Number</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -2881,7 +2898,7 @@
             <field>
               <id>[scriptid=custbody_bsp_aab_extwarrtyfrom]</id>
               <label>Extended Warranty From</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>DISABLED</displayType>
               <columnBreak>F</columnBreak>
@@ -2890,7 +2907,7 @@
             <field>
               <id>[scriptid=custbody_bsp_aab_extwarrtybid]</id>
               <label>Ext Warranty Bundle Id</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>DISABLED</displayType>
               <columnBreak>F</columnBreak>
@@ -2899,7 +2916,7 @@
             <field>
               <id>[scriptid=custbody_bsp_aab_extwarrtyoverride]</id>
               <label>Extended Warranty After Sale Validity Override</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -2919,7 +2936,7 @@
             <field>
               <id>[scriptid=custbody_bsp_aab_order_disclaimer]</id>
               <label>Order Disclaimer</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -2928,7 +2945,7 @@
             <field>
               <id>[scriptid=custbody_bsp_aab_price_override]</id>
               <label>Price Override</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>DISABLED</displayType>
               <columnBreak>F</columnBreak>
@@ -2938,7 +2955,7 @@
             <field>
               <id>[scriptid=custbody_bsp_aab_emp_override]</id>
               <label>Override User</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>DISABLED</displayType>
               <columnBreak>F</columnBreak>
@@ -2993,7 +3010,7 @@
             <field>
               <id>[scriptid=custbody_bsp_miva_customer_login]</id>
               <label>Miva Customer Login</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>DISABLED</displayType>
               <columnBreak>F</columnBreak>
@@ -3002,7 +3019,7 @@
             <field>
               <id>[scriptid=custbody_bsp_aab_delivery_information]</id>
               <label>Delivery Information Type</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -3011,7 +3028,7 @@
             <field>
               <id>[scriptid=custbody_bsp_aab_estimate_delivery]</id>
               <label>Estimated Delivery Date</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -3020,7 +3037,7 @@
             <field>
               <id>[scriptid=custbody_bsp_aab_scheduled_delivery]</id>
               <label>Scheduled Delivery Date</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -3029,7 +3046,7 @@
             <field>
               <id>[scriptid=custbody_bsp_aab_delivery_details_type]</id>
               <label>Delivery Details Type</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -3038,7 +3055,7 @@
             <field>
               <id>[scriptid=custbody_bsp_aab_removal_old_appliance]</id>
               <label>Removal of Old Appliances</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -3048,7 +3065,7 @@
             <field>
               <id>[scriptid=custbody_bsp_aab_installation_flag]</id>
               <label>Installation Flag</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -3058,7 +3075,7 @@
             <field>
               <id>[scriptid=custbody_bsp_aab_delivery_type]</id>
               <label>Delivery Type</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -3067,7 +3084,7 @@
             <field>
               <id>[scriptid=custbody_bsp_aab_coi_needed]</id>
               <label>COI Needed</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -3077,7 +3094,7 @@
             <field>
               <id>[scriptid=custbody_bsp_aab_freight_elevator]</id>
               <label>Freight Elevator</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -3087,7 +3104,7 @@
             <field>
               <id>[scriptid=custbody_bsp_aab_no_steps_to_home]</id>
               <label>Number of Steps to Home</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -3105,7 +3122,7 @@
             <field>
               <id>[scriptid=custbody_bsp_customer_email]</id>
               <label>Customer Email</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -3114,7 +3131,7 @@
             <field>
               <id>[scriptid=custbody_bsp_aab_delivery_contact]</id>
               <label>Delivery Contact Number</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -3123,7 +3140,7 @@
             <field>
               <id>[scriptid=custbody_bsp_aab_delivery_email]</id>
               <label>Delivery Email</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -3141,7 +3158,7 @@
             <field>
               <id>[scriptid=custbody_bsp_aab_delivery_contact_name]</id>
               <label>Delivery Contact Name</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -3150,7 +3167,7 @@
             <field>
               <id>[scriptid=custbody_bsp_aab_deposit_json]</id>
               <label>Deposit JSON</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -3168,7 +3185,7 @@
             <field>
               <id>[scriptid=custbody_bsp_aab_buildercustomer]</id>
               <label>Builder Order</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -3178,7 +3195,7 @@
             <field>
               <id>[scriptid=custbody_bsp_aab_ishmc]</id>
               <label>HMC / High Maintenance Client</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -3188,7 +3205,7 @@
             <field>
               <id>[scriptid=custbody_bsp_addrebates]</id>
               <label>Adding Rebates</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>DISABLED</displayType>
               <columnBreak>F</columnBreak>
@@ -3198,7 +3215,7 @@
             <field>
               <id>[scriptid=custbody_bsp_bypassshipmethodauto]</id>
               <label>Bypass Ship Method Automation</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -3208,7 +3225,7 @@
             <field>
               <id>[scriptid=custbody_bsp_created_automatically]</id>
               <label>Created Automatically From Fulfillment</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>DISABLED</displayType>
               <columnBreak>F</columnBreak>
@@ -3227,7 +3244,7 @@
             <field>
               <id>[scriptid=custbody_bsp_so_vendor]</id>
               <label>SO Vendor</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -3264,7 +3281,7 @@
             <field>
               <id>[scriptid=custbody5]</id>
               <label>Test</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -3283,7 +3300,7 @@
             <field>
               <id>[scriptid=custbody_bsp_pers_notcommittedlines]</id>
               <label>BSP Pers Non Committed Lines</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -3292,7 +3309,7 @@
             <field>
               <id>[scriptid=custbody_bsp_pers_readyforembroidery]</id>
               <label>Ready for Embroidery</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -3367,7 +3384,7 @@
             <field>
               <id>[scriptid=custbody_bsp_go_update_inv_loc]</id>
               <label>Update Inventory Location</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>DISABLED</displayType>
               <columnBreak>F</columnBreak>
@@ -3377,7 +3394,7 @@
             <field>
               <id>[scriptid=custbody_jei_perc]</id>
               <label>Percent Field</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -3386,7 +3403,7 @@
             <field>
               <id>[scriptid=custbody_bsp_aab_show_tc]</id>
               <label>Show T&amp;C Printout</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -3432,7 +3449,7 @@
             <field>
               <id>[scriptid=custbody_bsp_aq_project_id]</id>
               <label>AQ Project ID</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -3441,11 +3458,21 @@
             <field>
               <id>[scriptid=custbody_bsp_suitehub_s_primarycontact]</id>
               <label>BSP|SuiteHub|Primary Contact</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
               <sameRowAsPrevious>F</sameRowAsPrevious>
+            </field>
+            <field>
+              <id>[scriptid=custbody_bsp_ca_notified]</id>
+              <label>BSP | CA | Notified</label>
+              <visible>F</visible>
+              <mandatory>F</mandatory>
+              <displayType>NORMAL</displayType>
+              <columnBreak>F</columnBreak>
+              <sameRowAsPrevious>F</sameRowAsPrevious>
+              <checkBoxDefault>USE_FIELD_DEFAULT</checkBoxDefault>
             </field>
           </fields>
         </defaultFieldGroup>
@@ -3455,7 +3482,7 @@
     <tab>
       <id>GLIMPACTTAB</id>
       <label>GL Impact</label>
-      <visible>T</visible>
+      <visible>F</visible>
       <fieldGroups>
         <defaultFieldGroup/>
       </fieldGroups>
@@ -3471,7 +3498,7 @@
             <field>
               <id>[scriptid=custbody_bsp_gdn_apply_sp_allowance]</id>
               <label>Apply Self Promo Allowance?</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -3481,7 +3508,7 @@
             <field>
               <id>[scriptid=custbody_bsp_gdn_sp_allowance_amount]</id>
               <label>Self Promo Allowance Amount</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -3490,7 +3517,7 @@
             <field>
               <id>[scriptid=custbody_bsp_gdn_apply_sr_allowance]</id>
               <label>Apply Sales Rep Allowance?</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -3500,7 +3527,7 @@
             <field>
               <id>[scriptid=custbody_bsp_gdn_sr_allowance_amount]</id>
               <label>Sales Rep Allowance Amount</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -3509,7 +3536,7 @@
             <field>
               <id>[scriptid=custbody_bsp_gdn_allowance_overridden]</id>
               <label>Allowance Overridden?</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>INLINETEXT</displayType>
               <columnBreak>F</columnBreak>
@@ -3519,7 +3546,7 @@
             <field>
               <id>[scriptid=custbody_bsp_gdn_allowance_ovrd_user]</id>
               <label>Allowance Override User</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>INLINETEXT</displayType>
               <columnBreak>F</columnBreak>
@@ -3528,7 +3555,7 @@
             <field>
               <id>[scriptid=custbody_bsp_gdn_sample_used_amount]</id>
               <label>Sample YTD Used Amount</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -3537,7 +3564,7 @@
             <field>
               <id>[scriptid=custbody_bsp_gdn_sp_actual_amount]</id>
               <label>Self Promo Actual Amount</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -3546,7 +3573,7 @@
             <field>
               <id>[scriptid=custbody_bsp_gdn_apply_sb_allowance]</id>
               <label>Apply Sample Budget Allowance?</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -3556,7 +3583,7 @@
             <field>
               <id>[scriptid=custbody_bsp_gdn_sb_allowance_amount]</id>
               <label>Sample Budget Allowance Amount</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -3631,7 +3658,7 @@
             <field>
               <id>[scriptid=custbody_bsp_bluesnap_cc_authorized]</id>
               <label>CC Authorized By BlueSnap</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -3641,7 +3668,7 @@
             <field>
               <id>[scriptid=custbody_bsp_bluesnap_auth_no]</id>
               <label>Bluesnap Authorization #</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -3650,7 +3677,7 @@
             <field>
               <id>[scriptid=custbody_bsp_bluesnap_pmt_captured]</id>
               <label>BlueSnap Payment Captured</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -3660,7 +3687,7 @@
             <field>
               <id>[scriptid=custbody_bluesnap_trx_ref_no]</id>
               <label>BlueSnap Transaction Reference No.</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -3681,7 +3708,7 @@
             <field>
               <id>[scriptid=custbody_bsp_amzn_prime_order]</id>
               <label>Amazon Prime Order</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -3691,7 +3718,7 @@
             <field>
               <id>[scriptid=custbody_bsp_amzn_fulfill_by_amzn]</id>
               <label>Fulfilled By Amazon</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -3701,7 +3728,7 @@
             <field>
               <id>[scriptid=custbody_bsp_amzn_order_id]</id>
               <label>Amazon Order ID</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -3730,7 +3757,7 @@
             <field>
               <id>[scriptid=custbody_bsp_amzn_ship_method]</id>
               <label>Amazon Ship Method</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -3757,7 +3784,7 @@
             <field>
               <id>[scriptid=custbody_bsp_miva_sync_miva]</id>
               <label>Process in Miva</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -3767,7 +3794,7 @@
             <field>
               <id>[scriptid=custbody_bsp_amazon_exp_shipping]</id>
               <label>Expedited Shipping</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -3808,7 +3835,7 @@
             <field>
               <id>[scriptid=custbody_bsp_bsnap_trx_id]</id>
               <label>BlueSnap Transaction ID</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>INLINETEXT</displayType>
               <columnBreak>F</columnBreak>
@@ -3876,14 +3903,14 @@
     <tab>
       <id>[scriptid=custtab_bsp_sms]</id>
       <label>SMS</label>
-      <visible>T</visible>
+      <visible>F</visible>
       <fieldGroups>
         <defaultFieldGroup>
           <fields position="MIDDLE">
             <field>
               <id>[scriptid=custbody_bsp_sms_phone_number]</id>
               <label>SMS To Number</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -3892,7 +3919,7 @@
             <field>
               <id>[scriptid=custbody_bsp_sms_message]</id>
               <label>SMS Message</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -3901,7 +3928,7 @@
             <field>
               <id>[scriptid=custbody_bsp_sms_from_number]</id>
               <label>SMS From Number</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -3910,7 +3937,7 @@
             <field>
               <id>[scriptid=custbody_bsp_sms_template]</id>
               <label>SMS Template</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -3961,7 +3988,7 @@
             <field>
               <id>[scriptid=custbody_bsp_aab_so_spec_package_url]</id>
               <label>Spec Package URL</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -3970,7 +3997,7 @@
             <field>
               <id>[scriptid=custbodycustbody_bsp_aab_so_buttonpl]</id>
               <label>Button Placeholder</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>INLINETEXT</displayType>
               <columnBreak>F</columnBreak>
@@ -4098,6 +4125,12 @@
       <label>BSP | ISG</label>
       <visible>T</visible>
       <fieldGroups>
+        <fieldGroup scriptid="fieldgroup_2_t927173_906">
+          <label>Logicblock</label>
+          <visible>T</visible>
+          <showTitle>T</showTitle>
+          <singleColumn>F</singleColumn>
+        </fieldGroup>
         <defaultFieldGroup>
           <fields position="MIDDLE">
             <field>
@@ -4176,7 +4209,7 @@
             <field>
               <id>[scriptid=custbody_bsp_isg_tracking_link]</id>
               <label>Tracking Link</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>INLINETEXT</displayType>
               <columnBreak>F</columnBreak>
@@ -4276,7 +4309,7 @@
             <field>
               <id>[scriptid=custbody_bsp_isg_route_code]</id>
               <label>Route Code</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -4285,7 +4318,7 @@
             <field>
               <id>[scriptid=custbody_bsp_isg_cust_account_number]</id>
               <label>Customer Account Number</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -4303,7 +4336,7 @@
             <field>
               <id>[scriptid=custbody_bsp_isg_aopd]</id>
               <label>AOPD</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -4350,7 +4383,7 @@
       <button>
         <id>UPDATEVSOE</id>
         <label>Update VSOE</label>
-        <visible>T</visible>
+        <visible>F</visible>
       </button>
     </buttons>
     <menu>
