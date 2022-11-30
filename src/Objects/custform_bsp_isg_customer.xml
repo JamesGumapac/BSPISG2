@@ -1,5 +1,5 @@
 <entryForm scriptid="custform_bsp_isg_customer" standard="STANDARDCUSTOMERFORM">
-  <name>BSP  | ISG | Customer Form</name>
+  <name>BSP  | ISG | Customer </name>
   <recordType>CUSTOMER</recordType>
   <inactive>F</inactive>
   <preferred>T</preferred>
@@ -64,7 +64,7 @@
         <field>
           <id>SALUTATION</id>
           <label>Mr./Ms...</label>
-          <visible>T</visible>
+          <visible>F</visible>
           <mandatory>F</mandatory>
           <displayType>NORMAL</displayType>
           <columnBreak>F</columnBreak>
@@ -84,7 +84,7 @@
         <field>
           <id>TITLE</id>
           <label>Job Title</label>
-          <visible>T</visible>
+          <visible>F</visible>
           <mandatory>F</mandatory>
           <displayType>NORMAL</displayType>
           <columnBreak>F</columnBreak>
@@ -104,7 +104,7 @@
         <field>
           <id>PARENT</id>
           <label>Parent Company</label>
-          <visible>T</visible>
+          <visible>F</visible>
           <mandatory>F</mandatory>
           <displayType>NORMAL</displayType>
           <columnBreak>F</columnBreak>
@@ -124,7 +124,7 @@
         <field>
           <id>PROBABILITY</id>
           <label>Probability</label>
-          <visible>T</visible>
+          <visible>F</visible>
           <mandatory>F</mandatory>
           <displayType>NORMAL</displayType>
           <columnBreak>F</columnBreak>
@@ -134,7 +134,7 @@
         <field>
           <id>SALESREP</id>
           <label>Sales Rep</label>
-          <visible>T</visible>
+          <visible>F</visible>
           <mandatory>F</mandatory>
           <displayType>NORMAL</displayType>
           <columnBreak>F</columnBreak>
@@ -144,7 +144,7 @@
         <field>
           <id>PARTNER</id>
           <label>Partner</label>
-          <visible>T</visible>
+          <visible>F</visible>
           <mandatory>F</mandatory>
           <displayType>NORMAL</displayType>
           <columnBreak>F</columnBreak>
@@ -154,17 +154,17 @@
         <field>
           <id>URL</id>
           <label>Web Address</label>
-          <visible>T</visible>
+          <visible>F</visible>
           <mandatory>F</mandatory>
           <displayType>NORMAL</displayType>
           <columnBreak>F</columnBreak>
           <sameRowAsPrevious>F</sameRowAsPrevious>
-          <quickAdd>T</quickAdd>
+          <quickAdd>F</quickAdd>
         </field>
         <field>
           <id>CATEGORY</id>
           <label>Category</label>
-          <visible>T</visible>
+          <visible>F</visible>
           <mandatory>F</mandatory>
           <displayType>NORMAL</displayType>
           <columnBreak>F</columnBreak>
@@ -184,7 +184,7 @@
         <field>
           <id>DEFAULTORDERPRIORITY</id>
           <label>Default Order Priority</label>
-          <visible>T</visible>
+          <visible>F</visible>
           <mandatory>F</mandatory>
           <displayType>NORMAL</displayType>
           <columnBreak>F</columnBreak>
@@ -194,7 +194,7 @@
         <field>
           <id>COMMENTS</id>
           <label>Comments</label>
-          <visible>T</visible>
+          <visible>F</visible>
           <mandatory>F</mandatory>
           <displayType>NORMAL</displayType>
           <columnBreak>F</columnBreak>
@@ -222,7 +222,7 @@
         <field>
           <id>ALTEMAIL</id>
           <label>Alt. Email</label>
-          <visible>T</visible>
+          <visible>F</visible>
           <mandatory>F</mandatory>
           <displayType>NORMAL</displayType>
           <columnBreak>F</columnBreak>
@@ -242,7 +242,7 @@
         <field>
           <id>ALTPHONE</id>
           <label>Alt. Phone</label>
-          <visible>T</visible>
+          <visible>F</visible>
           <mandatory>F</mandatory>
           <displayType>NORMAL</displayType>
           <columnBreak>F</columnBreak>
@@ -252,7 +252,7 @@
         <field>
           <id>MOBILEPHONE</id>
           <label>Mobile Phone</label>
-          <visible>T</visible>
+          <visible>F</visible>
           <mandatory>F</mandatory>
           <displayType>NORMAL</displayType>
           <columnBreak>F</columnBreak>
@@ -262,7 +262,7 @@
         <field>
           <id>HOMEPHONE</id>
           <label>Home Phone</label>
-          <visible>T</visible>
+          <visible>F</visible>
           <mandatory>F</mandatory>
           <displayType>NORMAL</displayType>
           <columnBreak>F</columnBreak>
@@ -272,7 +272,7 @@
         <field>
           <id>FAX</id>
           <label>Fax</label>
-          <visible>T</visible>
+          <visible>F</visible>
           <mandatory>F</mandatory>
           <displayType>NORMAL</displayType>
           <columnBreak>F</columnBreak>
@@ -281,7 +281,7 @@
         </field>
         <field>
           <id>DEFAULTADDRESS</id>
-          <label>Address</label>
+          <label>Default Address</label>
           <visible>T</visible>
           <mandatory>F</mandatory>
           <displayType>NORMAL</displayType>
@@ -483,7 +483,7 @@
             <field>
               <id>OTHERRELATIONSHIPS</id>
               <label>Other Relationships</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -604,7 +604,7 @@
             <field>
               <id>TERRITORY</id>
               <label>Territory</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -648,14 +648,14 @@
         <subTab>
           <id>ENTITYQUALIFICATION</id>
           <label>Qualification</label>
-          <visible>T</visible>
+          <visible>F</visible>
           <fieldGroups>
             <defaultFieldGroup>
               <fields position="MIDDLE">
                 <field>
                   <id>ESTIMATEDBUDGET</id>
                   <label>Estimated Budget</label>
-                  <visible>T</visible>
+                  <visible>F</visible>
                   <mandatory>F</mandatory>
                   <displayType>NORMAL</displayType>
                   <columnBreak>F</columnBreak>
@@ -665,7 +665,7 @@
                 <field>
                   <id>ISBUDGETAPPROVED</id>
                   <label>Budget Approved</label>
-                  <visible>T</visible>
+                  <visible>F</visible>
                   <mandatory>F</mandatory>
                   <displayType>NORMAL</displayType>
                   <columnBreak>F</columnBreak>
@@ -675,7 +675,7 @@
                 <field>
                   <id>SALESREADINESS</id>
                   <label>Sales Readiness</label>
-                  <visible>T</visible>
+                  <visible>F</visible>
                   <mandatory>F</mandatory>
                   <displayType>NORMAL</displayType>
                   <columnBreak>F</columnBreak>
@@ -685,7 +685,7 @@
                 <field>
                   <id>BUYINGREASON</id>
                   <label>Buying Reason</label>
-                  <visible>T</visible>
+                  <visible>F</visible>
                   <mandatory>F</mandatory>
                   <displayType>NORMAL</displayType>
                   <columnBreak>F</columnBreak>
@@ -695,7 +695,7 @@
                 <field>
                   <id>BUYINGTIMEFRAME</id>
                   <label>Buying Time Frame</label>
-                  <visible>T</visible>
+                  <visible>F</visible>
                   <mandatory>F</mandatory>
                   <displayType>NORMAL</displayType>
                   <columnBreak>F</columnBreak>
@@ -712,7 +712,7 @@
     <tab>
       <id>ENTITYMARKETING</id>
       <label>Marketing</label>
-      <visible>T</visible>
+      <visible>F</visible>
       <fieldGroups>
         <fieldGroup scriptid="leadinformation">
           <label>Lead Information</label>
@@ -723,7 +723,7 @@
             <field>
               <id>CAMPAIGNCATEGORY</id>
               <label>Campaign Category</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -733,7 +733,7 @@
             <field>
               <id>LEADSOURCE</id>
               <label>Lead Source</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -743,7 +743,7 @@
             <field>
               <id>CAMPAIGNEVENT</id>
               <label>Campaign Event</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -753,7 +753,7 @@
             <field>
               <id>WEBLEAD</id>
               <label>Web Lead</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -763,7 +763,7 @@
             <field>
               <id>SOURCEWEBSITE</id>
               <label>Source Web Site</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -781,7 +781,7 @@
             <field>
               <id>VISITS</id>
               <label>Number of Visits</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -791,7 +791,7 @@
             <field>
               <id>FIRSTVISIT</id>
               <label>Date of First Visit</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -801,7 +801,7 @@
             <field>
               <id>REFERRER</id>
               <label>Referrer (1st Visit)</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -811,7 +811,7 @@
             <field>
               <id>KEYWORDS</id>
               <label>Search Engine Keywords (1st Visit)</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -821,7 +821,7 @@
             <field>
               <id>CLICKSTREAM</id>
               <label>Clickstream (1st Visit)</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -831,7 +831,7 @@
             <field>
               <id>LASTPAGEVISITED</id>
               <label>Last Page Visited</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -841,7 +841,7 @@
             <field>
               <id>LASTVISIT</id>
               <label>Date of Last Visit</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -855,7 +855,7 @@
             <field>
               <id>[scriptid=custentity_job_subscribed_from_website]</id>
               <label>Subscribed from Website</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -869,20 +869,20 @@
         <subList>
           <id>ENTITYCAMPAIGNS</id>
           <label>Campaigns</label>
-          <visible>T</visible>
+          <visible>F</visible>
           <neverEmpty>F</neverEmpty>
         </subList>
         <subTab>
           <id>ENTITYSUBSCRIPTIONS</id>
           <label>Subscriptions</label>
-          <visible>T</visible>
+          <visible>F</visible>
           <fieldGroups>
             <defaultFieldGroup>
               <fields position="MIDDLE">
                 <field>
                   <id>GLOBALSUBSCRIPTIONSTATUS</id>
                   <label>Global Subscription Status</label>
-                  <visible>T</visible>
+                  <visible>F</visible>
                   <mandatory>F</mandatory>
                   <displayType>NORMAL</displayType>
                   <columnBreak>F</columnBreak>
@@ -896,13 +896,13 @@
             <subList>
               <id>ENTITYSUBSCRIPTIONS</id>
               <label>Subscriptions</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <neverEmpty>F</neverEmpty>
             </subList>
             <subList>
               <id>ENTITYSUBSCRIPTIONMSGMACH</id>
               <label>Subscription Message History</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <neverEmpty>F</neverEmpty>
             </subList>
           </subLists>
@@ -910,55 +910,55 @@
         <subList>
           <id>ENTITYKEYWORDS</id>
           <label>Keywords</label>
-          <visible>T</visible>
+          <visible>F</visible>
           <neverEmpty>F</neverEmpty>
         </subList>
         <subList>
           <id>ENTITYONLINEFORMS</id>
           <label>Online Forms</label>
-          <visible>T</visible>
+          <visible>F</visible>
           <neverEmpty>F</neverEmpty>
         </subList>
         <subList>
           <id>ENTITYCLICKSTREAMS</id>
           <label>Click-Streams</label>
-          <visible>T</visible>
+          <visible>F</visible>
           <neverEmpty>F</neverEmpty>
         </subList>
         <subList>
           <id>ENTITYPAGEHITS</id>
           <label>Page Hits</label>
-          <visible>T</visible>
+          <visible>F</visible>
           <neverEmpty>F</neverEmpty>
         </subList>
         <subList>
           <id>ENTITYHOSTEDHITS</id>
           <label>Hosted Page Hits</label>
-          <visible>T</visible>
+          <visible>F</visible>
           <neverEmpty>F</neverEmpty>
         </subList>
         <subList>
           <id>ENTITYREFERRER</id>
           <label>Referrer</label>
-          <visible>T</visible>
+          <visible>F</visible>
           <neverEmpty>F</neverEmpty>
         </subList>
         <subList>
           <id>ENTITYCARTCONTENTS</id>
           <label>Cart Contents</label>
-          <visible>T</visible>
+          <visible>F</visible>
           <neverEmpty>F</neverEmpty>
         </subList>
         <subList>
           <id>ENTITYITEMORDERS</id>
           <label>Item Orders</label>
-          <visible>T</visible>
+          <visible>F</visible>
           <neverEmpty>F</neverEmpty>
         </subList>
         <subList>
           <id>ENTITYONLINEFORMEVENTS</id>
           <label>Online Forms</label>
-          <visible>T</visible>
+          <visible>F</visible>
           <neverEmpty>F</neverEmpty>
         </subList>
       </subItems>
@@ -966,7 +966,7 @@
     <tab>
       <id>ENTITYSUPPORT</id>
       <label>Support</label>
-      <visible>T</visible>
+      <visible>F</visible>
       <fieldGroups>
         <defaultFieldGroup/>
       </fieldGroups>
@@ -999,7 +999,7 @@
             <field>
               <id>ACCOUNTNUMBER</id>
               <label>Account</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1009,7 +1009,7 @@
             <field>
               <id>RECEIVABLESACCOUNT</id>
               <label>Default Receivables Account</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1019,7 +1019,7 @@
             <field>
               <id>DRACCOUNT</id>
               <label>Deferred Revenue Account for Revenue Reclassification</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1029,7 +1029,7 @@
             <field>
               <id>FXACCOUNT</id>
               <label>Foreign Currency Adjustment Revenue Account</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1039,7 +1039,7 @@
             <field>
               <id>STARTDATE</id>
               <label>Start Date</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1049,7 +1049,7 @@
             <field>
               <id>ENDDATE</id>
               <label>End Date</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1059,7 +1059,7 @@
             <field>
               <id>REMINDERDAYS</id>
               <label>Reminder Days</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1069,7 +1069,7 @@
             <field>
               <id>PRICELEVEL</id>
               <label>Price Level</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1089,7 +1089,7 @@
             <field>
               <id>CURRENCYFORMATSAMPLE</id>
               <label>Format Sample</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1099,7 +1099,7 @@
             <field>
               <id>OVERRIDECURRENCYFORMAT</id>
               <label>Override Currency Format</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1109,7 +1109,7 @@
             <field>
               <id>DISPLAYSYMBOL</id>
               <label>Currency Symbol</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1119,7 +1119,7 @@
             <field>
               <id>SYMBOLPLACEMENT</id>
               <label>Symbol Placement</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1129,7 +1129,7 @@
             <field>
               <id>TERMS</id>
               <label>Terms</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1139,7 +1139,7 @@
             <field>
               <id>CREDITLIMIT</id>
               <label>Credit Limit</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1149,7 +1149,7 @@
             <field>
               <id>CREDITHOLDOVERRIDE</id>
               <label>Hold</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1159,7 +1159,7 @@
             <field>
               <id>PREFCCPROCESSOR</id>
               <label>Pref. CC Processor</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1177,7 +1177,7 @@
             <field>
               <id>VATREGNUMBER</id>
               <label>Tax Reg. Number</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1187,7 +1187,7 @@
             <field>
               <id>TAXABLE</id>
               <label>Taxable</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1197,7 +1197,7 @@
             <field>
               <id>TAXITEM</id>
               <label>Tax Item</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1207,7 +1207,7 @@
             <field>
               <id>RESALENUMBER</id>
               <label>Resale Number</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1421,14 +1421,14 @@
     <tab>
       <id>ENTITYPREFERENCES</id>
       <label>Preferences</label>
-      <visible>T</visible>
+      <visible>F</visible>
       <fieldGroups>
         <defaultFieldGroup>
           <fields position="MIDDLE">
             <field>
               <id>NUMBERFORMAT</id>
               <label>Number Format</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1438,7 +1438,7 @@
             <field>
               <id>NEGATIVENUMBERFORMAT</id>
               <label>Negative Number Format</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1448,7 +1448,7 @@
             <field>
               <id>EMAILPREFERENCE</id>
               <label>Email Preference</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1458,7 +1458,7 @@
             <field>
               <id>PRINTONCHECKAS</id>
               <label>Print on Check As</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1468,7 +1468,7 @@
             <field>
               <id>SENDTRANSACTIONSVIA</id>
               <label>Send Transactions Via</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1478,7 +1478,7 @@
             <field>
               <id>SHIPCOMPLETE</id>
               <label>Ship Complete</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1488,7 +1488,7 @@
             <field>
               <id>SHIPPINGCARRIER</id>
               <label>Shipping Carrier</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1498,7 +1498,7 @@
             <field>
               <id>SHIPPINGITEM</id>
               <label>Shipping Method</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1508,7 +1508,7 @@
             <field>
               <id>ALCOHOLRECIPIENTTYPE</id>
               <label>Alcohol Recipient Type</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1518,7 +1518,7 @@
             <field>
               <id>[scriptid=custentity_bsp_shipmethodabvlimit]</id>
               <label>Ship Method above Limit</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1584,14 +1584,14 @@
     <tab>
       <id>ENTITYCUSTOM</id>
       <label>Custom</label>
-      <visible>T</visible>
+      <visible>F</visible>
       <fieldGroups>
         <defaultFieldGroup>
           <fields position="MIDDLE">
             <field>
               <id>[scriptid=custentity5]</id>
               <label>How did you hear of us?</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1601,7 +1601,7 @@
             <field>
               <id>[scriptid=custentity_bsp_contract]</id>
               <label>Contracr</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1611,7 +1611,7 @@
             <field>
               <id>[scriptid=custentity_bsp_coa]</id>
               <label>Contracting Officer's Authorization(COA)</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1621,7 +1621,7 @@
             <field>
               <id>[scriptid=custentity_bsp_wbs]</id>
               <label>WBS</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1631,7 +1631,7 @@
             <field>
               <id>[scriptid=custentity_club_supersmile]</id>
               <label>ClubSupersmile</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1641,7 +1641,7 @@
             <field>
               <id>[scriptid=custentity_bsp_hubspot_hubspot_id]</id>
               <label>BSP | HUBSPOT | Hubspot ID</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1651,7 +1651,7 @@
             <field>
               <id>[scriptid=custentity_bsp_hubspot_timestamp]</id>
               <label>BSP | HUBSPOT | Timestamp</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1661,7 +1661,7 @@
             <field>
               <id>[scriptid=custentity_bsp_hubspot_contact_count]</id>
               <label>BSP | Hubspot | Count of Contacts</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1671,7 +1671,7 @@
             <field>
               <id>[scriptid=custentity_bsp_go_customer_zone]</id>
               <label>Zone</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1681,7 +1681,7 @@
             <field>
               <id>[scriptid=custentitygo_cust_edi_block]</id>
               <label>Edi Block</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1691,7 +1691,7 @@
             <field>
               <id>[scriptid=custentity_bsp_hubspot_entity_type]</id>
               <label>BSP | HUBSPOT | HS Record Type</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1701,7 +1701,7 @@
             <field>
               <id>[scriptid=custentity_hs_lead_status]</id>
               <label>HubSpot Lead Status</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1711,7 +1711,7 @@
             <field>
               <id>[scriptid=custentity_hubspot_close_date]</id>
               <label>HubSpot Close Date</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1721,7 +1721,7 @@
             <field>
               <id>[scriptid=custentity_bsp_icp_flag]</id>
               <label>ICP?</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1731,7 +1731,7 @@
             <field>
               <id>[scriptid=custentity_wup_cust_subtype]</id>
               <label>Customer Subtype</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1741,7 +1741,7 @@
             <field>
               <id>[scriptid=custentity_bsp_aab_buildercustomer]</id>
               <label>Builder</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1751,7 +1751,7 @@
             <field>
               <id>[scriptid=custentity_bsp_go_ltl_shipping_method]</id>
               <label>LTL Shipping Method</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1761,7 +1761,7 @@
             <field>
               <id>[scriptid=custentity_oae_type]</id>
               <label>Type</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1771,7 +1771,7 @@
             <field>
               <id>[scriptid=custentity_customer_channel_tier]</id>
               <label>Channel Tier</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1781,7 +1781,7 @@
             <field>
               <id>[scriptid=custentity_afa_actcontractyn]</id>
               <label>Active contract item</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1791,7 +1791,7 @@
             <field>
               <id>[scriptid=custentity6]</id>
               <label>Test Form List</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1801,7 +1801,7 @@
             <field>
               <id>[scriptid=custentity_bsp_aq_project_id]</id>
               <label>AQ Project ID</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1811,7 +1811,7 @@
             <field>
               <id>[scriptid=custentity_bsp_oae_ffl_exempt]</id>
               <label>FFL Exempt</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1821,7 +1821,7 @@
             <field>
               <id>[scriptid=custentity_bsp_email_recipient_list]</id>
               <label>Email Recipient List</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1831,7 +1831,7 @@
             <field>
               <id>[scriptid=custentity1]</id>
               <label>Advertising Preference</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1845,25 +1845,25 @@
         <subList>
           <id>[scriptid=customrecord_bsp_bluesnap_cc.custrecord_bsp_bluesnap_customer]</id>
           <label>BSP | BLUESNAP | Credit Card Account</label>
-          <visible>T</visible>
+          <visible>F</visible>
           <neverEmpty>F</neverEmpty>
         </subList>
         <subList>
           <id>[scriptid=customrecord_bsp_sms_message.custrecord_bsp_sms_entity]</id>
           <label>BSP | SMS | Message</label>
-          <visible>T</visible>
+          <visible>F</visible>
           <neverEmpty>F</neverEmpty>
         </subList>
         <subList>
           <id>[scriptid=customrecord_bsp_bs_transaction_log.custrecord_bsp_log_customer]</id>
           <label>BSP | BLUESNAP | Transaction Log</label>
-          <visible>T</visible>
+          <visible>F</visible>
           <neverEmpty>F</neverEmpty>
         </subList>
         <subList>
           <id>[scriptid=customrecord_bsp_bs_cc_accnt.custrecord_bsp_bs_cc_ctmr]</id>
           <label>BSP | BLUESNAP | Credit Card</label>
-          <visible>T</visible>
+          <visible>F</visible>
           <neverEmpty>F</neverEmpty>
         </subList>
       </subItems>
@@ -1898,7 +1898,7 @@
             <field>
               <id>ASSIGNEDWEBSITE</id>
               <label>Assigned Web Site</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1960,7 +1960,7 @@
             <field>
               <id>[scriptid=custentity4]</id>
               <label>Shipping Instructions</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1970,7 +1970,7 @@
             <field>
               <id>[scriptid=custentity2]</id>
               <label>Special Order Request</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -2002,7 +2002,7 @@
         <subList>
           <id>[scriptid=customrecord_bsp_customerpersoptions.custrecord_bsp_pers_customer]</id>
           <label>BSP | Customer Personalization Options</label>
-          <visible>T</visible>
+          <visible>F</visible>
           <neverEmpty>F</neverEmpty>
         </subList>
       </subItems>
@@ -2027,7 +2027,7 @@
         <subList>
           <id>[scriptid=customrecord15.custrecord_customer]</id>
           <label>Customer Satisfaction Survey</label>
-          <visible>T</visible>
+          <visible>F</visible>
           <neverEmpty>F</neverEmpty>
         </subList>
       </subItems>
@@ -2035,7 +2035,7 @@
     <tab>
       <id>[scriptid=custtab_8_t927173_628]</id>
       <label>Documents</label>
-      <visible>T</visible>
+      <visible>F</visible>
       <fieldGroups>
         <defaultFieldGroup/>
       </fieldGroups>
@@ -2060,7 +2060,7 @@
             <field>
               <id>[scriptid=custentity_bsp_gdn_sp_budget_amount]</id>
               <label>Self Promo Budget Amount</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -2070,7 +2070,7 @@
             <field>
               <id>[scriptid=custentity_bsp_gdn_sp_actual_amount]</id>
               <label>Self Promo Actual Amount</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>INLINETEXT</displayType>
               <columnBreak>F</columnBreak>
@@ -2092,7 +2092,7 @@
             <field>
               <id>[scriptid=custentity_bsp_gdn_sample_allowed_amount]</id>
               <label>Sample YTD Allowed Amount</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -2102,7 +2102,7 @@
             <field>
               <id>[scriptid=custentity_bsp_gdn_sample_used_amount]</id>
               <label>Sample YTD Used Amount</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>INLINETEXT</displayType>
               <columnBreak>F</columnBreak>
@@ -2125,7 +2125,7 @@
         <subList>
           <id>[scriptid=customrecord_bsp_infqs_subscription.custrecord_bsp_infqs_customer]</id>
           <label>BSP | INFINITYQS | Subscription</label>
-          <visible>T</visible>
+          <visible>F</visible>
           <neverEmpty>F</neverEmpty>
         </subList>
       </subItems>
@@ -2141,7 +2141,7 @@
         <subList>
           <id>[scriptid=customrecord_bsp_subscription_order.custrecord_bsp_subscr_customer]</id>
           <label>Subscription Order</label>
-          <visible>T</visible>
+          <visible>F</visible>
           <neverEmpty>F</neverEmpty>
         </subList>
       </subItems>
@@ -2156,7 +2156,7 @@
             <field>
               <id>[scriptid=custentity_bsp_bluesnap_vaulted_shop_id]</id>
               <label>BSP | BLUESNAP | Vaulted Shopper ID</label>
-              <visible>T</visible>
+              <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -2170,13 +2170,13 @@
         <subList>
           <id>[scriptid=custsublist_11_t927173_803]</id>
           <label>BlueSnap Credit Cards</label>
-          <visible>T</visible>
+          <visible>F</visible>
           <neverEmpty>F</neverEmpty>
         </subList>
         <subList>
           <id>[scriptid=custsublist_23_t927173_563]</id>
           <label>Pending Authorizations</label>
-          <visible>T</visible>
+          <visible>F</visible>
           <neverEmpty>F</neverEmpty>
         </subList>
       </subItems>
@@ -2200,6 +2200,16 @@
             <field>
               <id>[scriptid=custentity_bsp_isg_route_code]</id>
               <label>Route Code</label>
+              <visible>T</visible>
+              <mandatory>F</mandatory>
+              <displayType>NORMAL</displayType>
+              <columnBreak>F</columnBreak>
+              <sameRowAsPrevious>F</sameRowAsPrevious>
+              <quickAdd>F</quickAdd>
+            </field>
+            <field>
+              <id>[scriptid=custentity_bsp_isg_lb_overrideschedule]</id>
+              <label>Override Delivery Schedule</label>
               <visible>T</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
