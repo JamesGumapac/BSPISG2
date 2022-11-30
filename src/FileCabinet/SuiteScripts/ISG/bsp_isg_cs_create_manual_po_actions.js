@@ -90,11 +90,7 @@
                      sublistId: 'custpage_items_sublist',
                      fieldId: 'custpage_po_item_qty'
                  });
-                 let salesOrders = suitelet.getCurrentSublistValue({
-                     sublistId: 'custpage_items_sublist',
-                     fieldId: 'custpage_po_sales_orders'
-                 });
- 
+
                  let amount = suitelet.getCurrentSublistValue({
                      sublistId: 'custpage_items_sublist',
                      fieldId: 'custpage_item_sum_cost'
@@ -124,7 +120,7 @@
                  }
 
                  if(selectedItem){
-                     selectedItemsArray.push({itemID: selectedItemID, accountSelected: accountSelected, poQty: poQty, itemPrice: itemPrice, salesOrders: salesOrders});
+                     selectedItemsArray.push({itemID: selectedItemID, accountSelected: accountSelected, poQty: poQty, itemPrice: itemPrice});
                      suitelet.setValue({
                          fieldId: 'custpage_item_queue',
                          value: JSON.stringify(selectedItemsArray)
@@ -231,11 +227,7 @@
                             accounts[acctIndex].amount += parseFloat(amount);
                          }  
 
-                         let salesOrders = suitelet.getCurrentSublistValue({
-                             sublistId: 'custpage_items_sublist',
-                             fieldId: 'custpage_po_sales_orders'
-                         });
-                         selectedItemsArray.push({itemID: selectedItemID, accountSelected: accountSelected, poQty: poQty, itemPrice: itemPrice, salesOrders: salesOrders});
+                         selectedItemsArray.push({itemID: selectedItemID, accountSelected: accountSelected, poQty: poQty, itemPrice: itemPrice});
                      }
                  }else{
                      for (let index = 0; index < itemCount; index++) {
