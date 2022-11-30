@@ -3,7 +3,7 @@
  * @NScriptType Suitelet
 */
 
-define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N/search', 'N/task'],
+define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N/search', 'N/task', 'N/cache'],
     /**
      * @param{http} http
      * @param{runtime} runtime
@@ -13,7 +13,7 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
      * @param{search} search
      * @param{task} task
     */
-    (http, runtime, record, redirect, serverWidget, search, task) => {
+    (http, runtime, record, redirect, serverWidget, search, task, cache) => {
         /**
          * Defines the Suitelet script trigger point.
          * @param {Object} scriptContext
@@ -521,6 +521,11 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
         const pupulateItemSublist = (sublist, items) => {
 
             if(items.length > 0){
+                let suiteletCache = cache.getCache({
+                    name: 'itemsCache',
+                    scope: cache.Scope.PRIVATE
+                });
+
                 let lineCount = 0;
                 items.forEach(element => {
                     let itemID = element.itemID;
@@ -593,11 +598,16 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                         line: lineCount,
                         value: `${itemPrice != "Not defined" ? "$"+itemPrice : itemPrice}`
                     });
-                    sublist.setSublistValue({
+                    /*sublist.setSublistValue({
                         id: "custpage_po_sales_orders",
                         line: lineCount,
                         value: JSON.stringify(salesOrders)
+                    });*/
+                    suiteletCache.put({
+                        key: itemID,
+                        value: JSON.stringify(salesOrders)
                     });
+
                     if(accounts){
                         sublist.setSublistValue({
                             id: "custpage_item_accounts",
@@ -907,6 +917,7 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
             let listPOsCreated = [];
             let itemsGroupedByAccount = groupBy(itemsSelected, (i) => i.accountSelected);
 
+            log.debug("createPOs", JSON.stringify(itemsGroupedByAccount));
             for(let accountID in itemsGroupedByAccount) { 
                 let data = itemsGroupedByAccount[accountID];
                 
@@ -991,11 +1002,19 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
         */
         const createCartonBuyRecords = (itemData) => {
 
+            let suiteletCache = cache.getCache({
+                name: 'itemsCache',
+                scope: cache.Scope.PRIVATE
+            });
+            log.debug("createCartonBuyRecords", JSON.stringify(suiteletCache));
             itemData.forEach(dataObj => {
                 let data = dataObj.data;
                 let po = dataObj.po;
                 data.forEach(element => {
-                    let salesOrders = JSON.parse(element.salesOrders);
+                    let strSalesOrders = suiteletCache.get({
+                        key: element.itemID
+                    });
+                    let salesOrders = JSON.parse(strSalesOrders);
                     if(salesOrders.constructor === Array){
                         for (let index = 0; index < salesOrders.length; index++) {
                             let salesorderObj = salesOrders[index];
@@ -1008,7 +1027,10 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                         let salesorderID = salesorderObj.salesOrderID;
                         let selectedLineItemID = salesorderObj.soLineUniqueID;
                         createCartonBuyRecord(salesorderID, element.itemID, selectedLineItemID, po, element.poQty);
-                    } 
+                    }
+                    suiteletCache.remove({
+                        key: element.itemID
+                    }); 
                 });                         
             });          
         }
