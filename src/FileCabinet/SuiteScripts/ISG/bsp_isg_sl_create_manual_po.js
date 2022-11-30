@@ -917,7 +917,6 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
             let listPOsCreated = [];
             let itemsGroupedByAccount = groupBy(itemsSelected, (i) => i.accountSelected);
 
-            log.debug("createPOs", JSON.stringify(itemsGroupedByAccount));
             for(let accountID in itemsGroupedByAccount) { 
                 let data = itemsGroupedByAccount[accountID];
                 
@@ -1006,7 +1005,7 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                 name: 'itemsCache',
                 scope: cache.Scope.PRIVATE
             });
-            log.debug("createCartonBuyRecords", JSON.stringify(suiteletCache));
+
             itemData.forEach(dataObj => {
                 let data = dataObj.data;
                 let po = dataObj.po;
