@@ -97,41 +97,17 @@
                    search.createColumn({name: "createdfrom", label: "Sales Order"}),
                    search.createColumn({name: "custbody_bsp_isg_transmission_acct_num", label: "Account Number"}),
                    search.createColumn({name: "custbody_bsp_isg_transmission_loc", label: "Transmission Location"}),
-                   search.createColumn({name: "custbody_bsp_isg_adot", label: "Adot"}),         
+                   search.createColumn({name: "custbody_bsp_isg_adot", label: "Adot"}),      
+                   search.createColumn({name: "shipaddress1", label: "Shipping Address 1"}),
+                   search.createColumn({name: "shipaddressee", label: "Shipping Addressee"}),
+                   search.createColumn({name: "shipcity", label: "Shipping City"}),
+                   search.createColumn({name: "shipcountrycode", label: "Shipping Country Code"}),
+                   search.createColumn({name: "shipzip", label: "Shipping Zip"}),
+                   search.createColumn({name: "shipstate", label: "Shipping State/Province"}),  
                    search.createColumn({
                       name: "entityid",
                       join: "customer",
                       label: "Name"
-                   }),
-                   search.createColumn({
-                      name: "addressee",
-                      join: "customer",
-                      label: "Addressee"
-                   }),
-                   search.createColumn({
-                      name: "address1",
-                      join: "customer",
-                      label: "Address 1"
-                   }),
-                   search.createColumn({
-                      name: "city",
-                      join: "customer",
-                      label: "City"
-                   }),
-                   search.createColumn({
-                      name: "state",
-                      join: "customer",
-                      label: "State/Province"
-                   }),
-                   search.createColumn({
-                      name: "zipcode",
-                      join: "customer",
-                      label: "Zip Code"
-                   }),
-                   search.createColumn({
-                      name: "countrycode",
-                      join: "customer",
-                      label: "Country Code"
                    }),
                    search.createColumn({
                       name: "symbol",
@@ -165,41 +141,17 @@
                    search.createColumn({name: "createdfrom", label: "Sales Order"}),
                    search.createColumn({name: "custbody_bsp_isg_transmission_acct_num", label: "Account Number"}),
                    search.createColumn({name: "custbody_bsp_isg_transmission_loc", label: "Transmission Location"}), 
-                   search.createColumn({name: "custbody_bsp_isg_adot", label: "Adot"}),    
+                   search.createColumn({name: "custbody_bsp_isg_adot", label: "Adot"}),
+                   search.createColumn({name: "shipaddress1", label: "Shipping Address 1"}),
+                   search.createColumn({name: "shipaddressee", label: "Shipping Addressee"}),
+                   search.createColumn({name: "shipcity", label: "Shipping City"}),
+                   search.createColumn({name: "shipcountrycode", label: "Shipping Country Code"}),
+                   search.createColumn({name: "shipzip", label: "Shipping Zip"}),
+                   search.createColumn({name: "shipstate", label: "Shipping State/Province"}),  
                    search.createColumn({
                       name: "entityid",
                       join: "customer",
                       label: "Name"
-                   }),
-                   search.createColumn({
-                      name: "addressee",
-                      join: "customer",
-                      label: "Addressee"
-                   }),
-                   search.createColumn({
-                      name: "address1",
-                      join: "customer",
-                      label: "Address 1"
-                   }),
-                   search.createColumn({
-                      name: "city",
-                      join: "customer",
-                      label: "City"
-                   }),
-                   search.createColumn({
-                      name: "state",
-                      join: "customer",
-                      label: "State/Province"
-                   }),
-                   search.createColumn({
-                      name: "zipcode",
-                      join: "customer",
-                      label: "Zip Code"
-                   }),
-                   search.createColumn({
-                      name: "countrycode",
-                      join: "customer",
-                      label: "Country Code"
                    }),
                    search.createColumn({
                       name: "symbol",
@@ -227,14 +179,14 @@
             let locationID = element.getValue("custbody_bsp_isg_transmission_loc");
             let locationText = element.getText("custbody_bsp_isg_transmission_loc");
             let adot = element.getText("custbody_bsp_isg_adot");
-            let customer = {
+            let shipAddress = {
                 companyName: element.getValue({name: "entityid", join: "customer"}),
-                addressee: element.getValue({name: "addressee", join: "customer"}),
-                address1: element.getValue({name: "address1", join: "customer"}),
-                city: element.getValue({name: "city", join: "customer"}),
-                state: element.getValue({name: "state", join: "customer"}),
-                zipcode: element.getValue({name: "zipcode", join: "customer"}),
-                countrycode: element.getValue({name: "countrycode", join: "customer"})
+                addressee: element.getValue("shipaddressee"),
+                address1: element.getValue("shipaddress1"),
+                city: element.getValue("shipcity"),
+                state: element.getValue("shipstate"),
+                zipcode: element.getValue("shipzip"),
+                countrycode: element.getValue("shipcountrycode")
             }
             let item = {
                 itemLine: element.getValue("line"),
@@ -259,7 +211,7 @@
                     routeCodeID: routeCodeID,
                     routeCode: routeCode,
                     currency: currency,
-                    customer: customer,
+                    shipAddress: shipAddress,
                     account: {id:accountNumberID, text: accountNumberText},
                     transmissionLocation: {id:locationID, text: locationText},
                     adot: adot,
@@ -323,6 +275,44 @@
                 value: parseInt(poData.location),
             });
 
+            /**
+              * Shipping Address Subrecord
+            */
+
+            let shipAddressSubrec = purchaseOrderRec.getSubrecord({
+                fieldId: 'shippingaddress'
+            });
+
+            shipAddressSubrec.setValue({
+                fieldId: 'country',
+                value: poData.shipAddress.shipcountry
+            });
+    
+            shipAddressSubrec.setValue({
+                fieldId: 'city',
+                value: poData.shipAddress.shipcity
+            });
+    
+            shipAddressSubrec.setValue({
+                fieldId: 'state',
+                value: poData.shipAddress.shipstate
+            });
+    
+            shipAddressSubrec.setValue({
+                fieldId: 'zip',
+                value: poData.shipAddress.shipzip
+            });
+    
+            shipAddressSubrec.setValue({
+                fieldId: 'addr1',
+                value: poData.shipAddress.shipaddress1
+            });
+
+            purchaseOrderRec.setValue({
+                fieldId: "shipaddress",
+                value: poData.shipAddress.shipaddress,
+            });
+          
             purchaseOrderRec.setValue({
                 fieldId: "custbody_bsp_isg_route_code",
                 value: parseInt(poData.routeCode),
@@ -419,6 +409,44 @@
             purchaseOrderRec.setValue({
                 fieldId: "customform",
                 value: parseInt(poData.transactionForm),
+            });
+
+            /**
+              * Shipping Address Subrecord
+            */
+           
+             let shipAddressSubrec = purchaseOrderRec.getSubrecord({
+                fieldId: 'shippingaddress'
+            });
+
+            shipAddressSubrec.setValue({
+                fieldId: 'country',
+                value: poData.shipAddress.shipcountry
+            });
+    
+            shipAddressSubrec.setValue({
+                fieldId: 'city',
+                value: poData.shipAddress.shipcity
+            });
+    
+            shipAddressSubrec.setValue({
+                fieldId: 'state',
+                value: poData.shipAddress.shipstate
+            });
+    
+            shipAddressSubrec.setValue({
+                fieldId: 'zip',
+                value: poData.shipAddress.shipzip
+            });
+    
+            shipAddressSubrec.setValue({
+                fieldId: 'addr1',
+                value: poData.shipAddress.shipaddress1
+            });
+
+            purchaseOrderRec.setValue({
+                fieldId: "shipaddress",
+                value: poData.shipAddress.shipaddress,
             });
       
             purchaseOrderRec.setValue({

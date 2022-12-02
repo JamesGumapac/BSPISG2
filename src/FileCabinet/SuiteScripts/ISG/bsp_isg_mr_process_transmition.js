@@ -62,6 +62,13 @@ define(['N/runtime', 'N/record', 'N/search', 'N/task', './Lib/bsp_isg_purchase_o
                     let customer = element.getValue("entity");
                     let shipaddress1 = element.getValue("shipaddress1");
                     let shipmentType = element.getValue("custcol_bsp_order_shipment_type");
+                    let shipaddress = element.getValue("shipaddress");
+                    let shipcountry = element.getValue("shipcountrycode");
+                    let shipcity = element.getValue("shipcity");
+                    let shipzip = element.getValue("shipzip");
+                    let shipaddressee = element.getValue("shipaddressee");
+                    let shipphone = element.getValue("shipphone");
+                    let shipstate = element.getValue("shipstate");
 
                     transmitionData.push({
                         transactionForm: ediSettings.transactionForm,
@@ -75,14 +82,22 @@ define(['N/runtime', 'N/record', 'N/search', 'N/task', './Lib/bsp_isg_purchase_o
                         vendor: vendor,
                         itemQuantity: resultQuantity,
                         customer: customer,
-                        shipaddress1: shipaddress1,
+                        shipAddress: {
+                            shipaddress1: shipaddress1,
+                            shipaddress: shipaddress,
+                            shipcountry: shipcountry,
+                            shipcity: shipcity,
+                            shipzip: shipzip,
+                            shipaddressee: shipaddressee,
+                            shipphone: shipphone,
+                            shipstate: shipstate
+                        },                  
                         autoreceive: autoreceive,
                         adot: adot,
                         account: account,
                         transmissionLocation: transmissionLocation,
                         deliveryTime: deliveryTime
-                    });                       
-                         
+                    });                                            
                 });  
             } catch (error)
             {
@@ -158,7 +173,8 @@ define(['N/runtime', 'N/record', 'N/search', 'N/task', './Lib/bsp_isg_purchase_o
 
                     let transmitionQueueID = commonData.transmitionQueueID;
                     let customer =  commonData.customer;
-                    let shipaddress1 = commonData.shipaddress1;
+                    let shipAddress = commonData.shipAddress;
+                    let shipaddress1 = shipAddress.shipaddress1;
                     let vendor = commonData.vendor;
                     let account = BSPTransmitionsUtil.getAccountNumber(customer, vendor, shipaddress1, commonData.account);
                     let routeCode = commonData.routeCodeID;
@@ -171,6 +187,7 @@ define(['N/runtime', 'N/record', 'N/search', 'N/task', './Lib/bsp_isg_purchase_o
                         transactionForm: transactionForm,
                         transmitionQueueID: transmitionQueueID, 
                         salesOrderID:salesOrderID, 
+                        shipAddress: shipAddress,
                         customer:customer, 
                         vendor:vendor, 
                         routeCode: routeCode,

@@ -3,7 +3,7 @@
  * @NScriptType Suitelet
 */
 
-define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N/search', 'N/task', 'N/cache'],
+define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N/search', 'N/task', 'N/cache', './Lib/bsp_isg_edi_settings.js'],
     /**
      * @param{http} http
      * @param{runtime} runtime
@@ -13,7 +13,7 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
      * @param{search} search
      * @param{task} task
     */
-    (http, runtime, record, redirect, serverWidget, search, task, cache) => {
+    (http, runtime, record, redirect, serverWidget, search, task, cache, BSP_EDISettingsUtil) => {
         /**
          * Defines the Suitelet script trigger point.
          * @param {Object} scriptContext
@@ -40,8 +40,10 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                     let itemsSelected = JSON.parse(stItemsSelected);
                     let vendorSelected = objClientParams.custpage_vendors;
                     
+                    let ediSettings = BSP_EDISettingsUtil.getEDIsettings(objSuiteletScriptParams.environment);
+
                     try{
-                        let listPOsCreatedObj = createPOs(vendorSelected, itemsSelected);
+                        let listPOsCreatedObj = createPOs(vendorSelected, itemsSelected, ediSettings.transactionForm);
                         createCartonBuyRecords(listPOsCreatedObj.itemData);
                         
                         if(listPOsCreatedObj.listPOsCreated.length > 1){
@@ -912,7 +914,7 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
          * @param itemsSelected - An array of objects that contain the item ID and the quantity to be ordered.
          * @returns The record ID of the newly created PO.
         */
-        const createPOs = (vendorSelected, itemsSelected) => {
+        const createPOs = (vendorSelected, itemsSelected, transactionForm) => {
             let itemData = []
             let listPOsCreated = [];
             let itemsGroupedByAccount = groupBy(itemsSelected, (i) => i.accountSelected);
@@ -923,6 +925,11 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                 let purchaseOrderRec = record.create({
                     type: record.Type.PURCHASE_ORDER,
                     isDynamic: true,
+                });
+
+                purchaseOrderRec.setValue({
+                    fieldId: "customform",
+                    value: transactionForm,
                 });
 
                 purchaseOrderRec.setValue({
@@ -1182,10 +1189,12 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
          * @returns An object with two properties: script_client and suitelet_title
         */
         const getParameters = () => {
+            let environment = runtime.envType;
             let script = runtime.getCurrentScript();
             let objParams = {
                 script_client: script.getParameter('custscript_bsp_isg_script_client'),
-                suitelet_title: script.getParameter('custscript_bsp_isg_suitelet_title')
+                suitelet_title: script.getParameter('custscript_bsp_isg_suitelet_title'),
+                environment: environment
             }     
             return objParams;
         }

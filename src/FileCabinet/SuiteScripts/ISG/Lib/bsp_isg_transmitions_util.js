@@ -604,7 +604,13 @@
             search.createColumn({name: "entity", label: "Customer"}),
             search.createColumn({name: "shipaddress1", label: "Shipping Address 1"}),
             search.createColumn({name: "custcol_bsp_order_shipment_type", label: "Order Shipment Type"}),
-            search.createColumn({name: "shipdate", label: "Ship Date"})
+            search.createColumn({name: "shipaddress", label: "Ship Address"}),
+            search.createColumn({name: "shipcountrycode", label: "Shipping Country"}),
+            search.createColumn({name: "shipcity", label: "Shipping City"}),
+            search.createColumn({name: "shipzip", label: "Shipping Zip"}),
+            search.createColumn({name: "shipaddressee", label: "Shipping Addressee"}),
+            search.createColumn({name: "shipphone", label: "Shipping Phone"}),
+            search.createColumn({name: "shipstate", label: "Shipping State/Province"})
         ];
 
         let searchFilters = transmitionSavedSearcObj.filters;

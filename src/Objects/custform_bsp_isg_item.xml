@@ -141,6 +141,15 @@
     <defaultFieldGroup>
       <fields position="MIDDLE">
         <field>
+          <id>UPCCODE</id>
+          <label>UPC Code</label>
+          <visible>T</visible>
+          <mandatory>F</mandatory>
+          <displayType>NORMAL</displayType>
+          <columnBreak>F</columnBreak>
+          <sameRowAsPrevious>F</sameRowAsPrevious>
+        </field>
+        <field>
           <id>[scriptid=custitem_freight_class]</id>
           <label>Freight Class</label>
           <visible>F</visible>
@@ -1029,7 +1038,7 @@
     <tab>
       <id>ITEMPRICING</id>
       <label>Sales / Pricing</label>
-      <visible>F</visible>
+      <visible>T</visible>
       <fieldGroups>
         <fieldGroup scriptid="sales">
           <label>Sales</label>
@@ -1040,7 +1049,7 @@
             <field>
               <id>RATE</id>
               <label>Sales Price (Rate)</label>
-              <visible>F</visible>
+              <visible>T</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1049,7 +1058,7 @@
             <field>
               <id>SALESDESCRIPTION</id>
               <label>Sales Description</label>
-              <visible>F</visible>
+              <visible>T</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -1129,7 +1138,7 @@
             <field>
               <id>WEIGHT</id>
               <label>Item Weight</label>
-              <visible>F</visible>
+              <visible>T</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>

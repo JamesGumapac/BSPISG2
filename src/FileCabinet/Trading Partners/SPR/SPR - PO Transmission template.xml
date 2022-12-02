@@ -9,13 +9,13 @@
 		CancelOrderOnBackorder="N" 
 		CustomerPONo="${data.purchaseOrder.purchaseOrderNumber}">
 	<#if data.purchaseOrder.orderType != 'Stock'>
-		<PersonInfoShipTo FirstName="${data.purchaseOrder.customer.companyName}" 
-				AddressLine1="${data.purchaseOrder.customer.address1}" 
-				City="${data.purchaseOrder.customer.city}"
-				State="${data.purchaseOrder.customer.state}" 
-				ZipCode="${data.purchaseOrder.customer.zipcode}" 
-				Country="${data.purchaseOrder.customer.countrycode}" />
-		<PersonInfoContact FirstName="${data.purchaseOrder.customer.addressee}" />
+		<PersonInfoShipTo FirstName="${data.purchaseOrder.shipAddress.companyName}" 
+				AddressLine1="${data.purchaseOrder.shipAddress.address1}" 
+				City="${data.purchaseOrder.shipAddress.city}"
+				State="${data.purchaseOrder.shipAddress.state}" 
+				ZipCode="${data.purchaseOrder.shipAddress.zipcode}" 
+				Country="${data.purchaseOrder.shipAddress.countrycode}" />
+		<PersonInfoContact FirstName="${data.purchaseOrder.shipAddress.addressee}" />
 	</#if>		
 	<OrderLines>
 		<#list data.purchaseOrder.items as item>
