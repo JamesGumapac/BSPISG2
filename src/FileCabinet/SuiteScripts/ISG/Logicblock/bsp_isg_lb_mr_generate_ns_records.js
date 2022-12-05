@@ -60,13 +60,6 @@ define(['N/record', 'N/runtime', 'N/search', '../Lib/bsp_isg_lb_utils.js', '../L
                 let itemObjMappingFields = BSPLBUtils.getMappingFields(recordType, false);
 
                 let loginData = BSPLBLoginAPI.login(settings);
-                let vendors = BSPLBEntities.fetchVendors(settings, loginData);
-
-                log.debug(functionName, 
-                    {
-                        vendors: vendors
-                    }
-                );
 
                 lbTransactions.forEach(element => {
                     lbTransactionsData.push({
@@ -77,7 +70,6 @@ define(['N/record', 'N/runtime', 'N/search', '../Lib/bsp_isg_lb_utils.js', '../L
                             cashSaleObjMappingFields: cashSaleObjMappingFields,
                             customerObjMappingFields: customerObjMappingFields,
                             itemObjMappingFields: itemObjMappingFields,
-                            vendors: vendors,
                             settings: settings,
                             loginData: loginData
                         }
