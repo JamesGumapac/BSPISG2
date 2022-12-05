@@ -48,7 +48,7 @@ define(["N/file", "N/record", "N/search"], /**
             name: "custrecord_bsp_isg_lb_default_asset_acc",
           });
           const defaultCogsAccount = result.getValue({
-            name: "custrecordbsp_isg_lb_default_cogs_acc",
+            name: "custrecord_bsp_isg_lb_default_cogs_acc",
           });
           lbSettings = {
             url: url,
