@@ -345,11 +345,7 @@ define([
     }catch(error){
       log.error("Error creating Item fulfillment record: " + JSON.stringify(error.message));
       return null;
-
-    
-
-}
-  //  log.debug('itemFulfillmentRec', itemFulfillmentRec);
+    }
 
     if (aopdVendor) {
       let purchaseOrderRec = record.create({
