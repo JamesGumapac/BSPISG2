@@ -6,40 +6,10 @@
   <notifyemails></notifyemails>
   <notifyowner>T</notifyowner>
   <scriptfile>[/SuiteScripts/ISG/bsp_isg_mr_create_item.js]</scriptfile>
-  <scriptcustomfields>
-    <scriptcustomfield scriptid="custscript_bsp_isg_upload_item_tp">
-      <accesslevel>2</accesslevel>
-      <applyformatting>F</applyformatting>
-      <checkspelling>F</checkspelling>
-      <defaultchecked>F</defaultchecked>
-      <defaultselection></defaultselection>
-      <defaultvalue></defaultvalue>
-      <description></description>
-      <displayheight></displayheight>
-      <displaytype>NORMAL</displaytype>
-      <displaywidth></displaywidth>
-      <dynamicdefault></dynamicdefault>
-      <fieldtype>SELECT</fieldtype>
-      <help></help>
-      <isformula>F</isformula>
-      <ismandatory>F</ismandatory>
-      <label>Trading Partner</label>
-      <linktext></linktext>
-      <maxlength></maxlength>
-      <maxvalue></maxvalue>
-      <minvalue></minvalue>
-      <onparentdelete>NO_ACTION</onparentdelete>
-      <searchlevel>2</searchlevel>
-      <selectrecordtype>[scriptid=customrecord_bsp_isg_lb_integ_settings]</selectrecordtype>
-      <setting></setting>
-      <storevalue>T</storevalue>
-    </scriptcustomfield>
-  </scriptcustomfields>
   <scriptdeployments>
     <scriptdeployment scriptid="customdeploy_bsp_isg_mr_get_items">
       <buffersize>1</buffersize>
       <concurrencylimit>2</concurrencylimit>
-      <custscript_bsp_isg_upload_item_tp>[scriptid=customrecord_bsp_isg_lb_integ_settings.val_853978_t927173_495]</custscript_bsp_isg_upload_item_tp>
       <isdeployed>T</isdeployed>
       <loglevel>DEBUG</loglevel>
       <queueallstagesatonce>T</queueallstagesatonce>
