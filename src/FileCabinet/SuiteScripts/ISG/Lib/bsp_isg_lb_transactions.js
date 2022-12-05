@@ -208,7 +208,8 @@ define([
     }
 
     /*--- Shipping method translation  ---*/
-    let shippingMethod = searchShippingItem(objFields.order);
+
+    let shippingMethod = objFields.order.ShippingMethodId ? searchShippingItem(objFields.order.ShippingMethodId) : '';
 
     transactionRecord.setValue({ fieldId: "shipcarrier", value: "nonups" });
     transactionRecord.setValue({
@@ -264,7 +265,9 @@ define([
     loop : for(let i=0; i<20; i++){
 
           if(BSPLBUtils.getHoliday(transactionRecord.getValue({fieldId: 'shipdate'})) != ''){
+            log.debug('before shipdatecalculation');
           shipDateCalculation(delZone, transactionRecord);
+          log.debug('after shipdatecalculation');
           }
           else{
             transactionRecord.setValue({fieldId: 'shipdate', value:(transactionRecord.getValue({fieldId: 'shipdate'}))});   
@@ -309,6 +312,44 @@ define([
       objFields.order.Id,
       "Order"
     );
+    try{
+
+      let itemFulfillmentRec = record.transform({
+        fromType: record.Type.SALES_ORDER,
+        fromId: parseInt(newRecordId),
+        toType: record.Type.ITEM_FULFILLMENT,
+      }); 
+      let newItemF;
+      let itemCount = itemFulfillmentRec.getLineCount({
+        sublistId: 'item' 
+    });
+    let backorderCount = 0;
+      for(i=0; i<itemCount; i++){
+        let backordered = transactionRecord.getSublistValue({sublistId: 'item', fieldId: 'backordered', line: i});
+        log.debug('backordered', backordered);
+        if(backordered>0){
+          backorderCount++;
+          itemFulfillmentRec.setSublistValue({
+            sublistId: 'item',
+            fieldId: 'itemreceive',
+            line: i,
+            value: false
+        });
+        }      
+      }
+      log.debug('backorderCount', backorderCount);
+        if(itemCount > backorderCount){
+         newItemF = itemFulfillmentRec.save();
+        }
+
+    }catch(error){
+      log.error("Error creating Item fulfillment record: " + JSON.stringify(error.message));
+      return null;
+
+    
+
+}
+  //  log.debug('itemFulfillmentRec', itemFulfillmentRec);
 
     if (aopdVendor) {
       let purchaseOrderRec = record.create({
@@ -638,12 +679,12 @@ define([
     return results;
   }
 
-  function searchShippingItem(order) {
+  function searchShippingItem(shippingMethodId) {
     let results = [];
 
     var shipitemSearchObj = search.create({
       type: "shipitem",
-      filters: [["externalid", "anyof", order.ShippingMethodId]],
+      filters: [["externalid", "anyof", shippingMethodId]],
       columns: [
         search.createColumn({
           name: "itemid",
