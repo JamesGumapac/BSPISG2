@@ -15,11 +15,63 @@ define(["N/file", "N/record", "N/search"], /**
   }
 
   /**
+   * get the URL, default Asset Account and default COGS account
+   * @returns {{}}
+   */
+  function getLbSettingsForUploadItem() {
+    try {
+      let lbSettings = {};
+      const customrecord_bsp_isg_lb_integ_settingsSearchObj = search.create({
+        type: "customrecord_bsp_isg_lb_integ_settings",
+        columns: [
+          search.createColumn({
+            name: "custrecord_bsp_isg_lb_default_asset_acc",
+            label: "Default Asset Account",
+          }),
+          search.createColumn({
+            name: "custrecordbsp_isg_lb_default_cogs_acc",
+            label: "Default COGS Account",
+          }),
+          search.createColumn({
+            name: "custrecord_bsp_isg_lb_item_upload_url",
+            label: "URL",
+          }),
+        ],
+      });
+      customrecord_bsp_isg_lb_integ_settingsSearchObj
+        .run()
+        .each(function (result) {
+          const url = result.getValue({
+            name: "custrecord_bsp_isg_lb_item_upload_url",
+          });
+          const defaultAssetAccount = result.getValue({
+            name: "custrecord_bsp_isg_lb_default_asset_acc",
+          });
+          const defaultCogsAccount = result.getValue({
+            name: "custrecordbsp_isg_lb_default_cogs_acc",
+          });
+          lbSettings = {
+            url: url,
+            defaultAssetAccount: defaultAssetAccount,
+            defaultCogsAccount: defaultCogsAccount,
+          };
+        });
+      return lbSettings;
+    } catch (e) {
+      log.error("functionName: getLbSettingsForUploadItem", e.message);
+    }
+  }
+
+  /**
    * This function combine they a set of array keys and objects into one set of objects
    * @param {*} key
    * @param {*} value
    */
   function createItemObj(key, value) {
+    try {
+    } catch (e) {
+      log.error("functionName: createItemObj", e.message);
+    }
     return key.reduce((acc, val, ind) => {
       acc[val] = value[ind];
       return acc;
@@ -27,17 +79,25 @@ define(["N/file", "N/record", "N/search"], /**
   }
 
   /**
-   * get the integration settings URL
-   * @param integrationSettingsId
+   * Check Item if exists
+   * @param itemId
    * @returns {*}
    */
-  function getURL(integrationSettingsId) {
-    const urlSearch = search.lookupFields({
-      type: "customrecord_bsp_isg_lb_integ_settings",
-      id: integrationSettingsId,
-      columns: ["custrecord_bsp_isg_ge_item_upload_url"],
-    });
-    return urlSearch.custrecord_bsp_isg_ge_item_upload_url;
+  function ifItemExists(itemId) {
+    try {
+      let itemIdResults;
+      const itemSearchObj = search.create({
+        type: "item",
+        filters: [["name", "is", itemId]],
+      });
+      itemSearchObj.run().each(function (result) {
+        itemIdResults = result.id;
+        return true;
+      });
+      return itemIdResults;
+    } catch (e) {
+      log.error(" checkItemId ", e.message);
+    }
   }
 
   /**
@@ -45,7 +105,7 @@ define(["N/file", "N/record", "N/search"], /**
    * @returns {string[]}
    */
   function getColumns() {
-    const columns = [
+    return [
       "id",
       "title",
       "description",
@@ -70,7 +130,6 @@ define(["N/file", "N/record", "N/search"], /**
       "shipping",
       "identifier_exists",
     ];
-    return columns;
   }
 
   /**
@@ -80,6 +139,7 @@ define(["N/file", "N/record", "N/search"], /**
    */
   function createItem(itemData) {
     try {
+      const lbSettings = getLbSettingsForUploadItem();
       const itemRec = record.create({
         type: "inventoryitem",
         isDynamic: true,
@@ -91,7 +151,7 @@ define(["N/file", "N/record", "N/search"], /**
           itemData.price.lastIndexOf(" ")
         );
         itemRec.selectLine({
-          sublistId: "price ",
+          sublistId: "price",
           line: 0,
         });
         itemRec.setCurrentSublistValue({
@@ -100,7 +160,7 @@ define(["N/file", "N/record", "N/search"], /**
           value: +basedPrice,
         });
         itemRec.commitLine({
-          sublistId: "price1",
+          sublistId: "price",
         });
       }
       if (itemData.product_weight) {
@@ -113,6 +173,19 @@ define(["N/file", "N/record", "N/search"], /**
           value: +weight,
         });
       }
+
+      lbSettings.defaultAssetAccount &&
+        itemRec.setValue({
+          fieldId: "assetaccount",
+          value: lbSettings.defaultAssetAccount,
+        });
+
+      lbSettings.defaultCogsAccount &&
+        itemRec.setValue({
+          fieldId: "cogsaccount",
+          value: lbSettings.defaultCogsAccount,
+        });
+
       itemData.mpn &&
         itemRec.setValue({
           fieldId: "mpn",
@@ -153,13 +226,17 @@ define(["N/file", "N/record", "N/search"], /**
 
       return itemRec.save({ ignoreMandatoryFields: true });
     } catch (e) {
-      log.error("createItem", e.message);
+      log.error(
+        "functionName: createItem",
+        e.message + " for Item ID:" + itemData.id
+      );
     }
   }
 
   return {
     getItemObj: getItemObj,
     createItem: createItem,
-    getURL: getURL,
+    getLbSettingsForUploadItem: getLbSettingsForUploadItem,
+    ifItemExists: ifItemExists,
   };
 });
