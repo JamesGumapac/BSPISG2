@@ -12,7 +12,7 @@
     const TRANSMITION_QUEUE_STATUSES = Object.freeze({
         notStarted: 1,
         transmitting: 2,
-        transmitted: 3,
+        pendingAcknowledment: 3,
         acknowledged: 4,
         complete: 5
     });
