@@ -105,9 +105,14 @@
                    search.createColumn({name: "shipzip", label: "Shipping Zip"}),
                    search.createColumn({name: "shipstate", label: "Shipping State/Province"}),  
                    search.createColumn({
-                      name: "entityid",
-                      join: "customer",
-                      label: "Name"
+                    name: "firstname",
+                    join: "customer",
+                    label: "First Name"
+                   }),
+                   search.createColumn({
+                    name: "lastname",
+                    join: "customer",
+                    label: "Last Name"
                    }),
                    search.createColumn({
                       name: "symbol",
@@ -149,9 +154,14 @@
                    search.createColumn({name: "shipzip", label: "Shipping Zip"}),
                    search.createColumn({name: "shipstate", label: "Shipping State/Province"}),  
                    search.createColumn({
-                      name: "entityid",
-                      join: "customer",
-                      label: "Name"
+                    name: "firstname",
+                    join: "customer",
+                    label: "First Name"
+                   }),
+                   search.createColumn({
+                    name: "lastname",
+                    join: "customer",
+                    label: "Last Name"
                    }),
                    search.createColumn({
                       name: "symbol",
@@ -180,7 +190,7 @@
             let locationText = element.getText("custbody_bsp_isg_transmission_loc");
             let adot = element.getText("custbody_bsp_isg_adot");
             let shipAddress = {
-                companyName: element.getValue({name: "entityid", join: "customer"}),
+                companyName: element.getValue({name: "firstname", join: "customer"}) + " " + element.getValue({name: "lastname", join: "customer"}),
                 addressee: element.getValue("shipaddressee"),
                 address1: element.getValue("shipaddress1"),
                 city: element.getValue("shipcity"),
@@ -944,6 +954,38 @@
         return false;
     }
 
+
+    function fetchItemUOM(transmissionData){
+        let purchaseOrderItems = transmissionData.data.purchaseOrder.items;
+        let itemArray = purchaseOrderItems.map((i) => i.itemID);
+
+        const customrecord_bsp_isg_item_acct_dataSearchObj = search.create({
+            type: "customrecord_bsp_isg_item_acct_data",
+            filters:
+            [
+               ["custrecord_bsp_isg_parent_item","anyof",itemArray]
+            ],
+            columns:
+            [
+               search.createColumn({name: "custrecord_bsp_isg_parent_item", label: "Item"}),
+               search.createColumn({name: "custrecord_bsp_isg_contract_code_uom", label: "UOM"})
+            ]
+        });
+
+        customrecord_bsp_isg_item_acct_dataSearchObj.run().each(function(result){
+            let itemID = result.getValue("custrecord_bsp_isg_parent_item");
+            let uom = result.getValue("custrecord_bsp_isg_contract_code_uom");
+            let index = findItemIndex(purchaseOrderItems, itemID);
+            if(index >= 0){
+                purchaseOrderItems[index].itemUOM = uom;
+            }
+            return true;
+        });
+
+        transmissionData.data.purchaseOrder.items = purchaseOrderItems;
+        return transmissionData;
+    }
+
     /**
      * Get all results from a saved search
      * @param {*} objSavedSearch 
@@ -1024,6 +1066,7 @@
         setPOMessageID: setPOMessageID,
         deletePO: deletePO,
         findPObyNumber: findPObyNumber,
+        fetchItemUOM: fetchItemUOM,
         getQueueOfPO: getQueueOfPO,
         getVendor: getVendor,
         getTransmissionFields: getTransmissionFields,

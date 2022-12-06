@@ -117,13 +117,13 @@ define([
         const map = (mapContext) => {
             let functionName = "map";
             try{
-                let tranmsission = JSON.parse(mapContext.value);
-                log.debug(functionName, `Tranmission PO: ${JSON.stringify(tranmsission)}`);
-                let poId = tranmsission.data.purchaseOrder.purchaseOrderID;
-
+                let transmission = JSON.parse(mapContext.value);      
+                let poId = transmission.data.purchaseOrder.purchaseOrderID;
+                transmission = BSP_POutil.fetchItemUOM(transmission);
+                log.debug(functionName, `Transmission PO: ${JSON.stringify(transmission)}`);
                 mapContext.write({
                     key: poId, 
-                    value: tranmsission.data
+                    value: transmission.data
                 });
             }catch (error)
             {
@@ -151,7 +151,6 @@ define([
             let poID = reduceContext.key;
             try{
                 let tranmsissionData = JSON.parse(reduceContext.values);
-
                 /**
                 * For Essendant get the BOD ID
                 */
@@ -230,7 +229,7 @@ define([
         const summarize = (summaryContext) => {
             let functionName = 'Summarize';
             try{
-                //BSPTransmitionsUtil.updateTransmissionQueueStatus(transmitionQueueID, BSPTransmitionsUtil.transmitionQueueStatus().transmitted);
+                //BSPTransmitionsUtil.updateTransmissionQueueStatus(transmitionQueueID, BSPTransmitionsUtil.transmitionQueueStatus().pendingAcknowledment);
             }catch (error)
             {
                 log.error(functionName, {error: error.toString()});
