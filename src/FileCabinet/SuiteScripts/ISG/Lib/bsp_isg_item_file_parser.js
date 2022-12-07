@@ -1,11 +1,12 @@
 /**
  * @NApiVersion 2.1
  */
-define(["N/file", "N/record", "N/search"], /**
+define(["N/file", "N/record", "N/search", "N/runtime"], /**
  * @param{file} file
  * @param record
  * @param search
- */ (file, record, search) => {
+ * @param runtime
+ */ (file, record, search, runtime) => {
   function getItemObj(itemlist) {
     try {
       return createItemObj(getColumns(), JSON.parse(itemlist));
@@ -29,7 +30,7 @@ define(["N/file", "N/record", "N/search"], /**
             label: "Default Asset Account",
           }),
           search.createColumn({
-            name: "custrecordbsp_isg_lb_default_cogs_acc",
+            name: "custrecord_bsp_isg_lb_default_cogs_acc",
             label: "Default COGS Account",
           }),
           search.createColumn({
@@ -133,6 +134,16 @@ define(["N/file", "N/record", "N/search"], /**
   }
 
   /**
+   * check if the multiCurrency feature is enabled
+   * @returns {boolean}
+   */
+  function checkIfMultiCurrencyEnabled() {
+    return runtime.isFeatureInEffect({
+      feature: "MULTICURRENCY",
+    });
+  }
+
+  /**
    * Create Item Record
    * @param itemData
    * @returns {number|*}
@@ -150,17 +161,25 @@ define(["N/file", "N/record", "N/search"], /**
           0,
           itemData.price.lastIndexOf(" ")
         );
+        const isMultiCurrencyEnabled = checkIfMultiCurrencyEnabled();
+        let priceSublistId;
+        if (isMultiCurrencyEnabled === true) {
+          priceSublistId = "price1";
+        } else {
+          priceSublistId = "price";
+        }
+
         itemRec.selectLine({
-          sublistId: "price",
+          sublistId: priceSublistId,
           line: 0,
         });
         itemRec.setCurrentSublistValue({
-          sublistId: "price",
+          sublistId: priceSublistId,
           fieldId: "price_1_",
           value: +basedPrice,
         });
         itemRec.commitLine({
-          sublistId: "price",
+          sublistId: priceSublistId,
         });
       }
       if (itemData.product_weight) {
