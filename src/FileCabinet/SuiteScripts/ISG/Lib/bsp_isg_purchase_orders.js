@@ -66,9 +66,49 @@
      * @param transmitionQueueID - The ID of the transmission queue record.
      * @returns An array of objects.
     */
-    function getPurchaseOrdersForTransmission(transmitionQueueID, poRecID){
+    function getPurchaseOrdersForTransmission(transmitionQueueID, poRecID, ediSettings){
         let purchaseOrderList = [];
         let purchaseOrderSearchObj = null;
+
+        let fixedColumns = [
+            search.createColumn({name: "tranid", label: "Document Number"}),
+            search.createColumn({name: "custbody_bsp_isg_order_type", label: "Order Type"}),
+            search.createColumn({name: "custbody_bsp_isg_route_code", label: "Route Code"}),
+            search.createColumn({name: "line", label: "Line ID"}),
+            search.createColumn({name: "item", label: "Item"}),
+            search.createColumn({name: "quantity", label: "Quantity"}),
+            search.createColumn({name: "rate", label: "Item Rate"}),
+            search.createColumn({name: "unitabbreviation", label: "Units"}),
+            search.createColumn({name: "trandate", label: "Date"}),
+            search.createColumn({name: "createdfrom", label: "Sales Order"}),
+            search.createColumn({name: "custbody_bsp_isg_transmission_acct_num", label: "Account Number"}),
+            search.createColumn({name: "custbody_bsp_isg_transmission_loc", label: "Transmission Location"}),
+            search.createColumn({name: "custbody_bsp_isg_adot", label: "Adot"}),      
+            search.createColumn({name: "shipaddress1", label: "Shipping Address 1"}),
+            search.createColumn({name: "shipaddressee", label: "Shipping Addressee"}),
+            search.createColumn({name: "shipcity", label: "Shipping City"}),
+            search.createColumn({name: "shipcountrycode", label: "Shipping Country Code"}),
+            search.createColumn({name: "shipzip", label: "Shipping Zip"}),
+            search.createColumn({name: "shipstate", label: "Shipping State/Province"}),  
+            search.createColumn({
+             name: "firstname",
+             join: "customer",
+             label: "First Name"
+            }),
+            search.createColumn({
+             name: "lastname",
+             join: "customer",
+             label: "Last Name"
+            })
+        ];
+
+        if(ediSettings.multiCurrencyEnabled === true){
+            fixedColumns.push(search.createColumn({
+                name: "symbol",
+                join: "Currency",
+                label: "Symbol"
+            }));
+        }
 
         if(transmitionQueueID){
             purchaseOrderSearchObj = search.create({
@@ -83,43 +123,7 @@
                    "AND", 
                    ["custbody_bsp_isg_po_transm_status","anyof",PO_TRANSMITION_STATUSES.pendingTransmission]
                 ],
-                columns:
-                [
-                   search.createColumn({name: "tranid", label: "Document Number"}),
-                   search.createColumn({name: "custbody_bsp_isg_order_type", label: "Order Type"}),
-                   search.createColumn({name: "custbody_bsp_isg_route_code", label: "Route Code"}),
-                   search.createColumn({name: "line", label: "Line ID"}),
-                   search.createColumn({name: "item", label: "Item"}),
-                   search.createColumn({name: "quantity", label: "Quantity"}),
-                   search.createColumn({name: "rate", label: "Item Rate"}),
-                   search.createColumn({name: "unitabbreviation", label: "Units"}),
-                   search.createColumn({name: "trandate", label: "Date"}),
-                   search.createColumn({name: "createdfrom", label: "Sales Order"}),
-                   search.createColumn({name: "custbody_bsp_isg_transmission_acct_num", label: "Account Number"}),
-                   search.createColumn({name: "custbody_bsp_isg_transmission_loc", label: "Transmission Location"}),
-                   search.createColumn({name: "custbody_bsp_isg_adot", label: "Adot"}),      
-                   search.createColumn({name: "shipaddress1", label: "Shipping Address 1"}),
-                   search.createColumn({name: "shipaddressee", label: "Shipping Addressee"}),
-                   search.createColumn({name: "shipcity", label: "Shipping City"}),
-                   search.createColumn({name: "shipcountrycode", label: "Shipping Country Code"}),
-                   search.createColumn({name: "shipzip", label: "Shipping Zip"}),
-                   search.createColumn({name: "shipstate", label: "Shipping State/Province"}),  
-                   search.createColumn({
-                    name: "firstname",
-                    join: "customer",
-                    label: "First Name"
-                   }),
-                   search.createColumn({
-                    name: "lastname",
-                    join: "customer",
-                    label: "Last Name"
-                   }),
-                   search.createColumn({
-                      name: "symbol",
-                      join: "Currency",
-                      label: "Symbol"
-                   })
-                ]
+                columns: fixedColumns
             });
         }else if(poRecID){
             purchaseOrderSearchObj = search.create({
@@ -132,43 +136,7 @@
                    "AND", 
                    ["internalid","anyof",poRecID]
                 ],
-                columns:
-                [
-                   search.createColumn({name: "tranid", label: "Document Number"}),
-                   search.createColumn({name: "custbody_bsp_isg_order_type", label: "Order Type"}),
-                   search.createColumn({name: "custbody_bsp_isg_route_code", label: "Route Code"}),
-                   search.createColumn({name: "line", label: "Line ID"}),
-                   search.createColumn({name: "item", label: "Item"}),
-                   search.createColumn({name: "quantity", label: "Quantity"}),
-                   search.createColumn({name: "rate", label: "Item Rate"}),
-                   search.createColumn({name: "unitabbreviation", label: "Units"}),
-                   search.createColumn({name: "trandate", label: "Date"}),
-                   search.createColumn({name: "createdfrom", label: "Sales Order"}),
-                   search.createColumn({name: "custbody_bsp_isg_transmission_acct_num", label: "Account Number"}),
-                   search.createColumn({name: "custbody_bsp_isg_transmission_loc", label: "Transmission Location"}), 
-                   search.createColumn({name: "custbody_bsp_isg_adot", label: "Adot"}),
-                   search.createColumn({name: "shipaddress1", label: "Shipping Address 1"}),
-                   search.createColumn({name: "shipaddressee", label: "Shipping Addressee"}),
-                   search.createColumn({name: "shipcity", label: "Shipping City"}),
-                   search.createColumn({name: "shipcountrycode", label: "Shipping Country Code"}),
-                   search.createColumn({name: "shipzip", label: "Shipping Zip"}),
-                   search.createColumn({name: "shipstate", label: "Shipping State/Province"}),  
-                   search.createColumn({
-                    name: "firstname",
-                    join: "customer",
-                    label: "First Name"
-                   }),
-                   search.createColumn({
-                    name: "lastname",
-                    join: "customer",
-                    label: "Last Name"
-                   }),
-                   search.createColumn({
-                      name: "symbol",
-                      join: "Currency",
-                      label: "Symbol"
-                   })
-                ]
+                columns: fixedColumns
             });
         }
 
@@ -183,7 +151,7 @@
             let salesOrder = element.getText("createdfrom");
             let routeCodeID = element.getValue("custbody_bsp_isg_route_code");
             let routeCode = element.getText("custbody_bsp_isg_route_code");
-            let currency = element.getValue({name: "symbol", join: "Currency"});
+            let currency = ediSettings.multiCurrencyEnabled === true ? element.getValue({name: "symbol", join: "Currency"}) : ediSettings.defaultCurrency;
             let accountNumberID = element.getValue("custbody_bsp_isg_transmission_acct_num");
             let accountNumberText = element.getText("custbody_bsp_isg_transmission_acct_num");
             let locationID = element.getValue("custbody_bsp_isg_transmission_loc");

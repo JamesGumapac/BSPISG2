@@ -3,7 +3,7 @@
  * @NModuleScope Public
  */
 
- define(['N/search'], function (search) {
+ define(['N/runtime', 'N/search'], function (runtime, search) {
     
    /**
      * It searches for the EDI settings corresponding to the account current environment, and returns the values of
@@ -38,6 +38,10 @@
                search.createColumn({
                   name: "custrecord_bsp_po_form",
                   label: "Purchase Order Form"
+               }),
+               search.createColumn({
+                  name: "custrecord_bsp_isg_default_currency",
+                  label: "Default Currency"
                })
             ]
         });
@@ -47,10 +51,13 @@
             let user = result.getValue("custrecord_bsp_sb_user");
             let pwd = result.getValue("custrecord_bsp_sb_password");
             let transactionForm = result.getValue("custrecord_bsp_po_form");
+            let defaultCurrency = result.getValue("custrecord_bsp_isg_default_currency");
             ediSettingsFields = {
                 endpointURL: endpointURL,
                 user: user,
                 pwd: pwd,
+                multiCurrencyEnabled: checkIfMultiCurrencyEnabled(),
+                defaultCurrency: defaultCurrency,
                 transactionForm: transactionForm
             }
             return true;
@@ -58,6 +65,15 @@
         return ediSettingsFields;
    }
 
+   /**
+     * check if the multiCurrency feature is enabled
+     * @returns {boolean}
+   */
+   function checkIfMultiCurrencyEnabled() {
+      return runtime.isFeatureInEffect({
+         feature: "MULTICURRENCY",
+      });
+   }
 
    function getCartonBuyFields(environment){
       let cartonBuyFields = {};
