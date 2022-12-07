@@ -87,7 +87,7 @@ define(["N/record", "N/search"], /**
   }
 
   /**
-   * Check if the corresponding line in the SO is a special order
+   * Check if the corresponding line in the SO is a special order or has po vendor
    * @param soRec
    * @param line
    * @returns {*}
