@@ -157,6 +157,24 @@
           <columnBreak>F</columnBreak>
           <sameRowAsPrevious>F</sameRowAsPrevious>
         </field>
+        <field>
+          <id>[scriptid=custbody_bsp_isg_vendor_so_number]</id>
+          <label>Vendor SO Number</label>
+          <visible>T</visible>
+          <mandatory>F</mandatory>
+          <displayType>NORMAL</displayType>
+          <columnBreak>F</columnBreak>
+          <sameRowAsPrevious>F</sameRowAsPrevious>
+        </field>
+        <field>
+          <id>[scriptid=custbody_bsp_isg_po_ack_status]</id>
+          <label>Acknowledgment Status</label>
+          <visible>T</visible>
+          <mandatory>F</mandatory>
+          <displayType>NORMAL</displayType>
+          <columnBreak>F</columnBreak>
+          <sameRowAsPrevious>F</sameRowAsPrevious>
+        </field>
       </fields>
     </fieldGroup>
     <fieldGroup scriptid="classification">
@@ -1391,6 +1409,26 @@
               <label>PO Vendor</label>
               <visible>F</visible>
             </column>
+            <column>
+              <id>[scriptid=custcol_bsp_isg_facility_name]</id>
+              <label>Facility Name</label>
+              <visible>T</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_isg_facility_note]</id>
+              <label>Facility Note</label>
+              <visible>T</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_isg_ack_status_desc]</id>
+              <label>Acknowledgment Status Description</label>
+              <visible>T</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_isg_ack_status_reason]</id>
+              <label>Acknowledgment Status Reason</label>
+              <visible>T</visible>
+            </column>
           </columns>
         </subList>
         <subList>
@@ -2097,6 +2135,26 @@
               <label>PO Vendor</label>
               <visible>F</visible>
             </column>
+            <column>
+              <id>[scriptid=custcol_bsp_isg_facility_name]</id>
+              <label>Facility Name</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_isg_facility_note]</id>
+              <label>Facility Note</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_isg_ack_status_desc]</id>
+              <label>Acknowledgment Status Description</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_isg_ack_status_reason]</id>
+              <label>Acknowledgment Status Reason</label>
+              <visible>F</visible>
+            </column>
           </columns>
         </subList>
       </subItems>
@@ -2213,7 +2271,7 @@
             <field>
               <id>SHIPADDRESS</id>
               <label>Ship To</label>
-              <visible>F</visible>
+              <visible>T</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
@@ -4355,6 +4413,15 @@
               <columnBreak>F</columnBreak>
               <sameRowAsPrevious>F</sameRowAsPrevious>
             </field>
+            <field>
+              <id>[scriptid=custbody_bsp_isg_route_code]</id>
+              <label>Route Code</label>
+              <visible>T</visible>
+              <mandatory>F</mandatory>
+              <displayType>NORMAL</displayType>
+              <columnBreak>F</columnBreak>
+              <sameRowAsPrevious>F</sameRowAsPrevious>
+            </field>
           </fields>
         </fieldGroup>
         <fieldGroup scriptid="fieldgroup_5_t927173_482">
@@ -4452,15 +4519,6 @@
             <field>
               <id>[scriptid=custbody_bsp_isg_lb_purchase_order_num]</id>
               <label>Logicblock Puchase Order #</label>
-              <visible>F</visible>
-              <mandatory>F</mandatory>
-              <displayType>NORMAL</displayType>
-              <columnBreak>F</columnBreak>
-              <sameRowAsPrevious>F</sameRowAsPrevious>
-            </field>
-            <field>
-              <id>[scriptid=custbody_bsp_isg_route_code]</id>
-              <label>Route Code</label>
               <visible>F</visible>
               <mandatory>F</mandatory>
               <displayType>NORMAL</displayType>

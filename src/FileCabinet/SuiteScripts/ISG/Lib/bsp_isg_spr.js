@@ -58,7 +58,7 @@
             log.debug(stLogTitle, `PO ID ${poID} :: Status: ${JSON.stringify(poAcknowledgmentStatus)}`);
 
             if(poAcknowledgmentStatus == STATUS_CODES.accepted){
-                let processStatus = processPO(poID, jsonObjResponse);
+                let processStatus = processPO(poID, jsonObjResponse, poAcknowledgmentStatus);
                 if(processStatus == STATUS_CODES.processStatusOK){
                     BSP_POutil.updatePOtransmissionStatus(poID, BSP_POutil.transmitionPOStatus().pendingShipmentNotification);
                     result.status = "Ok";
@@ -80,7 +80,7 @@
      * @param poID - The internal ID of the Purchase Order record
      * @param jsonObjResponse - This is the JSON response from the API call.
     */
-    function processPO(poID, jsonObjResponse){
+    function processPO(poID, jsonObjResponse, poAcknowledgmentStatus){
         let processStatus = STATUS_CODES.processStatusOK;
         let purchaseOrderRec = record.load({
             type: record.Type.PURCHASE_ORDER,
@@ -91,6 +91,10 @@
         let soID = purchaseOrderRec.getValue("createdfrom");
         let vendor = purchaseOrderRec.getValue("entity");
         let account = purchaseOrderRec.getValue("custbody_bsp_isg_transmission_acct_num");
+
+        let vendorSalesOrderID = getAcknowledgmentPOHeaderData(jsonObjResponse,"OrderNo");
+        purchaseOrderRec.setValue('custbody_bsp_isg_vendor_so_number', vendorSalesOrderID);
+        purchaseOrderRec.setValue('custbody_bsp_isg_po_ack_status', poAcknowledgmentStatus);
 
         let itemCount = purchaseOrderRec.getLineCount({
             sublistId: 'item'
@@ -107,7 +111,11 @@
             let acknowledgmentItem = getAcknowledmentItem(ackPOlines, item);
             log.debug("processPOline", `PO Acknowledgment Item Data ${JSON.stringify(acknowledgmentItem)}`);
             let acknowledgmentItemStatus = acknowledgmentItem.Extn.EXTNSprOrderLineList.EXTNSprOrderLine.EXTNSprOrderLine.AckStatus;
+            
             let rate = acknowledgmentItem.Extn.EXTNSprOrderLineList.EXTNSprOrderLine.EXTNSprOrderLine.DealerPrice;
+            let ackStatusDescription = acknowledgmentItem.Extn.EXTNSprOrderLineList.EXTNSprOrderLine.EXTNSprOrderLine.AckDesc;
+            let ackStatusReason = acknowledgmentItem.Extn.EXTNSprOrderLineList.EXTNSprOrderLine.EXTNSprOrderLine.AckStatus;
+
             if(acknowledgmentItemStatus == STATUS_CODES.accepted){
                 purchaseOrderRec.setSublistValue({
                     sublistId: 'item',
@@ -115,6 +123,21 @@
                     line: i,
                     value: parseFloat(rate)
                 });
+
+                purchaseOrderRec.setSublistValue({
+                    sublistId: 'item',
+                    fieldId: 'custcol_bsp_isg_ack_status_desc',
+                    line: i,
+                    value: ackStatusDescription
+                });
+
+                purchaseOrderRec.setSublistValue({
+                    sublistId: 'item',
+                    fieldId: 'custcol_bsp_isg_ack_status_reason',
+                    line: i,
+                    value: ackStatusReason
+                });
+
                 log.debug("processPOline", `Item Processed successfully`);
 
                 let itemID = purchaseOrderRec.getSublistValue({
@@ -162,6 +185,20 @@
                         value: parseInt(quantityAcknowledged)
                     });
 
+                    purchaseOrderRec.setSublistValue({
+                        sublistId: 'item',
+                        fieldId: 'custcol_bsp_isg_ack_status_desc',
+                        line: i,
+                        value: ackStatusDescription
+                    });
+    
+                    purchaseOrderRec.setSublistValue({
+                        sublistId: 'item',
+                        fieldId: 'custcol_bsp_isg_ack_status_reason',
+                        line: i,
+                        value: ackStatusReason
+                    });
+                    
                     poRates.push({itemID: itemID, rate: rate});
 
                     updatePricePlan(itemID, vendor, account, parseFloat(rate));    
@@ -209,6 +246,8 @@
                 return  jsonObjResponse.Order.CustomerPONo;
             case "Status":  
                 return jsonObjResponse.Extn.EXTNSprOrderHeaderList.EXTNSprOrderHeader.EXTNSprOrderHeader.PoAckStatus;
+            case "OrderNo":  
+                return jsonObjResponse.Order.OrderNo;
         }
         return null;
     }
@@ -257,23 +296,6 @@
                 }
             }
             return null;
-    }
-
-    function updatePricePlan(itemID, vendor, account, rate){
-        let pricePlanRecID = getPricePlanID(itemID, vendor, account);
-        if(pricePlanRecID){
-            record.submitFields({
-                type: "customrecord_bsp_isg_item_acct_data",
-                id: pricePlanRecID,
-                values: {
-                    custrecord_bsp_isg_item_cost: rate
-                },
-                options: {        
-                    enableSourcing: false,        
-                    ignoreMandatoryFields : true    
-                }           
-            });
-        }
     }
 
     function updatePricePlan(itemID, vendor, account, rate){

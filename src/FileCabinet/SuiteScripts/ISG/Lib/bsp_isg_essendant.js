@@ -40,7 +40,7 @@
             log.debug(stLogTitle, `PO ID ${poID} :: Status: ${JSON.stringify(poAcknowledgmentStatus)}`);
 
             if(poAcknowledgmentStatus.ReasonCode == STATUS_CODES.processedSuccessfully){
-                let processStatus = processPO(poID, jsonObjResponse);
+                let processStatus = processPO(poID, jsonObjResponse, poAcknowledgmentStatus);
                 if(processStatus == STATUS_CODES.processStatusOK){
                     BSP_POutil.updatePOtransmissionStatus(poID, BSP_POutil.transmitionPOStatus().pendingShipmentNotification);
                     result.status = "Ok";
@@ -63,7 +63,7 @@
      * @param poID - The internal ID of the Purchase Order record
      * @param jsonObjResponse - This is the JSON response from the API call.
     */
-    function processPO(poID, jsonObjResponse){
+    function processPO(poID, jsonObjResponse, poAcknowledgmentStatus){
         let processStatus = STATUS_CODES.processStatusOK;
 
         let purchaseOrderRec = record.load({
@@ -75,6 +75,10 @@
         let soID = purchaseOrderRec.getValue("createdfrom");
         let vendor = purchaseOrderRec.getValue("entity");
         let account = purchaseOrderRec.getValue("custbody_bsp_isg_transmission_acct_num");
+
+        let vendorSalesOrderID = getAcknowledgmentPOHeaderData(jsonObjResponse,"DocumentID");
+        purchaseOrderRec.setValue('custbody_bsp_isg_vendor_so_number', vendorSalesOrderID);
+        purchaseOrderRec.setValue('custbody_bsp_isg_po_ack_status', poAcknowledgmentStatus.Reason);
 
         let itemCount = purchaseOrderRec.getLineCount({
             sublistId: 'item'
@@ -91,14 +95,48 @@
             let acknowledgmentItem = getAcknowledmentItem(ackPOlines, item);
             log.debug("processPOline", `PO Acknowledgment Item Data ${JSON.stringify(acknowledgmentItem)}`);
 
-            if(acknowledgmentItem.Status.ReasonCode == STATUS_CODES.processedSuccessfully){
-                let rate = parseFloat(acknowledgmentItem.UnitPrice.Amount);
+            let rate = parseFloat(acknowledgmentItem.UnitPrice.Amount);
+            let facilityName = acknowledgmentItem.Facility.Name;
+            let facilityNote = acknowledgmentItem.Facility.Note;
+            let ackStatusDescription = acknowledgmentItem.Status.Description;
+            let ackStatusReason = acknowledgmentItem.Status.Reason;
+
+            if(acknowledgmentItem.Status.ReasonCode == STATUS_CODES.processedSuccessfully){   
                 purchaseOrderRec.setSublistValue({
                     sublistId: 'item',
                     fieldId: 'rate',
                     line: i,
                     value: rate
                 });
+
+                purchaseOrderRec.setSublistValue({
+                    sublistId: 'item',
+                    fieldId: 'custcol_bsp_isg_ack_status_desc',
+                    line: i,
+                    value: ackStatusDescription
+                });
+
+                purchaseOrderRec.setSublistValue({
+                    sublistId: 'item',
+                    fieldId: 'custcol_bsp_isg_ack_status_reason',
+                    line: i,
+                    value: ackStatusReason
+                });
+
+                purchaseOrderRec.setSublistValue({
+                    sublistId: 'item',
+                    fieldId: 'custcol_bsp_isg_facility_name',
+                    line: i,
+                    value: facilityName
+                });
+
+                purchaseOrderRec.setSublistValue({
+                    sublistId: 'item',
+                    fieldId: 'custcol_bsp_isg_facility_note',
+                    line: i,
+                    value: facilityNote
+                });
+
                 log.debug("processPOline", `Item Processed successfully`);
 
                 let itemID = purchaseOrderRec.getSublistValue({
@@ -113,7 +151,6 @@
                 log.debug("processPOline", `Price plan updated`);
 
             }else if(acknowledgmentItem.Status.ReasonCode == STATUS_CODES.processedPartially){
-                let rate = parseFloat(acknowledgmentItem.UnitPrice.Amount);
                 log.debug(
                     "processPOline", 
                     `Item Processed partially - Quantity sent: ${acknowledgmentItem.Quantity} | Quantity acknowledged: ${acknowledgmentItem.Facility.Quantity}`
@@ -146,6 +183,34 @@
                         value: parseInt(acknowledgmentItem.Facility.Quantity)
                     });
 
+                    purchaseOrderRec.setSublistValue({
+                        sublistId: 'item',
+                        fieldId: 'custcol_bsp_isg_ack_status_desc',
+                        line: i,
+                        value: ackStatusDescription
+                    });
+    
+                    purchaseOrderRec.setSublistValue({
+                        sublistId: 'item',
+                        fieldId: 'custcol_bsp_isg_ack_status_reason',
+                        line: i,
+                        value: ackStatusReason
+                    });
+    
+                    purchaseOrderRec.setSublistValue({
+                        sublistId: 'item',
+                        fieldId: 'custcol_bsp_isg_facility_name',
+                        line: i,
+                        value: facilityName
+                    });
+    
+                    purchaseOrderRec.setSublistValue({
+                        sublistId: 'item',
+                        fieldId: 'custcol_bsp_isg_facility_note',
+                        line: i,
+                        value: facilityNote
+                    });
+                    
                     poRates.push({itemID: itemID, rate: rate});
 
                     updatePricePlan(itemID, vendor, account, rate);    
@@ -199,6 +264,8 @@
                 return  jsonObjResponse.DataArea.PurchaseOrder.PurchaseOrderHeader.DocumentID[field];
             case "Status":  
                 return jsonObjResponse.DataArea.PurchaseOrder.PurchaseOrderHeader.Status;
+            case "DocumentID":
+                return jsonObjResponse.DataArea.PurchaseOrder.PurchaseOrderHeader.DocumentReference.SalesOrderReference.DocumentID["ID"];
         }
         return null;
     }
