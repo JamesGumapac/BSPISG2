@@ -47,7 +47,7 @@ define([
                 if(!BSPTransmitionsUtil.isEmpty(poRecID)){
                     log.debug(functionName, `PO transmission - Manual Process for PO ID: ${poRecID}`);
 
-                    let puchaseOrderList = BSP_POutil.getPurchaseOrdersForTransmission(null, poRecID);
+                    let puchaseOrderList = BSP_POutil.getPurchaseOrdersForTransmission(null, poRecID, ediSettings);
                     if(puchaseOrderList.length > 0){
                         let vendor = BSP_POutil.getVendor(poRecID);
                         let tranmsissionFields = BSP_POutil.getTransmissionFields(poRecID);
@@ -67,7 +67,7 @@ define([
                 }else{
                     log.debug(functionName, `Searching POs created from Transmission Queue: ${transmitionQueueID}`);
 
-                    let puchaseOrderList = BSP_POutil.getPurchaseOrdersForTransmission(transmitionQueueID, null);
+                    let puchaseOrderList = BSP_POutil.getPurchaseOrdersForTransmission(transmitionQueueID, null, ediSettings);
                     log.debug(functionName, `Encountered: ${puchaseOrderList.length} POs`);
     
                     if(puchaseOrderList.length > 0){
