@@ -116,7 +116,7 @@ define(['N/record', 'N/runtime', 'N/search', '../Lib/bsp_isg_lb_utils.js', '../L
             let itemRecordsResult = null;
             let salesOrderRecordsResult = null;
             let cashSaleRecordsResult = null;
-
+            log.debug(functionName, "*** REDUCE STARTED ***");
             try{               
                 let updateRetryCount = false;
                 let settings = logicBlockTransactionData.value.settings;
