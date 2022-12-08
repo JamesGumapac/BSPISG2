@@ -104,7 +104,7 @@
         <field>
           <id>PARENT</id>
           <label>Parent Company</label>
-          <visible>F</visible>
+          <visible>T</visible>
           <mandatory>F</mandatory>
           <displayType>NORMAL</displayType>
           <columnBreak>F</columnBreak>

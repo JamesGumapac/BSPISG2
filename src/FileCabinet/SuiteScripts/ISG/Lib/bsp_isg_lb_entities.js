@@ -101,7 +101,7 @@
      * @param {*} objMappingFields 
      * @returns 
      */
-     function createCustomerRecord(objFields, objMappingFields){
+     function createCustomerRecord(objFields, objMappingFields, parentCompany){
         let objResult = {};
         let status = BSPLBUtils.constants().successStatus;
         let newRecordId = "";
@@ -112,6 +112,10 @@
         });
 
         customerRec.setValue({ fieldId: "isperson", value: 'T' });
+
+        if(parentCompany){
+            customerRec.setValue({ fieldId: "parent", value: parentCompany });
+        }
 
         let addressIsSet = false;
         for (const fieldMapping of objMappingFields.bodyFields) {
@@ -133,6 +137,10 @@
                         } else if(fieldDataType == "Double"){               
                             customerRec.setValue({ fieldId: nsField, value: parseFloat(lbValue) });                       
                         }   
+                    }else{
+                        if(!BSPLBUtils.isEmpty(defaultValue)){
+                            customerRec.setValue({fieldId: nsField, value: defaultValue})
+                        }
                     }      
                 }else{
                     customerRec.selectNewLine({
@@ -178,6 +186,59 @@
         return objResult;
     }
 
+    function createCustomerHierarchyRecords(lbAccountNumber, objFields, objMappingFields){
+        let recordCreationResult = null
+        let parentCompany = getParentCompany(lbAccountNumber);
+
+        if(!parentCompany){
+            parentCompany = createParentCompany(lbAccountNumber, objFields);
+        }
+
+        recordCreationResult = createCustomerRecord(objFields, objMappingFields, parentCompany);
+
+        return recordCreationResult;
+    }
+
+    function getParentCompany(lbAccountNumber){
+        let parentCompanyInternalID = null;
+        const customerSearchObj = search.create({
+            type: "customer",
+            filters:
+            [
+               ["entityid","is",lbAccountNumber]
+            ],
+            columns:[]
+        });
+        const searchResultCount = customerSearchObj.runPaged().count;
+        if(searchResultCount > 0){
+            customerSearchObj.run().each(function(result){
+                parentCompanyInternalID = result.id;
+                return true;
+            });
+        }
+        return parentCompanyInternalID;
+    }
+
+    function createParentCompany(lbAccountNumber, objFields){
+        let parentCompanyID = null;
+
+        let customerData = objFields.customer;
+        let companyName = customerData.Company;
+
+        let customerRec = record.create({
+            type: record.Type.CUSTOMER,
+            isDynamic: true,
+        });
+
+        customerRec.setValue({ fieldId: "isperson", value: 'F' });
+        customerRec.setValue({ fieldId: "autoname", value: false });
+        customerRec.setValue({ fieldId: "companyname", value: companyName });
+        customerRec.setValue({ fieldId: "entityid", value: lbAccountNumber });
+
+        parentCompanyID = customerRec.save();
+        return parentCompanyID;
+    }
+
     /**
      * Gets Customer Record or Creates it if it does not exist
      * @param {*} logicBlockUserAccount
@@ -195,11 +256,20 @@
                 let objFields = {
                     customer: logicBlockUserAccount
                 }
-                let recordCreationResult = createCustomerRecord(objFields, objMappingFields);
-                if(recordCreationResult && recordCreationResult.recordId){
-                    internalId = recordCreationResult.recordId;
-                    customerRecordResult = {nsID: internalId, logicBlockID: logicBlockUserAccount.Id};
-                }   
+                let lbAccountNumber = logicBlockUserAccount.AccountNumber;
+                if(!BSPLBUtils.isEmpty(lbAccountNumber)){
+                    let recordCreationResult = createCustomerHierarchyRecords(lbAccountNumber, objFields, objMappingFields);
+                    if(recordCreationResult && recordCreationResult.recordId){
+                        internalId = recordCreationResult.recordId;
+                        customerRecordResult = {nsID: internalId, logicBlockID: logicBlockUserAccount.Id};
+                    }   
+                }else{
+                    let recordCreationResult = createCustomerRecord(objFields, objMappingFields, null);
+                    if(recordCreationResult && recordCreationResult.recordId){
+                        internalId = recordCreationResult.recordId;
+                        customerRecordResult = {nsID: internalId, logicBlockID: logicBlockUserAccount.Id};
+                    }   
+                }          
             }
             
         }catch(error){
@@ -364,7 +434,7 @@
         fetchCustomer: fetchCustomer,
         getFieldsFromCustomer: getFieldsFromCustomer,
         checkShippingAddress: checkShippingAddress,
-        getVendorEmail,
+        getVendorEmail: getVendorEmail
 	};
 
 });
