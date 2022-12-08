@@ -120,6 +120,7 @@
             let lbField = fieldMapping.lbFieldId;
             let isLineItem = fieldMapping.isLineItem;
             let fieldDataType = fieldMapping.lbFieldDataType;
+            let defaultValue = fieldMapping.defaultValue;
             let lbValue = BSPLBUtils.getProp(objFields, lbField);
 
             if (isLineItem == "F" || (isLineItem == false && nsField)) {
