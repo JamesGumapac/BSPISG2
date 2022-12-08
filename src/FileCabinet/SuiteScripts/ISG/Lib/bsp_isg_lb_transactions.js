@@ -208,15 +208,17 @@ define([
     }
 
     /*--- Shipping method translation  ---*/
-
-    let shippingMethod = objFields.order.ShippingMethodId ? searchShippingItem(objFields.order.ShippingMethodId) : '';
-
+    let shippingMethod;
+    const isEmpty = Object.keys(objFields.order.ShippingMethodId).length === 0;
+    if(isEmpty != true){
+      log.debug('shipping method ID IF', objFields.order.ShippingMethodId);
+    shippingMethod = searchShippingItem(objFields.order.ShippingMethodId);
     transactionRecord.setValue({ fieldId: "shipcarrier", value: "nonups" });
     transactionRecord.setValue({
       fieldId: "shipmethod",
       value: shippingMethod[0].internalid,
     });
-
+    }
     /*--- Tax Calculations   ---*/
     let taxCalculation;
     if (settings.custrecord_bsp_lb_avatax == false) {
@@ -242,7 +244,6 @@ define([
         });
       }
     }
-
     /*--- Delivery zone checker   ---*/
     let delZone = searchDeliveryZone(objFields.order);
     let shipmentType =
@@ -313,39 +314,52 @@ define([
       "Order"
     );
     try{
-
-      let itemFulfillmentRec = record.transform({
-        fromType: record.Type.SALES_ORDER,
-        fromId: parseInt(newRecordId),
-        toType: record.Type.ITEM_FULFILLMENT,
-      }); 
-      let newItemF;
-      let itemCount = itemFulfillmentRec.getLineCount({
+      let itemSOCount = transactionRecord.getLineCount({
         sublistId: 'item' 
     });
+
+    let newItemF;
+    let itemFulfillmentRec;
     let backorderCount = 0;
-      for(i=0; i<itemCount; i++){
+      for(i=0; i<itemSOCount; i++){
         let backordered = transactionRecord.getSublistValue({sublistId: 'item', fieldId: 'backordered', line: i});
         log.debug('backordered', backordered);
         if(backordered>0){
           backorderCount++;
-          itemFulfillmentRec.setSublistValue({
-            sublistId: 'item',
-            fieldId: 'itemreceive',
-            line: i,
-            value: false
-        });
         }      
       }
       log.debug('backorderCount', backorderCount);
-        if(itemCount > backorderCount){
-         newItemF = itemFulfillmentRec.save();
+        if(itemSOCount > backorderCount){
+            itemFulfillmentRec = record.transform({
+            fromType: record.Type.SALES_ORDER,
+            fromId: parseInt(newRecordId),
+            toType: record.Type.ITEM_FULFILLMENT,
+          }); 
+        let itemIFCount = transactionRecord.getLineCount({
+            sublistId: 'item' 
+        });
+        for(i=0; i<itemIFCount; i++){
+          if(backordered>0){
+            itemFulfillmentRec.setSublistValue({
+              sublistId: 'item',
+              fieldId: 'itemreceive',
+              line: i,
+              value: false
+          });
+          }
         }
+
+         newItemF = itemFulfillmentRec.save();
+     }
 
     }catch(error){
       log.error("Error creating Item fulfillment record: " + JSON.stringify(error.message));
-      return null;
-    }
+      return newRecordId;
+
+    
+
+}
+  //  log.debug('itemFulfillmentRec', itemFulfillmentRec);
 
     if (aopdVendor) {
       let purchaseOrderRec = record.create({
@@ -676,8 +690,7 @@ define([
   }
 
   function searchShippingItem(shippingMethodId) {
-    let results = [];
-
+    let results = [];   
     var shipitemSearchObj = search.create({
       type: "shipitem",
       filters: [["externalid", "anyof", shippingMethodId]],
