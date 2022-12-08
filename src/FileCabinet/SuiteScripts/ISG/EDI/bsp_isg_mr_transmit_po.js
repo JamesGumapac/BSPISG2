@@ -85,7 +85,9 @@ define([
                                 }
                             })
                         });
-                    }      
+                    }else{
+                        BSPTransmitionsUtil.deleteQueue(transmitionQueueID);
+                    }  
                 }            
             } catch (error)
             {
@@ -229,7 +231,13 @@ define([
         const summarize = (summaryContext) => {
             let functionName = 'Summarize';
             try{
-                //BSPTransmitionsUtil.updateTransmissionQueueStatus(transmitionQueueID, BSPTransmitionsUtil.transmitionQueueStatus().pendingAcknowledment);
+                let paramsObj = getParameters();
+                let ediSettings = BSP_EDISettingsUtil.getEDIsettings(paramsObj.environment);
+                let transmitionQueueID = paramsObj.transmitionQueueID;
+                if(ediSettings.waitForAcknowledgment == false){     
+                    if(transmitionQueueID)
+                        BSPTransmitionsUtil.deleteQueue(transmitionQueueID);
+                }
             }catch (error)
             {
                 log.error(functionName, {error: error.toString()});
@@ -246,8 +254,6 @@ define([
             let objParams = {};
 
             let environment = runtime.envType;
-            log.debug("Account Environment", `ENV: ${environment}`);
-
             let objScript = runtime.getCurrentScript();
             objParams = {
                 transmitionQueueID : objScript.getParameter({name: "custscript_bsp_mr_transm_queue"}),

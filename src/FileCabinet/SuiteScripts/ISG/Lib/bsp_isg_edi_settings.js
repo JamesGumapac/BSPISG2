@@ -42,6 +42,10 @@
                search.createColumn({
                   name: "custrecord_bsp_isg_default_currency",
                   label: "Default Currency"
+               }),
+               search.createColumn({
+                  name: "custrecord_bsp_isg_wait_for_ack",
+                  label: "Wait for Acknowledgment"
                })
             ]
         });
@@ -52,12 +56,14 @@
             let pwd = result.getValue("custrecord_bsp_sb_password");
             let transactionForm = result.getValue("custrecord_bsp_po_form");
             let defaultCurrency = result.getValue("custrecord_bsp_isg_default_currency");
+            let waitForAcknowledgment = result.getValue("custrecord_bsp_isg_wait_for_ack");
             ediSettingsFields = {
                 endpointURL: endpointURL,
                 user: user,
                 pwd: pwd,
                 multiCurrencyEnabled: checkIfMultiCurrencyEnabled(),
                 defaultCurrency: defaultCurrency,
+                waitForAcknowledgment: waitForAcknowledgment,
                 transactionForm: transactionForm
             }
             return true;

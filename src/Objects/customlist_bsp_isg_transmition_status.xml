@@ -18,17 +18,12 @@
     <customvalue scriptid="val_864613_t927173_166">
       <abbreviation>T</abbreviation>
       <isinactive>F</isinactive>
-      <value>Transmitted</value>
+      <value>Pending Acknowledment</value>
     </customvalue>
     <customvalue scriptid="val_864614_t927173_407">
       <abbreviation>A</abbreviation>
       <isinactive>F</isinactive>
       <value>Acknowledged</value>
-    </customvalue>
-    <customvalue scriptid="val_864615_t927173_263">
-      <abbreviation>C</abbreviation>
-      <isinactive>F</isinactive>
-      <value>Complete</value>
     </customvalue>
   </customvalues>
 </customlist>

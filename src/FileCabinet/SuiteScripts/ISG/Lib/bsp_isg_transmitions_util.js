@@ -13,8 +13,7 @@
         notStarted: 1,
         transmitting: 2,
         pendingAcknowledment: 3,
-        acknowledged: 4,
-        complete: 5
+        acknowledged: 4
     });
   
     /**

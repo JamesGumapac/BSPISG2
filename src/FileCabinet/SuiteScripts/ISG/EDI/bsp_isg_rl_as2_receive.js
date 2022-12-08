@@ -3,13 +3,16 @@
  * @NScriptType Restlet
  */
  define([
+    'N/runtime',
     'N/record', 
     'N/search', 
     '../Lib/bsp_isg_as2_service.js', 
     '../Lib/bsp_isg_trading_partners.js', 
     '../Lib/bsp_isg_transmitions_util.js',
-    '../Lib/bsp_isg_purchase_orders.js'],
+    '../Lib/bsp_isg_purchase_orders.js',
+    '../Lib/bsp_isg_edi_settings.js'],
  /**
+ * @param{runtime} runtime
  * @param{record} record
  * @param{search} search
  * @param{BSP_AS2Service} BSP_AS2Service
@@ -17,7 +20,7 @@
  * @param{BSPTransmitionsUtil} BSPTransmitionsUtil
  * @param{BSP_POutil} BSP_POutil
  */
- (record, search, BSP_AS2Service, BSPTradingParnters, BSPTransmitionsUtil, BSP_POutil) => {
+ (runtime, record, search, BSP_AS2Service, BSPTradingParnters, BSPTransmitionsUtil, BSP_POutil, BSP_EDISettingsUtil) => {
 
     /**
      * Defines the function that is executed when a POST request is sent to a RESTlet.
@@ -50,12 +53,16 @@
                 }
                 
                 /**
-                 * Check Transmission Queue for automatic PO Transmissions
+                 * Check Transmission Queue for automatic PO Transmissions only if Wait for acknowledgment feature is enabled
                 */
-                if(result && result.queueID){
-                    BSPTransmitionsUtil.checkTransmissionQueue(result.queueID);
+                let environment = runtime.envType;
+                let ediSettings = BSP_EDISettingsUtil.getEDIsettings(environment);
+                if(ediSettings.waitForAcknowledgment == true){              
+                    if(result && result.queueID){
+                        BSPTransmitionsUtil.checkTransmissionQueue(result.queueID);
+                    }
                 }
-              
+                            
                 /**
                  * Update Transmission Status for Manual POs
                 */
