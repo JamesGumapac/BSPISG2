@@ -3,23 +3,29 @@
  * @NScriptType ClientScript
  * @NModuleScope SameAccount
  */
-define(["N/record", "N/search", "./Lib/bsp_isg_get_item_contract_plan.js"], /**
+define([
+  "N/ui/message",
+  "N/record",
+  "N/search",
+  "./Lib/bsp_isg_get_item_contract_plan.js",
+], /**
+ * @param message
  * @param{record} record
  * @param{search} search
  * @param util
- */ function (record, search, util) {
+ */ function (message, record, search, util) {
   let isTP;
-
   function pageInit(context) {
     const currentRecord = context.currentRecord;
     let entity = currentRecord.getValue("entity");
-    isTP = util.isTradingPartner(entity);
+    if (entity) {
+      isTP = util.isTradingPartner(entity);
+    }
   }
 
   function postSourcing(context) {
     try {
       const currentRecord = context.currentRecord;
-
       let accountNumber;
       let fieldId = context.fieldId;
       let sublistId = context.sublistId;
@@ -35,49 +41,36 @@ define(["N/record", "N/search", "./Lib/bsp_isg_get_item_contract_plan.js"], /**
               fieldId: "custbody_bsp_isg_transmission_acct_num",
               value: accountNumber,
             });
-          console.log(" isTP " + isTP)
-          for(let i = 0; i < currentRecord.getLineCount({sublistId: 'item'}); i++) {
-           currentRecord.selectLine({sublistId: 'item',line: i})
-            
-            const itemId = currentRecord.getCurrentSublistValue({
-              sublistId: "item",
-              fieldId: "item",
-              line: i
-            });
-           const quantity = currentRecord.getCurrentSublistValue({
-             sublistId: "item",
-             fieldId: "quantity",
-             line: i
-           });
-            const cost = util.lookForContractCost(itemId, accountNumber);
-            console.log("Cost: " + cost);
-            if(cost){
+          showMessage();
+          //Update all item rate based in the contract cost of the trading partner
+          setTimeout(function () {
+           
+            for (
+              let i = 0;
+              i < currentRecord.getLineCount({ sublistId: "item" });
+              i++
+            ) {
+              currentRecord.selectLine({ sublistId: "item", line: i });
+              const itemId = currentRecord.getCurrentSublistValue({
+                sublistId: "item",
+                fieldId: "item",
+              });
+
+              const cost = util.lookForContractCost(itemId, accountNumber);
+              if (!cost) continue;
               currentRecord.setCurrentSublistValue({
                 sublistId: "item",
                 fieldId: "rate",
                 value: cost,
-                ignoreFieldChange: true
+                ignoreFieldChange: false,
               });
-              currentRecord.setCurrentSublistValue({
+
+              currentRecord.commitLine({
                 sublistId: "item",
-                fieldId: "amount",
-                value: Number(cost) * Number(quantity),
-                ignoreFieldChange: true
+                ignoreRecalc: false,
               });
-              currentRecord.commitLine({sublistId: "item"})
-             // currentRecord.commitLine({sublistId: "item"})
-              // currentRecord.setSublistValue({
-              //   sublistId: "item",
-              //   fieldId: "rate",
-              //   line: i,
-              //   value: cost,
-              // });
-        
             }
-          
-         
-            console.log('FiledChanged Entity ItemId: ' + itemId);
-          }
+          }, 1000);
         }
       }
 
@@ -98,8 +91,17 @@ define(["N/record", "N/search", "./Lib/bsp_isg_get_item_contract_plan.js"], /**
         });
       }
     } catch (e) {
-      log.error("fieldChanged", e.message);
+      log.error("postSourcing", e.message);
     }
+  }
+
+  function showMessage() {
+    const infoMessage = message.create({
+      title: "INFORMATION",
+      message: "UPDATING ITEM RATE",
+      type: message.Type.INFORMATION,
+    });
+    infoMessage.show();
   }
 
   return {
