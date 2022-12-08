@@ -305,7 +305,6 @@ define([
     /**
      * Default values
      */
-
     newRecordId = transactionRecord.save();
     BSPLBUtils.createMappingKeyRecord(
       newRecordId,
@@ -319,27 +318,31 @@ define([
     });
 
     let newItemF;
+    let backordered;
+    let backorderedIF;
     let itemFulfillmentRec;
     let backorderCount = 0;
+
       for(i=0; i<itemSOCount; i++){
-        let backordered = transactionRecord.getSublistValue({sublistId: 'item', fieldId: 'backordered', line: i});
-        log.debug('backordered', backordered);
+        backordered = transactionRecord.getSublistValue({sublistId: 'item', fieldId: 'backordered', line: i});
         if(backordered>0){
           backorderCount++;
         }      
       }
-      log.debug('backorderCount', backorderCount);
         if(itemSOCount > backorderCount){
             itemFulfillmentRec = record.transform({
             fromType: record.Type.SALES_ORDER,
             fromId: parseInt(newRecordId),
             toType: record.Type.ITEM_FULFILLMENT,
           }); 
-        let itemIFCount = transactionRecord.getLineCount({
+        
+        let itemIFCount = itemFulfillmentRec.getLineCount({
             sublistId: 'item' 
         });
         for(i=0; i<itemIFCount; i++){
-          if(backordered>0){
+          backorderedIF = transactionRecord.getSublistValue({sublistId: 'item', fieldId: 'backordered', line: i});
+          log.debug('backorderedIF', backorderedIF);
+          if(backorderedIF>0){
             itemFulfillmentRec.setSublistValue({
               sublistId: 'item',
               fieldId: 'itemreceive',
@@ -348,18 +351,14 @@ define([
           });
           }
         }
-
+      
          newItemF = itemFulfillmentRec.save();
-     }
+      }
 
     }catch(error){
       log.error("Error creating Item fulfillment record: " + JSON.stringify(error.message));
       return newRecordId;
-
-    
-
-}
-  //  log.debug('itemFulfillmentRec', itemFulfillmentRec);
+    } 
 
     if (aopdVendor) {
       let purchaseOrderRec = record.create({
