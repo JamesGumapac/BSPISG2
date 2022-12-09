@@ -11,15 +11,15 @@
     <scriptdeployment scriptid="customdeploy_bsp_isg_cs_get_cntrct_prce">
       <allemployees>F</allemployees>
       <alllocalizationcontexts>T</alllocalizationcontexts>
-      <allpartners>F</allpartners>
-      <allroles>F</allroles>
+      <allpartners>T</allpartners>
+      <allroles>T</allroles>
       <audslctrole></audslctrole>
       <eventtype></eventtype>
       <executioncontext>ACTION|ADVANCEDREVREC|BANKCONNECTIVITY|BANKSTATEMENTPARSER|BUNDLEINSTALLATION|CLIENT|CONSOLRATEADJUSTOR|CSVIMPORT|CUSTOMGLLINES|CUSTOMMASSUPDATE|DATASETBUILDER|DEBUGGER|EMAILCAPTURE|FICONNECTIVITY|FIPARSER|MAPREDUCE|OCRPLUGIN|OTHER|PAYMENTGATEWAY|PAYMENTPOSTBACK|PLATFORMEXTENSION|PORTLET|PROMOTIONS|RECORDACTION|RESTLET|RESTWEBSERVICES|SCHEDULED|SDFINSTALLATION|SHIPPINGPARTNERS|SUITELET|TAXCALCULATION|USEREVENT|USERINTERFACE|WEBSERVICES|WORKBOOKBUILDER|WORKFLOW</executioncontext>
       <isdeployed>T</isdeployed>
-      <loglevel>DEBUG</loglevel>
+      <loglevel>ERROR</loglevel>
       <recordtype>PURCHASEORDER</recordtype>
-      <status>TESTING</status>
+      <status>RELEASED</status>
     </scriptdeployment>
   </scriptdeployments>
 </clientscript>
