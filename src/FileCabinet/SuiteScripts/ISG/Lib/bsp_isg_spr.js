@@ -477,6 +477,7 @@
             BSP_POutil.updatePOlines(poID, linesPartiallyShipped, itemsNotShipped);
         }catch(error){
             resultObj.status = "Error";
+            resultObj.errorDesc = error.message;
             resultObj.itemFulfillmentRecID = null;
             return resultObj;
         }
@@ -561,6 +562,7 @@
             BSP_POutil.updatePOlines(poID, linesPartiallyShipped, itemsNotShipped);
         }catch(error){
             resultObj.status = "Error";
+            resultObj.errorDesc = error.message;
             resultObj.itemReceiptRecID = null;
             return resultObj;
         }
