@@ -34,7 +34,9 @@
     const post = (requestBody) => {
          let functionName = "POST";
          let response = null;
+         
          try{
+             let result = null;
              log.debug(functionName, `Request Body:  ${JSON.stringify(requestBody)}`);
              let decodedXMLresponse = BSP_AS2Service.decodeStringContent(requestBody.Payload.Content);
 
@@ -45,7 +47,7 @@
                 /**
                  * Check Trading partner Origin
                 */
-                let result = null;
+                result = null;
                 if(isAcknowledgmentSPR(jsonObjResponse)){
                     result = BSPTradingParnters.processPOAck(jsonObjResponse, BSPTradingParnters.constants().spr);
                 }else if(isAcknowledgmentEssendant(jsonObjResponse)){
@@ -73,7 +75,7 @@
 
              }else if(isShipmentNotification(jsonObjResponse)){
 
-                let result = null;
+                result = null;
                 if(isShipmentNotificationSPR(jsonObjResponse)){
                     log.debug(functionName, `This is a Shipment Notification from SPR`);
                     result = BSPTradingParnters.processASN(jsonObjResponse, BSPTradingParnters.constants().spr);
@@ -85,7 +87,7 @@
 
              }else if(isInvoice(jsonObjResponse)){
 
-                let result = null;
+                result = null;
                 if(isInvoiceSPR(jsonObjResponse)){
                     log.debug(functionName, `This is an Invoice from SPR`);
                     result = BSPTradingParnters.processInvoice(jsonObjResponse, BSPTradingParnters.constants().spr);
@@ -100,12 +102,14 @@
              response = {
                  "operation_code": "200",
                  "operation_message": "OK",
+                 "result": JSON.stringify(result)
              };
          }catch(error){
              log.error(functionName, `Error: ${error.toString()}`);
              response = {
                  "operation_code": "500",
                  "operation_message": "Internal error occured",
+                 "result": error.message
              };
          } 
          return response;

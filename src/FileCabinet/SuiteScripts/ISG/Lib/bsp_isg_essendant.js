@@ -451,6 +451,15 @@
             let shipmentItem = getShipmentItem(shipmentlines, itemName);
             log.debug("processItemFulfillment", `Item ${JSON.stringify(shipmentItem)}`);
             if(shipmentItem){
+
+
+                itemFulfillmentRec.setSublistValue({
+                    sublistId: 'item',
+                    fieldId: 'quantity',
+                    line: i,
+                    value: parseInt(shipmentItem.ShippedQuantity)
+                });
+
                 if(parseInt(shipmentItem.OrderQuantity) > parseInt(shipmentItem.ShippedQuantity)){
                     linesPartiallyShipped.push({
                         itemID: itemID,
@@ -479,6 +488,16 @@
         }
 
         try{
+            let trackingID = getShipmentHeaderFieldValue(jsonObjResponse, "TrackingID");
+            let containerID = getShipmentHeaderFieldValue(jsonObjResponse, "ContainerID");
+            let partyID = getShipmentHeaderFieldValue(jsonObjResponse, "PartyIDs");
+            let partyName = getShipmentHeaderFieldValue(jsonObjResponse, "Name");
+            
+            itemFulfillmentRec.setValue('custbody_bsp_isg_asn_tracking_id', trackingID);
+            itemFulfillmentRec.setValue('custbody_bsp_isg_asn_container_id', containerID);
+            itemFulfillmentRec.setValue('custbody_bsp_isg_asn_party_id', partyID);
+            itemFulfillmentRec.setValue('custbody_bsp_isg_asn_party_name', partyName);
+
             itemFulfillmentRec.setValue('shipstatus', status);
             let recID = itemFulfillmentRec.save();
             resultObj.itemFulfillmentRecID = recID;    
@@ -486,6 +505,7 @@
             BSP_POutil.updatePOlines(poID, linesPartiallyShipped, itemsNotShipped);
         }catch(error){
             resultObj.status = "Error";
+            resultObj.errorDesc = error.message;
             resultObj.itemFulfillmentRecID = null;
             return resultObj;
         }
@@ -564,22 +584,46 @@
         }
         
         try{
+            let trackingID = getShipmentHeaderFieldValue(jsonObjResponse, "TrackingID");
+            let containerID = getShipmentHeaderFieldValue(jsonObjResponse, "ContainerID");
+            let partyID = getShipmentHeaderFieldValue(jsonObjResponse, "PartyIDs");
+            let partyName = getShipmentHeaderFieldValue(jsonObjResponse, "Name");
+            
+            itemReceiptRec.setValue('custbody_bsp_isg_asn_tracking_id', trackingID);
+            itemReceiptRec.setValue('custbody_bsp_isg_asn_container_id', containerID);
+            itemReceiptRec.setValue('custbody_bsp_isg_asn_party_id', partyID);
+            itemReceiptRec.setValue('custbody_bsp_isg_asn_party_name', partyName);
+
             let recID = itemReceiptRec.save();
             resultObj.itemReceiptRecID = recID;  
             BSP_SOUtil.updateSOLinesPartiallyShipped(soID, linesPartiallyShipped);    
             BSP_POutil.updatePOlines(poID, linesPartiallyShipped, itemsNotShipped);
         }catch(error){
             resultObj.status = "Error";
+            resultObj.errorDesc = error.message;
             resultObj.itemReceiptRecID = null;
             return resultObj;
         }
         return resultObj;
     }
 
+    /**
+     * @param {*} jsonObjResponse 
+     * @param {*} field 
+     * @returns 
+     */
     function getShipmentHeaderFieldValue(jsonObjResponse, field){
         switch (field) {
             case "ID": 
                 return  jsonObjResponse.DataArea.Shipment.ShipmentHeader.DocumentReference.PurchaseOrderReference.DocumentID[field];
+            case "TrackingID": 
+                return  jsonObjResponse.DataArea.Shipment.ShipmentUnit.TrackingID;
+            case "ContainerID": 
+                return  jsonObjResponse.DataArea.Shipment.ShipmentUnit.ContainerID;
+            case "PartyIDs": 
+                return  jsonObjResponse.DataArea.Shipment.ShipmentUnit.CarrierParty.PartyIDs["ID"];
+            case "Name": 
+                return  jsonObjResponse.DataArea.Shipment.ShipmentUnit.CarrierParty.Name;
         }
         return null;
     }
