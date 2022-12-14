@@ -199,6 +199,36 @@
     }
 
     /**
+     * Cancel Order in Logicblock
+     * @param {*} settings 
+     * @param {*} loginData 
+     * @param {*} paymentData 
+     * @returns 
+    */
+    function cancelOrder(integrationSettingsRecID, salesOrderId, logicblockId){
+        let cancelOrderResult = null;
+        let settings = BSPLBUtils.getIntegrationSettings(integrationSettingsRecID);
+        let loginData = BSPLBLoginAPI.login(settings);
+        let serviceURL = settings.custrecord_bsp_lb_orders_service_url;
+        let soapGetOrdersAction = settings.custrecord_bsp_lb_cancel_order_soap_act;
+        let cancelOrderStatusID = settings.custrecord_bsp_isg_lb_cancel_orderstatus;
+
+        requestParams = {
+            salesOrderId: salesOrderId,
+            logicblockId: logicblockId,
+            cancelOrderStatusID: cancelOrderStatusID
+        }
+        let requestBodyXML = cancelOrdersXMLStrRequest(loginData, requestParams);
+        let logicBlockServerResponse = BSPLBServiceAPI.runService(serviceURL, requestBodyXML, soapGetOrdersAction);
+        log.debug("cancelOrder", JSON.stringify(logicBlockServerResponse));
+        if(!BSPLBUtils.isEmpty(logicBlockServerResponse)){
+            cancelOrderResult = logicBlockServerResponse.PatchOrderResponse.PatchOrderResult;
+        }
+        return cancelOrderResult;
+    }
+
+
+    /**
      * Get Paramters for the Logicblock Service request
      * @param {*} settings 
      * @returns 
@@ -395,12 +425,41 @@
         </soapenv:Envelope>`;
     }
 
+    /**
+     *  Body of cancel Order SOAP Action Request
+     * @param {*} loginData 
+     * @param {*} paymentData 
+     * @returns 
+     */
+    function cancelOrdersXMLStrRequest(loginData, requestParams){
+        return `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/" xmlns:log="http://schemas.datacontract.org/2004/07/Logicblock.Commerce.Domain" xmlns:arr="http://schemas.microsoft.com/2003/10/Serialization/Arrays">
+                <soapenv:Header/>
+                <soapenv:Body>
+                <tem:PatchOrder>
+                    <tem:token>
+                        <log:ApiId>${loginData.ApiId}</log:ApiId>
+                        <log:ExpirationDateUtc>${loginData.ExpirationDateUtc}</log:ExpirationDateUtc>
+                        <log:Id>${loginData.Id}</log:Id>
+                        <log:IsExpired>${loginData.IsExpired}</log:IsExpired>
+                        <log:TokenRejected>${loginData.TokenRejected}</log:TokenRejected>
+                    </tem:token>
+                    <tem:order>
+                        <log:BackendOrderId>${requestParams.salesOrderId}</log:BackendOrderId>
+                        <log:Id>${requestParams.logicblockId}</log:Id>
+                        <log:OrderStatusId>${requestParams.cancelOrderStatusID}</log:OrderStatusId>
+                    </tem:order>
+                </tem:PatchOrder>
+                </soapenv:Body>
+            </soapenv:Envelope>`;
+    }
+
     return {
         getOrders: getOrders,
         createPackage: createPackage,
         shipPackage: shipPackage,
         getOrderPayments: getOrderPayments,
         capturePayment: capturePayment,
-        addPOPayment: addPOPayment
+        addPOPayment: addPOPayment,
+        cancelOrder: cancelOrder
     };
 });

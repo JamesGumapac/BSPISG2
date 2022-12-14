@@ -696,6 +696,60 @@
           <columnBreak>F</columnBreak>
           <sameRowAsPrevious>F</sameRowAsPrevious>
         </field>
+        <field>
+          <id>[scriptid=custbody_bsp_isg_po_ack_status]</id>
+          <label>Acknowledgment Status</label>
+          <visible>F</visible>
+          <mandatory>F</mandatory>
+          <displayType>NORMAL</displayType>
+          <columnBreak>F</columnBreak>
+          <sameRowAsPrevious>F</sameRowAsPrevious>
+        </field>
+        <field>
+          <id>[scriptid=custbody_bsp_isg_vendor_so_number]</id>
+          <label>Vendor SO Number</label>
+          <visible>F</visible>
+          <mandatory>F</mandatory>
+          <displayType>NORMAL</displayType>
+          <columnBreak>F</columnBreak>
+          <sameRowAsPrevious>F</sameRowAsPrevious>
+        </field>
+        <field>
+          <id>[scriptid=custbody_bsp_isg_asn_tracking_id]</id>
+          <label>ASN TrackingID</label>
+          <visible>F</visible>
+          <mandatory>F</mandatory>
+          <displayType>NORMAL</displayType>
+          <columnBreak>F</columnBreak>
+          <sameRowAsPrevious>F</sameRowAsPrevious>
+        </field>
+        <field>
+          <id>[scriptid=custbody_bsp_isg_asn_container_id]</id>
+          <label>ASN Container ID</label>
+          <visible>F</visible>
+          <mandatory>F</mandatory>
+          <displayType>NORMAL</displayType>
+          <columnBreak>F</columnBreak>
+          <sameRowAsPrevious>F</sameRowAsPrevious>
+        </field>
+        <field>
+          <id>[scriptid=custbody_bsp_isg_asn_party_id]</id>
+          <label>ASN Party ID</label>
+          <visible>F</visible>
+          <mandatory>F</mandatory>
+          <displayType>NORMAL</displayType>
+          <columnBreak>F</columnBreak>
+          <sameRowAsPrevious>F</sameRowAsPrevious>
+        </field>
+        <field>
+          <id>[scriptid=custbody_bsp_isg_asn_party_name]</id>
+          <label>ASN Party Name</label>
+          <visible>F</visible>
+          <mandatory>F</mandatory>
+          <displayType>NORMAL</displayType>
+          <columnBreak>F</columnBreak>
+          <sameRowAsPrevious>F</sameRowAsPrevious>
+        </field>
       </fields>
     </defaultFieldGroup>
   </mainFields>
@@ -1658,6 +1712,26 @@
             <column>
               <id>[scriptid=custcol_bsp_isg_po_vendor]</id>
               <label>PO Vendor</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_isg_facility_name]</id>
+              <label>Facility Name</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_isg_facility_note]</id>
+              <label>Facility Note</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_isg_ack_status_desc]</id>
+              <label>Acknowledgment Status Description</label>
+              <visible>F</visible>
+            </column>
+            <column>
+              <id>[scriptid=custcol_bsp_isg_ack_status_reason]</id>
+              <label>Acknowledgment Status Reason</label>
               <visible>F</visible>
             </column>
           </columns>
@@ -4359,6 +4433,16 @@
               <displayType>NORMAL</displayType>
               <columnBreak>F</columnBreak>
               <sameRowAsPrevious>F</sameRowAsPrevious>
+            </field>
+            <field>
+              <id>[scriptid=custbody_bsp_isg_lb_order_cancelled]</id>
+              <label>Order cancelled</label>
+              <visible>T</visible>
+              <mandatory>F</mandatory>
+              <displayType>NORMAL</displayType>
+              <columnBreak>F</columnBreak>
+              <sameRowAsPrevious>F</sameRowAsPrevious>
+              <checkBoxDefault>USE_FIELD_DEFAULT</checkBoxDefault>
             </field>
           </fields>
         </fieldGroup>
