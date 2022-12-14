@@ -215,7 +215,9 @@
         "custrecord_bsp_lb_default_location_trans",
         "custrecord_bsp_lb_default_route_code",
         "custrecord_bsp_lb_avatax",
-        "custrecord_bsp_isg_taxable"
+        "custrecord_bsp_isg_taxable",
+        "custrecord_bsp_lb_cancel_order_soap_act",
+        "custrecord_bsp_isg_lb_cancel_orderstatus"
       ],
     });
     log.debug("settings on utils", settings);
