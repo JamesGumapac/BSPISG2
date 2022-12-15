@@ -982,7 +982,10 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
                         sublistId: "item",
                     });
                 });
-                let poRecordId = purchaseOrderRec.save();
+                let poRecordId = purchaseOrderRec.save({
+                    enableSourcing: true,
+                    ignoreMandatoryFields: true
+                });
 
                 itemData.push({
                     data: data,

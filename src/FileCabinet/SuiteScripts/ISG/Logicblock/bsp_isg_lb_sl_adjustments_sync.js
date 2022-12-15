@@ -26,18 +26,29 @@ define(['N/record', 'N/redirect', 'N/runtime', '../Lib/bsp_isg_lb_ordersservice_
                 let requestparam = scriptContext.request.parameters;
                 let salesOrderId = requestparam.salesOrderId;
                 let logicblockId = requestparam.logicblockId;
+                let isCancellation = requestparam.isCancellation;
                 log.debug(stLogTitle, {
                     salesOrderId: salesOrderId,
-                    logicblockId: logicblockId
+                    logicblockId: logicblockId,
+                    isCancellation: isCancellation
                 })
-                const result = LBOrdersAPI.cancelOrder(integrationSettingsRecID, salesOrderId, logicblockId);
-                log.debug(stLogTitle, "Result: " + JSON.stringify(result));
-                const returnMessage = updateSalesOrder(result, salesOrderId);
-                response.write(JSON.stringify(returnMessage));
+                if(isCancellation == "true"){
+                    const result = LBOrdersAPI.cancelOrder(integrationSettingsRecID, salesOrderId, logicblockId);
+                    log.debug(stLogTitle, "Result: " + JSON.stringify(result));
+                    const returnMessage = updateSalesOrder(result, salesOrderId);
+                    response.write(JSON.stringify(returnMessage));
+                }else{
+                    /*const result = LBOrdersAPI.cancelOrder(integrationSettingsRecID, salesOrderId, logicblockId);
+                    log.debug(stLogTitle, "Result: " + JSON.stringify(result));
+                    const returnMessage = updateSalesOrder(result, salesOrderId);*/
+                    response.write(JSON.stringify("test"));
+                }
+
+                
 
             } catch (error) {
                 log.error(stLogTitle, error)
-                response.write(JSON.stringify(error));
+                response.write(JSON.stringify([{message: `Failed to cancel/close order: ${e.message}`, failed: true}]));
             };
         }
 

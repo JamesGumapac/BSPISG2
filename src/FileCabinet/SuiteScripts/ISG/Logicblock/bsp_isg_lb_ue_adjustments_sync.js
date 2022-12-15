@@ -30,7 +30,7 @@ define(['N/runtime', 'N/search', '../Lib/bsp_isg_lb_utils.js'],
                 let clientScriptFileId = search
                   .create({
                     type: "file",
-                    filters: [["name", "is", "bsp_isg_lb_cancel_order_btn_action.js"]],
+                    filters: [["name", "is", "bsp_isg_lb_adjustments_sync_actions.js"]],
                   })
                   .run()
                   .getRange({ start: 0, end: 1 });
@@ -55,6 +55,12 @@ define(['N/runtime', 'N/search', '../Lib/bsp_isg_lb_utils.js'],
                         id: "custpage_cancel_order_lb",
                         label: "Cancel/Close Order",
                         functionName: 'cancelOrderLB(' + JSON.stringify(params) + ')'
+                      });
+
+                      scriptContext.form.addButton({
+                        id: "custpage_sync_order_lb",
+                        label: "Sync with Logicblock",
+                        functionName: 'syncOrderLB(' + JSON.stringify(params) + ')'
                       });
                     }      
                   }            
