@@ -10,7 +10,7 @@
      * @param soID - The ID of the Sales Order
      * @param linesPartiallyAcknowledged - 
     */
-    function updateSOLinesPartiallyAcknowledged(soID, linesPartiallyAcknowledged){ 
+    function updateSOLinesPartiallyAcknowledged(salesOrderRec, linesPartiallyAcknowledged){ 
         let linesPartiallyProcessed = linesPartiallyAcknowledged.map((i) => {
             return {
                 itemID: i.itemID,
@@ -18,7 +18,8 @@
                 quantityRemaining: i.quantityRemaining
             }
         });
-        updateSOLines(soID, linesPartiallyProcessed)
+        salesOrderRec = updateSOLines(salesOrderRec, linesPartiallyProcessed);
+        return salesOrderRec;
     }
 
     /**
@@ -26,7 +27,7 @@
      * @param soID - The ID of the Sales Order
      * @param linesPartiallyAcknowledged - 
     */
-    function updateSOLinesPartiallyShipped(soID, linesPartiallyShipped){ 
+    function updateSOLinesPartiallyShipped(salesOrderRec, linesPartiallyShipped){ 
         let linesPartiallyProcessed = linesPartiallyShipped.map((i) => {
             return {
                 itemID: i.itemID,
@@ -34,7 +35,8 @@
                 quantityRemaining: i.quantityRemaining
             }
         });
-        updateSOLines(soID, linesPartiallyProcessed)
+        salesOrderRec = updateSOLines(salesOrderRec, linesPartiallyProcessed);
+        return salesOrderRec;
     }
 
     /**
@@ -46,18 +48,12 @@
      * @param soID - The internal ID of the sales order
      * @param linesPartiallyProcessed - An array of objects that contain the lines partially processed:
     */
-    function updateSOLines(soID, linesPartiallyProcessed){      
-        if(soID){
-            log.debug("updateSOLines", `Update lines in SO ID ${soID}`);
+    function updateSOLines(salesOrderRec, linesPartiallyProcessed){      
+        if(salesOrderRec){
+            log.debug("updateSOLines", `Update lines in SO ID ${salesOrderRec.id}`);
             if(linesPartiallyProcessed.length > 0){
                 log.debug("updateSOLines", `Item lines ${JSON.stringify(linesPartiallyProcessed)}`);
-
-                let salesOrderRec = record.load({
-                    type: record.Type.SALES_ORDER,
-                    id: parseInt(soID),
-                    isDynamic: true
-                });
-        
+     
                 for(let i = 0; i < linesPartiallyProcessed.length; i++){
                     let item = linesPartiallyProcessed[i];
                     let itemID = item.itemID;
@@ -98,10 +94,10 @@
                         sublistId: "item",
                     });
                 }
-                salesOrderRec.save();
                 log.debug("updateSOLines", `Sales Order updated`);
             }     
         }
+        return salesOrderRec;
     }
 
     /**
@@ -118,6 +114,12 @@
             fieldId: 'rate'
         });
         lineData.push({fieldID: "rate", fieldValue: rate});
+
+        let porate = soRec.getCurrentSublistValue({
+            sublistId: 'item',
+            fieldId: 'porate'
+        });
+        lineData.push({fieldID: "porate", fieldValue: porate});
 
         let description = soRec.getCurrentSublistValue({
             sublistId: 'item',
@@ -147,18 +149,12 @@
     }
 
 
-    function updateSOItemPORates(soID, poRates){
-        if(soID){
-            log.debug("updateSOItemPORates", `Update rates in SO ID ${soID}`);
+    function updateSOItemPORates(salesOrderRec, poRates){
+        if(salesOrderRec){
+            log.debug("updateSOItemPORates", `Update rates in SO ID ${salesOrderRec.id}`);
             if(poRates.length > 0){
                 log.debug("updateSOItemPORates", `Item rates ${JSON.stringify(poRates)}`);
-
-                let salesOrderRec = record.load({
-                    type: record.Type.SALES_ORDER,
-                    id: parseInt(soID),
-                    isDynamic: true
-                });
-        
+       
                 for(let i = 0; i < poRates.length; i++){
                     let item = poRates[i];
                     let itemID = item.itemID;
@@ -177,22 +173,61 @@
                          
                     salesOrderRec.setCurrentSublistValue({
                         sublistId: 'item',
-                        fieldId: 'rate',
+                        fieldId: 'porate',
                         value: rate
                     });
                     salesOrderRec.commitLine({
                         sublistId: "item",
                     });
                 }
-                salesOrderRec.save();
                 log.debug("updateSOLines", `Sales Order updated`);
             }     
         }
+        return salesOrderRec;
+    }
+
+    
+    function updateSOItemsFailed(salesOrderRec, soLinesFailed){
+        if(salesOrderRec){
+            log.debug("updateSOItemsFailed", `Update items in SO ID ${salesOrderRec.id}`);
+            if(soLinesFailed.length > 0){
+                log.debug("updateSOItemsFailed", `Failed Items ${JSON.stringify(soLinesFailed)}`);
+       
+                for(let i = 0; i < soLinesFailed.length; i++){
+                    let item = soLinesFailed[i];
+                    let itemID = item.itemID;
+                    let reasonFailed = item.reasonFailed;
+
+                    let lineNum = salesOrderRec.findSublistLineWithValue({
+                        sublistId: 'item',
+                        fieldId: 'item',
+                        value: itemID
+                    });
+        
+                    salesOrderRec.selectLine({
+                        sublistId: 'item',
+                        line: lineNum
+                    });
+                         
+                    salesOrderRec.setCurrentSublistValue({
+                        sublistId: 'item',
+                        fieldId: 'custcol_bsp_isg_transmission_result',
+                        value: reasonFailed
+                    });
+                    salesOrderRec.commitLine({
+                        sublistId: "item",
+                    });
+                }
+                log.debug("updateSOLines", `Sales Order updated`);
+            }     
+        }
+        return salesOrderRec;
     }
 
     return {
         updateSOLinesPartiallyAcknowledged: updateSOLinesPartiallyAcknowledged,
         updateSOLinesPartiallyShipped: updateSOLinesPartiallyShipped,
-        updateSOItemPORates: updateSOItemPORates
+        updateSOItemPORates: updateSOItemPORates,
+        updateSOItemsFailed: updateSOItemsFailed
 	};
 });

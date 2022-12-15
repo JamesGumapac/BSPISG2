@@ -89,6 +89,14 @@
 
         let ackPOlines = getPOlines(jsonObjResponse);
         let soID = purchaseOrderRec.getValue("createdfrom");
+        let salesOrderRec = null;
+        if(soID){
+            salesOrderRec = record.load({
+                type: record.Type.SALES_ORDER,
+                id: parseInt(soID),
+                isDynamic: true
+            });
+        }
         let vendor = purchaseOrderRec.getValue("entity");
         let account = purchaseOrderRec.getValue("custbody_bsp_isg_transmission_acct_num");
 
@@ -100,6 +108,7 @@
             sublistId: 'item'
         });
 
+        let soLinesFailed = [];
         let poRates = [];
         let linesPartiallyAcknowledged = [];
         for(let i = (itemCount - 1); i >= 0; i--){
@@ -205,6 +214,12 @@
                     log.debug("processPOline", `Price plan updated`); 
                 }
             }else {
+                let itemID = purchaseOrderRec.getSublistValue({
+                    sublistId: 'item',
+                    fieldId: 'item',
+                    line: i
+                });
+                soLinesFailed.push({itemID: itemID, reasonFailed: `Acknowledgment failed: ${ackStatusReason}`});
                 log.debug("processPOline", `Item Rejected`);
                 purchaseOrderRec.removeLine({
                     sublistId: 'item',
@@ -225,12 +240,19 @@
         }
         
         if(poRates.length > 0){
-            BSP_SOUtil.updateSOItemPORates(soID, poRates);
+            salesOrderRec = BSP_SOUtil.updateSOItemPORates(salesOrderRec, poRates);
+        }
+
+        if(soLinesFailed.length > 0){
+            salesOrderRec = BSP_SOUtil.updateSOItemsFailed(salesOrderRec, soLinesFailed);
         }
 
         if(linesPartiallyAcknowledged.length > 0){
-            BSP_SOUtil.updateSOLines(soID, linesPartiallyAcknowledged);
+            salesOrderRec = BSP_SOUtil.updateSOLinesPartiallyAcknowledged(salesOrderRec, linesPartiallyAcknowledged);
         }
+        salesOrderRec.save();
+        log.debug("updateSO", `Sales Order updated`);
+
         return processStatus;
     }    
 

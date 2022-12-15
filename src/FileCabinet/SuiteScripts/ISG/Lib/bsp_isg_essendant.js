@@ -73,6 +73,15 @@
 
         let ackPOlines = getPOlines(jsonObjResponse);
         let soID = purchaseOrderRec.getValue("createdfrom");
+        let salesOrderRec = null;
+        if(soID){
+            salesOrderRec = record.load({
+                type: record.Type.SALES_ORDER,
+                id: parseInt(soID),
+                isDynamic: true
+            });
+        }
+
         let vendor = purchaseOrderRec.getValue("entity");
         let account = purchaseOrderRec.getValue("custbody_bsp_isg_transmission_acct_num");
 
@@ -84,6 +93,7 @@
             sublistId: 'item'
         });
 
+        let soLinesFailed = [];
         let poRates = [];
         let linesPartiallyAcknowledged = [];
         for(let i = (itemCount - 1); i >= 0; i--){
@@ -217,6 +227,12 @@
                     log.debug("processPOline", `Price plan updated`);             
                 }
             }else {
+                let itemID = purchaseOrderRec.getSublistValue({
+                    sublistId: 'item',
+                    fieldId: 'item',
+                    line: i
+                });
+                soLinesFailed.push({itemID: itemID, reasonFailed: `Acknowledgment failed: ${ackStatusReason}`});
                 log.debug("processPOline", `Item Rejected`);
                 purchaseOrderRec.removeLine({
                     sublistId: 'item',
@@ -237,13 +253,18 @@
         }
 
         if(poRates.length > 0){
-            BSP_SOUtil.updateSOItemPORates(soID, poRates);
+            salesOrderRec = BSP_SOUtil.updateSOItemPORates(salesOrderRec, poRates);
+        }
+
+        if(soLinesFailed.length > 0){
+            salesOrderRec = BSP_SOUtil.updateSOItemsFailed(salesOrderRec, soLinesFailed);
         }
         
         if(linesPartiallyAcknowledged.length > 0){
-            BSP_SOUtil.updateSOLinesPartiallyAcknowledged(soID, linesPartiallyAcknowledged);
+            salesOrderRec = BSP_SOUtil.updateSOLinesPartiallyAcknowledged(salesOrderRec, linesPartiallyAcknowledged);
         }
-
+        salesOrderRec.save();
+        log.debug("updateSO", `Sales Order updated`);
         return processStatus;
     }
 
@@ -435,6 +456,15 @@
             sublistId: 'item'
         });
 
+        let salesOrderRec = null;
+        if(soID){
+            salesOrderRec = record.load({
+                type: record.Type.SALES_ORDER,
+                id: parseInt(soID),
+                isDynamic: true
+            });
+        }
+
         let linesPartiallyShipped = [];
         let itemsNotShipped = [];
         for(let i = (itemCount - 1); i >= 0; i--){
@@ -501,7 +531,9 @@
             itemFulfillmentRec.setValue('shipstatus', status);
             let recID = itemFulfillmentRec.save();
             resultObj.itemFulfillmentRecID = recID;    
-            BSP_SOUtil.updateSOLinesPartiallyShipped(soID, linesPartiallyShipped);  
+            salesOrderRec = BSP_SOUtil.updateSOLinesPartiallyShipped(salesOrderRec, linesPartiallyShipped); 
+            salesOrderRec.save();
+            log.debug("updateSO", `Sales Order updated`);
             BSP_POutil.updatePOlines(poID, linesPartiallyShipped, itemsNotShipped);
         }catch(error){
             resultObj.status = "Error";
@@ -538,6 +570,15 @@
         let itemCount = itemReceiptRec.getLineCount({
             sublistId: 'item'
         });
+
+        let salesOrderRec = null;
+        if(soID){
+            salesOrderRec = record.load({
+                type: record.Type.SALES_ORDER,
+                id: parseInt(soID),
+                isDynamic: true
+            });
+        }
 
         let linesPartiallyShipped = [];
         let itemsNotShipped = [];
@@ -596,7 +637,9 @@
 
             let recID = itemReceiptRec.save();
             resultObj.itemReceiptRecID = recID;  
-            BSP_SOUtil.updateSOLinesPartiallyShipped(soID, linesPartiallyShipped);    
+            salesOrderRec = BSP_SOUtil.updateSOLinesPartiallyShipped(salesOrderRec, linesPartiallyShipped); 
+            salesOrderRec.save();
+            log.debug("updateSO", `Sales Order updated`);
             BSP_POutil.updatePOlines(poID, linesPartiallyShipped, itemsNotShipped);
         }catch(error){
             resultObj.status = "Error";
