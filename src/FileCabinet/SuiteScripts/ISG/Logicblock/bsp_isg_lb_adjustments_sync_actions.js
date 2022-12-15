@@ -29,28 +29,48 @@ function(record, dialog, message, url, https) {
     function cancelOrderLB(params){
         alert("Sending Cancellation. Please wait...");
         let suiteletURL = url.resolveScript({
-            scriptId: "customscript_bsp_isg_sl_lb_cancel_order",
-            deploymentId: "customdeploy_bsp_isg_sl_lb_cancel_order",
+            scriptId: "customscript_bsp_isg_sl_lb_sync_order",
+            deploymentId: "customdeploy_bsp_isg_sl_lb_sync_order",
             returnExternalUrl: true,
         });
         let response = https.post({
             url: suiteletURL,
             body: {
                 salesOrderId: params.salesOrderId,
-                logicblockId: params.logicblockId
+                logicblockId: params.logicblockId,
+                isCancellation: true
             },
         });
 
         let returnMessage = JSON.parse(response.body);
-        console.log({
-            title: "return Message",
-            details: JSON.stringify(returnMessage),
-        })
         showResponseToUser(returnMessage);
         location.reload();
     }
 
-    
+    /**
+     * Client side function to call Sync Order
+     * @param {*} params 
+     */
+    function syncOrderLB(params){
+        alert("Syncronizing. Please wait...");
+        let suiteletURL = url.resolveScript({
+            scriptId: "customscript_bsp_isg_sl_lb_sync_order",
+            deploymentId: "customdeploy_bsp_isg_sl_lb_sync_order",
+            returnExternalUrl: true,
+        });
+        let response = https.post({
+            url: suiteletURL,
+            body: {
+                salesOrderId: params.salesOrderId,
+                logicblockId: params.logicblockId,
+                isCancellation: false
+            },
+        });
+
+        let returnMessage = JSON.parse(response.body);
+        //showResponseToUser(returnMessage);
+        location.reload();
+    }    
 
     /**
     * Show response to the user if the was successfully uploaded or not
@@ -80,7 +100,8 @@ function(record, dialog, message, url, https) {
 
     return {
         pageInit: pageInit,
-        cancelOrderLB: cancelOrderLB
+        cancelOrderLB: cancelOrderLB,
+        syncOrderLB: syncOrderLB
     };
     
 });
