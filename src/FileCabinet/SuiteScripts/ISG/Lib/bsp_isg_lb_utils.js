@@ -37,6 +37,7 @@
     creditCard: "Credit Card",
     purchaseOrder: "Purchase Order",
     excludeFromTransmission: 3,
+    manualTransmission: 2
   });
 
   const OUTBOUND_QUEUE_OPERATIONS = Object.freeze({
@@ -217,7 +218,9 @@
         "custrecord_bsp_lb_avatax",
         "custrecord_bsp_isg_taxable",
         "custrecord_bsp_lb_cancel_order_soap_act",
-        "custrecord_bsp_isg_lb_cancel_orderstatus"
+        "custrecord_bsp_isg_lb_cancel_orderstatus",
+        "custrecord_bsp_isg_exclude_cb_items",
+        "custrecord_bsp_isg_min_qty_required"
       ],
     });
     log.debug("settings on utils", settings);

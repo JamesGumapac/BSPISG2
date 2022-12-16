@@ -300,8 +300,10 @@ define([
       itemRecordsResult,
       shipmentType,
       taxable,
-      aopdChecker
+      aopdChecker,
+      settings
     );
+
     /**
      * Default values
      */
@@ -312,16 +314,18 @@ define([
       objFields.order.Id,
       "Order"
     );
+   
+    /*--- Create Item Fulfillment for non-backorder Items   ---*/
     try{
       let itemSOCount = transactionRecord.getLineCount({
         sublistId: 'item' 
-    });
+      });
 
-    let newItemF;
-    let backordered;
-    let backorderedIF;
-    let itemFulfillmentRec;
-    let backorderCount = 0;
+      let newItemF;
+      let backordered;
+      let backorderedIF;
+      let itemFulfillmentRec;
+      let backorderCount = 0;
 
       for(i=0; i<itemSOCount; i++){
         backordered = transactionRecord.getSublistValue({sublistId: 'item', fieldId: 'backordered', line: i});
@@ -329,30 +333,30 @@ define([
           backorderCount++;
         }      
       }
-        if(itemSOCount > backorderCount){
-            itemFulfillmentRec = record.transform({
+        
+      if(itemSOCount > backorderCount){
+          itemFulfillmentRec = record.transform({
             fromType: record.Type.SALES_ORDER,
             fromId: parseInt(newRecordId),
             toType: record.Type.ITEM_FULFILLMENT,
           }); 
         
-        let itemIFCount = itemFulfillmentRec.getLineCount({
-            sublistId: 'item' 
-        });
-        for(i=0; i<itemIFCount; i++){
-          backorderedIF = transactionRecord.getSublistValue({sublistId: 'item', fieldId: 'backordered', line: i});
-          log.debug('backorderedIF', backorderedIF);
-          if(backorderedIF>0){
-            itemFulfillmentRec.setSublistValue({
-              sublistId: 'item',
-              fieldId: 'itemreceive',
-              line: i,
-              value: false
+          let itemIFCount = itemFulfillmentRec.getLineCount({
+              sublistId: 'item' 
           });
+          for(i=0; i<itemIFCount; i++){
+            backorderedIF = transactionRecord.getSublistValue({sublistId: 'item', fieldId: 'backordered', line: i});
+            if(backorderedIF>0){
+              itemFulfillmentRec.setSublistValue({
+                sublistId: 'item',
+                fieldId: 'itemreceive',
+                line: i,
+                value: false
+              });
+            }
           }
-        }
       
-         newItemF = itemFulfillmentRec.save();
+          newItemF = itemFulfillmentRec.save();
       }
 
     }catch(error){
@@ -403,7 +407,8 @@ define([
     itemRecordsResult,
     shipmentType,
     taxable,
-    aopdChecker
+    aopdChecker,
+    settings
   ) {
     let lineItems = [];
     if (
@@ -449,17 +454,11 @@ define([
             });
           }
 
-          let excludeItemFromTransmission = BSPLBItems.getItemField(
-            itemRecId,
-            "custitem_bsp_isg_excl_from_auto_transm"
-          );
-
-          if (excludeItemFromTransmission || aopdChecker) {
-            transactionRecord.setCurrentSublistValue({
-              sublistId: strSublistID,
-              fieldId: "custcol_bsp_isg_exclude_auto_transm",
-              value: BSPLBUtils.constants().excludeFromTransmission,
-            });
+          /*--- Exclude Carton Buy Eligible Items   ---*/
+          let excludeCartonBuyEligibleItems = settings.custrecord_bsp_isg_exclude_cb_items;
+          let minQtyRequired = 0
+          if(excludeCartonBuyEligibleItems == true){
+            minQtyRequired = (!isNaN(parseInt(settings.custrecord_bsp_isg_min_qty_required))) ? parseInt(settings.custrecord_bsp_isg_min_qty_required) : 0;             
           }
 
           for (const fieldMapping of objMappingFields.lineFields) {
@@ -523,6 +522,32 @@ define([
               }
             }
           }
+
+          if(excludeCartonBuyEligibleItems == true){
+            let qty = transactionRecord.getCurrentSublistValue({sublistId: 'item', fieldId: 'quantity'});
+            let qtyOnHand = transactionRecord.getCurrentSublistValue({sublistId: 'item', fieldId: 'quantityavailable'});
+            let backorderedQty = (qtyOnHand > qty) ? 0 : Math.abs(qtyOnHand - qty);
+            if(backorderedQty > 0 && backorderedQty >= minQtyRequired){
+              transactionRecord.setCurrentSublistValue({
+                sublistId: 'item',
+                fieldId: 'custcol_bsp_isg_exclude_auto_transm',
+                value: BSPLBUtils.constants().manualTransmission
+              });
+            }
+          }
+          
+          let excludeItemFromTransmission = BSPLBItems.getItemField(
+            itemRecId,
+            "custitem_bsp_isg_excl_from_auto_transm"
+          );
+          if (excludeItemFromTransmission || aopdChecker) {
+            transactionRecord.setCurrentSublistValue({
+              sublistId: strSublistID,
+              fieldId: "custcol_bsp_isg_exclude_auto_transm",
+              value: BSPLBUtils.constants().excludeFromTransmission,
+            });
+          }
+
           transactionRecord.commitLine({
             sublistId: strSublistID,
           });
