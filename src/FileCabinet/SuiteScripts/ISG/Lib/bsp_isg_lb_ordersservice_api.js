@@ -227,6 +227,91 @@
         return cancelOrderResult;
     }
 
+    /**
+     * Add new line Items in LB Order
+     * @param {*} integrationSettingsRecID 
+     * @param {*} newLinesToAdd 
+     * @returns 
+     */
+    function addLineItemsToOrder(integrationSettingsRecID, newLinesToAdd){
+        let result = [];
+        let settings = BSPLBUtils.getIntegrationSettings(integrationSettingsRecID);
+        let loginData = BSPLBLoginAPI.login(settings);
+        let serviceURL = settings.custrecord_bsp_lb_orders_service_url;
+        let soapGetOrdersAction = settings.custrecord_bsp_lb_add_line_item;
+
+        for (let index = 0; index < newLinesToAdd.length; index++) {
+            const newItem = newLinesToAdd[index];
+            requestParams = {
+                logicblockId: newItem.logicblockId,
+                sku: newItem.productSKU,
+                quantity: newItem.productQty
+            }
+            let requestBodyXML = addLineItemXMLStrRequest(loginData, requestParams);
+            let logicBlockServerResponse = BSPLBServiceAPI.runService(serviceURL, requestBodyXML, soapGetOrdersAction);
+
+            if(!BSPLBUtils.isEmpty(logicBlockServerResponse)){
+                result.push({
+                    sku: newItem.productSKU,
+                    lbItemID: logicBlockServerResponse.AddLineItemBySkuResponse.AddLineItemBySkuResult
+                });
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Update line Items in Logicblock Order
+     * @param {*} integrationSettingsRecID 
+     * @param {*} logicblockId 
+     * @param {*} updatedDeletedLines 
+     * @returns 
+     */
+    function updateLineItemsInOrder(integrationSettingsRecID, logicblockId, updatedDeletedLines){
+        let result = null;
+        let settings = BSPLBUtils.getIntegrationSettings(integrationSettingsRecID);
+        let loginData = BSPLBLoginAPI.login(settings);
+        let serviceURL = settings.custrecord_bsp_lb_orders_service_url;
+        let soapGetOrdersAction = settings.custrecord_bsp_lb_update_line_items;
+        requestParams = {
+            logicblockId: logicblockId,
+            updatedDeletedLines: updatedDeletedLines
+        }
+        let requestBodyXML = updateLineItemsXMLStrRequest(loginData, requestParams);
+        let logicBlockServerResponse = BSPLBServiceAPI.runService(serviceURL, requestBodyXML, soapGetOrdersAction);
+        if(!BSPLBUtils.isEmpty(logicBlockServerResponse)){
+            result = logicBlockServerResponse.UpdateLineItemsResponse.UpdateLineItemsResult;
+        }
+        return result;
+    }
+
+    /**
+     * Get order line items by Order ID from Logicblock
+     * @param {*} integrationSettingsRecID 
+     * @param {*} logicblockId 
+     * @returns 
+     */
+    function getOrderLineItems(integrationSettingsRecID, logicblockId){
+        let lbOrderLineItemsResult = [];
+        let settings = BSPLBUtils.getIntegrationSettings(integrationSettingsRecID);
+        let loginData = BSPLBLoginAPI.login(settings);
+        let serviceURL = settings.custrecord_bsp_lb_orders_service_url;
+        let soapGetOrdersAction = settings.custrecord_bsp_lb_get_order_by_id;
+        requestParams = {
+            logicblockId: logicblockId
+        }
+        let requestBodyXML = getOrderByIdXMLStrRequest(loginData, requestParams);
+        let logicBlockServerResponse = BSPLBServiceAPI.runService(serviceURL, requestBodyXML, soapGetOrdersAction);
+        if(!BSPLBUtils.isEmpty(logicBlockServerResponse)){
+            let lbLineItems = logicBlockServerResponse.GetOrderByIdResponse.GetOrderByIdResult.LineItems.LineItem;
+            if (lbLineItems.length && lbLineItems.length > 0) {
+                lbOrderLineItemsResult = lbLineItems;
+            } else {
+                lbOrderLineItemsResult.push(lbLineItems);
+            }
+        }
+        return lbOrderLineItemsResult;
+    }
 
     /**
      * Get Paramters for the Logicblock Service request
@@ -251,6 +336,30 @@
             pageSize: pageSize,
             canceledOrders: canceledOrders
         };
+    }
+
+    /**
+     * Body of Get Order by ID Request
+     * @param {*} loginData 
+     * @param {*} logicBlockOrderID 
+     * @returns 
+     */
+    function getOrderByIdXMLStrRequest(loginData, requestParams){
+        return `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/" xmlns:log="http://schemas.datacontract.org/2004/07/Logicblock.Commerce.Domain">
+                <soapenv:Header/>
+                <soapenv:Body>
+                <tem:GetOrderById>
+                    <tem:token>
+                        <log:ApiId>${loginData.ApiId}</log:ApiId>
+                        <log:ExpirationDateUtc>${loginData.ExpirationDateUtc}</log:ExpirationDateUtc>
+                        <log:Id>${loginData.Id}</log:Id>
+                        <log:IsExpired>${loginData.IsExpired}</log:IsExpired>
+                        <log:TokenRejected>${loginData.TokenRejected}</log:TokenRejected>
+                    </tem:token>
+                    <tem:orderId>${requestParams.logicblockId}</tem:orderId>
+                </tem:GetOrderById>
+                </soapenv:Body>
+            </soapenv:Envelope>`;
     }
 
     /**
@@ -453,6 +562,69 @@
             </soapenv:Envelope>`;
     }
 
+    /**
+     *  Body of add lineItem into Order SOAP Action Request
+     * @param {*} loginData 
+     * @param {*} paymentData 
+     * @returns 
+     */
+    function addLineItemXMLStrRequest(loginData, requestParams){
+        return `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/" xmlns:log="http://schemas.datacontract.org/2004/07/Logicblock.Commerce.Domain">
+                <soapenv:Header/>
+                <soapenv:Body>
+                <tem:AddLineItemBySku>
+                    <tem:token>
+                        <log:ApiId>${loginData.ApiId}</log:ApiId>
+                        <log:ExpirationDateUtc>${loginData.ExpirationDateUtc}</log:ExpirationDateUtc>
+                        <log:Id>${loginData.Id}</log:Id>
+                        <log:IsExpired>${loginData.IsExpired}</log:IsExpired>
+                        <log:TokenRejected>${loginData.TokenRejected}</log:TokenRejected>
+                    </tem:token>
+                    <tem:orderId>${requestParams.logicblockId}</tem:orderId>
+                    <tem:sku>${requestParams.sku}</tem:sku>
+                    <tem:quantity>${requestParams.quantity}</tem:quantity>
+                </tem:AddLineItemBySku>
+                </soapenv:Body>
+            </soapenv:Envelope>`;
+    }
+
+    /**
+     *  Body of update lineItems in Order SOAP Action Request
+     * @param {*} loginData 
+     * @param {*} paymentData 
+     * @returns 
+     */  
+    function updateLineItemsXMLStrRequest(loginData, requestParams){
+        let lineItems = ``;
+        requestParams.updatedDeletedLines.forEach(item => {
+            lineItems += `<log:LineItem>
+            <log:Id>${item.lbItemID}</log:Id>
+            <log:Quantity>${item.productQty}</log:Quantity>
+            </log:LineItem>`
+        });
+    
+        let xmlBodyRequest = `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/" xmlns:log="http://schemas.datacontract.org/2004/07/Logicblock.Commerce.Domain">
+        <soapenv:Header/>
+        <soapenv:Body>
+        <tem:UpdateLineItems>
+        <tem:token>
+        <log:ApiId>${loginData.ApiId}</log:ApiId>
+        <log:ExpirationDateUtc>${loginData.ExpirationDateUtc}</log:ExpirationDateUtc>
+        <log:Id>${loginData.Id}</log:Id>
+        <log:IsExpired>${loginData.IsExpired}</log:IsExpired>
+        <log:TokenRejected>${loginData.TokenRejected}</log:TokenRejected>
+        </tem:token>
+        <tem:orderId>${requestParams.logicblockId}</tem:orderId>
+        <tem:lineItems>
+        ${lineItems}
+        </tem:lineItems>
+        </tem:UpdateLineItems>
+        </soapenv:Body>
+        </soapenv:Envelope>`;
+
+        return xmlBodyRequest;
+    }
+
     return {
         getOrders: getOrders,
         createPackage: createPackage,
@@ -460,6 +632,9 @@
         getOrderPayments: getOrderPayments,
         capturePayment: capturePayment,
         addPOPayment: addPOPayment,
-        cancelOrder: cancelOrder
+        cancelOrder: cancelOrder,
+        getOrderLineItems: getOrderLineItems,
+        addLineItemsToOrder: addLineItemsToOrder,
+        updateLineItemsInOrder: updateLineItemsInOrder
     };
 });
