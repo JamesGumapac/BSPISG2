@@ -220,10 +220,12 @@
         "custrecord_bsp_lb_cancel_order_soap_act",
         "custrecord_bsp_isg_lb_cancel_orderstatus",
         "custrecord_bsp_isg_exclude_cb_items",
-        "custrecord_bsp_isg_min_qty_required"
+        "custrecord_bsp_isg_min_qty_required",
+        "custrecord_bsp_lb_get_order_by_id",
+        "custrecord_bsp_lb_update_line_items",
+        "custrecord_bsp_lb_add_line_item"
       ],
     });
-    log.debug("settings on utils", settings);
     return settings;
   }
 

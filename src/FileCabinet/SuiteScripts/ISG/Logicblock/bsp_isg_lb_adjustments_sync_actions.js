@@ -68,7 +68,7 @@ function(record, dialog, message, url, https) {
         });
 
         let returnMessage = JSON.parse(response.body);
-        //showResponseToUser(returnMessage);
+        showResponseToUser(returnMessage);
         location.reload();
     }    
 
