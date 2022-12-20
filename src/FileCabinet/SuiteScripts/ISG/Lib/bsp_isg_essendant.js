@@ -456,15 +456,6 @@
             sublistId: 'item'
         });
 
-        let salesOrderRec = null;
-        if(soID){
-            salesOrderRec = record.load({
-                type: record.Type.SALES_ORDER,
-                id: parseInt(soID),
-                isDynamic: true
-            });
-        }
-
         let linesPartiallyShipped = [];
         let itemsNotShipped = [];
         for(let i = (itemCount - 1); i >= 0; i--){
@@ -519,21 +510,56 @@
 
         try{
             let trackingID = getShipmentHeaderFieldValue(jsonObjResponse, "TrackingID");
+            let weightMeasure = getShipmentHeaderFieldValue(jsonObjResponse, "GrossWeightMeasure");
+
             let containerID = getShipmentHeaderFieldValue(jsonObjResponse, "ContainerID");
             let partyID = getShipmentHeaderFieldValue(jsonObjResponse, "PartyIDs");
             let partyName = getShipmentHeaderFieldValue(jsonObjResponse, "Name");
             
-            itemFulfillmentRec.setValue('custbody_bsp_isg_asn_tracking_id', trackingID);
+            itemFulfillmentRec.setSublistValue({
+                sublistId: "package", 
+                fieldId: "packageweight", 
+                line: 0,
+                value: weightMeasure
+            });
+
+            itemFulfillmentRec.setSublistValue({
+                sublistId: "package", 
+                fieldId: "packagetrackingnumber", 
+                line: 0,
+                value: trackingID
+            });
+
             itemFulfillmentRec.setValue('custbody_bsp_isg_asn_container_id', containerID);
             itemFulfillmentRec.setValue('custbody_bsp_isg_asn_party_id', partyID);
             itemFulfillmentRec.setValue('custbody_bsp_isg_asn_party_name', partyName);
 
+            if(partyID.indexOf("ups") != -1 || partyID.indexOf("UPS") != -1){
+                itemFulfillmentRec.setValue({ fieldId: "shipcarrier", value: "ups" });
+            }else{
+                itemFulfillmentRec.setValue({ fieldId: "shipcarrier", value: "nonups" });
+            }
+                
             itemFulfillmentRec.setValue('shipstatus', status);
-            let recID = itemFulfillmentRec.save();
+            let recID = itemFulfillmentRec.save({
+                enableSourcing: true,
+                ignoreMandatoryFields: true
+            });
             resultObj.itemFulfillmentRecID = recID;    
-            salesOrderRec = BSP_SOUtil.updateSOLinesPartiallyShipped(salesOrderRec, linesPartiallyShipped); 
-            salesOrderRec.save();
-            log.debug("updateSO", `Sales Order updated`);
+
+            if(linesPartiallyShipped.length > 0){
+                let salesOrderRec = null;
+                if(soID){
+                    salesOrderRec = record.load({
+                        type: record.Type.SALES_ORDER,
+                        id: parseInt(soID),
+                        isDynamic: true
+                    });
+                }
+                salesOrderRec = BSP_SOUtil.updateSOLinesPartiallyShipped(salesOrderRec, linesPartiallyShipped); 
+                salesOrderRec.save();
+                log.debug("updateSO", `Sales Order updated`);
+            }          
             BSP_POutil.updatePOlines(poID, linesPartiallyShipped, itemsNotShipped);
         }catch(error){
             resultObj.status = "Error";
@@ -544,6 +570,31 @@
         
         return resultObj;
     }
+
+    function searchShippingCarrier(shippingMethodId) {
+        let results = [];   
+        var shipitemSearchObj = search.create({
+          type: "shipitem",
+          filters: [["externalid", "anyof", shippingMethodId]],
+          columns: [
+            search.createColumn({
+              name: "itemid",
+              sort: search.Sort.ASC,
+              label: "Name",
+            }),
+            search.createColumn({ name: "internalid", label: "Internal ID" }),
+          ],
+        });
+    
+        shipitemSearchObj.run().each(function (result) {
+          let itemid = result.getValue({ name: "itemid" });
+          let internalid = result.getValue({ name: "internalid" });
+          results.push({ itemid, internalid });
+        });
+    
+        return results;
+      }
+
 
     /**
      * The function takes in an item receipt record, a JSON object response from the API call, a PO ID, a
@@ -570,15 +621,6 @@
         let itemCount = itemReceiptRec.getLineCount({
             sublistId: 'item'
         });
-
-        let salesOrderRec = null;
-        if(soID){
-            salesOrderRec = record.load({
-                type: record.Type.SALES_ORDER,
-                id: parseInt(soID),
-                isDynamic: true
-            });
-        }
 
         let linesPartiallyShipped = [];
         let itemsNotShipped = [];
@@ -635,11 +677,24 @@
             itemReceiptRec.setValue('custbody_bsp_isg_asn_party_id', partyID);
             itemReceiptRec.setValue('custbody_bsp_isg_asn_party_name', partyName);
 
-            let recID = itemReceiptRec.save();
+            let recID = itemReceiptRec.save({
+                enableSourcing: true,
+                ignoreMandatoryFields: true
+            });
             resultObj.itemReceiptRecID = recID;  
-            salesOrderRec = BSP_SOUtil.updateSOLinesPartiallyShipped(salesOrderRec, linesPartiallyShipped); 
-            salesOrderRec.save();
-            log.debug("updateSO", `Sales Order updated`);
+            if(linesPartiallyShipped.length > 0){
+                let salesOrderRec = null;
+                if(soID){
+                    salesOrderRec = record.load({
+                        type: record.Type.SALES_ORDER,
+                        id: parseInt(soID),
+                        isDynamic: true
+                    });
+                }
+                salesOrderRec = BSP_SOUtil.updateSOLinesPartiallyShipped(salesOrderRec, linesPartiallyShipped); 
+                salesOrderRec.save();
+                log.debug("updateSO", `Sales Order updated`);
+            }
             BSP_POutil.updatePOlines(poID, linesPartiallyShipped, itemsNotShipped);
         }catch(error){
             resultObj.status = "Error";
@@ -667,6 +722,8 @@
                 return  jsonObjResponse.DataArea.Shipment.ShipmentUnit.CarrierParty.PartyIDs["ID"];
             case "Name": 
                 return  jsonObjResponse.DataArea.Shipment.ShipmentUnit.CarrierParty.Name;
+            case "GrossWeightMeasure":
+                return jsonObjResponse.DataArea.Shipment.ShipmentHeader.GrossWeightMeasure;
         }
         return null;
     }
