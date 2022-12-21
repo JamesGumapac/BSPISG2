@@ -239,6 +239,12 @@
             BSP_POutil.deletePO(poID);
         }
         
+        if(isMainAccount(account)){
+            if(poRates.length > 0){
+                updateItemVendorListPrice(poRates, vendor);
+            }
+        }    
+
         if(poRates.length > 0){
             salesOrderRec = BSP_SOUtil.updateSOItemPORates(salesOrderRec, poRates);
         }
@@ -255,6 +261,30 @@
 
         return processStatus;
     }    
+
+    function isMainAccount(account){
+        const tradingPartnerSearchObj = search.create({
+            type: "customrecord_bsp_isg_trading_partner",
+            filters:
+            [
+               ["name","is","SPR"]
+            ],
+            columns:
+            [
+               search.createColumn({name: "custrecord_bsp_isg_main_account", label: "Main Account"})
+            ]
+        });
+        let mainAccount = null;
+        tradingPartnerSearchObj.run().each(function(result){
+            mainAccount = result.getValue("custrecord_bsp_isg_main_account");
+            return true;
+        });
+
+        if(mainAccount && mainAccount == account)
+            return true;
+        
+        return false;
+    }
 
     /**
      * It returns the value of the field parameter from the jsonObjResponse parameter.
@@ -357,6 +387,45 @@
             return true;
         });
         return planID;
+    }
+
+    function updateItemVendorListPrice(poRates, vendor){
+        for (let index = 0; index < poRates.length; index++) {
+            const element = poRates[index];
+            let itemID = element.itemID;
+            let rate = element.rate;
+
+            let itemRec = record.load({
+                type: record.Type.INVENTORY_ITEM,
+                id: itemID,
+                isDynamic: true,
+            });
+            let vendorLine = itemRec.findSublistLineWithValue({
+                sublistId: 'itemvendor',
+                fieldId: 'vendor',
+                value: vendor
+            });
+            if(vendorLine >= 0){
+                itemRec.selectLine({
+                    sublistId: 'itemvendor',
+                    line: vendorLine
+                });
+                itemRec.setCurrentSublistValue({
+                    sublistId: 'itemvendor',
+                    fieldId: 'purchaseprice',
+                    value: rate,
+                    ignoreFieldChange: true
+                });
+                itemRec.commitLine({
+                    sublistId: 'itemvendor'
+                });
+            }
+            itemRec.save({
+                enableSourcing: true,
+                ignoreMandatoryFields: true
+            });           
+        }
+        log.debug("updateItemVendorListPrice","Vendor list prices updated on each Item Record.");
     }
 
     /************************************************************
