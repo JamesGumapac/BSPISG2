@@ -250,6 +250,7 @@
         if(tradingPartner == CONTANTS.spr){
             result = SPR.processInvoice(jsonObjResponse);
         }
+
         return result;
     }
 
@@ -268,6 +269,7 @@
         if(tradingPartner == CONTANTS.spr){
             result = SPR.processASN(jsonObjResponse);
         }
+
         return result;
     }
 

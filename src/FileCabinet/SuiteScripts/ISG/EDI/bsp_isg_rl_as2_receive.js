@@ -7,20 +7,15 @@
     'N/record', 
     'N/search', 
     '../Lib/bsp_isg_as2_service.js', 
-    '../Lib/bsp_isg_trading_partners.js', 
-    '../Lib/bsp_isg_transmitions_util.js',
-    '../Lib/bsp_isg_purchase_orders.js',
-    '../Lib/bsp_isg_edi_settings.js'],
+    '../Lib/bsp_isg_trading_partners.js'],
  /**
  * @param{runtime} runtime
  * @param{record} record
  * @param{search} search
  * @param{BSP_AS2Service} BSP_AS2Service
  * @param{BSPTradingParnters} BSPTradingParnters
- * @param{BSPTransmitionsUtil} BSPTransmitionsUtil
- * @param{BSP_POutil} BSP_POutil
  */
- (runtime, record, search, BSP_AS2Service, BSPTradingParnters, BSPTransmitionsUtil, BSP_POutil, BSP_EDISettingsUtil) => {
+ (runtime, record, search, BSP_AS2Service, BSPTradingParnters) => {
 
     /**
      * Defines the function that is executed when a POST request is sent to a RESTlet.
@@ -36,7 +31,6 @@
          let response = null;
          
          try{
-             let result = null;
              log.debug(functionName, `Request Body:  ${JSON.stringify(requestBody)}`);
              let decodedXMLresponse = BSP_AS2Service.decodeStringContent(requestBody.Payload.Content);
 
@@ -44,65 +38,40 @@
              log.debug(functionName, `${JSON.stringify(jsonObjResponse)}`);  
                     
              if(isPOAcknowledgment(jsonObjResponse)){
-                /**
-                 * Check Trading partner Origin
-                */
-                result = null;
+
                 if(isAcknowledgmentSPR(jsonObjResponse)){
-                    result = BSPTradingParnters.processPOAck(jsonObjResponse, BSPTradingParnters.constants().spr);
+                    log.debug(functionName, `This is an Acknowledgment from SPR`);
+                    createAS2incomingMessageRecord(BSPTradingParnters.constants().spr, "Acknowledgment", jsonObjResponse);
                 }else if(isAcknowledgmentEssendant(jsonObjResponse)){
-                    result = BSPTradingParnters.processPOAck(jsonObjResponse, BSPTradingParnters.constants().essendant);
+                    log.debug(functionName, `This is an Acknowledgment from Essendant`);
+                    createAS2incomingMessageRecord(BSPTradingParnters.constants().essendant, "Acknowledgment", jsonObjResponse);
                 }
                 
-                /**
-                 * Check Transmission Queue for automatic PO Transmissions only if Wait for acknowledgment feature is enabled
-                */
-                let environment = runtime.envType;
-                let ediSettings = BSP_EDISettingsUtil.getEDIsettings(environment);
-                if(ediSettings.waitForAcknowledgment == true){              
-                    if(result && result.queueID){
-                        BSPTransmitionsUtil.checkTransmissionQueue(result.queueID);
-                    }
-                }
-                            
-                /**
-                 * Update Transmission Status for Manual POs
-                */
-                if(result && !result.queueID && result.status == "Error"){
-                    BSP_POutil.updatePOtransmissionStatus(result.poID, BSP_POutil.transmitionPOStatus().acknowledgmentFailed);
-                    log.debug(functionName, `Error in Manual PO Acknowledgment`);
-                }
-
              }else if(isShipmentNotification(jsonObjResponse)){
 
-                result = null;
                 if(isShipmentNotificationSPR(jsonObjResponse)){
                     log.debug(functionName, `This is a Shipment Notification from SPR`);
-                    result = BSPTradingParnters.processASN(jsonObjResponse, BSPTradingParnters.constants().spr);
+                    createAS2incomingMessageRecord(BSPTradingParnters.constants().spr, "ASN", jsonObjResponse);
                 }else if(isShipmentNotificationEssendant(jsonObjResponse)){
                     log.debug(functionName, `This is a Shipment Notification from Essendant`);
-                    result = BSPTradingParnters.processASN(jsonObjResponse, BSPTradingParnters.constants().essendant);
-                }      
-                log.debug(functionName, "Shipment Notification: " + JSON.stringify(result));
+                    createAS2incomingMessageRecord(BSPTradingParnters.constants().essendant, "ASN", jsonObjResponse);
+                }
 
              }else if(isInvoice(jsonObjResponse)){
 
-                result = null;
                 if(isInvoiceSPR(jsonObjResponse)){
                     log.debug(functionName, `This is an Invoice from SPR`);
-                    result = BSPTradingParnters.processInvoice(jsonObjResponse, BSPTradingParnters.constants().spr);
+                    createAS2incomingMessageRecord(BSPTradingParnters.constants().spr, "Invoice", jsonObjResponse);
                 }else if(isInvoiceEssendant(jsonObjResponse)){
                     log.debug(functionName, `This is an Invoice from Essendant`);
-                    result = BSPTradingParnters.processInvoice(jsonObjResponse, BSPTradingParnters.constants().essendant);
-                }      
-                log.debug(functionName, "Invoice processed: " + JSON.stringify(result));
+                    createAS2incomingMessageRecord(BSPTradingParnters.constants().essendant, "Invoice", jsonObjResponse);
+                } 
 
              }
 
              response = {
                  "operation_code": "200",
-                 "operation_message": "OK",
-                 "result": JSON.stringify(result)
+                 "operation_message": "OK"
              };
          }catch(error){
              log.error(functionName, `Error: ${error.toString()}`);
@@ -268,6 +237,38 @@
             return true;
         }
         return false;
+    }
+
+
+    /**
+     * This function creates a new record in the custom record type "customrecord_bsp_isg_as2_incoming_msg"
+     * and sets the values of the fields "custrecord_bsp_isg_trading_partner",
+     * "custrecord_bsp_isg_message_type", and "custrecord_bsp_isg_payload" to the values of the parameters
+     * "tradingPartner", "messageType", and "jsonObjResponse" respectively
+     * @param tradingPartner - The internal ID of the trading partner record
+     * @param messageType - The type of message that was received.
+     * @param jsonObjResponse - This is the JSON object that is returned from the AS2 server.
+     */
+    function createAS2incomingMessageRecord(tradingPartner, messageType, jsonObjResponse){
+        let as2MessageRecord = record.create({
+            type: "customrecord_bsp_isg_as2_incoming_msg",
+          });
+    
+          as2MessageRecord.setValue({
+            fieldId: "custrecord_bsp_isg_trading_partner",
+            value: tradingPartner,
+          });
+          as2MessageRecord.setValue({
+            fieldId: "custrecord_bsp_isg_message_type",
+            value: messageType,
+          });
+          as2MessageRecord.setValue({
+            fieldId: "custrecord_bsp_isg_payload",
+            value: JSON.stringify(jsonObjResponse),
+          });
+    
+          as2MessageRecord.save();
+          log.debug("createAS2incomingMessageRecord", "AS2 Incoming Message Record Created");
     }
 
     return {post}
