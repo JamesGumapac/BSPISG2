@@ -717,7 +717,6 @@
      * @returns A Vendor Bill Record
     */
     function createBillFromPO(poID) {
-        let functionName = "createBillFromPO";
         let vendorBillRec = null;
         try{        
             vendorBillRec = record.transform({
@@ -726,8 +725,7 @@
                 toType: record.Type.VENDOR_BILL,
             });
         }catch(error){
-            log.error(functionName, "Error creating Vendor Bill Record: " + JSON.stringify(error.message));
-            return null;
+            throw "Error creating Vendor Bill Record: " + JSON.stringify(error.message);
         }
 
         return vendorBillRec;
@@ -739,7 +737,6 @@
      * @returns A Vendor Bill Record
     */
     function createItemFulfillmentFromPO(soID) {
-        let functionName = "createItemFulfillmentFromPO";
         let itemFulfillmentRec = null;
         try{        
             itemFulfillmentRec = record.transform({
@@ -748,8 +745,7 @@
                 toType: record.Type.ITEM_FULFILLMENT,
             });
         }catch(error){
-            log.error(functionName, "Error creating Item Fulfillment Record: " + JSON.stringify(error.message));
-            return null;
+            throw "Error creating Item Fulfillment Record: " + JSON.stringify(error.message);
         }
 
         return itemFulfillmentRec;
@@ -761,7 +757,6 @@
      * @returns A Vendor Bill Record
     */
     function createItemReceiptFromPO(poID) {
-        let functionName = "createItemReceiptFromPO";
         let itemReceiptRec = null;
         try{        
             itemReceiptRec = record.transform({
@@ -770,8 +765,7 @@
                 toType: record.Type.ITEM_RECEIPT,
             });
         }catch(error){
-            log.error(functionName, "Error creating Item Receipt Record: " + JSON.stringify(error.message));
-            return null;
+            throw "Error creating Item Receipt Record: " + JSON.stringify(error.message);
         }
 
         return itemReceiptRec;
