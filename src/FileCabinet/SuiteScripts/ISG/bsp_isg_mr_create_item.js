@@ -17,58 +17,99 @@ define([
     try {
       const sampleFeed = [
         {
-          sku: "AAG013200",
+          sku: "KCC38691",
           title:
-            "Lined Notes Pages for Planners/Organizers, 6.75 x 3.75, White Sheets, Undated",
-          price: 4.67,
-          list_price: 7.19,
+            "G60 ANSI Level 2 Cut-Resistant Glove, 240 mm Length, Large/Size 9, White/Black, 12 Pairs",
+          price: 113.02,
+          list_price: 161.45,
           description:
-            "Lined notes pages are loose-leaf for easy insert and removal. High-quality paper features superior ink bleed resistance. Undated format to use anytime for list and notes of all kinds. Punched for fit with any matching size ring planner or organizer. 30 sheets per pack. Dated/Undated: Undated; Academic Year: No; Julian Dates: No; Size (Bound-Side First): 6.75 x 3.75.",
+            "When duty turns dangerous, these durable, cut-resistant gloves work to protect your hands. A sturdy black polyurethane coating enhances your grip for tough projects and helps hide dirt for longer wear. Comfortable fit. Style: Cut-Resistant; Wrist Style: Knit Cuff; Material(s): HMPE Engineered Yarn/Nylon/Spandex Seamless Knit Shell; Polyurethane-Coated Palm; Thumb Style: Full.",
           keywords:
-            "AT-A-GLANCE® AAG013200, AAG-013200, 089138023792, Lined Notes Pages for Planners/Organizers, 6.75 x 3.75, White Sheets, Undated, Loose Leaf Refills,  Lined Notes,  Personal Organizer,   Calendar,  Agendas,  Annuals,  Appointment Tracking,  Dates,  Dating,  Organizers,  Pages,  Time-Management  ",
-          gtin: "089138023792",
-          uom: "EA",
-          mpn: "013200",
-          unspsc: "44112005",
-          manufacturer_id: "e084730d-cbca-4d31-ae95-14f19294bee1",
-          manufacturer_name: "At-A-Glance",
-          shipping_weight: 0.114,
-          shipping_height: 0.25,
-          shipping_length: 6.813,
-          shipping_width: 3.75,
-          default_vendor_id: "B8802687-B2F2-41bb-B221-9433F85B271E",
-          default_vendor_name: "Essendant",
-          vendor_associations: [],
-        },
-        {
-          sku: "AAG031054005",
-          title:
-            "Black Leather Planner/Organizer Starter Set, 8.5 x 5.5, Black Cover, 12-Month (Jan to Dec): Undated",
-          price: 92.68,
-          list_price: 142.59,
-          description:
-            "Black genuine leather binder has professional look and zipper closure. Planner is undated for flexible planning with a full year of tabbed monthly spreads. Comes with 60 two-page daily planning spreads with hourly appointments 8:00 a.m. to 7:00 p.m. Comes with 60 one-page daily planning pages with half-hourly appointments 7:00 a.m. to 6:30 p.m. Comes with eight weekly planning spreads with hourly appointments 7:00 a.m. to 6:00 p.m. Monday through Friday. Extra features include interior storage pockets, address and phone sections, 24 notetaking pages, a note pad and a pen loop. Binder has 7 rings and holds loose-leaf pages. Dated/Undated: Undated; Calendar Format: Daily; Weekly; Monthly; Page Format: One Day per Page; One Day per Two-Page Spread; One Week per Two-Page Spread; One Month per Two-Page Spread; Academic Year: No.",
-          keywords:
-            "AT-A-GLANCE® AAG031054005, AAG-031054005, 038576373259, Black Leather Planner/Organizer Starter Set, 8.5 x 5.5, Black Cover, 12-Month (Jan to Dec): Undated, Agendas,  Annuals,  Appointment Tracking,  Dates,  Dating,  Organizers,  Pages,  Time-Management  ",
-          gtin: "038576373259",
-          uom: "EA",
-          mpn: "031054005",
-          unspsc: "44112005",
-          manufacturer_id: "e084730d-cbca-4d31-ae95-14f19294bee1",
-          manufacturer_name: "At-A-Glance",
-          shipping_weight: 1.75,
-          shipping_height: 1.688,
-          shipping_length: 10.375,
-          shipping_width: 8.125,
+            "KleenGuard™ KCC38691, KCC-38691, 036000386912, G60 ANSI Level 2 Cut-Resistant Glove, 240 mm Length, Large/Size 9, White/Black, 12 Pairs, G60,  Cut-Resistant,  Cut Resistant,  Polyurethane,  Hand,  Covering,  Safety,  Sanitary,  Food-Service,  Janitorial,  Kitchens  ",
+          gtin: "036000386912",
+          uom: "CT",
+          mpn: "38691",
+          unspsc: "46181504",
+          manufacturer_id: "44f91840-0a9d-484f-8745-2a3745fa7f85",
+          manufacturer_name: "KleenGuard",
+          shipping_weight: 2.1,
+          shipping_height: 6.0,
+          shipping_length: 11.625,
+          shipping_width: 6.375,
           default_vendor_id: "B8802687-B2F2-41bb-B221-9433F85B271E",
           default_vendor_name: "Essendant",
           vendor_associations: [
             {
-              vendor_sku: "AAG031054005",
-              vendor_id: "0F9A51F8-5292-4858-8B5B-74250A4552F0",
-              vendor_name: "Test3",
-              uom: "EA",
-              cost: 97.12,
+              vendor_sku: "KCC38691",
+              vendor_id: "B8802687-B2F2-41bb-B221-9433F85B271E",
+              vendor_name: "Essendant",
+              uom: "CT",
+              cost: 69.74,
+              min_qty: 1,
+            },
+          ],
+        },
+        {
+          sku: "KCC38693",
+          title:
+            "G60 ANSI Level 2 Cut-Resistant Gloves, 265 mm Length, 2X-Large, White/Black, 12 Pairs",
+          price: 113.02,
+          list_price: 161.45,
+          description:
+            "When duty turns dangerous, these durable, cut-resistant gloves work to protect your hands. A sturdy black polyurethane coating enhances your grip for tough projects and helps hide dirt for longer wear. Comfortable fit. Style: Cut-Resistant; Wrist Style: Knit Cuff; Material(s): HMPE Engineered Yarn/Nylon/Spandex Seamless Knit Shell; Polyurethane-Coated Palm; Thumb Style: Full.",
+          keywords:
+            "KleenGuard™ KCC38693, KCC-38693, 036000386936, G60 ANSI Level 2 Cut-Resistant Gloves, 265 mm Length, 2X-Large, White/Black, 12 Pairs, G60,  Cut-Resistant,  Hand,  Covering,  Safety,  Sanitary,  Food-Service,  Janitorial,  Kitchens  ",
+          gtin: "036000386936",
+          uom: "CT",
+          mpn: "38693",
+          unspsc: "46181504",
+          manufacturer_id: "44f91840-0a9d-484f-8745-2a3745fa7f85",
+          manufacturer_name: "KleenGuard",
+          shipping_weight: 2.1,
+          shipping_height: 6.0,
+          shipping_length: 11.625,
+          shipping_width: 6.375,
+          default_vendor_id: "B8802687-B2F2-41bb-B221-9433F85B271E",
+          default_vendor_name: "Test2",
+          vendor_associations: [
+            {
+              vendor_sku: "KCC38693",
+              vendor_id: "B8802687-B2F2-41bb-B221-9433F85B271E",
+              vendor_name: "Test78",
+              uom: "CT",
+              cost: 69.74,
+              min_qty: 1,
+            },
+          ],
+        },
+        {
+          sku: "KCC38920",
+          title:
+            "A35 Liquid and Particle Protection Coveralls, Zipper Front, 2X-Large, White, 25/Carton",
+          price: 107.8,
+          list_price: 154.0,
+          description:
+            "Ensure safe working conditions. Lightweight and comfortable microporous film laminate provides an excellent liquid and particulate barrier. Zipper front keeps the coveralls easy to put on and take off. Reliable apparel for applications such as liquid handling, pressure washing and general industrial tasks. Zipper Front. Apparel Type: Coverall; Material(s): Microporous Film Laminate; Color(s): White; Color Family: White.",
+          keywords:
+            "KleenGuard™ KCC38920, KCC-38920, 000000000000, A35 Liquid and Particle Protection Coveralls, Zipper Front, 2X-Large, White, 25/Carton, Attire,  Clothes,  Clothing,  Coverings,  Gear,  Wear  ",
+          uom: "CT",
+          mpn: "38920",
+          unspsc: "46181503",
+          manufacturer_id: "44f91840-0a9d-484f-8745-2a3745fa7f85",
+          manufacturer_name: "KleenGuard",
+          shipping_weight: 10.2,
+          shipping_height: 11.3,
+          shipping_length: 14.8,
+          shipping_width: 10.5,
+          default_vendor_id: "B8802687-B2F2-41bb-B221-9433F85B271E",
+          default_vendor_name: "Test7",
+          vendor_associations: [
+            {
+              vendor_sku: "KCC38920",
+              vendor_id: "B8802687-B2F2-41bb-B221-9433F85B271E",
+              vendor_name: "Test19",
+              uom: "CT",
+              cost: 91.92,
               min_qty: 1,
             },
           ],
@@ -102,11 +143,17 @@ define([
           log.debug("ITEM ALREADY EXISTS", itemObj.sku);
           let itemUom = itemObj.uom;
           let vendorUom = itemObj.vendor_associations[0].uom;
+          let vendor = BSPItemParser.checkIfVendorExists(
+            itemObj.vendor_associations[0].vendor_name
+          );
+
           if (itemUom === vendorUom) {
-            BSPItemParser.createVendorSublist(
-              itemId,
-              itemObj.vendor_associations
-            );
+            if (BSPItemParser.checkItemVendorSublist(itemId, vendor) === -1) {
+              BSPItemParser.createVendorSublist(
+                itemId,
+                itemObj.vendor_associations
+              );
+            }
           } // update the item vendor sublist
         }
       } else {

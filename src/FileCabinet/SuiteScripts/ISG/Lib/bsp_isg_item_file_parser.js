@@ -165,13 +165,32 @@ define(["N/file", "N/record", "N/search", "N/runtime"], /**
   }
 
   /**
+   * Check if vendor is existing already in the item vendor line
+   * @param itemId
+   * @param vendorId
+   * @returns {number|*}
+   */
+  function checkItemVendorSublist(itemId, vendorId) {
+    const itemRec = record.load({
+      type: record.Type.INVENTORY_ITEM,
+      id: itemId,
+      isDynamic: true,
+    });
+
+    return itemRec.findSublistLineWithValue({
+      sublistId: "itemvendor",
+      fieldId: "vendor",
+      value: vendorId,
+    });
+  }
+
+  /**
    * Create vendor sublist
    * @param itemId
    * @param vendorAssociations
    * @returns {number|*}
    */
   function createVendorSublist(itemId, vendorAssociations) {
-    log.debug("createVendorSublist", vendorAssociations);
     try {
       const itemRec = record.load({
         type: record.Type.INVENTORY_ITEM,
@@ -180,10 +199,9 @@ define(["N/file", "N/record", "N/search", "N/runtime"], /**
       });
 
       let vendorId = checkIfVendorExists(vendorAssociations[0].vendor_name);
-      if (vendorId === false) {
+      if (!vendorId) {
         vendorId = createVendor(vendorAssociations[0].vendor_name);
       }
-      log.debug("createVendorSublist", vendorId);
       itemRec.selectNewLine("itemvendor");
       itemRec.setCurrentSublistValue({
         sublistId: "itemvendor",
@@ -221,7 +239,7 @@ define(["N/file", "N/record", "N/search", "N/runtime"], /**
     vendorSearch.run().each(function (result) {
       vendorId = result.id;
     });
-    return vendorId ? vendorId : false;
+    return vendorId;
   }
 
   /**
@@ -240,8 +258,8 @@ define(["N/file", "N/record", "N/search", "N/runtime"], /**
         case "EA":
           rec.setValue({
             fieldId: "name",
-            value: "Each"
-          })
+            value: "Each",
+          });
           rec.setCurrentSublistValue({
             sublistId: "uom",
             fieldId: "abbreviation",
@@ -276,8 +294,8 @@ define(["N/file", "N/record", "N/search", "N/runtime"], /**
         case "PK":
           rec.setValue({
             fieldId: "name",
-            value: "Package"
-          })
+            value: "Package",
+          });
           rec.setCurrentSublistValue({
             sublistId: "uom",
             fieldId: "abbreviation",
@@ -313,8 +331,8 @@ define(["N/file", "N/record", "N/search", "N/runtime"], /**
         case "BX":
           rec.setValue({
             fieldId: "name",
-            value: "Box"
-          })
+            value: "Box",
+          });
           rec.setCurrentSublistValue({
             sublistId: "uom",
             fieldId: "abbreviation",
@@ -350,8 +368,8 @@ define(["N/file", "N/record", "N/search", "N/runtime"], /**
         case "KG":
           rec.setValue({
             fieldId: "name",
-            value: "Kilogram"
-          })
+            value: "Kilogram",
+          });
           rec.setCurrentSublistValue({
             sublistId: "uom",
             fieldId: "abbreviation",
@@ -382,6 +400,43 @@ define(["N/file", "N/record", "N/search", "N/runtime"], /**
             sublistId: "uom",
             fieldId: "unitname",
             value: "Kilogram",
+          });
+          break;
+        case "CT":
+          rec.setValue({
+            fieldId: "name",
+            value: "Carton",
+          });
+          rec.setCurrentSublistValue({
+            sublistId: "uom",
+            fieldId: "abbreviation",
+            value: abbreviation,
+          });
+
+          rec.setCurrentSublistValue({
+            sublistId: "uom",
+            fieldId: "conversionrate",
+            value: 1,
+          });
+          rec.setCurrentSublistValue({
+            sublistId: "uom",
+            fieldId: "pluralabbreviation",
+            value: "CTs",
+          });
+          rec.setCurrentSublistValue({
+            sublistId: "uom",
+            fieldId: "pluralname",
+            value: "Cartons",
+          });
+          rec.setCurrentSublistValue({
+            sublistId: "uom",
+            fieldId: "baseunit",
+            value: true,
+          });
+          rec.setCurrentSublistValue({
+            sublistId: "uom",
+            fieldId: "unitname",
+            value: "Carton",
           });
           break;
       }
@@ -423,7 +478,6 @@ define(["N/file", "N/record", "N/search", "N/runtime"], /**
    * @returns {number|*}
    */
   function createItem(itemData) {
-    log.debug("itemData", itemData);
     try {
       const lbSettings = getLbSettingsForUploadItem();
       const itemRec = record.create({
@@ -535,10 +589,11 @@ define(["N/file", "N/record", "N/search", "N/runtime"], /**
   return {
     getItemObj: getItemObj,
     createItem: createItem,
-    createVendor:createVendor,
+    createVendor: createVendor,
     checkIfVendorExists: checkIfVendorExists,
     getLbSettingsForUploadItem: getLbSettingsForUploadItem,
+    checkItemVendorSublist: checkItemVendorSublist,
     ifItemExists: ifItemExists,
-    createVendorSublist: createVendorSublist
+    createVendorSublist: createVendorSublist,
   };
 });
