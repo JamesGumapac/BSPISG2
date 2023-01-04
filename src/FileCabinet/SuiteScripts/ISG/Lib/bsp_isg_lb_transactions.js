@@ -327,13 +327,18 @@ define([
       let itemFulfillmentRec;
       let backorderCount = 0;
 
+        
+      
       for(i=0; i<itemSOCount; i++){
-        backordered = transactionRecord.getSublistValue({sublistId: 'item', fieldId: 'backordered', line: i});
-        if(backordered>0){
+        let qty = transactionRecord.getCurrentSublistValue({sublistId: 'item', fieldId: 'quantity'});
+        let qtyOnHand = transactionRecord.getCurrentSublistValue({sublistId: 'item', fieldId: 'quantityavailable'});
+        let backorderedQty = (qtyOnHand > qty) ? 0 : Math.abs(qtyOnHand - qty);
+
+        if(backorderedQty>0){
           backorderCount++;
         }      
       }
-        
+      
       if(itemSOCount > backorderCount){
           itemFulfillmentRec = record.transform({
             fromType: record.Type.SALES_ORDER,
