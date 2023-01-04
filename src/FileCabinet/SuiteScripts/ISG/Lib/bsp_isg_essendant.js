@@ -600,6 +600,12 @@
                 value: trackingID
             });
 
+            log.debug("itemFulfillmentRec", itemFulfillmentRec.getLineCount({sublistId: 'package'}));
+            /*itemFulfillmentRec.removeLine({
+                sublistId: 'package',
+                line: (itemFulfillmentRec.getLineCount({sublistId: 'package'}) -1),
+            });*/
+
             itemFulfillmentRec.setValue('custbody_bsp_isg_asn_container_id', containerID);
             itemFulfillmentRec.setValue('custbody_bsp_isg_asn_party_id', partyID);
             itemFulfillmentRec.setValue('custbody_bsp_isg_asn_party_name', partyName);
@@ -615,6 +621,20 @@
                 enableSourcing: true,
                 ignoreMandatoryFields: true
             });
+            itemFulfillmentRec = record.load({
+                type: record.Type.ITEM_FULFILLMENT,
+                id: parseInt(recID),
+                isDynamic: true
+            });
+            itemFulfillmentRec.removeLine({
+                sublistId: 'package',
+                line: (itemFulfillmentRec.getLineCount({sublistId: 'package'}) -1),
+            })
+            itemFulfillmentRec.save({
+                enableSourcing: true,
+                ignoreMandatoryFields: true
+            });
+            
             resultObj.itemFulfillmentRecID = recID;    
 
             if(linesPartiallyShipped.length > 0){
