@@ -600,12 +600,6 @@
                 value: trackingID
             });
 
-            log.debug("itemFulfillmentRec", itemFulfillmentRec.getLineCount({sublistId: 'package'}));
-            /*itemFulfillmentRec.removeLine({
-                sublistId: 'package',
-                line: (itemFulfillmentRec.getLineCount({sublistId: 'package'}) -1),
-            });*/
-
             itemFulfillmentRec.setValue('custbody_bsp_isg_asn_container_id', containerID);
             itemFulfillmentRec.setValue('custbody_bsp_isg_asn_party_id', partyID);
             itemFulfillmentRec.setValue('custbody_bsp_isg_asn_party_name', partyName);
