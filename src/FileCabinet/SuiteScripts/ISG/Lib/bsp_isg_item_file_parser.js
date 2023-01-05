@@ -1,4 +1,3 @@
-8;
 /**
  * @NApiVersion 2.1
  */
@@ -8,14 +7,6 @@ define(["N/file", "N/record", "N/search", "N/runtime"], /**
  * @param search
  * @param runtime
  */ (file, record, search, runtime) => {
-  function getItemObj(itemlist) {
-    try {
-      return createItemObj(getColumns(), JSON.parse(itemlist));
-    } catch (e) {
-      log.error("getItemObj", e.message);
-    }
-  }
-
   /**
    * get the URL, default Asset Account and default COGS account
    * @returns {{}}
@@ -65,22 +56,6 @@ define(["N/file", "N/record", "N/search", "N/runtime"], /**
   }
 
   /**
-   * This function combine they a set of array keys and objects into one set of objects
-   * @param {*} key
-   * @param {*} value
-   */
-  function createItemObj(key, value) {
-    try {
-    } catch (e) {
-      log.error("functionName: createItemObj", e.message);
-    }
-    return key.reduce((acc, val, ind) => {
-      acc[val] = value[ind];
-      return acc;
-    }, {});
-  }
-
-  /**
    * Check Item if exists
    * @param itemId
    * @returns {*}
@@ -102,39 +77,6 @@ define(["N/file", "N/record", "N/search", "N/runtime"], /**
     }
   }
 
-  //
-  // /**
-  //  * get the column provided from the feed
-  //  * @returns {string[]}
-  //  */
-  // function getColumns() {
-  //   return [
-  //     "id",
-  //     "title",
-  //     "description",
-  //     "image_link",
-  //     "link",
-  //     "price",
-  //     "quantity",
-  //     "product_type",
-  //     "brand",
-  //     "google_product_category",
-  //     "condition",
-  //     "availability",
-  //     "mpn",
-  //     "color",
-  //     "size",
-  //     "gtin",
-  //     "shipping_height",
-  //     "shipping_length",
-  //     "shipping_width",
-  //     "shipping_weight",
-  //     "product_weight",
-  //     "shipping",
-  //     "identifier_exists",
-  //   ];
-  // }
-
   /**
    * check if the multiCurrency feature is enabled
    * @returns {boolean}
@@ -151,17 +93,21 @@ define(["N/file", "N/record", "N/search", "N/runtime"], /**
    * @returns {number|*}
    */
   function createVendor(vendorName) {
-    const vendorRec = record.create({
-      type: record.Type.VENDOR,
-      isDynamic: true,
-    });
-    vendorRec.setValue({
-      fieldId: "companyname",
-      value: vendorName,
-    });
-    return vendorRec.save({
-      ignoreMandatoryFields: true,
-    });
+    try {
+      const vendorRec = record.create({
+        type: record.Type.VENDOR,
+        isDynamic: true,
+      });
+      vendorRec.setValue({
+        fieldId: "companyname",
+        value: vendorName,
+      });
+      return vendorRec.save({
+        ignoreMandatoryFields: true,
+      });
+    } catch (e) {
+      log.error("createVendor", e.message);
+    }
   }
 
   /**
@@ -171,17 +117,21 @@ define(["N/file", "N/record", "N/search", "N/runtime"], /**
    * @returns {number|*}
    */
   function checkItemVendorSublist(itemId, vendorId) {
-    const itemRec = record.load({
-      type: record.Type.INVENTORY_ITEM,
-      id: itemId,
-      isDynamic: true,
-    });
+    try {
+      const itemRec = record.load({
+        type: record.Type.INVENTORY_ITEM,
+        id: itemId,
+        isDynamic: true,
+      });
 
-    return itemRec.findSublistLineWithValue({
-      sublistId: "itemvendor",
-      fieldId: "vendor",
-      value: vendorId,
-    });
+      return itemRec.findSublistLineWithValue({
+        sublistId: "itemvendor",
+        fieldId: "vendor",
+        value: vendorId,
+      });
+    } catch (e) {
+      log.error("checkItemVendorSublist", e.message);
+    }
   }
 
   /**
@@ -231,215 +181,160 @@ define(["N/file", "N/record", "N/search", "N/runtime"], /**
    * @returns {*|boolean}
    */
   function checkIfVendorExists(vendorName) {
-    let vendorId;
-    const vendorSearch = search.create({
-      type: "vendor",
-      filters: [["entityid", "is", vendorName]],
-    });
-    vendorSearch.run().each(function (result) {
-      vendorId = result.id;
-    });
-    return vendorId;
+    try {
+      let vendorId;
+      const vendorSearch = search.create({
+        type: "vendor",
+        filters: [["entityid", "is", vendorName]],
+      });
+      vendorSearch.run().each(function (result) {
+        vendorId = result.id;
+      });
+      return vendorId;
+    } catch (e) {
+      log.error("checkIfVendorExists", e.message);
+    }
+  }
+
+  /**
+   * Update Logiblock UOM
+   * @param abbreviation
+   * @param uomId
+   * @returns {number|*}
+   */
+  function addUnitOfMeasure(abbreviation, uomId) {
+    try {
+      const rec = record.load({
+        type: "unitstype",
+        id: uomId,
+        isDynamic: true,
+      });
+      const isUOMexists = rec.findSublistLineWithValue({
+        sublistId: "uom",
+        fieldId: "abbreviation",
+        value: abbreviation,
+      });
+
+      if (isUOMexists !== -1) {
+        return rec.getSublistValue({
+          sublistId: "uom",
+          fieldId: "internalid",
+          line: isUOMexists,
+        });
+      } else {
+        try {
+          rec.selectNewLine({ sublistId: "uom" });
+          rec.setCurrentSublistValue({
+            sublistId: "uom",
+            fieldId: "abbreviation",
+            value: abbreviation,
+          });
+
+          rec.setCurrentSublistValue({
+            sublistId: "uom",
+            fieldId: "conversionrate",
+            value: 1,
+          });
+          rec.setCurrentSublistValue({
+            sublistId: "uom",
+            fieldId: "pluralabbreviation",
+            value: abbreviation + "'s",
+          });
+          rec.setCurrentSublistValue({
+            sublistId: "uom",
+            fieldId: "pluralname",
+            value: abbreviation,
+          });
+
+          rec.setCurrentSublistValue({
+            sublistId: "uom",
+            fieldId: "unitname",
+            value: abbreviation,
+          });
+          rec.commitLine("uom");
+          const UOMnewId = rec.save({
+            ignoreMandatoryFields: true,
+          });
+
+          if (UOMnewId) {
+            const saveRec = record.load({
+              type: "unitstype",
+              id: UOMnewId,
+              isDynamic: true,
+            });
+
+            let UOMLine = saveRec.findSublistLineWithValue({
+              sublistId: "uom",
+              fieldId: "abbreviation",
+              value: abbreviation,
+            });
+
+            return saveRec.getSublistValue({
+              sublistId: "uom",
+              fieldId: "internalid",
+              line: UOMLine,
+            });
+          }
+        } catch (e) {
+          log.error("erroring in creating new uom", e.message);
+        }
+      }
+    } catch (e) {
+      log.error("addUnitOfMeasure", e.message);
+    }
   }
 
   /**
    * create initial unit of measurement
    * @param abbreviation
+   * @param name
    * @returns {number|*}
    */
-  function createUnitOfMeasure(abbreviation) {
+  function createUnitOfMeasure(abbreviation, name) {
     try {
       const rec = record.create({
         type: "unitstype",
         isDynamic: true,
       });
-      rec.selectNewLine("uom");
-      switch (abbreviation) {
-        case "EA":
-          rec.setValue({
-            fieldId: "name",
-            value: "Each",
-          });
-          rec.setCurrentSublistValue({
-            sublistId: "uom",
-            fieldId: "abbreviation",
-            value: abbreviation,
-          });
-          rec.setCurrentSublistValue({
-            sublistId: "uom",
-            fieldId: "conversionrate",
-            value: 1,
-          });
-          rec.setCurrentSublistValue({
-            sublistId: "uom",
-            fieldId: "pluralabbreviation",
-            value: "EA",
-          });
-          rec.setCurrentSublistValue({
-            sublistId: "uom",
-            fieldId: "pluralname",
-            value: "EACH",
-          });
-          rec.setCurrentSublistValue({
-            sublistId: "uom",
-            fieldId: "baseunit",
-            value: true,
-          });
-          rec.setCurrentSublistValue({
-            sublistId: "uom",
-            fieldId: "unitname",
-            value: "EACH",
-          });
-          break;
-        case "PK":
-          rec.setValue({
-            fieldId: "name",
-            value: "Package",
-          });
-          rec.setCurrentSublistValue({
-            sublistId: "uom",
-            fieldId: "abbreviation",
-            value: abbreviation,
-          });
 
-          rec.setCurrentSublistValue({
-            sublistId: "uom",
-            fieldId: "conversionrate",
-            value: 1,
-          });
-          rec.setCurrentSublistValue({
-            sublistId: "uom",
-            fieldId: "pluralabbreviation",
-            value: "PKs",
-          });
-          rec.setCurrentSublistValue({
-            sublistId: "uom",
-            fieldId: "pluralname",
-            value: "Packages",
-          });
-          rec.setCurrentSublistValue({
-            sublistId: "uom",
-            fieldId: "baseunit",
-            value: true,
-          });
-          rec.setCurrentSublistValue({
-            sublistId: "uom",
-            fieldId: "unitname",
-            value: "EACH",
-          });
-          break;
-        case "BX":
-          rec.setValue({
-            fieldId: "name",
-            value: "Box",
-          });
-          rec.setCurrentSublistValue({
-            sublistId: "uom",
-            fieldId: "abbreviation",
-            value: abbreviation,
-          });
+      rec.setValue({
+        fieldId: "name",
+        value: name,
+      });
 
-          rec.setCurrentSublistValue({
-            sublistId: "uom",
-            fieldId: "conversionrate",
-            value: 1,
-          });
-          rec.setCurrentSublistValue({
-            sublistId: "uom",
-            fieldId: "pluralabbreviation",
-            value: "BXs",
-          });
-          rec.setCurrentSublistValue({
-            sublistId: "uom",
-            fieldId: "pluralname",
-            value: "Boxes",
-          });
-          rec.setCurrentSublistValue({
-            sublistId: "uom",
-            fieldId: "baseunit",
-            value: true,
-          });
-          rec.setCurrentSublistValue({
-            sublistId: "uom",
-            fieldId: "unitname",
-            value: "Box",
-          });
-          break;
-        case "KG":
-          rec.setValue({
-            fieldId: "name",
-            value: "Kilogram",
-          });
-          rec.setCurrentSublistValue({
-            sublistId: "uom",
-            fieldId: "abbreviation",
-            value: abbreviation,
-          });
+      rec.selectNewLine({ sublistId: "uom" });
+      rec.setCurrentSublistValue({
+        sublistId: "uom",
+        fieldId: "abbreviation",
+        value: abbreviation,
+      });
 
-          rec.setCurrentSublistValue({
-            sublistId: "uom",
-            fieldId: "conversionrate",
-            value: 1,
-          });
-          rec.setCurrentSublistValue({
-            sublistId: "uom",
-            fieldId: "pluralabbreviation",
-            value: "KGs",
-          });
-          rec.setCurrentSublistValue({
-            sublistId: "uom",
-            fieldId: "pluralname",
-            value: "Kilograms",
-          });
-          rec.setCurrentSublistValue({
-            sublistId: "uom",
-            fieldId: "baseunit",
-            value: true,
-          });
-          rec.setCurrentSublistValue({
-            sublistId: "uom",
-            fieldId: "unitname",
-            value: "Kilogram",
-          });
-          break;
-        case "CT":
-          rec.setValue({
-            fieldId: "name",
-            value: "Carton",
-          });
-          rec.setCurrentSublistValue({
-            sublistId: "uom",
-            fieldId: "abbreviation",
-            value: abbreviation,
-          });
+      rec.setCurrentSublistValue({
+        sublistId: "uom",
+        fieldId: "conversionrate",
+        value: 1,
+      });
+      rec.setCurrentSublistValue({
+        sublistId: "uom",
+        fieldId: "baseunit",
+        value: true,
+      });
+      rec.setCurrentSublistValue({
+        sublistId: "uom",
+        fieldId: "pluralabbreviation",
+        value: abbreviation + "s",
+      });
+      rec.setCurrentSublistValue({
+        sublistId: "uom",
+        fieldId: "pluralname",
+        value: abbreviation,
+      });
 
-          rec.setCurrentSublistValue({
-            sublistId: "uom",
-            fieldId: "conversionrate",
-            value: 1,
-          });
-          rec.setCurrentSublistValue({
-            sublistId: "uom",
-            fieldId: "pluralabbreviation",
-            value: "CTs",
-          });
-          rec.setCurrentSublistValue({
-            sublistId: "uom",
-            fieldId: "pluralname",
-            value: "Cartons",
-          });
-          rec.setCurrentSublistValue({
-            sublistId: "uom",
-            fieldId: "baseunit",
-            value: true,
-          });
-          rec.setCurrentSublistValue({
-            sublistId: "uom",
-            fieldId: "unitname",
-            value: "Carton",
-          });
-          break;
-      }
+      rec.setCurrentSublistValue({
+        sublistId: "uom",
+        fieldId: "unitname",
+        value: abbreviation,
+      });
       rec.commitLine("uom");
       return rec.save({ ignoreMandatoryFields: true });
     } catch (e) {
@@ -453,18 +348,20 @@ define(["N/file", "N/record", "N/search", "N/runtime"], /**
    */
   function getUnitOfmeasureId(abbreviation) {
     try {
+      const logicblockUOM = "Logicblock UOM";
       let unitOfMeasureId;
       const unitstypeSearchObj = search.create({
         type: "unitstype",
-        filters: [["abbreviation", "is", abbreviation]],
+        filters: [["name", "is", logicblockUOM]],
       });
       const searchResultCount = unitstypeSearchObj.runPaged().count;
-      if (searchResultCount > 0) {
+
+      if (searchResultCount) {
         unitstypeSearchObj.run().each(function (result) {
           unitOfMeasureId = result.id;
         });
       } else {
-        unitOfMeasureId = createUnitOfMeasure(abbreviation);
+        unitOfMeasureId = createUnitOfMeasure(abbreviation, logicblockUOM);
       }
       return unitOfMeasureId;
     } catch (e) {
@@ -549,12 +446,31 @@ define(["N/file", "N/record", "N/search", "N/runtime"], /**
           fieldId: "displayname",
           value: itemData.title,
         });
+      let oumId = getUnitOfmeasureId(itemData.uom);
 
-      itemData.uom &&
-        itemRec.setValue({
-          fieldId: "unitstype",
-          value: getUnitOfmeasureId(itemData.uom),
-        });
+      if (oumId) {
+        itemData.uom &&
+          itemRec.setValue({
+            fieldId: "unitstype",
+            value: oumId,
+          });
+        let UOMPrimaryBasedUnit = addUnitOfMeasure(itemData.uom, oumId);
+        if (UOMPrimaryBasedUnit) {
+          itemRec.setValue({
+            fieldId: "stockunit",
+            value: UOMPrimaryBasedUnit,
+          });
+          itemRec.setValue({
+            fieldId: "purchaseunit",
+            value: UOMPrimaryBasedUnit,
+          });
+          itemRec.setValue({
+            fieldId: "saleunit",
+            value: UOMPrimaryBasedUnit,
+          });
+        }
+
+      }
 
       itemData.manufacturer_name &&
         itemRec.setValue({
@@ -579,15 +495,11 @@ define(["N/file", "N/record", "N/search", "N/runtime"], /**
         }
       }
     } catch (e) {
-      log.error(
-        "functionName: createItem",
-        e.message + " for Item ID:" + itemData.id
-      );
+      log.error("createItem", e.message + " for Item ID:" + itemData.id);
     }
   }
 
   return {
-    getItemObj: getItemObj,
     createItem: createItem,
     createVendor: createVendor,
     checkIfVendorExists: checkIfVendorExists,
