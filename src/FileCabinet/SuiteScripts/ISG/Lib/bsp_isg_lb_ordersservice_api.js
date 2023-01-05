@@ -29,7 +29,7 @@
         
         let lbOrdersResult = null;
         if(!BSPLBUtils.isEmpty(logicBlockServerResponse)){
-            lbOrdersResult = logicBlockServerResponse.GetOrdersByCriteriaResponse.GetOrdersByCriteriaResult.List.Order;
+            lbOrdersResult = logicBlockServerResponse.GetOrdersReadyForThirdPartyResponse.GetOrdersReadyForThirdPartyResult.List.Order;
             if(!BSPLBUtils.isEmpty(lbOrdersResult)){
                 if(lbOrdersResult.length > 0){
                     orders = orders.concat(lbOrdersResult);
@@ -38,7 +38,7 @@
                 }
             }         
 
-            let totalOrders =  logicBlockServerResponse.GetOrdersByCriteriaResponse.GetOrdersByCriteriaResult.TotalRows;
+            let totalOrders =  logicBlockServerResponse.GetOrdersReadyForThirdPartyResponse.GetOrdersReadyForThirdPartyResult.TotalRows;
             let pageSize = settings.custrecord_bsp_lb_orders_page_size;
 
             if(totalOrders > pageSize){
@@ -50,7 +50,7 @@
                     let logicBlockServerResponse = BSPLBServiceAPI.runService(serviceURL, requestBodyXML, soapGetOrdersAction);
         
                     if(logicBlockServerResponse){
-                        lbOrdersResult = logicBlockServerResponse.GetOrdersByCriteriaResponse.GetOrdersByCriteriaResult.List.Order;
+                        lbOrdersResult = logicBlockServerResponse.GetOrdersReadyForThirdPartyResponse.GetOrdersReadyForThirdPartyResult.List.Order;
                         if(lbOrdersResult.length > 0){
                             orders = orders.concat(lbOrdersResult);
                         }else if(!BSPLBUtils.isEmpty(lbOrdersResult)){
@@ -328,13 +328,15 @@
         let startIndex = BSPLBUtils.serverConstants().startIndex;
         let pageSize = settings.custrecord_bsp_lb_orders_page_size;
         let canceledOrders = settings.custrecord_bsp_lb_exclude_canceled_ord;
+        let numberOfDays = 1;
 
         return {
             startDate: startDate,
             endDate: endDate,
             startIndex: startIndex,
             pageSize: pageSize,
-            canceledOrders: canceledOrders
+            canceledOrders: canceledOrders,
+            numberOfDays: numberOfDays
         };
     }
 
@@ -393,28 +395,29 @@
      * @returns 
      */
      function getOrdersXMLStrRequest(loginData, requestParams){
-        return `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/" xmlns:log="http://schemas.datacontract.org/2004/07/Logicblock.Commerce.Domain">
-                    <soapenv:Header/>
-                    <soapenv:Body>
-                        <tem:GetOrdersByCriteria>
-                            <tem:token>
-                                <log:ApiId>${loginData.ApiId}</log:ApiId>
-                                <log:ExpirationDateUtc>${loginData.ExpirationDateUtc}</log:ExpirationDateUtc>
-                                <log:Id>${loginData.Id}</log:Id>
-                                <log:IsExpired>${loginData.IsExpired}</log:IsExpired>
-                                <log:TokenRejected>${loginData.TokenRejected}</log:TokenRejected>
-                            </tem:token>
-                            <tem:criteria>
-                                <log:StartDate>${requestParams.startDate}</log:StartDate>
-                                <log:EndDate>${requestParams.endDate}</log:EndDate>
-                                <log:ExcludeCanceledOrders>${requestParams.canceledOrders}</log:ExcludeCanceledOrders>
-                            </tem:criteria>
-                            <tem:startIndex>${requestParams.startIndex}</tem:startIndex>
-                            <tem:pageSize>${requestParams.pageSize}</tem:pageSize>
-                        </tem:GetOrdersByCriteria>
-                    </soapenv:Body>
-                </soapenv:Envelope>`;
+        return  `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/" xmlns:log="http://schemas.datacontract.org/2004/07/Logicblock.Commerce.Domain">
+        <soapenv:Header/>
+        <soapenv:Body>
+           <tem:GetOrdersReadyForThirdParty>
+              <tem:token>
+                 <log:ApiId>${loginData.ApiId}</log:ApiId>
+                 <log:ExpirationDateUtc>${loginData.ExpirationDateUtc}</log:ExpirationDateUtc>
+                 <log:Id>${loginData.Id}</log:Id>
+                 <log:IsExpired>${loginData.IsExpired}</log:IsExpired>          
+                 <log:TokenRejected>${loginData.TokenRejected}</log:TokenRejected>
+              </tem:token>  
+              <tem:ordersReadyForThirdPartyParams>    
+                 <log:DownloadStartDate>${requestParams.startDate}</log:DownloadStartDate>    
+                 <log:NumberOfDays>${requestParams.numberOfDays}</log:NumberOfDays>
+              </tem:ordersReadyForThirdPartyParams>  
+              <tem:startIndex>${requestParams.startIndex}</tem:startIndex> 
+              <tem:pageSize>${requestParams.pageSize}</tem:pageSize>
+           </tem:GetOrdersReadyForThirdParty>
+        </soapenv:Body>
+     </soapenv:Envelope>`;
     }
+
+   
 
     /**
      * Body of Create Package Request
