@@ -356,7 +356,6 @@
         let addressIsSet = false;
 
       outerloop:  for(i=0; i<lineCount; i++){
-            log.debug('Iteration number: ', i);
             customerRec.selectLine({sublistId: 'addressbook',
             line: i})
             let addressSubRecord = customerRec.getCurrentSublistSubrecord({
@@ -370,10 +369,11 @@
 
                 if(((addressaddr1 == order.ShippingAddress.Line1) && (addressCity == order.ShippingAddress.City) && (addressState == order.ShippingAddress.RegionCode) && (addressZipcode == order.ShippingAddress.PostalCode)))    
                 {
-                    log.debug("Shipping Address already exists");   
+                    log.debug("checkShippingAddress","Shipping Address already exists");   
                     break outerloop;                     
                 }
                 else{
+                    log.debug("checkShippingAddress","Adding new Shipping Address...");   
                     customerRec.selectNewLine({
                         sublistId: 'addressbook',
                     });
@@ -395,9 +395,10 @@
             customerRec.commitLine({
                 sublistId: 'addressbook'
             });
+            log.debug("checkShippingAddress","New Ship address added");
         }
         customerRec.save();
-
+        
     }
 
     function getVendorEmail(vendorId){

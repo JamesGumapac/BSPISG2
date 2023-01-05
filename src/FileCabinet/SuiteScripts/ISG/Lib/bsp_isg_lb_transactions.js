@@ -61,6 +61,7 @@ define([
     });
 
     if (recType == record.Type.CASH_SALE) {
+      
       let account = !BSPLBUtils.isEmpty(settings.custrecord_bsp_lb_account)
         ? settings.custrecord_bsp_lb_account[0].value
         : null;
@@ -70,6 +71,7 @@ define([
         ? settings.custrecord_bsp_lb_default_location_trans[0].value
         : null;
 
+
       if (account) {
         transactionRecord.setValue({ fieldId: "undepfunds", value: "F" });
         transactionRecord.setValue({ fieldId: "account", value: account });
@@ -78,7 +80,7 @@ define([
       }
 
       if (location) {
-        transactionRecord.setValue({ fieldId: "location", value: location });
+        transactionRecord.setValue({ fieldId: "location", value: parseInt(location) });
       }
     }
 
@@ -86,10 +88,10 @@ define([
       customerRecordResult.nsID
     );
 
-    let routeCode = objCustomerFields.addressSubRecord[0].routeCode;
-    let accountNumber = objCustomerFields.addressSubRecord[0].accountNumber;
-    let aopdVendor = objCustomerFields.addressSubRecord[0].aopdVendor;
-    let flagged = objCustomerFields.overrideSchedule;
+    let routeCode = objCustomerFields.addressSubRecord[0].routeCode || null;
+    let accountNumber = objCustomerFields.addressSubRecord[0].accountNumber || null;
+    let aopdVendor = objCustomerFields.addressSubRecord[0].aopdVendor || null;
+    let flagged = objCustomerFields.overrideSchedule || null;
 
     if (BSPLBUtils.isEmpty(routeCode)) {
       routeCode = settings.custrecord_bsp_lb_default_route_code[0].value;
@@ -207,91 +209,92 @@ define([
       }
     }
 
-    /*--- Shipping method translation  ---*/
-    let shippingMethod;
-    const isEmpty = Object.keys(objFields.order.ShippingMethodId).length === 0;
-    if(isEmpty != true){
-      log.debug('shipping method ID IF', objFields.order.ShippingMethodId);
-    shippingMethod = searchShippingItem(objFields.order.ShippingMethodId);
-    transactionRecord.setValue({ fieldId: "shipcarrier", value: "nonups" });
-    transactionRecord.setValue({
-      fieldId: "shipmethod",
-      value: shippingMethod[0].internalid,
-    });
-    }
-    /*--- Tax Calculations   ---*/
-    let taxCalculation;
-    if (settings.custrecord_bsp_lb_avatax == false) {
-      if (objFields.order.TaxTotal) {
-        taxable = true;
-        transactionRecord.setValue({ fieldId: "istaxable", value: true });
+
+      /*--- Shipping method translation  ---*/
+      let shippingMethod;
+      const isEmpty = Object.keys(objFields.order.ShippingMethodId).length === 0;
+      if(isEmpty != true){
+        log.debug('shipping method ID IF', objFields.order.ShippingMethodId);
+        shippingMethod = searchShippingItem(objFields.order.ShippingMethodId);
+        transactionRecord.setValue({ fieldId: "shipcarrier", value: "nonups" });
         transactionRecord.setValue({
-          fieldId: "taxitem",
-          value: settings.custrecord_bsp_isg_taxable[0].value,
-        });
-        taxCalculation =
-          (objFields.order.TaxTotal * 100) / objFields.order.SubTotal;
-        transactionRecord.setValue({
-          fieldId: "taxrate",
-          value: taxCalculation,
-        });
-      } else {
-        taxable = false;
-        transactionRecord.setValue({ fieldId: "istaxable", value: false });
-        transactionRecord.setValue({
-          fieldId: "taxitem",
-          value: settings.custrecord_bsp_isg_taxable[0].value,
+          fieldId: "shipmethod",
+          value: shippingMethod[0].internalid,
         });
       }
-    }
-    /*--- Delivery zone checker   ---*/
-    let delZone = searchDeliveryZone(objFields.order);
-    let shipmentType =
-      delZone != ""
-        ? BSPLBUtils.SHIPMENT_TYPE.wrapAndLabel
-        : BSPLBUtils.SHIPMENT_TYPE.dropship;
 
-    if (shipmentType === BSPLBUtils.SHIPMENT_TYPE.wrapAndLabel) {
-      transactionRecord.setValue({
-        fieldId: "custbody_bsp_isg_route_code",
-        value: delZone[0].routeCode,
-      });
-      transactionRecord.setValue({
-        fieldId: "location",
-        value: delZone[0].location,
-      });
+      /*--- Tax Calculations   ---*/
+      let taxCalculation;
+      if (settings.custrecord_bsp_lb_avatax == false) {
+        if (objFields.order.TaxTotal && parseFloat(objFields.order.TaxTotal) > 0) {
+          taxable = true;
+          transactionRecord.setValue({ fieldId: "istaxable", value: true });
+          transactionRecord.setValue({
+            fieldId: "taxitem",
+            value: settings.custrecord_bsp_isg_taxable[0].value,
+          });
+          taxCalculation =
+            (objFields.order.TaxTotal * 100) / objFields.order.SubTotal;
+          transactionRecord.setValue({
+            fieldId: "taxrate",
+            value: taxCalculation,
+          });
+        } else {
+          taxable = false;
+          transactionRecord.setValue({ fieldId: "istaxable", value: false });
+          transactionRecord.setValue({
+            fieldId: "taxitem",
+            value: settings.custrecord_bsp_isg_taxable[0].value,
+          });
+        }
+      }
 
-    let shipDate = transactionRecord.getValue({fieldId: 'shipdate'});
+      /*--- Delivery zone checker   ---*/
+      let delZone = searchDeliveryZone(objFields.order);
+      let shipmentType =
+        delZone != ""
+          ? BSPLBUtils.SHIPMENT_TYPE.wrapAndLabel
+          : BSPLBUtils.SHIPMENT_TYPE.dropship;
 
-    loop : for(let i=0; i<20; i++){
+      if (shipmentType === BSPLBUtils.SHIPMENT_TYPE.wrapAndLabel) {
+        transactionRecord.setValue({
+          fieldId: "custbody_bsp_isg_route_code",
+          value: delZone[0].routeCode,
+        });
+        transactionRecord.setValue({
+          fieldId: "location",
+          value: delZone[0].location,
+        });
 
-          if(BSPLBUtils.getHoliday(transactionRecord.getValue({fieldId: 'shipdate'})) != ''){
-            log.debug('before shipdatecalculation');
-          shipDateCalculation(delZone, transactionRecord);
-          log.debug('after shipdatecalculation');
-          }
-          else{
-            transactionRecord.setValue({fieldId: 'shipdate', value:(transactionRecord.getValue({fieldId: 'shipdate'}))});   
-            break loop;            
+        loop : for(let i=0; i<20; i++){
+
+              if(BSPLBUtils.getHoliday(transactionRecord.getValue({fieldId: 'shipdate'})) != ''){
+                log.debug('before shipdatecalculation');
+              shipDateCalculation(delZone, transactionRecord);
+              log.debug('after shipdatecalculation');
+              }
+              else{
+                transactionRecord.setValue({fieldId: 'shipdate', value:(transactionRecord.getValue({fieldId: 'shipdate'}))});   
+                break loop;            
+              }
           }
       }
-    }
-    let shippingDate = transactionRecord.getValue({fieldId: 'shipdate'});
-    if(flagged == true){    
-        if(shippingDate.getDay() == 5){
-          shippingDate.setDate(shippingDate.getDate() + 3); 
-        }
-        else {
-          shippingDate.setDate(shippingDate.getDate() + 1);
-        }
-        transactionRecord.setValue({fieldId:'shipdate', value: shippingDate});
-    }
-    if (shipmentType === BSPLBUtils.SHIPMENT_TYPE.dropship) {
-      let checkShipAddr = BSPLBEntities.checkShippingAddress(
-        customerRecordResult.nsID,
-        objFields.order
-      );
-    }
+      let shippingDate = transactionRecord.getValue({fieldId: 'shipdate'});
+      if(flagged == true){    
+          if(shippingDate.getDay() == 5){
+            shippingDate.setDate(shippingDate.getDate() + 3); 
+          }
+          else {
+            shippingDate.setDate(shippingDate.getDate() + 1);
+          }
+          transactionRecord.setValue({fieldId:'shipdate', value: shippingDate});
+      }
+      if (shipmentType === BSPLBUtils.SHIPMENT_TYPE.dropship) {
+        BSPLBEntities.checkShippingAddress(
+          customerRecordResult.nsID,
+          objFields.order
+        );
+      }
 
     processTransactionLines(
       transactionRecord,
@@ -304,10 +307,9 @@ define([
       settings
     );
 
-    /**
-     * Default values
-     */
-    newRecordId = transactionRecord.save();
+    log.debug("createTransactionRecord", "Saving new Record...");
+    newRecordId = transactionRecord.save({enableSourcing: true, ignoreMandatoryFields: true});
+    log.debug("createTransactionRecord", "Record Saved. ID: " + newRecordId);
     BSPLBUtils.createMappingKeyRecord(
       newRecordId,
       recType,
@@ -315,59 +317,62 @@ define([
       "Order"
     );
    
-    /*--- Create Item Fulfillment for non-backorder Items   ---*/
-    try{
-      let itemSOCount = transactionRecord.getLineCount({
-        sublistId: 'item' 
-      });
+    if (recType == record.Type.SALES_ORDER) {
+      /*--- Create Item Fulfillment for non-backorder Items   ---*/
+      try{
+        let itemSOCount = transactionRecord.getLineCount({
+          sublistId: 'item' 
+        });
 
-      let newItemF;
-      let backordered;
-      let backorderedIF;
-      let itemFulfillmentRec;
-      let backorderCount = 0;
+        let newItemF;
+        let backordered;
+        let backorderedIF;
+        let itemFulfillmentRec;
+        let backorderCount = 0;
 
+          
         
-      
-      for(i=0; i<itemSOCount; i++){
-        let qty = transactionRecord.getCurrentSublistValue({sublistId: 'item', fieldId: 'quantity'});
-        let qtyOnHand = transactionRecord.getCurrentSublistValue({sublistId: 'item', fieldId: 'quantityavailable'});
-        let backorderedQty = (qtyOnHand > qty) ? 0 : Math.abs(qtyOnHand - qty);
+        for(i=0; i<itemSOCount; i++){
+          let qty = transactionRecord.getCurrentSublistValue({sublistId: 'item', fieldId: 'quantity'});
+          let qtyOnHand = transactionRecord.getCurrentSublistValue({sublistId: 'item', fieldId: 'quantityavailable'});
+          let backorderedQty = (qtyOnHand > qty) ? 0 : Math.abs(qtyOnHand - qty);
 
-        if(backorderedQty>0){
-          backorderCount++;
-        }      
-      }
-      
-      if(itemSOCount > backorderCount){
-          itemFulfillmentRec = record.transform({
-            fromType: record.Type.SALES_ORDER,
-            fromId: parseInt(newRecordId),
-            toType: record.Type.ITEM_FULFILLMENT,
-          }); 
+          if(backorderedQty>0){
+            backorderCount++;
+          }      
+        }
         
-          let itemIFCount = itemFulfillmentRec.getLineCount({
-              sublistId: 'item' 
-          });
-          for(i=0; i<itemIFCount; i++){
-            backorderedIF = transactionRecord.getSublistValue({sublistId: 'item', fieldId: 'backordered', line: i});
-            if(backorderedIF>0){
-              itemFulfillmentRec.setSublistValue({
-                sublistId: 'item',
-                fieldId: 'itemreceive',
-                line: i,
-                value: false
-              });
+        if(itemSOCount > backorderCount){
+            itemFulfillmentRec = record.transform({
+              fromType: record.Type.SALES_ORDER,
+              fromId: parseInt(newRecordId),
+              toType: record.Type.ITEM_FULFILLMENT,
+            }); 
+          
+            let itemIFCount = itemFulfillmentRec.getLineCount({
+                sublistId: 'item' 
+            });
+            for(i=0; i<itemIFCount; i++){
+              backorderedIF = transactionRecord.getSublistValue({sublistId: 'item', fieldId: 'backordered', line: i});
+              if(backorderedIF>0){
+                itemFulfillmentRec.setSublistValue({
+                  sublistId: 'item',
+                  fieldId: 'itemreceive',
+                  line: i,
+                  value: false
+                });
+              }
             }
-          }
-      
-          newItemF = itemFulfillmentRec.save();
-      }
+        
+            newItemF = itemFulfillmentRec.save();
+        }
 
-    }catch(error){
-      log.error("Error creating Item fulfillment record: " + JSON.stringify(error.message));
-      return newRecordId;
-    } 
+      }catch(error){
+        log.error("Error creating Item fulfillment record: " + JSON.stringify(error.message));
+        return newRecordId;
+      } 
+    }
+    
 
     if (aopdVendor) {
       let purchaseOrderRec = record.create({
@@ -426,6 +431,9 @@ define([
     }
 
     let strSublistID = "item";
+    
+    log.debug("processTransactionLines", "Processing lines...")
+
     lineItems.forEach((itemDetail) => {
       let productSKU = itemDetail.ProductSku;
       if (productSKU) {
@@ -455,7 +463,7 @@ define([
             transactionRecord.setCurrentSublistValue({
               sublistId: "item",
               fieldId: "istaxable",
-              value: "F",
+              value: false,
             });
           }
 
@@ -490,6 +498,9 @@ define([
                     searchColumn,
                     searchOperator
                   );
+                  log.debug("objMappingFields.lineFields", {
+                    resultValue: resultValue
+                  });
                   if (!BSPLBUtils.isEmpty(resultValue)) {
                     transactionRecord.setCurrentSublistValue({
                       sublistId: nsSublistId,
@@ -559,6 +570,7 @@ define([
         }
       }
     });
+    log.debug("processTransactionLines", "Lines processed");
   }
 
   /**
@@ -633,7 +645,8 @@ define([
         };
       }
     } catch (error) {
-      log.error(functionName, { error: error.message });
+      log.error(functionName, error);
+      log.error(functionName, JSON.stringify(error));
       let errorDetail = JSON.stringify({ error: error.message });
       let errorSource = "BSP | LB | MR | Create NS Records - " + functionName;
       BSPLBUtils.createErrorLog(errorSource, error.message, errorDetail);
