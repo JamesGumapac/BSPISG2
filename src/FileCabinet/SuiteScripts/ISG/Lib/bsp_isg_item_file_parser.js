@@ -197,7 +197,7 @@ define(["N/file", "N/record", "N/search", "N/runtime"], /**
   }
 
   /**
-   * Update Logiblock UOM
+   * Update Logicblock UOM
    * @param abbreviation
    * @param uomId
    * @returns {number|*}
