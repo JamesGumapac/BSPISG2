@@ -851,6 +851,7 @@
      * @returns The resultObj is being returned.
     */
     function processVendorBill(vendorBillRec, jsonObjResponse, resultObj){
+
         let invoicelines = getInvoicelines(jsonObjResponse);
 
         let itemCount = vendorBillRec.getLineCount({
@@ -886,12 +887,49 @@
         });
 
         if(itemCount > 0){
-            let recID = vendorBillRec.save();
-            resultObj.vendorBillRecID = recID;
+            try{
+                let dueDateInv = getInvoiceHeaderFieldValue(jsonObjResponse, "DueDateTime");
+                if(dueDateInv){
+                    let dueDate = new Date(dueDateInv);
+                    dueDate.setDate(dueDate.getDate()+1);
+                    vendorBillRec.setValue('duedate', dueDate);
+                }
+                
+                let invoiceCharges = getInvoiceCharges(jsonObjResponse);
+                if(invoiceCharges.length > 0){
+                    let chargeTypeMapping = getChargeTypeMapping();
+                    if(chargeTypeMapping.length === 0){
+                        throw "Need to define the Charge/Expense Category mapping in the Trading Partner Record";
+                    }
+                    for (let index = 0; index < invoiceCharges.length; index++) {
+                        const charge = invoiceCharges[index];
+                        let expenseCategory = findExpenseCategory(charge.Charge.type, chargeTypeMapping);
+                        if(!expenseCategory)
+                            throw "Charge type " + charge.Charge.type + " not mapped in the Trading Partner Record";
+
+                        vendorBillRec.setSublistValue({
+                            sublistId: 'expense',
+                            fieldId: 'category',
+                            line: index,
+                            value: parseInt(expenseCategory)
+                        });
+                        vendorBillRec.setSublistValue({
+                            sublistId: 'expense',
+                            fieldId: 'amount',
+                            line: index,
+                            value: parseFloat(charge.Amount)
+                        });
+                    }
+                }
+
+
+                let recID = vendorBillRec.save();
+                resultObj.vendorBillRecID = recID;
+            }catch(error){
+                throw error.message;
+            }
         }else{
-            resultObj.status = "Error";
-            resultObj.vendorBillRecID = null;
-            return resultObj;
+            throw "Error procesing Invoice Lines";
         }
 
         return resultObj;
@@ -901,6 +939,10 @@
         switch (field) {
             case "ID": 
                 return  jsonObjResponse.DataArea.Invoice.InvoiceHeader.PurchaseOrderReference.DocumentID[field];
+            case "TotalAmount":
+                return jsonObjResponse.DataArea.Invoice.InvoiceHeader.TotalAmount;
+            case "DueDateTime":
+                    return jsonObjResponse.DataArea.Invoice.InvoiceHeader.PaymentTerm.Term.DueDateTime;
         }
         return null;
     }
@@ -916,8 +958,58 @@
         return lines;
     }
 
+    function getInvoiceCharges(jsonObjResponse){
+        let charges = [];
+        let invoiceCharges = getCharges(jsonObjResponse);
+        if(invoiceCharges.length > 0){
+            charges = invoiceCharges;
+        }else{
+            charges.push(invoiceCharges);
+        }
+        return charges;
+    }
+
     function getLines(jsonObjResponse){
         return jsonObjResponse.DataArea.Invoice.InvoiceLine;
+    }
+
+    function getCharges(jsonObjResponse){
+        return jsonObjResponse.DataArea.Invoice.InvoiceHeader.Charge;
+    }
+
+    function getChargeTypeMapping(){
+        let map = [];
+        const chargeTypeSearchObj = search.create({
+            type: "customrecord_bsp_isg_tp_charge_type",
+            filters:
+            [
+               ["custrecord_bsp_isg_tp_charge_parent.name","is","Essendant Inc"]
+            ],
+            columns:
+            [
+               search.createColumn({name: "custrecord_bsp_isg_charge_type", label: "Charge Type"}),
+               search.createColumn({name: "custrecord_bsp_isg_expense_category", label: "NetSuite Expense Category"})
+            ]
+        });
+
+        chargeTypeSearchObj.run().each(function(result){
+            let chargeType = result.getValue("custrecord_bsp_isg_charge_type");
+            let netSuiteExpenseCategory = result.getValue("custrecord_bsp_isg_expense_category");
+            map.push({
+                chargeType: chargeType,
+                netSuiteExpenseCategory: netSuiteExpenseCategory
+            })
+            return true;
+        });
+        return map;
+    }
+
+    function findExpenseCategory(type, chargeTypeMapping){
+        for (let index = 0; index < chargeTypeMapping.length; index++) {
+            if(chargeTypeMapping[index].chargeType == type)
+                return chargeTypeMapping[index].netSuiteExpenseCategory;      
+        }
+        return null;
     }
 
     function getInvoiceItem(invoiceLines, item){

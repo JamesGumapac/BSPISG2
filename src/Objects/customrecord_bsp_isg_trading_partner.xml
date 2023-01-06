@@ -1276,5 +1276,9 @@ This is a 5-digit integer value, unique for each ProcessPurchaseOrder. You may s
       <tabparent></tabparent>
       <tabtitle>Options</tabtitle>
     </subtab>
+    <subtab scriptid="tab_166_t927173_491">
+      <tabparent></tabparent>
+      <tabtitle>Charge Types</tabtitle>
+    </subtab>
   </subtabs>
 </customrecordtype>
