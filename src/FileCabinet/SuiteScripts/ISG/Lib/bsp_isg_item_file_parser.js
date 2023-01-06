@@ -238,7 +238,7 @@ define(["N/file", "N/record", "N/search", "N/runtime"], /**
           rec.setCurrentSublistValue({
             sublistId: "uom",
             fieldId: "pluralabbreviation",
-            value: abbreviation + "'s",
+            value: abbreviation,
           });
           rec.setCurrentSublistValue({
             sublistId: "uom",
@@ -285,12 +285,75 @@ define(["N/file", "N/record", "N/search", "N/runtime"], /**
   }
 
   /**
+   * Update the unit of measurement of the item
+   * @param itemId
+   * @param abbrevation
+   * @returns {number|*}
+   */
+  function updateUnitOfMeasure(itemId, abbrevation) {
+    try {
+      const primaryUOMId = getUnitOfmeasureId(abbrevation);
+      const itemRec = record.load({
+        type: record.Type.INVENTORY_ITEM,
+        id: itemId,
+        isDynamic: true,
+      });
+      const primaryUnitTypeId = itemRec.getValue("unitstype");
+  
+      if (!isEmpty(primaryUOMId) || primaryUnitTypeId === "") {
+        itemRec.setValue({
+          fieldId: "unitstype",
+          value: primaryUOMId,
+        });
+      }
+      if (primaryUOMId) {
+        let UOMPrimaryBasedUnit = addUnitOfMeasure(abbrevation, primaryUOMId);
+        if (UOMPrimaryBasedUnit) {
+          itemRec.setValue({
+            fieldId: "stockunit",
+            value: UOMPrimaryBasedUnit,
+          });
+          itemRec.setValue({
+            fieldId: "purchaseunit",
+            value: UOMPrimaryBasedUnit,
+          });
+          itemRec.setValue({
+            fieldId: "saleunit",
+            value: UOMPrimaryBasedUnit,
+          });
+        }
+      }
+      return itemRec.save({ ignoreMandatoryFields: true });
+    } catch (e) {
+      log.error("updateUnitOfMeasure", e.message);
+    }
+  }
+  
+  /**
+   * check if the string is empty
+   * @param stValue
+   * @returns {boolean}
+   */
+  function isEmpty(stValue) {
+    return (
+      stValue === "" ||
+      stValue == null ||
+      false ||
+      (stValue.constructor === Array && stValue.length === 0) ||
+      (stValue.constructor === Object &&
+        (function (v) {
+          for (var k in v) return false;
+          return true;
+        })(stValue))
+    );
+  }
+
+  /**
    * create initial unit of measurement
-   * @param abbreviation
    * @param name
    * @returns {number|*}
    */
-  function createUnitOfMeasure(abbreviation, name) {
+  function createUnitOfMeasure(name) {
     try {
       const rec = record.create({
         type: "unitstype",
@@ -306,7 +369,7 @@ define(["N/file", "N/record", "N/search", "N/runtime"], /**
       rec.setCurrentSublistValue({
         sublistId: "uom",
         fieldId: "abbreviation",
-        value: abbreviation,
+        value: "EA",
       });
 
       rec.setCurrentSublistValue({
@@ -322,18 +385,18 @@ define(["N/file", "N/record", "N/search", "N/runtime"], /**
       rec.setCurrentSublistValue({
         sublistId: "uom",
         fieldId: "pluralabbreviation",
-        value: abbreviation + "s",
+        value: "EA",
       });
       rec.setCurrentSublistValue({
         sublistId: "uom",
         fieldId: "pluralname",
-        value: abbreviation,
+        value: "Each",
       });
 
       rec.setCurrentSublistValue({
         sublistId: "uom",
         fieldId: "unitname",
-        value: abbreviation,
+        value: "Each",
       });
       rec.commitLine("uom");
       return rec.save({ ignoreMandatoryFields: true });
@@ -348,7 +411,7 @@ define(["N/file", "N/record", "N/search", "N/runtime"], /**
    */
   function getUnitOfmeasureId(abbreviation) {
     try {
-      const logicblockUOM = "Logicblock UOM";
+      const logicblockUOM = "Logicblock";
       let unitOfMeasureId;
       const unitstypeSearchObj = search.create({
         type: "unitstype",
@@ -361,7 +424,7 @@ define(["N/file", "N/record", "N/search", "N/runtime"], /**
           unitOfMeasureId = result.id;
         });
       } else {
-        unitOfMeasureId = createUnitOfMeasure(abbreviation, logicblockUOM);
+        unitOfMeasureId = createUnitOfMeasure(logicblockUOM);
       }
       return unitOfMeasureId;
     } catch (e) {
@@ -446,32 +509,33 @@ define(["N/file", "N/record", "N/search", "N/runtime"], /**
           fieldId: "displayname",
           value: itemData.title,
         });
-      let oumId = getUnitOfmeasureId(itemData.uom);
 
-      if (oumId) {
-        itemData.uom &&
-          itemRec.setValue({
-            fieldId: "unitstype",
-            value: oumId,
-          });
-        let UOMPrimaryBasedUnit = addUnitOfMeasure(itemData.uom, oumId);
-        if (UOMPrimaryBasedUnit) {
-          itemRec.setValue({
-            fieldId: "stockunit",
-            value: UOMPrimaryBasedUnit,
-          });
-          itemRec.setValue({
-            fieldId: "purchaseunit",
-            value: UOMPrimaryBasedUnit,
-          });
-          itemRec.setValue({
-            fieldId: "saleunit",
-            value: UOMPrimaryBasedUnit,
-          });
+      if (itemData.uom) {
+        let oumId = getUnitOfmeasureId(itemData.uom);
+
+        if (oumId) {
+          itemData.uom &&
+            itemRec.setValue({
+              fieldId: "unitstype",
+              value: oumId,
+            });
+          let UOMPrimaryBasedUnit = addUnitOfMeasure(itemData.uom, oumId);
+          if (UOMPrimaryBasedUnit) {
+            itemRec.setValue({
+              fieldId: "stockunit",
+              value: UOMPrimaryBasedUnit,
+            });
+            itemRec.setValue({
+              fieldId: "purchaseunit",
+              value: UOMPrimaryBasedUnit,
+            });
+            itemRec.setValue({
+              fieldId: "saleunit",
+              value: UOMPrimaryBasedUnit,
+            });
+          }
         }
-
       }
-
       itemData.manufacturer_name &&
         itemRec.setValue({
           fieldId: "manufacturer",
@@ -494,6 +558,7 @@ define(["N/file", "N/record", "N/search", "N/runtime"], /**
           createVendorSublist(itemId, itemData.vendor_associations);
         }
       }
+      return itemId
     } catch (e) {
       log.error("createItem", e.message + " for Item ID:" + itemData.id);
     }
@@ -507,5 +572,6 @@ define(["N/file", "N/record", "N/search", "N/runtime"], /**
     checkItemVendorSublist: checkItemVendorSublist,
     ifItemExists: ifItemExists,
     createVendorSublist: createVendorSublist,
+    updateUnitOfMeasure: updateUnitOfMeasure,
   };
 });
