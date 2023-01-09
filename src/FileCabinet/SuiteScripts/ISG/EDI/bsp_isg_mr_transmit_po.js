@@ -121,7 +121,6 @@ define([
             try{
                 let transmission = JSON.parse(mapContext.value);      
                 let poId = transmission.data.purchaseOrder.purchaseOrderID;
-                transmission = BSP_POutil.fetchItemUOM(transmission);
                 log.debug(functionName, `Transmission PO: ${JSON.stringify(transmission)}`);
                 mapContext.write({
                     key: poId, 

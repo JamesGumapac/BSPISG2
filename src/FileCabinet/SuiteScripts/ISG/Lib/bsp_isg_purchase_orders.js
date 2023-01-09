@@ -916,38 +916,6 @@
         return false;
     }
 
-
-    function fetchItemUOM(transmissionData){
-        let purchaseOrderItems = transmissionData.data.purchaseOrder.items;
-        let itemArray = purchaseOrderItems.map((i) => i.itemID);
-
-        const customrecord_bsp_isg_item_acct_dataSearchObj = search.create({
-            type: "customrecord_bsp_isg_item_acct_data",
-            filters:
-            [
-               ["custrecord_bsp_isg_parent_item","anyof",itemArray]
-            ],
-            columns:
-            [
-               search.createColumn({name: "custrecord_bsp_isg_parent_item", label: "Item"}),
-               search.createColumn({name: "custrecord_bsp_isg_contract_code_uom", label: "UOM"})
-            ]
-        });
-
-        customrecord_bsp_isg_item_acct_dataSearchObj.run().each(function(result){
-            let itemID = result.getValue("custrecord_bsp_isg_parent_item");
-            let uom = result.getValue("custrecord_bsp_isg_contract_code_uom");
-            let index = findItemIndex(purchaseOrderItems, itemID);
-            if(index >= 0){
-                purchaseOrderItems[index].itemUOM = uom;
-            }
-            return true;
-        });
-
-        transmissionData.data.purchaseOrder.items = purchaseOrderItems;
-        return transmissionData;
-    }
-
     /**
      * Get all results from a saved search
      * @param {*} objSavedSearch 
@@ -1028,7 +996,6 @@
         setPOMessageID: setPOMessageID,
         deletePO: deletePO,
         findPObyNumber: findPObyNumber,
-        fetchItemUOM: fetchItemUOM,
         getQueueOfPO: getQueueOfPO,
         getVendor: getVendor,
         getTransmissionFields: getTransmissionFields,
