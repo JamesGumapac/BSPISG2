@@ -15,7 +15,6 @@ define([
       functionName,
       "************* GET INPUT DATA STARTED *************"
     );
-    
     try {
       const lbIntegrationSettings = BSPItemParser.getLbSettingsForUploadItem();
       const lbResponse = https.get({

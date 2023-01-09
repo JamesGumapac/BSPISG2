@@ -93,6 +93,9 @@ define(["N/file", "N/record", "N/search", "N/runtime"], /**
    * @returns {number|*}
    */
   function createVendor(vendorName) {
+    if (vendorName.includes("Essendant")) {
+      vendorName = "Essendant Inc";
+    }
     try {
       const vendorRec = record.create({
         type: record.Type.VENDOR,
@@ -182,6 +185,9 @@ define(["N/file", "N/record", "N/search", "N/runtime"], /**
    */
   function checkIfVendorExists(vendorName) {
     try {
+      if (vendorName.includes("Essendant")) {
+        vendorName = "Essendant Inc";
+      }
       let vendorId;
       const vendorSearch = search.create({
         type: "vendor",
@@ -299,7 +305,7 @@ define(["N/file", "N/record", "N/search", "N/runtime"], /**
         isDynamic: true,
       });
       const primaryUnitTypeId = itemRec.getValue("unitstype");
-  
+
       if (!isEmpty(primaryUOMId) || primaryUnitTypeId === "") {
         itemRec.setValue({
           fieldId: "unitstype",
@@ -328,7 +334,7 @@ define(["N/file", "N/record", "N/search", "N/runtime"], /**
       log.error("updateUnitOfMeasure", e.message);
     }
   }
-  
+
   /**
    * check if the string is empty
    * @param stValue
@@ -558,7 +564,7 @@ define(["N/file", "N/record", "N/search", "N/runtime"], /**
           createVendorSublist(itemId, itemData.vendor_associations);
         }
       }
-      return itemId
+      return itemId;
     } catch (e) {
       log.error("createItem", e.message + " for Item ID:" + itemData.id);
     }
