@@ -49,7 +49,7 @@ define(['N/runtime', 'N/record', 'N/search', 'N/task', './Lib/bsp_isg_purchase_o
 
                 let paramTransmissionSavedSearchObj = search.load({id: transmitionSavedSearchID});
                 let deliveryTime = BSPTradingParnters.getTradingPartnerDeliveryTime(vendor);
-                let transmissionSearchObj = BSPTransmitionsUtil.buildTransmissionSavedSearch(paramTransmissionSavedSearchObj);
+                let transmissionSearchObj = BSPTransmitionsUtil.buildTransmissionSavedSearch(paramTransmissionSavedSearchObj, vendor);
                 let resultSearch = BSPTransmitionsUtil.searchAll(transmissionSearchObj);
                 resultSearch.forEach(element => {
                     let salesOrderID = element.id;
@@ -98,7 +98,7 @@ define(['N/runtime', 'N/record', 'N/search', 'N/task', './Lib/bsp_isg_purchase_o
                         transmissionLocation: transmissionLocation,
                         deliveryTime: deliveryTime
                     });                                            
-                });  
+                }); 
             } catch (error)
             {
                 log.error(functionName, {error: error.toString()});

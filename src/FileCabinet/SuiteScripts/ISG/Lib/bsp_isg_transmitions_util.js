@@ -523,7 +523,7 @@
         log.debug("deleteQueue", `Queue ID ${queueID} has been deleted`);
     }
 
-    function buildTransmissionSavedSearch(transmitionSavedSearcObj){
+    function buildTransmissionSavedSearch(transmitionSavedSearcObj, vendor){
         let fixedFilters = [
             {
                name: "type",
@@ -591,7 +591,32 @@
                isnot: false,
                leftparens: 0,
                rightparens: 0
-            }
+            },
+            {
+                name: "status",
+                operator: "anyof",
+                values: [
+                   "SalesOrd:D",
+                   "SalesOrd:E",
+                   "SalesOrd:B"
+                ],
+                isor: false,
+                isnot: false,
+                leftparens: 0,
+                rightparens: 0
+             },
+             {
+                name: "othervendor",
+                join: "item",
+                operator: "anyof",
+                values: [
+                   vendor
+                ],
+                isor: false,
+                isnot: false,
+                leftparens: 0,
+                rightparens: 0
+             }
          ];
 
         let fixedColumns = [
