@@ -24,7 +24,7 @@
         let requestParams = getOrdersRequestParams(settings);
 
         let orders = [];
-        let requestBodyXML = getOrdersXMLStrRequest(loginData, requestParams);
+        let requestBodyXML = getOrdersXMLStrRequest(loginData, requestParams, requestParams.startIndex,  requestParams.pageSize);
         let logicBlockServerResponse = BSPLBServiceAPI.runService(serviceURL, requestBodyXML, soapGetOrdersAction);
         
         let lbOrdersResult = null;
@@ -46,7 +46,7 @@
                 let reqIndex = 1;
 
                 while(reqIndex <= totalRequests){
-                    let requestBodyXML = getOrdersXMLStrRequest(loginData, reqIndex, pageSize);
+                    let requestBodyXML = getOrdersXMLStrRequest(loginData, requestParams, reqIndex, pageSize);
                     let logicBlockServerResponse = BSPLBServiceAPI.runService(serviceURL, requestBodyXML, soapGetOrdersAction);
         
                     if(logicBlockServerResponse){
@@ -394,7 +394,7 @@
      * @param {*} requestParams 
      * @returns 
      */
-     function getOrdersXMLStrRequest(loginData, requestParams){
+     function getOrdersXMLStrRequest(loginData, requestParams, reqIndex, pageSize){
         return  `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/" xmlns:log="http://schemas.datacontract.org/2004/07/Logicblock.Commerce.Domain">
         <soapenv:Header/>
         <soapenv:Body>
@@ -410,8 +410,8 @@
                  <log:DownloadStartDate>${requestParams.startDate}</log:DownloadStartDate>    
                  <log:NumberOfDays>${requestParams.numberOfDays}</log:NumberOfDays>
               </tem:ordersReadyForThirdPartyParams>  
-              <tem:startIndex>${requestParams.startIndex}</tem:startIndex> 
-              <tem:pageSize>${requestParams.pageSize}</tem:pageSize>
+              <tem:startIndex>${reqIndex}</tem:startIndex> 
+              <tem:pageSize>${pageSize}</tem:pageSize>
            </tem:GetOrdersReadyForThirdParty>
         </soapenv:Body>
      </soapenv:Envelope>`;

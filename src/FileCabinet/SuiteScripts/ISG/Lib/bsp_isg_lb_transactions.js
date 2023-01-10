@@ -216,11 +216,13 @@ define([
       if(isEmpty != true){
         log.debug('shipping method ID IF', objFields.order.ShippingMethodId);
         shippingMethod = searchShippingItem(objFields.order.ShippingMethodId);
-        transactionRecord.setValue({ fieldId: "shipcarrier", value: "nonups" });
-        transactionRecord.setValue({
-          fieldId: "shipmethod",
-          value: shippingMethod[0].internalid,
-        });
+        if(shippingMethod.length > 0){
+          transactionRecord.setValue({ fieldId: "shipcarrier", value: "nonups" });
+          transactionRecord.setValue({
+            fieldId: "shipmethod",
+            value: shippingMethod[0].internalid,
+          });
+        }
       }
 
       /*--- Tax Calculations   ---*/
@@ -325,13 +327,10 @@ define([
         });
 
         let newItemF;
-        let backordered;
         let backorderedIF;
         let itemFulfillmentRec;
         let backorderCount = 0;
-
-          
-        
+       
         for(i=0; i<itemSOCount; i++){
           let qty = transactionRecord.getCurrentSublistValue({sublistId: 'item', fieldId: 'quantity'});
           let qtyOnHand = transactionRecord.getCurrentSublistValue({sublistId: 'item', fieldId: 'quantityavailable'});
@@ -368,11 +367,13 @@ define([
         }
 
       }catch(error){
-        log.error("Error creating Item fulfillment record: " + JSON.stringify(error.message));
-        return newRecordId;
+        log.error("Create Item Fulfillment", "Error creating Item fulfillment record: " + JSON.stringify(error.message));
+        return {
+          status: "IF Not created",
+          recordId: newRecordId
+        };
       } 
     }
-    
 
     if (aopdVendor) {
       let purchaseOrderRec = record.create({
