@@ -48,6 +48,8 @@ define([
                 let recId = objNewRecord.id;
                 let recType = objNewRecord.type;
                 let rec = record.load({id: recId, type: recType});
+
+                e = e.type ? e.message : e;
                 rec.setValue({ fieldId: "custrecord_bsp_isg_error_message", value: JSON.stringify(e) }); 
                 rec.save({ignoreMandatoryFields: true});
                 log.debug("processAS2Message", '*** SCRIPT EXECUTION COMPLETE ***');

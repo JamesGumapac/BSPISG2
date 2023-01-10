@@ -33,7 +33,7 @@
          try{
              log.debug(functionName, `Request Body:  ${JSON.stringify(requestBody)}`);
              let decodedXMLresponse = BSP_AS2Service.decodeStringContent(requestBody.Payload.Content);
-
+             decodedXMLresponse = linearize(decodedXMLresponse);
              let jsonObjResponse = BSP_AS2Service.parseResponseXml(decodedXMLresponse);  
              log.debug(functionName, `${JSON.stringify(jsonObjResponse)}`);  
                     
@@ -269,6 +269,10 @@
     
           as2MessageRecord.save();
           log.debug("createAS2incomingMessageRecord", "AS2 Incoming Message Record Created");
+    }
+
+    function linearize(xml) {
+        return (xml!= null) ? xml.trim().replace(/(>|&gt;){1,1}( |\t|\n|\r|\s)*(<|&lt;){1,1}/g, "$1$3") : null;
     }
 
     return {post}
