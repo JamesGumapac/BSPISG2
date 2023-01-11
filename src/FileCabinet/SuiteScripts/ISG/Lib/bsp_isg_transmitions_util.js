@@ -616,6 +616,17 @@
                 isnot: false,
                 leftparens: 0,
                 rightparens: 0
+             },
+             {
+                name: "rate",
+                operator: "greaterthan",
+                values: [
+                   "0.00"
+                ],
+                isor: false,
+                isnot: false,
+                leftparens: 0,
+                rightparens: 0
              }
          ];
 
