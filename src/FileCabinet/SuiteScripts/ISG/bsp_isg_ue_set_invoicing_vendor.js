@@ -8,6 +8,13 @@ define(["N/search", "N/record", "N/runtime"],
 
   const afterSubmit = (context) => {
       let newRecord = context.newRecord;
+      let type = context.type;
+
+    if (type !== context.UserEventType.CREATE && type !== context.UserEventType.COPY) {
+
+        return;
+
+    }
     try { 
       vendorbillRec = record.load({
         type: 'vendorbill',
