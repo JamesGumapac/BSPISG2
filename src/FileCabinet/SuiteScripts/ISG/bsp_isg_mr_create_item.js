@@ -22,7 +22,6 @@ define([
       });
       const itemInfoContent = lbResponse.body;
       return JSON.parse(itemInfoContent);
-   
     } catch (e) {
       log.error(functionName, e.message);
     }
@@ -43,7 +42,8 @@ define([
           let itemUom = itemObj.uom;
           let vendorUom = itemObj.vendor_associations[0].uom;
           let vendor = BSPItemParser.checkIfVendorExists(
-            itemObj.vendor_associations[0].vendor_name
+            itemObj.vendor_associations[0].vendor_name,
+            itemObj.vendor_associations[0].vendor_id
           );
           // update the item vendor sublist if vendor uom  = item uom
           if (itemUom === vendorUom) {
