@@ -597,18 +597,17 @@ define([
     let functionName = "fetchTransaction";
     let transactionRecordResult = {};
     let transactionUpdated = false;
+    
     try {
-      let transactionRecID;
-      if (!BSPLBUtils.getRecordInternalID(order.Id)) {
-        transactionRecID = "";
-      }
-      // let transactionRecID = BSPLBUtils.getRecordInternalID(order.Id);
+      let deleteSuccess = true;
+      let transactionRecID = BSPLBUtils.getRecordInternalID(order.Id);
       if (transactionRecID) {
         transactionUpdated = true;
         try {
           BSPLBUtils.deleteMappedKey(order.Id);
           BSPLBUtils.deleteTransaction(recType, transactionRecID);
         } catch (error) {
+          deleteSuccess = false;
           log.error(functionName, { error: error.message });
           let errorDetail = JSON.stringify({ error: error.message });
           let errorSource =
@@ -617,34 +616,36 @@ define([
         }
       }
 
-      let objFields = {
-        order: order,
-        ShippingAddress: order.ShippingAddress,
-        BillingAddress: order.BillingAddress,
-        customerRecordResult: customerRecordResult,
-        itemRecordsResult: itemRecordsResult,
-        logicBlockForm:
-          recType == record.Type.CASH_SALE
-            ? settings.custrecord_bsp_lb_cash_sale_form[0].value
-            : settings.custrecord_bsp_lb_sales_order_form[0].value,
-      };
-      let recordCreationResult = createTransactionRecord(
-        objFields,
-        objMappingFields,
-        customerRecordResult,
-        itemRecordsResult,
-        recType,
-        settings,
-        loginData
-      );
-      if (recordCreationResult && recordCreationResult.recordId) {
-        internalId = recordCreationResult.recordId;
-        transactionRecordResult = {
-          nsID: internalId,
-          logicBlockID: order.Id,
-          transactionUpdated: transactionUpdated,
+      if(!transactionUpdated || (transactionUpdated && deleteSuccess)) {
+        let objFields = {
+          order: order,
+          ShippingAddress: order.ShippingAddress,
+          BillingAddress: order.BillingAddress,
+          customerRecordResult: customerRecordResult,
+          itemRecordsResult: itemRecordsResult,
+          logicBlockForm:
+            recType == record.Type.CASH_SALE
+              ? settings.custrecord_bsp_lb_cash_sale_form[0].value
+              : settings.custrecord_bsp_lb_sales_order_form[0].value,
         };
-      }
+        let recordCreationResult = createTransactionRecord(
+          objFields,
+          objMappingFields,
+          customerRecordResult,
+          itemRecordsResult,
+          recType,
+          settings,
+          loginData
+        );
+        if (recordCreationResult && recordCreationResult.recordId) {
+          internalId = recordCreationResult.recordId;
+          transactionRecordResult = {
+            nsID: internalId,
+            logicBlockID: order.Id,
+            transactionUpdated: transactionUpdated,
+          };
+        }
+      }    
     } catch (error) {
       log.error(functionName, error);
       log.error(functionName, JSON.stringify(error));
