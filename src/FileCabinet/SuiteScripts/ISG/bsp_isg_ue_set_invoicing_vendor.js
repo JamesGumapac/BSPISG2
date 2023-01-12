@@ -24,12 +24,12 @@ define(["N/search", "N/record", "N/runtime"],
       let invoicingVendor =  search.lookupFields({
           type: 'vendor',
           id: vendorId,
-          columns: ['custentity_bsp_invoicingvendor']
+          columns: ['custentity_bsp_isg_invoicingvendor']
          });
-      log.debug('invoicingVendor.custentity_bsp_invoicingvendor[0].value',invoicingVendor.custentity_bsp_invoicingvendor[0].value);
+      log.debug('invoicingVendor.custentity_bsp_isg_invoicingvendor[0].value',invoicingVendor.custentity_bsp_isg_invoicingvendor[0].value);
      if(invoicingVendor != '')
      {
-      vendorbillRec.setValue({fieldId:'entity', value: invoicingVendor.custentity_bsp_invoicingvendor[0].value})
+      vendorbillRec.setValue({fieldId:'entity', value: invoicingVendor.custentity_bsp_isg_invoicingvendor[0].value})
      }
       vendorbillRec.save();
     } catch (e) {
