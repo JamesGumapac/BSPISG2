@@ -56,6 +56,31 @@ define(["N/file", "N/record", "N/search", "N/runtime"], /**
   }
 
   /**
+   * Update vendor id from json payload
+   * @param vendorId
+   * @param vendor_code
+   * @returns {number|*}
+   */
+  function updateVendorCode(vendorId, vendor_code) {
+    try {
+      const rec = record.load({
+        type: record.Type.VENDOR,
+        id: vendorId,
+        isDynamic: true,
+      });
+
+      rec.setValue({
+        fieldId: "externalid",
+        value: vendor_code,
+      });
+
+      rec.save({ ignoreMandatoryFields: true });
+    } catch (e) {
+      log.error("updateVendorCode", e.message);
+    }
+  }
+
+  /**
    * Check Item if exists
    * @param itemId
    * @returns {*}
@@ -90,21 +115,25 @@ define(["N/file", "N/record", "N/search", "N/runtime"], /**
   /**
    * Create new vendor
    * @param vendorName
+   * @param vendorCode
    * @returns {number|*}
    */
-  function createVendor(vendorName) {
-    if (vendorName.includes("Essendant")) {
-      vendorName = "Essendant Inc";
-    }
+  function createVendor(vendorName, vendorCode) {
     try {
       const vendorRec = record.create({
         type: record.Type.VENDOR,
         isDynamic: true,
       });
       vendorRec.setValue({
-        fieldId: "companyname",
+        fieldId: "entityid",
         value: vendorName,
       });
+      if (vendorCode) {
+        vendorRec.setValue({
+          fieldId: "externalid",
+          value: vendorCode,
+        });
+      }
       return vendorRec.save({
         ignoreMandatoryFields: true,
       });
@@ -151,9 +180,15 @@ define(["N/file", "N/record", "N/search", "N/runtime"], /**
         isDynamic: true,
       });
 
-      let vendorId = checkIfVendorExists(vendorAssociations[0].vendor_name);
+      let vendorId = checkIfVendorExists(
+        vendorAssociations[0].vendor_name,
+        vendorAssociations[0].vendor_id
+      );
       if (!vendorId) {
-        vendorId = createVendor(vendorAssociations[0].vendor_name);
+        vendorId = createVendor(
+          vendorAssociations[0].vendor_name,
+          vendorAssociations[0].vendor_id
+        );
       }
       itemRec.selectNewLine("itemvendor");
       itemRec.setCurrentSublistValue({
@@ -181,21 +216,39 @@ define(["N/file", "N/record", "N/search", "N/runtime"], /**
   /**
    * Check if vendor Exists
    * @param vendorName
+   * @param vendorCode
    * @returns {*|boolean}
    */
-  function checkIfVendorExists(vendorName) {
+  function checkIfVendorExists(vendorName, vendorCode) {
     try {
-      if (vendorName.includes("Essendant")) {
-        vendorName = "Essendant Inc";
-      }
       let vendorId;
-      const vendorSearch = search.create({
-        type: "vendor",
-        filters: [["entityid", "is", vendorName]],
-      });
-      vendorSearch.run().each(function (result) {
-        vendorId = result.id;
-      });
+      let vendorSearch;
+      if (!isEmpty(vendorCode)) {
+        vendorSearch = search.create({
+          type: "vendor",
+          filters: [["externalid", "is", vendorCode]],
+          columns: [
+            search.createColumn({ name: "externalid", label: "External ID" }),
+          ],
+        });
+        vendorSearch.run().each(function (result) {
+          vendorId = result.id;
+        });
+      }
+
+      if (isEmpty(vendorId)) {
+        vendorSearch = search.create({
+          type: "vendor",
+          filters: [["entityid", "is", vendorName]],
+        });
+        vendorSearch.run().each(function (result) {
+          vendorId = result.id;
+        });
+        if (vendorId) {
+          updateVendorCode(vendorId, vendorCode);
+        }
+      }
+
       return vendorId;
     } catch (e) {
       log.error("checkIfVendorExists", e.message);
@@ -306,7 +359,7 @@ define(["N/file", "N/record", "N/search", "N/runtime"], /**
       });
       const primaryUnitTypeId = itemRec.getValue("unitstype");
 
-      if (!isEmpty(primaryUOMId) || primaryUnitTypeId === "") {
+      if (!isEmpty(primaryUOMId) && primaryUnitTypeId === "") {
         itemRec.setValue({
           fieldId: "unitstype",
           value: primaryUOMId,
@@ -331,7 +384,7 @@ define(["N/file", "N/record", "N/search", "N/runtime"], /**
       }
       return itemRec.save({ ignoreMandatoryFields: true });
     } catch (e) {
-      log.error("updateUnitOfMeasure", e.message);
+      log.error("updateUnitOfMeasure", "item Id: " + itemId + " " + e.message);
     }
   }
 
@@ -499,11 +552,13 @@ define(["N/file", "N/record", "N/search", "N/runtime"], /**
           fieldId: "mpn",
           value: itemData.mpn,
         });
+
       itemData.description &&
         itemRec.setValue({
           fieldId: "salesdescription",
           value: itemData.description,
         });
+
       itemData.gtin &&
         itemRec.setValue({
           fieldId: "upccode",
