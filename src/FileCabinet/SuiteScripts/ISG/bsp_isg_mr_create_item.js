@@ -21,6 +21,7 @@ define([
         url: lbIntegrationSettings.url,
       });
       const itemInfoContent = lbResponse.body;
+      log.debug("itemInfoContent", itemInfoContent)
       return JSON.parse(itemInfoContent);
     } catch (e) {
       log.error(functionName, e.message);
@@ -79,5 +80,5 @@ define([
     }
   };
 
-  return { getInputData, reduce, summarize };
+  return { getInputData,reduce,   summarize };
 });

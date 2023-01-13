@@ -68,7 +68,7 @@ define(["N/file", "N/record", "N/search", "N/runtime"], /**
         id: vendorId,
         isDynamic: true,
       });
-      
+
       rec.setValue({
         fieldId: "externalid",
         value: vendor_code,
@@ -248,7 +248,7 @@ define(["N/file", "N/record", "N/search", "N/runtime"], /**
           updateVendorCode(vendorId, vendorCode);
         }
       }
-    
+
       return vendorId;
     } catch (e) {
       log.error("checkIfVendorExists", e.message);
@@ -359,7 +359,7 @@ define(["N/file", "N/record", "N/search", "N/runtime"], /**
       });
       const primaryUnitTypeId = itemRec.getValue("unitstype");
 
-      if (!isEmpty(primaryUOMId) || primaryUnitTypeId === "") {
+      if (!isEmpty(primaryUOMId) && primaryUnitTypeId === "") {
         itemRec.setValue({
           fieldId: "unitstype",
           value: primaryUOMId,
@@ -552,11 +552,13 @@ define(["N/file", "N/record", "N/search", "N/runtime"], /**
           fieldId: "mpn",
           value: itemData.mpn,
         });
+
       itemData.description &&
         itemRec.setValue({
           fieldId: "salesdescription",
           value: itemData.description,
         });
+
       itemData.gtin &&
         itemRec.setValue({
           fieldId: "upccode",
