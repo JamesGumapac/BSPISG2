@@ -21,7 +21,6 @@ define([
         url: lbIntegrationSettings.url,
       });
       const itemInfoContent = lbResponse.body;
-      log.debug("itemInfoContent", itemInfoContent)
       return JSON.parse(itemInfoContent);
     } catch (e) {
       log.error(functionName, e.message);
@@ -36,7 +35,7 @@ define([
       const itemId = BSPItemParser.ifItemExists(itemObj.sku);
 
       if (itemId) {
-        log.debug("ITEM ALREADY EXISTS", itemObj.sku);
+        log.audit("ITEM ALREADY EXISTS", itemObj.sku);
         BSPItemParser.updateUnitOfMeasure(itemId, itemObj.uom);
         //check if item has vendor associated with it
         if (itemObj.vendor_associations.length > 0) {
@@ -59,7 +58,7 @@ define([
       } else {
         const newItemId = BSPItemParser.createItem(itemObj);
 
-        log.debug("ITEM CREATED SUCCESSFULLY", newItemId);
+        log.audit("ITEM CREATED SUCCESSFULLY", newItemId);
       }
     } catch (e) {
       log.error(functionName, e.message);
@@ -80,5 +79,5 @@ define([
     }
   };
 
-  return { getInputData,reduce,   summarize };
+  return { getInputData, reduce,  summarize };
 });

@@ -384,7 +384,7 @@ define(["N/file", "N/record", "N/search", "N/runtime"], /**
       }
       return itemRec.save({ ignoreMandatoryFields: true });
     } catch (e) {
-      log.error("updateUnitOfMeasure", e.message);
+      log.error("updateUnitOfMeasure", "item Id: " + itemId + " " + e.message);
     }
   }
 
