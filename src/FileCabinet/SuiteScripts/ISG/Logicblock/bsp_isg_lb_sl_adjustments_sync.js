@@ -32,52 +32,74 @@ define(['N/record', 'N/redirect', 'N/runtime', '../Lib/bsp_isg_lb_ordersservice_
                     logicblockId: logicblockId,
                     isCancellation: isCancellation
                 })
-                if(isCancellation == "true"){
-                    const result = LBOrdersAPI.cancelOrder(integrationSettingsRecID, salesOrderId, logicblockId);
-                    log.debug(stLogTitle, "Result: " + JSON.stringify(result));
-                    const returnMessage = updateSalesOrder(result, salesOrderId);
-                    response.write(JSON.stringify(returnMessage));
-                }else{
-                    let lbOrderLineItems = LBOrdersAPI.getOrderLineItems(integrationSettingsRecID, logicblockId);
-                    log.debug(stLogTitle, "lbOrderLineItems: " + JSON.stringify(lbOrderLineItems));
-                    let soRec = record.load({
-                        type: record.Type.SALES_ORDER,
-                        id: salesOrderId,
-                        isDynamic: true,
-                    });
-                    let newLinesToAdd = getNewLines(lbOrderLineItems, soRec, logicblockId);
-                    log.debug(stLogTitle, "newLinesToAdd: " + JSON.stringify(newLinesToAdd));
-
-                    let updatedDeletedLines = getUpdatedDeletedLines(lbOrderLineItems, soRec);
-                    log.debug(stLogTitle, "updatedDeletedLines: " + JSON.stringify(updatedDeletedLines));
-
-                    if(newLinesToAdd.length > 0){
-                       let lbLineIDsResult = LBOrdersAPI.addLineItemsToOrder(integrationSettingsRecID, newLinesToAdd);
-                       log.debug(stLogTitle, "lbLineIDsResult: " + JSON.stringify(lbLineIDsResult));
-                       soRec = updateSalesOrderNewLines(lbLineIDsResult, soRec);
-                    }
-
-                    soRec.save();
-                    log.debug(stLogTitle, "soRec saved");
-
-                    let message = [{
-                        message: "Order has been Syncronized.",
-                        failed: false,
-                    }];
-                    if(updatedDeletedLines.length > 0){
-                        let lbResult = LBOrdersAPI.updateLineItemsInOrder(integrationSettingsRecID, logicblockId, updatedDeletedLines);
-                        log.debug(stLogTitle, "lbResult: " + JSON.stringify(lbResult));
-                        if(lbResult && lbResult == "false"){
-                            message = [];
-                            message.push({
-                                message: "Failed to Syncronize Order with Logicblock. Some changes may not have been uploaded",
-                                failed: true,
-                            });
+                if(logicblockId){
+                    if(isCancellation == "true"){
+                        const result = LBOrdersAPI.cancelOrder(integrationSettingsRecID, salesOrderId, logicblockId);
+                        log.debug(stLogTitle, "Result: " + JSON.stringify(result));
+                        const returnMessage = updateSalesOrder(result, salesOrderId);
+                        response.write(JSON.stringify(returnMessage));
+                    }else{
+                        let lbOrderLineItems = LBOrdersAPI.getOrderLineItems(integrationSettingsRecID, logicblockId);
+                        log.debug(stLogTitle, "lbOrderLineItems: " + JSON.stringify(lbOrderLineItems));
+                        let soRec = record.load({
+                            type: record.Type.SALES_ORDER,
+                            id: salesOrderId,
+                            isDynamic: true,
+                        });
+                        let newLinesToAdd = getNewLines(lbOrderLineItems, soRec, logicblockId);
+                        log.debug(stLogTitle, "newLinesToAdd: " + JSON.stringify(newLinesToAdd));
+    
+                        let updatedDeletedLines = getUpdatedLines(lbOrderLineItems, soRec);
+                        log.debug(stLogTitle, "updatedDeletedLines: " + JSON.stringify(updatedDeletedLines));
+    
+                        let removedLines = getRemovedLines(lbOrderLineItems, soRec);
+                        log.debug(stLogTitle, "removedLines: " + JSON.stringify(removedLines));
+    
+                        if(newLinesToAdd.length > 0){
+                           let lbLineIDsResult = LBOrdersAPI.addLineItemsToOrder(integrationSettingsRecID, newLinesToAdd);
+                           log.debug(stLogTitle, "lbLineIDsResult: " + JSON.stringify(lbLineIDsResult));
+                           soRec = updateSalesOrderNewLines(lbLineIDsResult, soRec);
                         }
+    
+                        soRec.save();
+                        log.debug(stLogTitle, "soRec saved");
+    
+                        let message = [{
+                            message: "Order has been Syncronized.",
+                            failed: false,
+                        }];
+                        if(updatedDeletedLines.length > 0){
+                            let lbResult = LBOrdersAPI.updateLineItemsInOrder(integrationSettingsRecID, logicblockId, updatedDeletedLines);
+                            log.debug(stLogTitle, "lbResult: " + JSON.stringify(lbResult));
+                            if(lbResult && lbResult == "false"){
+                                message = [];
+                                message.push({
+                                    message: "Failed to Syncronize Order with Logicblock. Some changes may not have been uploaded",
+                                    failed: true,
+                                });
+                            }
+                        }
+                        if(removedLines.length > 0){
+                            let lbResult = LBOrdersAPI.removeLineItemsToOrder(integrationSettingsRecID, removedLines);
+                            log.debug(stLogTitle, "lbResult: " + JSON.stringify(lbResult));
+                            if(lbResult && lbResult == "false"){
+                                message = [];
+                                message.push({
+                                    message: "Failed to Syncronize Order with Logicblock. Some changes may not have been uploaded",
+                                    failed: true,
+                                });
+                            }
+                        }
+                        response.write(JSON.stringify(message));
                     }
+                }else{
+                    let message = [{
+                        message: "This order is not placed in Logicblock.",
+                        failed: true,
+                    }];
                     response.write(JSON.stringify(message));
                 }
-            
+                    
             } catch (error) {
                 log.error(stLogTitle, error)
                 response.write(JSON.stringify([{message: `Failed to Sync order: ${error.message}`, failed: true}]));
@@ -176,12 +198,12 @@ define(['N/record', 'N/redirect', 'N/runtime', '../Lib/bsp_isg_lb_ordersservice_
         }
 
         /**
-         * Returns lines updated or removed in NS Order
+         * Returns lines updated  in NS Order
          * @param {*} lbOrderLineItems 
          * @param {*} soRec 
          * @returns 
          */
-        const getUpdatedDeletedLines = (lbOrderLineItems, soRec) => {
+        const getUpdatedLines = (lbOrderLineItems, soRec) => {
             let updatedLines = [];
 
             /** Updated lines in NS */
@@ -215,7 +237,19 @@ define(['N/record', 'N/redirect', 'N/runtime', '../Lib/bsp_isg_lb_ordersservice_
                 }
             }
 
-            /** Deleted lines in NS */
+           
+            return updatedLines;
+        }
+
+        /**
+         * Returns lines removed in NS Order
+         * @param {*} lbOrderLineItems 
+         * @param {*} soRec 
+         * @returns 
+         */
+        const getRemovedLines = (lbOrderLineItems, soRec) => {
+
+            let removedLines = [];
 
             for (let i = 0; i < lbOrderLineItems.length; i++) {
 
@@ -227,13 +261,13 @@ define(['N/record', 'N/redirect', 'N/runtime', '../Lib/bsp_isg_lb_ordersservice_
                     value: lbProductSku
                 });
                 if(itemLineInNetSuite < 0){
-                    updatedLines.push({
-                        lbItemID: lbItem.Id,
-                        productQty: 0
+                    removedLines.push({
+                        lbItemID: lbItem.Id
                     });
                 }         
             }
-            return updatedLines;
+
+            return removedLines;
         }
 
         /**
