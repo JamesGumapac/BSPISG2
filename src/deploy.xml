@@ -58,7 +58,6 @@
 		<path>~/Objects/custbody_bsp_isg_lb_purchase_order_num.xml</path> 
 		<path>~/Objects/custcol_bsp_isg_lb_line_item_id.xml</path>
 		<path>~/Objects/custcol_bsp_isg_manual_po_id.xml</path>
-		<path>~/Objects/custentity_bsp_isg_essendant_unique_id.xml</path>
 		<path>~/Objects/customscript_bsp_isg_mr_queue_transm_sch.xml</path>
 		<path>~/Objects/customrecord_bsp_isg_transm_schedule.xml</path> 
 		<path>~/Objects/custcentercategory_bsp_isg_settings.xml</path>
