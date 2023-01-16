@@ -223,7 +223,8 @@
         "custrecord_bsp_isg_min_qty_required",
         "custrecord_bsp_lb_get_order_by_id",
         "custrecord_bsp_lb_update_line_items",
-        "custrecord_bsp_lb_add_line_item"
+        "custrecord_bsp_lb_add_line_item",
+        "custrecord_bsp_lb_remove_line_item"
       ],
     });
     return settings;

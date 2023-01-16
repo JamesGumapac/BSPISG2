@@ -286,6 +286,34 @@
     }
 
     /**
+     * Remove line Items in LB Order
+     * @param {*} integrationSettingsRecID 
+     * @param {*} removedLines 
+     * @returns 
+     */
+    function removeLineItemsToOrder(integrationSettingsRecID, removedLines){
+        let result = [];
+        let settings = BSPLBUtils.getIntegrationSettings(integrationSettingsRecID);
+        let loginData = BSPLBLoginAPI.login(settings);
+        let serviceURL = settings.custrecord_bsp_lb_orders_service_url;
+        let soapGetOrdersAction = settings.custrecord_bsp_lb_remove_line_item;
+
+        for (let index = 0; index < removedLines.length; index++) {
+            const removedItem = removedLines[index];
+            const lineItemID =  removedItem.lbItemID;
+
+            let requestBodyXML = removeLineItemXMLStrRequest(loginData, lineItemID);
+            let logicBlockServerResponse = BSPLBServiceAPI.runService(serviceURL, requestBodyXML, soapGetOrdersAction);
+
+            if(!BSPLBUtils.isEmpty(logicBlockServerResponse)){
+                result = logicBlockServerResponse.RemoveLineItemResponse.RemoveLineItemResult;
+            }
+        }
+        return result;
+    }    
+
+
+    /**
      * Get order line items by Order ID from Logicblock
      * @param {*} integrationSettingsRecID 
      * @param {*} logicblockId 
@@ -592,6 +620,30 @@
     }
 
     /**
+     *  Body of remove lineItem into Order SOAP Action Request
+     * @param {*} loginData 
+     * @param {*} paymentData 
+     * @returns 
+     */
+    function removeLineItemXMLStrRequest(loginData, lineItemID){
+        return `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/" xmlns:log="http://schemas.datacontract.org/2004/07/Logicblock.Commerce.Domain">
+                <soapenv:Header/>
+                <soapenv:Body>
+                <tem:RemoveLineItem>
+                    <tem:token>
+                        <log:ApiId>${loginData.ApiId}</log:ApiId>
+                        <log:ExpirationDateUtc>${loginData.ExpirationDateUtc}</log:ExpirationDateUtc>
+                        <log:Id>${loginData.Id}</log:Id>
+                        <log:IsExpired>${loginData.IsExpired}</log:IsExpired>
+                        <log:TokenRejected>${loginData.TokenRejected}</log:TokenRejected>
+                    </tem:token>
+                    <tem:lineItemId>${lineItemID}</tem:lineItemId>
+                </tem:RemoveLineItem>
+                </soapenv:Body>
+            </soapenv:Envelope>`;
+    }
+
+    /**
      *  Body of update lineItems in Order SOAP Action Request
      * @param {*} loginData 
      * @param {*} paymentData 
@@ -600,10 +652,10 @@
     function updateLineItemsXMLStrRequest(loginData, requestParams){
         let lineItems = ``;
         requestParams.updatedDeletedLines.forEach(item => {
-            lineItems += `<log:LineItem>
+            lineItems += `<log:LineItemExt>
             <log:Id>${item.lbItemID}</log:Id>
             <log:Quantity>${item.productQty}</log:Quantity>
-            </log:LineItem>`
+            </log:LineItemExt>`
         });
     
         let xmlBodyRequest = `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/" xmlns:log="http://schemas.datacontract.org/2004/07/Logicblock.Commerce.Domain">
@@ -638,6 +690,7 @@
         cancelOrder: cancelOrder,
         getOrderLineItems: getOrderLineItems,
         addLineItemsToOrder: addLineItemsToOrder,
-        updateLineItemsInOrder: updateLineItemsInOrder
+        updateLineItemsInOrder: updateLineItemsInOrder,
+        removeLineItemsToOrder: removeLineItemsToOrder
     };
 });
