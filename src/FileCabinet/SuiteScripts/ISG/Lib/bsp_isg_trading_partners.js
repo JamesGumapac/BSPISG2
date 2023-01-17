@@ -195,29 +195,6 @@
     }
     
     /**
-     * It takes a record ID and a document control number, increments the document control number by 1, and
-     * then updates the record with the new document control number.
-     * @param id - the internal id of the record you want to update
-     * @param documentControlNumber - The document control number that is being used to generate the BOD
-     * ID.
-    */
-    function updateTradingPartnerBODId(id, documentControlNumber){
-        let bodID =  parseInt(documentControlNumber);
-        let newBODid = bodID + 1;
-        newBODid = ((newBODid == 100000) ? 1 : newBODid);
-
-        let newBODidString = String(newBODid).padStart(5, '0'); 
-
-        record.submitFields({
-            type: "customrecord_bsp_isg_trading_partner",
-            id: parseInt(id),
-            values: {
-                custrecord_bsp_trading_partner_bodid: newBODidString
-            }
-        });
-    }
-
-    /**
      * "If the trading partner is essendant, then call the essendant processPOAck function, otherwise if
      * the trading partner is spr, then call the spr processPOAck function."
      * 
@@ -278,7 +255,6 @@
         getTradingPartnerID: getTradingPartnerID,
         getTradingPartnerInfo: getTradingPartnerInfo,
         getTradingPartnerBODId: getTradingPartnerBODId,
-        updateTradingPartnerBODId: updateTradingPartnerBODId,
         isTradingPartner: isTradingPartner,
         getTradingPartnerDeliveryTime: getTradingPartnerDeliveryTime,
         processPOAck: processPOAck,

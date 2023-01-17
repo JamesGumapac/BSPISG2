@@ -4,20 +4,14 @@
  */
 define([
     'N/record',
-    'N/runtime', 
-    '../Lib/bsp_isg_trading_partners.js', 
-    '../Lib/bsp_isg_transmitions_util.js',
-    '../Lib/bsp_isg_purchase_orders.js',
-    '../Lib/bsp_isg_edi_settings.js'],
+    '../Lib/bsp_isg_trading_partners.js',
+    '../Lib/bsp_isg_purchase_orders.js'],
     /**
      * @param{record} record
-     * @param{runtime} runtime
      * @param{BSPTradingParnters} BSPTradingParnters
-     * @param{BSPTransmitionsUtil} BSPTransmitionsUtil
      * @param{BSP_POutil} BSP_POutil
-     * @param{BSP_EDISettingsUtil} BSP_EDISettingsUtil
     */
-    (record, runtime, BSPTradingParnters, BSPTransmitionsUtil, BSP_POutil, BSP_EDISettingsUtil) => {
+    (record, BSPTradingParnters, BSP_POutil) => {
 
         /**
          * Defines the function definition that is executed after record is submitted.
@@ -67,18 +61,7 @@ define([
             if(messageType == "Acknowledgment"){
                 let result = null;
                 result = BSPTradingParnters.processPOAck(payload, tradingPartner);
-
-                /**
-                 * Check Transmission Queue for automatic PO Transmissions only if Wait for acknowledgment feature is enabled
-                */
-                let environment = runtime.envType;
-                let ediSettings = BSP_EDISettingsUtil.getEDIsettings(environment);
-                if(ediSettings.waitForAcknowledgment == true){              
-                    if(result && result.queueID){
-                        BSPTransmitionsUtil.checkTransmissionQueue(result.queueID);
-                    }
-                }
-                            
+                           
                 /**
                  * Update Transmission Status for Manual POs
                 */

@@ -7,15 +7,21 @@
     'N/record', 
     'N/search', 
     '../Lib/bsp_isg_as2_service.js', 
-    '../Lib/bsp_isg_trading_partners.js'],
+    '../Lib/bsp_isg_trading_partners.js',
+    '../Lib/bsp_isg_transmitions_util.js',
+    '../Lib/bsp_isg_purchase_orders.js',
+    '../Lib/bsp_isg_edi_settings.js'],
  /**
  * @param{runtime} runtime
  * @param{record} record
  * @param{search} search
  * @param{BSP_AS2Service} BSP_AS2Service
  * @param{BSPTradingParnters} BSPTradingParnters
+ * @param{BSPTransmitionsUtil} BSPTransmitionsUtil
+ * @param{BSP_POutil} BSP_POutil
+ * @param{BSP_EDISettingsUtil} BSP_EDISettingsUtil
  */
- (runtime, record, search, BSP_AS2Service, BSPTradingParnters) => {
+ (runtime, record, search, BSP_AS2Service, BSPTradingParnters, BSPTransmitionsUtil, BSP_POutil, BSP_EDISettingsUtil) => {
 
     /**
      * Defines the function that is executed when a POST request is sent to a RESTlet.
@@ -39,14 +45,29 @@
                     
              if(isPOAcknowledgment(jsonObjResponse)){
 
+                let transmissionQueueID = null; 
+
                 if(isAcknowledgmentSPR(jsonObjResponse)){
                     log.debug(functionName, `This is an Acknowledgment from SPR`);
+                    transmissionQueueID = getTransmissionQueueID(jsonObjResponse, BSPTradingParnters.constants().spr);
                     createAS2incomingMessageRecord(BSPTradingParnters.constants().spr, "Acknowledgment", jsonObjResponse);
                 }else if(isAcknowledgmentEssendant(jsonObjResponse)){
                     log.debug(functionName, `This is an Acknowledgment from Essendant`);
+                    transmissionQueueID = getTransmissionQueueID(jsonObjResponse, BSPTradingParnters.constants().essendant);
                     createAS2incomingMessageRecord(BSPTradingParnters.constants().essendant, "Acknowledgment", jsonObjResponse);
                 }
-                
+                log.debug("isAcknowledgment", "Transmission Queue: " + transmissionQueueID);
+                /**
+                 * Check Transmission Queue for automatic PO Transmissions only if Wait for acknowledgment feature is enabled
+                */
+                let environment = runtime.envType;
+                let ediSettings = BSP_EDISettingsUtil.getEDIsettings(environment);
+                if(ediSettings.waitForAcknowledgment == true){              
+                    if(transmissionQueueID){
+                        BSPTransmitionsUtil.checkTransmissionQueue(transmissionQueueID);
+                    }
+                }
+
              }else if(isShipmentNotification(jsonObjResponse)){
 
                 if(isShipmentNotificationSPR(jsonObjResponse)){
@@ -239,6 +260,22 @@
         return false;
     }
 
+    function getTransmissionQueueID(jsonObjResponse, tradingPartner){
+        let transmissionQueueID = null;
+        let poID = null;
+        if(tradingPartner == BSPTradingParnters.constants().spr){
+            let poNumber = jsonObjResponse.Order.CustomerPONo;
+            poID = BSP_POutil.findPObyNumber(poNumber);
+        }else{
+            poID = jsonObjResponse.DataArea.PurchaseOrder.PurchaseOrderHeader.DocumentID["ID"];
+        }
+
+        if(poID){
+            transmissionQueueID = BSP_POutil.getQueueOfPO(poID);
+        }
+
+        return transmissionQueueID;
+    }
 
     /**
      * This function creates a new record in the custom record type "customrecord_bsp_isg_as2_incoming_msg"
