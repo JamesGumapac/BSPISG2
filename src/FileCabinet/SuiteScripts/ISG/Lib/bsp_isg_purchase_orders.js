@@ -521,7 +521,9 @@
         
         let resultItems = items.map(i => JSON.parse(i));
 
-        if(transmissionAccount.ovewritten){
+        let autoDetermineBestPriceConfig = BSPTradingParnters.getAutoDetermineBestPriceConfig(vendor);
+
+        if(transmissionAccount.ovewritten && autoDetermineBestPriceConfig){
             let tradingPartnerMainAccount = BSPTradingParnters.getMainAccount(vendor, transmissionAccount.type);
             const customrecord_bsp_isg_item_acct_dataSearchObj = search.create({
                 type: "customrecord_bsp_isg_item_acct_data",

@@ -115,6 +115,37 @@
         return tradingPartnerDeliveryTime;
     }
 
+
+    /**
+     * It searches for a trading partner that has a vendor field that matches the vendor passed in and
+     * returns the value of the "Auto Determine Best Price" field.
+     * @param vendor - The vendor that the item is being purchased from.
+     * @returns A boolean value.
+     */
+    function getAutoDetermineBestPriceConfig(vendor){
+        let autoDetermineBestPriceConfig = false;
+
+        const trading_partnerSearchObj = search.create({
+            type: "customrecord_bsp_isg_trading_partner",
+            filters:
+            [
+                ["custrecord_bsp_isg_tp_vendor","anyof",vendor], 
+                "AND", 
+                ["isinactive","is","F"]
+            ],
+            columns:[
+                search.createColumn({name: "custrecord_bsp_isg_determine_best_price", label: "Auto Determine Best Price"})
+            ]
+        });
+
+        trading_partnerSearchObj.run().each(function(result){
+            autoDetermineBestPriceConfig = result.getValue("custrecord_bsp_isg_determine_best_price");
+            return true;
+        });
+
+        return autoDetermineBestPriceConfig;
+    }
+
     /**
      * It takes a vendor ID and returns the trading partner Main Account for either W&L or DropShip.
      * @param vendor - The vendor ID of the vendor.
@@ -292,6 +323,7 @@
         isTradingPartner: isTradingPartner,
         getTradingPartnerDeliveryTime: getTradingPartnerDeliveryTime,
         getMainAccount: getMainAccount,
+        getAutoDetermineBestPriceConfig: getAutoDetermineBestPriceConfig,
         processPOAck: processPOAck,
         processInvoice: processInvoice,
         processASN: processASN
