@@ -469,6 +469,16 @@
           <sameRowAsPrevious>F</sameRowAsPrevious>
           <quickAdd>F</quickAdd>
         </field>
+        <field>
+          <id>[scriptid=custentity_bsp_isg_department]</id>
+          <label>Department</label>
+          <visible>T</visible>
+          <mandatory>F</mandatory>
+          <displayType>NORMAL</displayType>
+          <columnBreak>F</columnBreak>
+          <sameRowAsPrevious>F</sameRowAsPrevious>
+          <quickAdd>F</quickAdd>
+        </field>
       </fields>
     </defaultFieldGroup>
   </mainFields>
@@ -2195,7 +2205,11 @@
       <label>BSP | ISG</label>
       <visible>T</visible>
       <fieldGroups>
-        <defaultFieldGroup>
+        <fieldGroup scriptid="fieldgroup_1_t927173_940">
+          <label>Delivery</label>
+          <visible>T</visible>
+          <showTitle>T</showTitle>
+          <singleColumn>F</singleColumn>
           <fields position="MIDDLE">
             <field>
               <id>[scriptid=custentity_bsp_isg_route_code]</id>
@@ -2218,7 +2232,14 @@
               <quickAdd>F</quickAdd>
             </field>
           </fields>
-        </defaultFieldGroup>
+        </fieldGroup>
+        <fieldGroup scriptid="fieldgroup_2_t927173_159">
+          <label>Account override</label>
+          <visible>T</visible>
+          <showTitle>T</showTitle>
+          <singleColumn>F</singleColumn>
+        </fieldGroup>
+        <defaultFieldGroup/>
       </fieldGroups>
       <subItems>
         <subList>
