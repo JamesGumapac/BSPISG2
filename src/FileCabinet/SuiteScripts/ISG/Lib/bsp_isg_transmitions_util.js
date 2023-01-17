@@ -195,7 +195,7 @@
         let resultSearch = searchAll(transmitionQueueSearchObj);
         log.debug("findNextTransmitionInQueue", `${JSON.stringify(resultSearch)}`);
         
-        if(resultSearch[0].getValue("custrecord_bsp_transmition_status") == TRANSMITION_QUEUE_STATUSES.notStarted){
+        if(resultSearch.length > 0 && resultSearch[0].getValue("custrecord_bsp_transmition_status") == TRANSMITION_QUEUE_STATUSES.notStarted){
             transmitionQueueRecID = resultSearch[0].getValue("internalid");
         }
          

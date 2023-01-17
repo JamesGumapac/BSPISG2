@@ -184,14 +184,7 @@ define([
 
                 BSP_POutil.updatePOtransmissionStatus(poID, BSP_POutil.transmitionPOStatus().pendingAcknowledment);
                 BSP_POutil.setPOMessageID(poID, jsonObjResponse);
-                
-                /**
-                 * For Essendant update the BOD ID
-                */
-                if(tranmsissionData.tradingPartner.name == BSPTransmitionsUtil.constants().essendant){
-                    BSPTradingParnters.updateTradingPartnerBODId(tranmsissionData.tradingPartner.id, tranmsissionData.tradingPartner.documentControlNumber);
-                }
-                
+                              
             }catch (error)
             {
                 log.error(functionName, `Error Transmitting PO: ${error.toString()}`);
@@ -206,7 +199,6 @@ define([
                 );
             }
         }
-
 
         /**
          * Defines the function that is executed when the summarize entry point is triggered. This entry point is triggered
