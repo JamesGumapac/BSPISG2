@@ -40,7 +40,7 @@
 				</oa:SupplierParty>
 				<oa:ShipToParty>
 					<oa:PartyIDs>
-						<oa:ID><#if data.purchaseOrder.account.id?? && data.purchaseOrder.account.id?trim?has_content>${data.purchaseOrder.account.text}<#else>${data.transmissionData.accountNumber.text}</#if></oa:ID> 
+						<oa:ID>${data.purchaseOrder.account.text}</oa:ID> 
 					</oa:PartyIDs>
 					<#if data.purchaseOrder.orderType != 'Stock'>
 						<oa:Name>${data.purchaseOrder.shipAddress.companyName}</oa:Name> 

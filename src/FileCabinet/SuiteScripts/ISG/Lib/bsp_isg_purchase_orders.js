@@ -3,7 +3,7 @@
  * @NModuleScope Public
  */
 
- define(['N/search', 'N/record'], function (search, record) {
+ define(['N/search', 'N/record', '../Lib/bsp_isg_trading_partners.js'], function (search, record, BSPTradingParnters) {
 
     const PO_TRANSMITION_STATUSES = Object.freeze({
         pendingTransmission: 1,
@@ -227,9 +227,21 @@
     function createPurchaseOrders(poData){
         let purchaseOrderIDs = [];
 
-        let itemData = getItemPrices(poData.itemData, poData.vendor, poData.account.value);
+        let itemData = getItemWithPrices(poData.itemData, poData.vendor, poData.account);
         let wrapAndLabelItems = getWrapAndLabelItems(itemData);
         let dropShipItems = getDropShipItems(itemData);
+
+        log.debug("itemData", JSON.stringify(itemData));
+        log.debug("wrapAndLabelItems", JSON.stringify(wrapAndLabelItems));
+        log.debug("dropShipItems", JSON.stringify(dropShipItems));
+
+        /**
+         * 
+         * TODO: 
+         * 1) Group Items By Account
+         * 2) Create PO per Account
+         * 
+         */
 
         if(wrapAndLabelItems.length > 0){
             let purchaseOrderRec = record.create({
@@ -505,36 +517,126 @@
         return purchaseOrderIDs;
     }
 
-    function getItemPrices(items, vendor, account){
-
+    function getItemWithPrices(items, vendor, transmissionAccount){
+        
         let resultItems = items.map(i => JSON.parse(i));
 
-        const customrecord_bsp_isg_item_acct_dataSearchObj = search.create({
-            type: "customrecord_bsp_isg_item_acct_data",
-            filters:
-            [
-               ["custrecord_bsp_isg_parent_item","anyof",resultItems.map(i => i.itemID)], 
-               "AND", 
-               ["custrecord_bsp_isg_account_number","anyof",account], 
-               "AND", 
-               ["custrecord_bsp_isg_item_supplier","anyof",vendor]
-            ],
-            columns:
-            [
-               search.createColumn({name: "custrecord_bsp_isg_parent_item", label: "Item"}),
-               search.createColumn({name: "custrecord_bsp_isg_item_cost", label: "Cost"})
-            ]
-         });
+        if(transmissionAccount.ovewritten){
+            let tradingPartnerMainAccount = BSPTradingParnters.getMainAccount(vendor, transmissionAccount.type);
+            const customrecord_bsp_isg_item_acct_dataSearchObj = search.create({
+                type: "customrecord_bsp_isg_item_acct_data",
+                filters: [
+                    ["custrecord_bsp_isg_parent_item","anyof",resultItems.map(i => i.itemID)], 
+                    "AND", 
+                    ["custrecord_bsp_isg_account_number","anyof",transmissionAccount.value, tradingPartnerMainAccount], 
+                    "AND", 
+                    ["custrecord_bsp_isg_item_supplier","anyof",vendor]
+                ],
+                columns:
+                [
+                   search.createColumn({name: "custrecord_bsp_isg_parent_item", label: "Item"}),
+                   search.createColumn({name: "custrecord_bsp_isg_item_cost", label: "Cost"}),
+                   search.createColumn({name: "custrecord_bsp_isg_account_number", label: "Account Number"})
+                ]
+            });
 
-        customrecord_bsp_isg_item_acct_dataSearchObj.run().each(function(result){
-            let itemID = result.getValue({name: 'custrecord_bsp_isg_parent_item'});
-            let cost = result.getValue({name: 'custrecord_bsp_isg_item_cost'});
-            let itemIndex = findItemIndex(resultItems, itemID);
-            if(itemIndex >=0){
-                resultItems[itemIndex].cost = cost;
+            let itemsWithPrices = [];
+            customrecord_bsp_isg_item_acct_dataSearchObj.run().each(function(result){
+                let itemID = result.getValue({name: 'custrecord_bsp_isg_parent_item'});
+                let accountNumberValue = result.getValue({name: 'custrecord_bsp_isg_account_number'});
+                let accountNumberText = result.getText({name: 'custrecord_bsp_isg_account_number'});
+                let accountNumber = {
+                    value: accountNumberValue,
+                    text: accountNumberText
+                }
+                let isMainAccount = accountNumber.value == tradingPartnerMainAccount ? true : false;
+                let cost = result.getValue({name: 'custrecord_bsp_isg_item_cost'});
+                let itemIndex = findItemIndex(itemsWithPrices, itemID);
+                if(itemIndex >=0){
+                    if(isMainAccount){
+                        itemsWithPrices[itemIndex].accounts.mainAccount.account = accountNumber;
+                        itemsWithPrices[itemIndex].accounts.mainAccount.cost = cost;
+                    }else{
+                        itemsWithPrices[itemIndex].accounts.transmissionAccount.account = transmissionAccount;
+                        itemsWithPrices[itemIndex].accounts.transmissionAccount.cost = cost;
+                    }
+                    
+                }else{
+                    if(isMainAccount){
+                        itemsWithPrices.push({
+                            itemID: itemID,
+                            accounts:{
+                                mainAccount: {
+                                    account: accountNumber,
+                                    cost: cost
+                                },
+                                transmissionAccount: {
+                                    account: null,
+                                    cost: null
+                                }
+                            }
+                        });
+                    }else{
+                        itemsWithPrices.push({
+                            itemID: itemID,
+                            accounts:{
+                                mainAccount: {
+                                    account: null,
+                                    cost: null
+                                },
+                                transmissionAccount: {
+                                    account: accountNumber,
+                                    cost: cost
+                                }
+                            }
+                        });
+                    }  
+                }
+                return true;
+            });
+
+            for (let index = 0; index < itemsWithPrices.length; index++) {
+                const itemWithPrices = itemsWithPrices[index];
+                const itemID = itemWithPrices.itemID;
+                const mainAccount = itemWithPrices.accounts.mainAccount;
+                const transmissionAccount = itemWithPrices.accounts.transmissionAccount;
+                let bestCostAccount = (mainAccount && (mainAccount.cost < transmissionAccount.cost)) ? mainAccount : transmissionAccount;
+            
+                let itemIndex = findItemIndex(resultItems, itemID);
+                if(itemIndex >=0){
+                    resultItems[itemIndex].cost = bestCostAccount.cost;
+                    resultItems[itemIndex].account = bestCostAccount.account;
+                }
             }
-            return true;
-        })
+        }else{
+            const customrecord_bsp_isg_item_acct_dataSearchObj = search.create({
+                type: "customrecord_bsp_isg_item_acct_data",
+                filters:  [
+                    ["custrecord_bsp_isg_parent_item","anyof",resultItems.map(i => i.itemID)], 
+                    "AND", 
+                    ["custrecord_bsp_isg_account_number","anyof",transmissionAccount.value], 
+                    "AND", 
+                    ["custrecord_bsp_isg_item_supplier","anyof",vendor]
+                ],
+                columns:
+                [
+                   search.createColumn({name: "custrecord_bsp_isg_parent_item", label: "Item"}),
+                   search.createColumn({name: "custrecord_bsp_isg_item_cost", label: "Cost"}),
+                   search.createColumn({name: "custrecord_bsp_isg_account_number", label: "Account Number"})
+                ]
+            });
+            customrecord_bsp_isg_item_acct_dataSearchObj.run().each(function(result){
+                let itemID = result.getValue({name: 'custrecord_bsp_isg_parent_item'});
+                let cost = result.getValue({name: 'custrecord_bsp_isg_item_cost'});
+                let itemIndex = findItemIndex(resultItems, itemID);
+                if(itemIndex >=0){
+                    resultItems[itemIndex].cost = cost;
+                    resultItems[itemIndex].account = transmissionAccount;
+                }
+                return true;
+            });
+        }
+
         return resultItems;
     }
 
