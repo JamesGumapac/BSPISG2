@@ -235,286 +235,269 @@
         log.debug("wrapAndLabelItems", JSON.stringify(wrapAndLabelItems));
         log.debug("dropShipItems", JSON.stringify(dropShipItems));
 
-        /**
-         * 
-         * TODO: 
-         * 1) Group Items By Account
-         * 2) Create PO per Account
-         * 
-         */
-
         if(wrapAndLabelItems.length > 0){
-            let purchaseOrderRec = record.create({
-                type: record.Type.PURCHASE_ORDER,
-                isDynamic: true,
-                defaultValues: {
-                    'soid' : poData.salesOrderID,
-                    'specord' : 'T',
-                    'custid': poData.customer,
-                    'entity': poData.vendor
-                }
-            });
 
-            purchaseOrderRec.setValue({
-                fieldId: "customform",
-                value: parseInt(poData.transactionForm),
-            });
-    
-            purchaseOrderRec.setValue({
-                fieldId: "location",
-                value: parseInt(poData.location),
-            });
+            let itemsGroupedByAccount = groupBy(wrapAndLabelItems, (i) => i.account.value);
 
-            /**
-              * Shipping Address Subrecord
-            */
+            for(let accountID in itemsGroupedByAccount) { 
+                let items = itemsGroupedByAccount[accountID];
 
-            let shipAddressSubrec = purchaseOrderRec.getSubrecord({
-                fieldId: 'shippingaddress'
-            });
-
-            shipAddressSubrec.setValue({
-                fieldId: 'country',
-                value: poData.shipAddress.shipcountry
-            });
-    
-            shipAddressSubrec.setValue({
-                fieldId: 'city',
-                value: poData.shipAddress.shipcity
-            });
-    
-            shipAddressSubrec.setValue({
-                fieldId: 'state',
-                value: poData.shipAddress.shipstate
-            });
-    
-            shipAddressSubrec.setValue({
-                fieldId: 'zip',
-                value: poData.shipAddress.shipzip
-            });
-    
-            shipAddressSubrec.setValue({
-                fieldId: 'addr1',
-                value: poData.shipAddress.shipaddress1
-            });
-
-            purchaseOrderRec.setValue({
-                fieldId: "shipaddress",
-                value: poData.shipAddress.shipaddress,
-            });
-          
-            purchaseOrderRec.setValue({
-                fieldId: "custbody_bsp_isg_route_code",
-                value: parseInt(poData.routeCode),
-            });
-    
-            purchaseOrderRec.setValue({
-                fieldId: "custbody_bsp_isg_autoreceived",
-                value: poData.autoreceive,
-            });
-    
-            purchaseOrderRec.setValue({
-                fieldId: "custbody_bsp_isg_adot",
-                value: poData.adot,
-            });
-    
-            purchaseOrderRec.setValue({
-                fieldId: "custbody_bsp_isg_transmission_acct_num",
-                value: poData.account.value,
-            });
-    
-            purchaseOrderRec.setValue({
-                fieldId: "custbody_bsp_isg_transmission_loc",
-                value: poData.transmissionLocation,
-            });
-    
-            purchaseOrderRec.setValue({
-                fieldId: "custbody_bsp_isg_transm_queue_id",
-                value: poData.transmitionQueueID,
-            });
-
-            purchaseOrderRec.setValue({
-                fieldId: "custbody_bsp_isg_order_type",
-                value: SHIPMENT_TYPES.wrapAndLabel,
-            });
-    
-            purchaseOrderRec.setValue({
-                fieldId: "custbody_bsp_isg_po_transm_status",
-                value: PO_TRANSMITION_STATUSES.pendingTransmission,
-            });
-    
-            let itemCount = purchaseOrderRec.getLineCount({
-                sublistId: 'item'
-            });
-            if(itemCount > 0){
-                for(let i = 0 ; i < itemCount ; i++){
-                    let item = purchaseOrderRec.getSublistValue({
-                        sublistId: 'item',
-                        fieldId: 'item',
-                        line: i
-                    });
-                    let rate = findItemRate(wrapAndLabelItems, item);
-                    if(rate && rate != -1){
-                        purchaseOrderRec.selectLine({
-                            sublistId: 'item',
-                            line: i
-                        });
-            
-                        purchaseOrderRec.setCurrentSublistValue({
-                            sublistId: 'item',
-                            fieldId: 'rate',
-                            value: parseFloat(rate)
-                        });
-                        purchaseOrderRec.commitLine({
-                            sublistId: "item",
-                        });
+                let purchaseOrderRec = record.create({
+                    type: record.Type.PURCHASE_ORDER,
+                    isDynamic: true,
+                    defaultValues: {
+                        'soid' : poData.salesOrderID,
+                        'specord' : 'T',
+                        'custid': poData.customer,
+                        'entity': poData.vendor
                     }
-                    if(itemNotIncludedInTransmission(item, wrapAndLabelItems)){
-                        log.debug("createPurchaseOrder W&L", `Item ${item} will be removed`);
-                        purchaseOrderRec.removeLine({
-                            sublistId: 'item',
-                            line: i,
-                       });
-                    }
+                });
+
+                purchaseOrderRec.setValue({
+                    fieldId: "customform",
+                    value: parseInt(poData.transactionForm),
+                });
+        
+                purchaseOrderRec.setValue({
+                    fieldId: "location",
+                    value: parseInt(poData.location),
+                });
+    
+                purchaseOrderRec.setValue({
+                    fieldId: "custbody_bsp_isg_route_code",
+                    value: parseInt(poData.routeCode),
+                });
+        
+                purchaseOrderRec.setValue({
+                    fieldId: "custbody_bsp_isg_autoreceived",
+                    value: poData.autoreceive,
+                });
+        
+                purchaseOrderRec.setValue({
+                    fieldId: "custbody_bsp_isg_adot",
+                    value: poData.adot,
+                });
+        
+                purchaseOrderRec.setValue({
+                    fieldId: "custbody_bsp_isg_transmission_acct_num",
+                    value: parseInt(accountID),
+                });
+        
+                purchaseOrderRec.setValue({
+                    fieldId: "custbody_bsp_isg_transmission_loc",
+                    value: poData.transmissionLocation,
+                });
+        
+                purchaseOrderRec.setValue({
+                    fieldId: "custbody_bsp_isg_transm_queue_id",
+                    value: poData.transmitionQueueID,
+                });
+    
+                purchaseOrderRec.setValue({
+                    fieldId: "custbody_bsp_isg_order_type",
+                    value: SHIPMENT_TYPES.wrapAndLabel,
+                });
+        
+                purchaseOrderRec.setValue({
+                    fieldId: "custbody_bsp_isg_po_transm_status",
+                    value: PO_TRANSMITION_STATUSES.pendingTransmission,
+                });
+
+                /**
+                  * Shipping Address Subrecord
+                */
+    
+                let shipAddressSubrec = purchaseOrderRec.getSubrecord({
+                    fieldId: 'shippingaddress'
+                });
+    
+                shipAddressSubrec.setValue({
+                    fieldId: 'country',
+                    value: poData.shipAddress.shipcountry
+                });
+        
+                shipAddressSubrec.setValue({
+                    fieldId: 'city',
+                    value: poData.shipAddress.shipcity
+                });
+        
+                shipAddressSubrec.setValue({
+                    fieldId: 'state',
+                    value: poData.shipAddress.shipstate
+                });
+        
+                shipAddressSubrec.setValue({
+                    fieldId: 'zip',
+                    value: poData.shipAddress.shipzip
+                });
+        
+                shipAddressSubrec.setValue({
+                    fieldId: 'addr1',
+                    value: poData.shipAddress.shipaddress1
+                });
+    
+                purchaseOrderRec.setValue({
+                    fieldId: "shipaddress",
+                    value: poData.shipAddress.shipaddress,
+                });
+              
+                let itemCount = purchaseOrderRec.getLineCount({
+                    sublistId: 'item'
+                });
+                if(itemCount > 0){
+                    purchaseOrderRec = processPOitems(purchaseOrderRec, itemCount, items)
+                    poID = purchaseOrderRec.save();
+                    purchaseOrderIDs.push(poID);
+                }else{
+                    throw `There was an unexpected Error while trynig to create a PO for Sales Order ID ${poData.salesOrderID}`;
                 }
-                poID = purchaseOrderRec.save();
-                purchaseOrderIDs.push(poID);
-            }else{
-                throw `There was an unexpected Error while trynig to create a PO for Sales Order ID ${poData.salesOrderID}`;
-            }
+            }           
         }
 
         if(dropShipItems.length > 0){
-            let purchaseOrderRec = record.create({
-                type: record.Type.PURCHASE_ORDER,
-                isDynamic: true,
-                defaultValues: {
-                    'soid' : poData.salesOrderID,
-                    'dropship' : 'T',
-                    'custid': poData.customer,
-                    'entity': poData.vendor
-                }
-            });
 
-            purchaseOrderRec.setValue({
-                fieldId: "customform",
-                value: parseInt(poData.transactionForm),
-            });
+            let itemsGroupedByAccount = groupBy(dropShipItems, (i) => i.account.value);
 
-            /**
-              * Shipping Address Subrecord
-            */
-           
-             let shipAddressSubrec = purchaseOrderRec.getSubrecord({
-                fieldId: 'shippingaddress'
-            });
+            for(let accountID in itemsGroupedByAccount) { 
+                let items = itemsGroupedByAccount[accountID];
 
-            shipAddressSubrec.setValue({
-                fieldId: 'country',
-                value: poData.shipAddress.shipcountry
-            });
-    
-            shipAddressSubrec.setValue({
-                fieldId: 'city',
-                value: poData.shipAddress.shipcity
-            });
-    
-            shipAddressSubrec.setValue({
-                fieldId: 'state',
-                value: poData.shipAddress.shipstate
-            });
-    
-            shipAddressSubrec.setValue({
-                fieldId: 'zip',
-                value: poData.shipAddress.shipzip
-            });
-    
-            shipAddressSubrec.setValue({
-                fieldId: 'addr1',
-                value: poData.shipAddress.shipaddress1
-            });
-
-            purchaseOrderRec.setValue({
-                fieldId: "shipaddress",
-                value: poData.shipAddress.shipaddress,
-            });
-      
-            purchaseOrderRec.setValue({
-                fieldId: "custbody_bsp_isg_autoreceived",
-                value: poData.autoreceive,
-            });
-    
-            purchaseOrderRec.setValue({
-                fieldId: "custbody_bsp_isg_adot",
-                value: poData.adot,
-            });
-    
-            purchaseOrderRec.setValue({
-                fieldId: "custbody_bsp_isg_transmission_acct_num",
-                value: poData.account.value,
-            });
-    
-            purchaseOrderRec.setValue({
-                fieldId: "custbody_bsp_isg_transmission_loc",
-                value: poData.transmissionLocation,
-            });
-    
-            purchaseOrderRec.setValue({
-                fieldId: "custbody_bsp_isg_transm_queue_id",
-                value: poData.transmitionQueueID,
-            });
-    
-            purchaseOrderRec.setValue({
-                fieldId: "custbody_bsp_isg_order_type",
-                value: SHIPMENT_TYPES.dropship,
-            });
-
-            purchaseOrderRec.setValue({
-                fieldId: "custbody_bsp_isg_po_transm_status",
-                value: PO_TRANSMITION_STATUSES.pendingTransmission,
-            });
-    
-            let itemCount = purchaseOrderRec.getLineCount({
-                sublistId: 'item'
-            });
-            if(itemCount > 0){
-                for(let i = 0 ; i < itemCount ; i++){
-                    let item = purchaseOrderRec.getSublistValue({
-                        sublistId: 'item',
-                        fieldId: 'item',
-                        line: i
-                    });
-                    let rate = findItemRate(dropShipItems, item);
-                    if(rate && rate != -1){
-                        purchaseOrderRec.selectLine({
-                            sublistId: 'item',
-                            line: i
-                        });
-            
-                        purchaseOrderRec.setCurrentSublistValue({
-                            sublistId: 'item',
-                            fieldId: 'rate',
-                            value: parseFloat(rate)
-                        });
-                        purchaseOrderRec.commitLine({
-                            sublistId: "item",
-                        });
+                let purchaseOrderRec = record.create({
+                    type: record.Type.PURCHASE_ORDER,
+                    isDynamic: true,
+                    defaultValues: {
+                        'soid' : poData.salesOrderID,
+                        'dropship' : 'T',
+                        'custid': poData.customer,
+                        'entity': poData.vendor
                     }
-                    if(itemNotIncludedInTransmission(item, dropShipItems)){
-                        log.debug("createPurchaseOrder dropShip", `Item ${item} will be removed`);
-                        purchaseOrderRec.removeLine({
-                            sublistId: 'item',
-                            line: i,
-                       });
-                    }
+                });
+    
+                purchaseOrderRec.setValue({
+                    fieldId: "customform",
+                    value: parseInt(poData.transactionForm),
+                });
+
+                purchaseOrderRec.setValue({
+                    fieldId: "custbody_bsp_isg_autoreceived",
+                    value: poData.autoreceive,
+                });
+        
+                purchaseOrderRec.setValue({
+                    fieldId: "custbody_bsp_isg_adot",
+                    value: poData.adot,
+                });
+        
+                purchaseOrderRec.setValue({
+                    fieldId: "custbody_bsp_isg_transmission_acct_num",
+                    value: parseInt(accountID),
+                });
+        
+                purchaseOrderRec.setValue({
+                    fieldId: "custbody_bsp_isg_transmission_loc",
+                    value: poData.transmissionLocation,
+                });
+        
+                purchaseOrderRec.setValue({
+                    fieldId: "custbody_bsp_isg_transm_queue_id",
+                    value: poData.transmitionQueueID,
+                });
+        
+                purchaseOrderRec.setValue({
+                    fieldId: "custbody_bsp_isg_order_type",
+                    value: SHIPMENT_TYPES.dropship,
+                });
+    
+                purchaseOrderRec.setValue({
+                    fieldId: "custbody_bsp_isg_po_transm_status",
+                    value: PO_TRANSMITION_STATUSES.pendingTransmission,
+                });
+
+                /**
+                 * Shipping Address Subrecord
+                */
+                        
+                let shipAddressSubrec = purchaseOrderRec.getSubrecord({
+                    fieldId: 'shippingaddress'
+                });
+
+                shipAddressSubrec.setValue({
+                    fieldId: 'country',
+                    value: poData.shipAddress.shipcountry
+                });
+
+                shipAddressSubrec.setValue({
+                    fieldId: 'city',
+                    value: poData.shipAddress.shipcity
+                });
+
+                shipAddressSubrec.setValue({
+                    fieldId: 'state',
+                    value: poData.shipAddress.shipstate
+                });
+
+                shipAddressSubrec.setValue({
+                    fieldId: 'zip',
+                    value: poData.shipAddress.shipzip
+                });
+
+                shipAddressSubrec.setValue({
+                    fieldId: 'addr1',
+                    value: poData.shipAddress.shipaddress1
+                });
+
+                purchaseOrderRec.setValue({
+                    fieldId: "shipaddress",
+                    value: poData.shipAddress.shipaddress,
+                });
+
+                let itemCount = purchaseOrderRec.getLineCount({
+                    sublistId: 'item'
+                });
+
+                if(itemCount > 0){
+                    purchaseOrderRec = processPOitems(purchaseOrderRec, itemCount, items)
+                    poID = purchaseOrderRec.save();
+                    purchaseOrderIDs.push(poID);
+                }else{
+                    throw `There was an unexpected Error while trynig to create a PO for Sales Order ID ${poData.salesOrderID}`;
                 }
-                poID = purchaseOrderRec.save();
-                purchaseOrderIDs.push(poID);
-            }else{
-                throw `There was an unexpected Error while trynig to create a PO for Sales Order ID ${poData.salesOrderID}`;
-            }
+            }      
         }
         return purchaseOrderIDs;
+    }
+
+    function processPOitems(purchaseOrderRec, itemCount, items){
+        for(let i = 0 ; i < itemCount ; i++){
+            let item = purchaseOrderRec.getSublistValue({
+                sublistId: 'item',
+                fieldId: 'item',
+                line: i
+            });
+            let rate = findItemRate(items, item);
+            if(rate && rate != -1){
+                purchaseOrderRec.selectLine({
+                    sublistId: 'item',
+                    line: i
+                });
+    
+                purchaseOrderRec.setCurrentSublistValue({
+                    sublistId: 'item',
+                    fieldId: 'rate',
+                    value: parseFloat(rate)
+                });
+                purchaseOrderRec.commitLine({
+                    sublistId: "item",
+                });
+            }
+            if(itemNotIncludedInTransmission(item, items)){
+                log.debug("createPurchaseOrder dropShip", `Item ${item} will be removed`);
+                purchaseOrderRec.removeLine({
+                    sublistId: 'item',
+                    line: i,
+               });
+            }
+        }
+        return purchaseOrderRec;
     }
 
     function getItemWithPrices(items, vendor, transmissionAccount){
@@ -561,8 +544,7 @@
                     }else{
                         itemsWithPrices[itemIndex].accounts.transmissionAccount.account = transmissionAccount;
                         itemsWithPrices[itemIndex].accounts.transmissionAccount.cost = cost;
-                    }
-                    
+                    }     
                 }else{
                     if(isMainAccount){
                         itemsWithPrices.push({
@@ -1091,6 +1073,10 @@
 				})(value))
 		);
 	}
+
+    function groupBy(xs, f) {
+        return xs.reduce((r, v, i, a, k = f(v)) => ((r[k] || (r[k] = [])).push(v), r), {});
+    }
 
     return {
         transmitionPOStatus: transmitionPOStatus,

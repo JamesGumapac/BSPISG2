@@ -278,6 +278,11 @@
             accountNumber = transmissionAccount;
         }
 
+        log.debug("getAccountNumber", {
+            transmissionAccount: transmissionAccount,
+            accountNumber: accountNumber
+        });
+        
         return accountNumber;
     }
 
