@@ -3,7 +3,7 @@
  * @NModuleScope Public
  */
 
- define(['N/search', 'N/record'], function (search, record) {
+ define(['N/search', 'N/record', '../Lib/bsp_isg_trading_partners.js'], function (search, record, BSPTradingParnters) {
 
     const PO_TRANSMITION_STATUSES = Object.freeze({
         pendingTransmission: 1,
@@ -227,314 +227,400 @@
     function createPurchaseOrders(poData){
         let purchaseOrderIDs = [];
 
-        let itemData = getItemPrices(poData.itemData, poData.vendor, poData.account.value);
+        let itemData = getItemWithPrices(poData.itemData, poData.vendor, poData.account);
         let wrapAndLabelItems = getWrapAndLabelItems(itemData);
         let dropShipItems = getDropShipItems(itemData);
 
+        log.debug("itemData", JSON.stringify(itemData));
+        log.debug("wrapAndLabelItems", JSON.stringify(wrapAndLabelItems));
+        log.debug("dropShipItems", JSON.stringify(dropShipItems));
+
         if(wrapAndLabelItems.length > 0){
-            let purchaseOrderRec = record.create({
-                type: record.Type.PURCHASE_ORDER,
-                isDynamic: true,
-                defaultValues: {
-                    'soid' : poData.salesOrderID,
-                    'specord' : 'T',
-                    'custid': poData.customer,
-                    'entity': poData.vendor
-                }
-            });
 
-            purchaseOrderRec.setValue({
-                fieldId: "customform",
-                value: parseInt(poData.transactionForm),
-            });
-    
-            purchaseOrderRec.setValue({
-                fieldId: "location",
-                value: parseInt(poData.location),
-            });
+            let itemsGroupedByAccount = groupBy(wrapAndLabelItems, (i) => i.account.value);
 
-            /**
-              * Shipping Address Subrecord
-            */
+            for(let accountID in itemsGroupedByAccount) { 
+                let items = itemsGroupedByAccount[accountID];
 
-            let shipAddressSubrec = purchaseOrderRec.getSubrecord({
-                fieldId: 'shippingaddress'
-            });
-
-            shipAddressSubrec.setValue({
-                fieldId: 'country',
-                value: poData.shipAddress.shipcountry
-            });
-    
-            shipAddressSubrec.setValue({
-                fieldId: 'city',
-                value: poData.shipAddress.shipcity
-            });
-    
-            shipAddressSubrec.setValue({
-                fieldId: 'state',
-                value: poData.shipAddress.shipstate
-            });
-    
-            shipAddressSubrec.setValue({
-                fieldId: 'zip',
-                value: poData.shipAddress.shipzip
-            });
-    
-            shipAddressSubrec.setValue({
-                fieldId: 'addr1',
-                value: poData.shipAddress.shipaddress1
-            });
-
-            purchaseOrderRec.setValue({
-                fieldId: "shipaddress",
-                value: poData.shipAddress.shipaddress,
-            });
-          
-            purchaseOrderRec.setValue({
-                fieldId: "custbody_bsp_isg_route_code",
-                value: parseInt(poData.routeCode),
-            });
-    
-            purchaseOrderRec.setValue({
-                fieldId: "custbody_bsp_isg_autoreceived",
-                value: poData.autoreceive,
-            });
-    
-            purchaseOrderRec.setValue({
-                fieldId: "custbody_bsp_isg_adot",
-                value: poData.adot,
-            });
-    
-            purchaseOrderRec.setValue({
-                fieldId: "custbody_bsp_isg_transmission_acct_num",
-                value: poData.account.value,
-            });
-    
-            purchaseOrderRec.setValue({
-                fieldId: "custbody_bsp_isg_transmission_loc",
-                value: poData.transmissionLocation,
-            });
-    
-            purchaseOrderRec.setValue({
-                fieldId: "custbody_bsp_isg_transm_queue_id",
-                value: poData.transmitionQueueID,
-            });
-
-            purchaseOrderRec.setValue({
-                fieldId: "custbody_bsp_isg_order_type",
-                value: SHIPMENT_TYPES.wrapAndLabel,
-            });
-    
-            purchaseOrderRec.setValue({
-                fieldId: "custbody_bsp_isg_po_transm_status",
-                value: PO_TRANSMITION_STATUSES.pendingTransmission,
-            });
-    
-            let itemCount = purchaseOrderRec.getLineCount({
-                sublistId: 'item'
-            });
-            if(itemCount > 0){
-                for(let i = 0 ; i < itemCount ; i++){
-                    let item = purchaseOrderRec.getSublistValue({
-                        sublistId: 'item',
-                        fieldId: 'item',
-                        line: i
-                    });
-                    let rate = findItemRate(wrapAndLabelItems, item);
-                    if(rate && rate != -1){
-                        purchaseOrderRec.selectLine({
-                            sublistId: 'item',
-                            line: i
-                        });
-            
-                        purchaseOrderRec.setCurrentSublistValue({
-                            sublistId: 'item',
-                            fieldId: 'rate',
-                            value: parseFloat(rate)
-                        });
-                        purchaseOrderRec.commitLine({
-                            sublistId: "item",
-                        });
+                let purchaseOrderRec = record.create({
+                    type: record.Type.PURCHASE_ORDER,
+                    isDynamic: true,
+                    defaultValues: {
+                        'soid' : poData.salesOrderID,
+                        'specord' : 'T',
+                        'custid': poData.customer,
+                        'entity': poData.vendor
                     }
-                    if(itemNotIncludedInTransmission(item, wrapAndLabelItems)){
-                        log.debug("createPurchaseOrder W&L", `Item ${item} will be removed`);
-                        purchaseOrderRec.removeLine({
-                            sublistId: 'item',
-                            line: i,
-                       });
-                    }
+                });
+
+                purchaseOrderRec.setValue({
+                    fieldId: "customform",
+                    value: parseInt(poData.transactionForm),
+                });
+        
+                purchaseOrderRec.setValue({
+                    fieldId: "location",
+                    value: parseInt(poData.location),
+                });
+    
+                purchaseOrderRec.setValue({
+                    fieldId: "custbody_bsp_isg_route_code",
+                    value: parseInt(poData.routeCode),
+                });
+        
+                purchaseOrderRec.setValue({
+                    fieldId: "custbody_bsp_isg_autoreceived",
+                    value: poData.autoreceive,
+                });
+        
+                purchaseOrderRec.setValue({
+                    fieldId: "custbody_bsp_isg_adot",
+                    value: poData.adot,
+                });
+        
+                purchaseOrderRec.setValue({
+                    fieldId: "custbody_bsp_isg_transmission_acct_num",
+                    value: parseInt(accountID),
+                });
+        
+                purchaseOrderRec.setValue({
+                    fieldId: "custbody_bsp_isg_transmission_loc",
+                    value: poData.transmissionLocation,
+                });
+        
+                purchaseOrderRec.setValue({
+                    fieldId: "custbody_bsp_isg_transm_queue_id",
+                    value: poData.transmitionQueueID,
+                });
+    
+                purchaseOrderRec.setValue({
+                    fieldId: "custbody_bsp_isg_order_type",
+                    value: SHIPMENT_TYPES.wrapAndLabel,
+                });
+        
+                purchaseOrderRec.setValue({
+                    fieldId: "custbody_bsp_isg_po_transm_status",
+                    value: PO_TRANSMITION_STATUSES.pendingTransmission,
+                });
+
+                /**
+                  * Shipping Address Subrecord
+                */
+    
+                let shipAddressSubrec = purchaseOrderRec.getSubrecord({
+                    fieldId: 'shippingaddress'
+                });
+    
+                shipAddressSubrec.setValue({
+                    fieldId: 'country',
+                    value: poData.shipAddress.shipcountry
+                });
+        
+                shipAddressSubrec.setValue({
+                    fieldId: 'city',
+                    value: poData.shipAddress.shipcity
+                });
+        
+                shipAddressSubrec.setValue({
+                    fieldId: 'state',
+                    value: poData.shipAddress.shipstate
+                });
+        
+                shipAddressSubrec.setValue({
+                    fieldId: 'zip',
+                    value: poData.shipAddress.shipzip
+                });
+        
+                shipAddressSubrec.setValue({
+                    fieldId: 'addr1',
+                    value: poData.shipAddress.shipaddress1
+                });
+    
+                purchaseOrderRec.setValue({
+                    fieldId: "shipaddress",
+                    value: poData.shipAddress.shipaddress,
+                });
+              
+                let itemCount = purchaseOrderRec.getLineCount({
+                    sublistId: 'item'
+                });
+                if(itemCount > 0){
+                    purchaseOrderRec = processPOitems(purchaseOrderRec, itemCount, items)
+                    poID = purchaseOrderRec.save();
+                    purchaseOrderIDs.push(poID);
+                }else{
+                    throw `There was an unexpected Error while trynig to create a PO for Sales Order ID ${poData.salesOrderID}`;
                 }
-                poID = purchaseOrderRec.save();
-                purchaseOrderIDs.push(poID);
-            }else{
-                throw `There was an unexpected Error while trynig to create a PO for Sales Order ID ${poData.salesOrderID}`;
-            }
+            }           
         }
 
         if(dropShipItems.length > 0){
-            let purchaseOrderRec = record.create({
-                type: record.Type.PURCHASE_ORDER,
-                isDynamic: true,
-                defaultValues: {
-                    'soid' : poData.salesOrderID,
-                    'dropship' : 'T',
-                    'custid': poData.customer,
-                    'entity': poData.vendor
-                }
-            });
 
-            purchaseOrderRec.setValue({
-                fieldId: "customform",
-                value: parseInt(poData.transactionForm),
-            });
+            let itemsGroupedByAccount = groupBy(dropShipItems, (i) => i.account.value);
 
-            /**
-              * Shipping Address Subrecord
-            */
-           
-             let shipAddressSubrec = purchaseOrderRec.getSubrecord({
-                fieldId: 'shippingaddress'
-            });
+            for(let accountID in itemsGroupedByAccount) { 
+                let items = itemsGroupedByAccount[accountID];
 
-            shipAddressSubrec.setValue({
-                fieldId: 'country',
-                value: poData.shipAddress.shipcountry
-            });
-    
-            shipAddressSubrec.setValue({
-                fieldId: 'city',
-                value: poData.shipAddress.shipcity
-            });
-    
-            shipAddressSubrec.setValue({
-                fieldId: 'state',
-                value: poData.shipAddress.shipstate
-            });
-    
-            shipAddressSubrec.setValue({
-                fieldId: 'zip',
-                value: poData.shipAddress.shipzip
-            });
-    
-            shipAddressSubrec.setValue({
-                fieldId: 'addr1',
-                value: poData.shipAddress.shipaddress1
-            });
-
-            purchaseOrderRec.setValue({
-                fieldId: "shipaddress",
-                value: poData.shipAddress.shipaddress,
-            });
-      
-            purchaseOrderRec.setValue({
-                fieldId: "custbody_bsp_isg_autoreceived",
-                value: poData.autoreceive,
-            });
-    
-            purchaseOrderRec.setValue({
-                fieldId: "custbody_bsp_isg_adot",
-                value: poData.adot,
-            });
-    
-            purchaseOrderRec.setValue({
-                fieldId: "custbody_bsp_isg_transmission_acct_num",
-                value: poData.account.value,
-            });
-    
-            purchaseOrderRec.setValue({
-                fieldId: "custbody_bsp_isg_transmission_loc",
-                value: poData.transmissionLocation,
-            });
-    
-            purchaseOrderRec.setValue({
-                fieldId: "custbody_bsp_isg_transm_queue_id",
-                value: poData.transmitionQueueID,
-            });
-    
-            purchaseOrderRec.setValue({
-                fieldId: "custbody_bsp_isg_order_type",
-                value: SHIPMENT_TYPES.dropship,
-            });
-
-            purchaseOrderRec.setValue({
-                fieldId: "custbody_bsp_isg_po_transm_status",
-                value: PO_TRANSMITION_STATUSES.pendingTransmission,
-            });
-    
-            let itemCount = purchaseOrderRec.getLineCount({
-                sublistId: 'item'
-            });
-            if(itemCount > 0){
-                for(let i = 0 ; i < itemCount ; i++){
-                    let item = purchaseOrderRec.getSublistValue({
-                        sublistId: 'item',
-                        fieldId: 'item',
-                        line: i
-                    });
-                    let rate = findItemRate(dropShipItems, item);
-                    if(rate && rate != -1){
-                        purchaseOrderRec.selectLine({
-                            sublistId: 'item',
-                            line: i
-                        });
-            
-                        purchaseOrderRec.setCurrentSublistValue({
-                            sublistId: 'item',
-                            fieldId: 'rate',
-                            value: parseFloat(rate)
-                        });
-                        purchaseOrderRec.commitLine({
-                            sublistId: "item",
-                        });
+                let purchaseOrderRec = record.create({
+                    type: record.Type.PURCHASE_ORDER,
+                    isDynamic: true,
+                    defaultValues: {
+                        'soid' : poData.salesOrderID,
+                        'dropship' : 'T',
+                        'custid': poData.customer,
+                        'entity': poData.vendor
                     }
-                    if(itemNotIncludedInTransmission(item, dropShipItems)){
-                        log.debug("createPurchaseOrder dropShip", `Item ${item} will be removed`);
-                        purchaseOrderRec.removeLine({
-                            sublistId: 'item',
-                            line: i,
-                       });
-                    }
+                });
+    
+                purchaseOrderRec.setValue({
+                    fieldId: "customform",
+                    value: parseInt(poData.transactionForm),
+                });
+
+                purchaseOrderRec.setValue({
+                    fieldId: "custbody_bsp_isg_autoreceived",
+                    value: poData.autoreceive,
+                });
+        
+                purchaseOrderRec.setValue({
+                    fieldId: "custbody_bsp_isg_adot",
+                    value: poData.adot,
+                });
+        
+                purchaseOrderRec.setValue({
+                    fieldId: "custbody_bsp_isg_transmission_acct_num",
+                    value: parseInt(accountID),
+                });
+        
+                purchaseOrderRec.setValue({
+                    fieldId: "custbody_bsp_isg_transmission_loc",
+                    value: poData.transmissionLocation,
+                });
+        
+                purchaseOrderRec.setValue({
+                    fieldId: "custbody_bsp_isg_transm_queue_id",
+                    value: poData.transmitionQueueID,
+                });
+        
+                purchaseOrderRec.setValue({
+                    fieldId: "custbody_bsp_isg_order_type",
+                    value: SHIPMENT_TYPES.dropship,
+                });
+    
+                purchaseOrderRec.setValue({
+                    fieldId: "custbody_bsp_isg_po_transm_status",
+                    value: PO_TRANSMITION_STATUSES.pendingTransmission,
+                });
+
+                /**
+                 * Shipping Address Subrecord
+                */
+                        
+                let shipAddressSubrec = purchaseOrderRec.getSubrecord({
+                    fieldId: 'shippingaddress'
+                });
+
+                shipAddressSubrec.setValue({
+                    fieldId: 'country',
+                    value: poData.shipAddress.shipcountry
+                });
+
+                shipAddressSubrec.setValue({
+                    fieldId: 'city',
+                    value: poData.shipAddress.shipcity
+                });
+
+                shipAddressSubrec.setValue({
+                    fieldId: 'state',
+                    value: poData.shipAddress.shipstate
+                });
+
+                shipAddressSubrec.setValue({
+                    fieldId: 'zip',
+                    value: poData.shipAddress.shipzip
+                });
+
+                shipAddressSubrec.setValue({
+                    fieldId: 'addr1',
+                    value: poData.shipAddress.shipaddress1
+                });
+
+                purchaseOrderRec.setValue({
+                    fieldId: "shipaddress",
+                    value: poData.shipAddress.shipaddress,
+                });
+
+                let itemCount = purchaseOrderRec.getLineCount({
+                    sublistId: 'item'
+                });
+
+                if(itemCount > 0){
+                    purchaseOrderRec = processPOitems(purchaseOrderRec, itemCount, items)
+                    poID = purchaseOrderRec.save();
+                    purchaseOrderIDs.push(poID);
+                }else{
+                    throw `There was an unexpected Error while trynig to create a PO for Sales Order ID ${poData.salesOrderID}`;
                 }
-                poID = purchaseOrderRec.save();
-                purchaseOrderIDs.push(poID);
-            }else{
-                throw `There was an unexpected Error while trynig to create a PO for Sales Order ID ${poData.salesOrderID}`;
-            }
+            }      
         }
         return purchaseOrderIDs;
     }
 
-    function getItemPrices(items, vendor, account){
+    function processPOitems(purchaseOrderRec, itemCount, items){
+        for(let i = 0 ; i < itemCount ; i++){
+            let item = purchaseOrderRec.getSublistValue({
+                sublistId: 'item',
+                fieldId: 'item',
+                line: i
+            });
+            let rate = findItemRate(items, item);
+            if(rate && rate != -1){
+                purchaseOrderRec.selectLine({
+                    sublistId: 'item',
+                    line: i
+                });
+    
+                purchaseOrderRec.setCurrentSublistValue({
+                    sublistId: 'item',
+                    fieldId: 'rate',
+                    value: parseFloat(rate)
+                });
+                purchaseOrderRec.commitLine({
+                    sublistId: "item",
+                });
+            }
+            if(itemNotIncludedInTransmission(item, items)){
+                log.debug("createPurchaseOrder", `Item ${item} will be removed`);
+                purchaseOrderRec.removeLine({
+                    sublistId: 'item',
+                    line: i,
+               });
+            }
+        }
+        return purchaseOrderRec;
+    }
 
+    function getItemWithPrices(items, vendor, transmissionAccount){
+        
         let resultItems = items.map(i => JSON.parse(i));
 
-        const customrecord_bsp_isg_item_acct_dataSearchObj = search.create({
-            type: "customrecord_bsp_isg_item_acct_data",
-            filters:
-            [
-               ["custrecord_bsp_isg_parent_item","anyof",resultItems.map(i => i.itemID)], 
-               "AND", 
-               ["custrecord_bsp_isg_account_number","anyof",account], 
-               "AND", 
-               ["custrecord_bsp_isg_item_supplier","anyof",vendor]
-            ],
-            columns:
-            [
-               search.createColumn({name: "custrecord_bsp_isg_parent_item", label: "Item"}),
-               search.createColumn({name: "custrecord_bsp_isg_item_cost", label: "Cost"})
-            ]
-         });
+        let autoDetermineBestPriceConfig = BSPTradingParnters.getAutoDetermineBestPriceConfig(vendor);
 
-        customrecord_bsp_isg_item_acct_dataSearchObj.run().each(function(result){
-            let itemID = result.getValue({name: 'custrecord_bsp_isg_parent_item'});
-            let cost = result.getValue({name: 'custrecord_bsp_isg_item_cost'});
-            let itemIndex = findItemIndex(resultItems, itemID);
-            if(itemIndex >=0){
-                resultItems[itemIndex].cost = cost;
+        if(transmissionAccount.ovewritten && autoDetermineBestPriceConfig){
+            let tradingPartnerMainAccount = BSPTradingParnters.getMainAccount(vendor, transmissionAccount.type);
+            const customrecord_bsp_isg_item_acct_dataSearchObj = search.create({
+                type: "customrecord_bsp_isg_item_acct_data",
+                filters: [
+                    ["custrecord_bsp_isg_parent_item","anyof",resultItems.map(i => i.itemID)], 
+                    "AND", 
+                    ["custrecord_bsp_isg_account_number","anyof",transmissionAccount.value, tradingPartnerMainAccount], 
+                    "AND", 
+                    ["custrecord_bsp_isg_item_supplier","anyof",vendor]
+                ],
+                columns:
+                [
+                   search.createColumn({name: "custrecord_bsp_isg_parent_item", label: "Item"}),
+                   search.createColumn({name: "custrecord_bsp_isg_item_cost", label: "Cost"}),
+                   search.createColumn({name: "custrecord_bsp_isg_account_number", label: "Account Number"})
+                ]
+            });
+
+            let itemsWithPrices = [];
+            customrecord_bsp_isg_item_acct_dataSearchObj.run().each(function(result){
+                let itemID = result.getValue({name: 'custrecord_bsp_isg_parent_item'});
+                let accountNumberValue = result.getValue({name: 'custrecord_bsp_isg_account_number'});
+                let accountNumberText = result.getText({name: 'custrecord_bsp_isg_account_number'});
+                let accountNumber = {
+                    value: accountNumberValue,
+                    text: accountNumberText
+                }
+                let isMainAccount = accountNumber.value == tradingPartnerMainAccount ? true : false;
+                let cost = result.getValue({name: 'custrecord_bsp_isg_item_cost'});
+                let itemIndex = findItemIndex(itemsWithPrices, itemID);
+                if(itemIndex >=0){
+                    if(isMainAccount){
+                        itemsWithPrices[itemIndex].accounts.mainAccount.account = accountNumber;
+                        itemsWithPrices[itemIndex].accounts.mainAccount.cost = cost;
+                    }else{
+                        itemsWithPrices[itemIndex].accounts.transmissionAccount.account = transmissionAccount;
+                        itemsWithPrices[itemIndex].accounts.transmissionAccount.cost = cost;
+                    }     
+                }else{
+                    if(isMainAccount){
+                        itemsWithPrices.push({
+                            itemID: itemID,
+                            accounts:{
+                                mainAccount: {
+                                    account: accountNumber,
+                                    cost: cost
+                                },
+                                transmissionAccount: {
+                                    account: null,
+                                    cost: null
+                                }
+                            }
+                        });
+                    }else{
+                        itemsWithPrices.push({
+                            itemID: itemID,
+                            accounts:{
+                                mainAccount: {
+                                    account: null,
+                                    cost: null
+                                },
+                                transmissionAccount: {
+                                    account: accountNumber,
+                                    cost: cost
+                                }
+                            }
+                        });
+                    }  
+                }
+                return true;
+            });
+
+            for (let index = 0; index < itemsWithPrices.length; index++) {
+                const itemWithPrices = itemsWithPrices[index];
+                const itemID = itemWithPrices.itemID;
+                const mainAccount = itemWithPrices.accounts.mainAccount;
+                const transmissionAccount = itemWithPrices.accounts.transmissionAccount;
+                let bestCostAccount = (mainAccount && (mainAccount.cost < transmissionAccount.cost)) ? mainAccount : transmissionAccount;
+            
+                let itemIndex = findItemIndex(resultItems, itemID);
+                if(itemIndex >=0){
+                    resultItems[itemIndex].cost = bestCostAccount.cost;
+                    resultItems[itemIndex].account = bestCostAccount.account;
+                }
             }
-            return true;
-        })
+        }else{
+            const customrecord_bsp_isg_item_acct_dataSearchObj = search.create({
+                type: "customrecord_bsp_isg_item_acct_data",
+                filters:  [
+                    ["custrecord_bsp_isg_parent_item","anyof",resultItems.map(i => i.itemID)], 
+                    "AND", 
+                    ["custrecord_bsp_isg_account_number","anyof",transmissionAccount.value], 
+                    "AND", 
+                    ["custrecord_bsp_isg_item_supplier","anyof",vendor]
+                ],
+                columns:
+                [
+                   search.createColumn({name: "custrecord_bsp_isg_parent_item", label: "Item"}),
+                   search.createColumn({name: "custrecord_bsp_isg_item_cost", label: "Cost"}),
+                   search.createColumn({name: "custrecord_bsp_isg_account_number", label: "Account Number"})
+                ]
+            });
+            customrecord_bsp_isg_item_acct_dataSearchObj.run().each(function(result){
+                let itemID = result.getValue({name: 'custrecord_bsp_isg_parent_item'});
+                let cost = result.getValue({name: 'custrecord_bsp_isg_item_cost'});
+                let itemIndex = findItemIndex(resultItems, itemID);
+                if(itemIndex >=0){
+                    resultItems[itemIndex].cost = cost;
+                    resultItems[itemIndex].account = transmissionAccount;
+                }
+                return true;
+            });
+        }
+
         return resultItems;
     }
 
@@ -987,6 +1073,10 @@
 				})(value))
 		);
 	}
+
+    function groupBy(xs, f) {
+        return xs.reduce((r, v, i, a, k = f(v)) => ((r[k] || (r[k] = [])).push(v), r), {});
+    }
 
     return {
         transmitionPOStatus: transmitionPOStatus,

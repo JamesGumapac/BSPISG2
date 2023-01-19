@@ -1,0 +1,24 @@
+<customlist scriptid="customlist_bsp_isg_account_type">
+  <description></description>
+  <isinactive>F</isinactive>
+  <ismatrixoption>F</ismatrixoption>
+  <isordered>T</isordered>
+  <name>Account Type</name>
+  <customvalues>
+    <customvalue scriptid="val_5598510_t927173_612">
+      <abbreviation>D</abbreviation>
+      <isinactive>F</isinactive>
+      <value>DropShip</value>
+    </customvalue>
+    <customvalue scriptid="val_5598511_t927173_759">
+      <abbreviation>W</abbreviation>
+      <isinactive>F</isinactive>
+      <value>Wrap and Label</value>
+    </customvalue>
+    <customvalue scriptid="val_5598512_t927173_839">
+      <abbreviation>D</abbreviation>
+      <isinactive>F</isinactive>
+      <value>Depends on Delivery Zone</value>
+    </customvalue>
+  </customvalues>
+</customlist>

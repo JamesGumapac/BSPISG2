@@ -89,11 +89,10 @@
     /**
      * It takes a vendor ID and returns the trading partner Delivery Time.
      * @param vendor - The vendor ID of the vendor that you want to get the trading partner Delivery Time for.
-     * @returns The ID of the trading partner record.
+     * @returns The tradingPartnerDeliveryTime.
     */
     function getTradingPartnerDeliveryTime(vendor){
         let tradingPartnerDeliveryTime = null;
-        log.debug("getTradingPartnerID", "Vendor: " + vendor);
 
         const trading_partnerSearchObj = search.create({
             type: "customrecord_bsp_isg_trading_partner",
@@ -114,6 +113,72 @@
             });
 
         return tradingPartnerDeliveryTime;
+    }
+
+
+    /**
+     * It searches for a trading partner that has a vendor field that matches the vendor passed in and
+     * returns the value of the "Auto Determine Best Price" field.
+     * @param vendor - The vendor that the item is being purchased from.
+     * @returns A boolean value.
+     */
+    function getAutoDetermineBestPriceConfig(vendor){
+        let autoDetermineBestPriceConfig = false;
+
+        const trading_partnerSearchObj = search.create({
+            type: "customrecord_bsp_isg_trading_partner",
+            filters:
+            [
+                ["custrecord_bsp_isg_tp_vendor","anyof",vendor], 
+                "AND", 
+                ["isinactive","is","F"]
+            ],
+            columns:[
+                search.createColumn({name: "custrecord_bsp_isg_determine_best_price", label: "Auto Determine Best Price"})
+            ]
+        });
+
+        trading_partnerSearchObj.run().each(function(result){
+            autoDetermineBestPriceConfig = result.getValue("custrecord_bsp_isg_determine_best_price");
+            return true;
+        });
+
+        return autoDetermineBestPriceConfig;
+    }
+
+    /**
+     * It takes a vendor ID and returns the trading partner Main Account for either W&L or DropShip.
+     * @param vendor - The vendor ID of the vendor.
+     * @param accountType - The Account Type to be sourced.
+     * @returns The ID of the Main Account.
+    */
+    function getMainAccount(vendor, accountType){
+        let mainAccount = null;
+
+        const trading_partnerSearchObj = search.create({
+            type: "customrecord_bsp_isg_trading_partner",
+            filters:
+            [
+                ["custrecord_bsp_isg_tp_vendor","anyof",vendor], 
+                "AND", 
+                ["isinactive","is","F"]
+            ],
+            columns:[
+                search.createColumn({name: "custrecord_bsp_isg_main_wl_account", label: "Main Wrap and Label Account"}),
+                search.createColumn({name: "custrecord_bsp_isg_main_dropship_account", label: "Main DropShip Account"})
+            ]
+            });
+
+            trading_partnerSearchObj.run().each(function(result){
+                if(accountType == "DropShip"){
+                    mainAccount = result.getValue("custrecord_bsp_isg_main_dropship_account");
+                }else if(accountType == "Wrap and Label"){
+                    mainAccount = result.getValue("custrecord_bsp_isg_main_wl_account");
+                }
+                return true;
+            });
+
+        return mainAccount;
     }
 
     /**
@@ -257,6 +322,8 @@
         getTradingPartnerBODId: getTradingPartnerBODId,
         isTradingPartner: isTradingPartner,
         getTradingPartnerDeliveryTime: getTradingPartnerDeliveryTime,
+        getMainAccount: getMainAccount,
+        getAutoDetermineBestPriceConfig: getAutoDetermineBestPriceConfig,
         processPOAck: processPOAck,
         processInvoice: processInvoice,
         processASN: processASN

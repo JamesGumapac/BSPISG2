@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <Order EnterpriseCode="${data.tradingPartner.name}" 
-		BuyerOrganizationCode="${data.transmissionData.accountNumber.text}"
+		BuyerOrganizationCode="${data.purchaseOrder.account.text}"
 		EntryType="AS2"		
 		DraftOrderFlag="Y" 
 		OrderType="<#if data.purchaseOrder.orderType == 'Wrap and Label'>03<#elseif data.purchaseOrder.orderType == 'Dropship'>04<#else>01</#if>" 

@@ -1211,7 +1211,7 @@ This is a 5-digit integer value, unique for each ProcessPurchaseOrder. You may s
       <storevalue>T</storevalue>
       <subtab></subtab>
     </customrecordcustomfield>
-    <customrecordcustomfield scriptid="custrecord_bsp_isg_main_account">
+    <customrecordcustomfield scriptid="custrecord_bsp_isg_main_wl_account">
       <accesslevel>2</accesslevel>
       <allowquickadd>F</allowquickadd>
       <applyformatting>F</applyformatting>
@@ -1231,7 +1231,7 @@ This is a 5-digit integer value, unique for each ProcessPurchaseOrder. You may s
       <isformula>F</isformula>
       <ismandatory>F</ismandatory>
       <isparent>F</isparent>
-      <label>Main Account</label>
+      <label>Main Wrap and Label Account</label>
       <linktext></linktext>
       <maxlength></maxlength>
       <maxvalue></maxvalue>
@@ -1261,6 +1261,96 @@ This is a 5-digit integer value, unique for each ProcessPurchaseOrder. You may s
           <fldfilterval></fldfilterval>
         </customfieldfilter>
       </customfieldfilters>
+    </customrecordcustomfield>
+    <customrecordcustomfield scriptid="custrecord_bsp_isg_main_dropship_account">
+      <accesslevel>2</accesslevel>
+      <allowquickadd>F</allowquickadd>
+      <applyformatting>F</applyformatting>
+      <checkspelling>F</checkspelling>
+      <defaultchecked>F</defaultchecked>
+      <defaultselection></defaultselection>
+      <defaultvalue></defaultvalue>
+      <description></description>
+      <displayheight></displayheight>
+      <displaytype>NORMAL</displaytype>
+      <displaywidth></displaywidth>
+      <dynamicdefault></dynamicdefault>
+      <encryptatrest>F</encryptatrest>
+      <fieldtype>SELECT</fieldtype>
+      <globalsearch>F</globalsearch>
+      <help></help>
+      <isformula>F</isformula>
+      <ismandatory>F</ismandatory>
+      <isparent>F</isparent>
+      <label>Main DropShip Account</label>
+      <linktext></linktext>
+      <maxlength></maxlength>
+      <maxvalue></maxvalue>
+      <minvalue></minvalue>
+      <onparentdelete>NO_ACTION</onparentdelete>
+      <parentsubtab></parentsubtab>
+      <rolerestrict>F</rolerestrict>
+      <searchcomparefield></searchcomparefield>
+      <searchdefault></searchdefault>
+      <searchlevel>2</searchlevel>
+      <selectrecordtype>[scriptid=customrecord_bsp_isg_account_number]</selectrecordtype>
+      <showinlist>F</showinlist>
+      <sourcefilterby></sourcefilterby>
+      <sourcefrom></sourcefrom>
+      <sourcelist></sourcelist>
+      <storevalue>T</storevalue>
+      <subtab></subtab>
+      <customfieldfilters>
+        <customfieldfilter>
+          <fldcomparefield></fldcomparefield>
+          <fldfilter>[scriptid=customrecord_bsp_isg_account_number.custrecord_bsp_isg_parent_trading_partn]</fldfilter>
+          <fldfilterchecked></fldfilterchecked>
+          <fldfiltercomparetype>EQ</fldfiltercomparetype>
+          <fldfilternotnull>F</fldfilternotnull>
+          <fldfilternull>F</fldfilternull>
+          <fldfiltersel>@CURRENT@</fldfiltersel>
+          <fldfilterval></fldfilterval>
+        </customfieldfilter>
+      </customfieldfilters>
+    </customrecordcustomfield>
+    <customrecordcustomfield scriptid="custrecord_bsp_isg_determine_best_price">
+      <accesslevel>2</accesslevel>
+      <allowquickadd>F</allowquickadd>
+      <applyformatting>F</applyformatting>
+      <checkspelling>F</checkspelling>
+      <defaultchecked>F</defaultchecked>
+      <defaultselection></defaultselection>
+      <defaultvalue></defaultvalue>
+      <description></description>
+      <displayheight></displayheight>
+      <displaytype>NORMAL</displaytype>
+      <displaywidth></displaywidth>
+      <dynamicdefault></dynamicdefault>
+      <encryptatrest>F</encryptatrest>
+      <fieldtype>CHECKBOX</fieldtype>
+      <globalsearch>F</globalsearch>
+      <help></help>
+      <isformula>F</isformula>
+      <ismandatory>F</ismandatory>
+      <isparent>F</isparent>
+      <label>Automatically determine best price for Customer Account overrides</label>
+      <linktext></linktext>
+      <maxlength></maxlength>
+      <maxvalue></maxvalue>
+      <minvalue></minvalue>
+      <onparentdelete></onparentdelete>
+      <parentsubtab></parentsubtab>
+      <rolerestrict>F</rolerestrict>
+      <searchcomparefield></searchcomparefield>
+      <searchdefault></searchdefault>
+      <searchlevel>2</searchlevel>
+      <selectrecordtype></selectrecordtype>
+      <showinlist>F</showinlist>
+      <sourcefilterby></sourcefilterby>
+      <sourcefrom></sourcefrom>
+      <sourcelist></sourcelist>
+      <storevalue>T</storevalue>
+      <subtab></subtab>
     </customrecordcustomfield>
   </customrecordcustomfields>
   <subtabs>

@@ -227,9 +227,7 @@
 
     function getAccountNumber(customer, vendor, shipaddress1, transmissionAccount){
         let accountNumber = null;
-        log.debug("getAccountNumber", "ShipAddress: " + shipaddress1);
-        log.debug("getAccountNumber", "TransmissionAccount: " + JSON.stringify(transmissionAccount));
-        
+       
         let tradingPartnerID = BSPTradingParnters.getTradingPartnerID(vendor);
 
         const acctOverrideSearchObj = search.create({
@@ -243,7 +241,8 @@
             columns:
             [
                search.createColumn({name: "custrecord_bsp_isg_acct_number", label: "Account Number"}),
-               search.createColumn({name: "custrecord_bsp_isg_acct_address", label: "Address"})
+               search.createColumn({name: "custrecord_bsp_isg_acct_address", label: "Address"}),
+               search.createColumn({name: "custrecord_bsp_isg_account_type", label: "Account Type"})
             ]
         });
 
@@ -252,15 +251,20 @@
             let overrideAccountNumberValue = result.getValue({name: "custrecord_bsp_isg_acct_number"});
             let overrideAccountNumberText = result.getText({name: "custrecord_bsp_isg_acct_number"});
             let address = result.getText({name: "custrecord_bsp_isg_acct_address"});
+            let accountType = result.getText({name: "custrecord_bsp_isg_account_type"});
             if(address == shipaddress1){
                 accountNumber = {
                     value: overrideAccountNumberValue,
-                    text: overrideAccountNumberText
+                    text: overrideAccountNumberText,
+                    type: accountType,
+                    ovewritten: true
                 };
             }else if(isEmpty(address)){
                 accountOverrideDefault = {
                     value: overrideAccountNumberValue,
-                    text: overrideAccountNumberText
+                    text: overrideAccountNumberText,
+                    type: accountType,
+                    ovewritten: true
                 };
             }
             return true;
@@ -274,6 +278,11 @@
             accountNumber = transmissionAccount;
         }
 
+        log.debug("getAccountNumber", {
+            transmissionAccount: transmissionAccount,
+            accountNumber: accountNumber
+        });
+        
         return accountNumber;
     }
 
