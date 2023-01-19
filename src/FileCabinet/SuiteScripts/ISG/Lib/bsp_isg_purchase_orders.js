@@ -490,7 +490,7 @@
                 });
             }
             if(itemNotIncludedInTransmission(item, items)){
-                log.debug("createPurchaseOrder dropShip", `Item ${item} will be removed`);
+                log.debug("createPurchaseOrder", `Item ${item} will be removed`);
                 purchaseOrderRec.removeLine({
                     sublistId: 'item',
                     line: i,
