@@ -67,7 +67,6 @@
                         BSPTransmitionsUtil.checkTransmissionQueue(transmissionQueueID);
                     }
                 }
-
              }else if(isShipmentNotification(jsonObjResponse)){
 
                 if(isShipmentNotificationSPR(jsonObjResponse)){
@@ -77,7 +76,6 @@
                     log.debug(functionName, `This is a Shipment Notification from Essendant`);
                     createAS2incomingMessageRecord(BSPTradingParnters.constants().essendant, "ASN", jsonObjResponse);
                 }
-
              }else if(isInvoice(jsonObjResponse)){
 
                 if(isInvoiceSPR(jsonObjResponse)){
@@ -87,7 +85,6 @@
                     log.debug(functionName, `This is an Invoice from Essendant`);
                     createAS2incomingMessageRecord(BSPTradingParnters.constants().essendant, "Invoice", jsonObjResponse);
                 } 
-
              }
 
              response = {
@@ -262,6 +259,14 @@
 
     function getTransmissionQueueID(jsonObjResponse, tradingPartner){
         let transmissionQueueID = null;
+        let poID = getPoID(jsonObjResponse, tradingPartner)
+        if(poID){
+            transmissionQueueID = BSP_POutil.getQueueOfPO(poID);
+        }
+        return transmissionQueueID;
+    }
+
+    function getPoID(jsonObjResponse, tradingPartner){
         let poID = null;
         if(tradingPartner == BSPTradingParnters.constants().spr){
             let poNumber = jsonObjResponse.Order.CustomerPONo;
@@ -269,12 +274,7 @@
         }else{
             poID = jsonObjResponse.DataArea.PurchaseOrder.PurchaseOrderHeader.DocumentID["ID"];
         }
-
-        if(poID){
-            transmissionQueueID = BSP_POutil.getQueueOfPO(poID);
-        }
-
-        return transmissionQueueID;
+        return poID;
     }
 
     /**

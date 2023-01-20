@@ -46,28 +46,52 @@ define(['N/runtime', 'N/search', '../Lib/bsp_isg_lb_utils.js'],
 
                   if(orderStatus == ORDER_STATUSES.open || orderStatus == ORDER_STATUSES.pendingApproval || orderStatus == ORDER_STATUSES.pendingFulfillment){
                     if(orderCancelled == false){   
-                      let logicblockId = BSPLBUtils.getLogicblockID(salesOrderId);     
-                      let params = {
-                        salesOrderId: salesOrderId,
-                        logicblockId: logicblockId
-                      }
-                      scriptContext.form.addButton({
-                        id: "custpage_cancel_order_lb",
-                        label: "Cancel/Close Order",
-                        functionName: 'cancelOrderLB(' + JSON.stringify(params) + ')'
-                      });
 
-                      scriptContext.form.addButton({
-                        id: "custpage_sync_order_lb",
-                        label: "Sync with Logicblock",
-                        functionName: 'syncOrderLB(' + JSON.stringify(params) + ')'
-                      });
+                      if(!orderProcessed(salesOrderId)){
+                        let logicblockId = BSPLBUtils.getLogicblockID(salesOrderId);     
+                        let params = {
+                          salesOrderId: salesOrderId,
+                          logicblockId: logicblockId
+                        }
+                        scriptContext.form.addButton({
+                          id: "custpage_cancel_order_lb",
+                          label: "Cancel/Close Order",
+                          functionName: 'cancelOrderLB(' + JSON.stringify(params) + ')'
+                        });
+  
+                        scriptContext.form.addButton({
+                          id: "custpage_sync_order_lb",
+                          label: "Sync with Logicblock",
+                          functionName: 'syncOrderLB(' + JSON.stringify(params) + ')'
+                        });
+                      }              
                     }      
                   }            
                 }
             } catch (e) {
                 log.error("beforeLoad", e.message);
             }         
+        }
+
+        const orderProcessed = (salesOrderId) => {
+          const salesorderSearchObj = search.create({
+            type: "salesorder",
+            filters:
+            [
+               ["type","anyof","SalesOrd"], 
+               "AND", 
+               ["internalid","anyof",salesOrderId], 
+               "AND", 
+               ["purchaseorder","noneof","@NONE@"], 
+               "AND", 
+               ["mainline","is","F"]
+            ],
+            columns:
+            []
+         });
+         let searchResultCount = salesorderSearchObj.runPaged().count;
+         log.debug("salesorder with PO SearchObj result count", searchResultCount);
+         return (searchResultCount > 0);
         }
 
         return {beforeLoad}

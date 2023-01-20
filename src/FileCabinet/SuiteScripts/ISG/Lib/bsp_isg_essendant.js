@@ -51,6 +51,7 @@
                 BSP_POutil.deletePO(poID);
                 result.status = "Error";
             }
+            createResponseLog("Acknowledgment", poID, jsonObjResponse);
             log.debug(stLogTitle, `PO ID ${poID} has ben processed`);
         }
         return result;
@@ -106,8 +107,12 @@
             log.debug("processPOline", `PO Acknowledgment Item Data ${JSON.stringify(acknowledgmentItem)}`);
 
             let rate = parseFloat(acknowledgmentItem.UnitPrice.Amount);
-            let facilityName = acknowledgmentItem.Facility.Name;
-            let facilityNote = acknowledgmentItem.Facility.Note;
+            let facilityData = getFacilityData(acknowledgmentItem.Facility);
+            let facilityName, facilityNote = "";
+            if(facilityData.length > 0){
+                facilityName = facilityData[0].name;
+                facilityNote = facilityData[0].note;
+            }
             let ackStatusDescription = acknowledgmentItem.Status.Description;
             let ackStatusReason = acknowledgmentItem.Status.Reason;
 
@@ -274,7 +279,6 @@
         return processStatus;
     }
 
-
     function isMainAccount(account){
         const tradingPartnerSearchObj = search.create({
             type: "customrecord_bsp_isg_trading_partner",
@@ -284,16 +288,19 @@
             ],
             columns:
             [
-               search.createColumn({name: "custrecord_bsp_isg_main_account", label: "Main Account"})
+               search.createColumn({name: "custrecord_bsp_isg_main_wl_account", label: "Main W&L Account"}),
+               search.createColumn({name: "custrecord_bsp_isg_main_dropship_account", label: "Main DropShip Account"})
             ]
         });
-        let mainAccount = null;
+        let mainDropShipAccount = null;
+        let mainWLAccount = null;
         tradingPartnerSearchObj.run().each(function(result){
-            mainAccount = result.getValue("custrecord_bsp_isg_main_account");
+            mainDropShipAccount = result.getValue("custrecord_bsp_isg_main_dropship_account");
+            mainWLAccount = result.getValue("custrecord_bsp_isg_main_wl_account");
             return true;
         });
 
-        if(mainAccount && mainAccount == account)
+        if((mainWLAccount && mainWLAccount == account) || (mainDropShipAccount && mainDropShipAccount == account))
             return true;
         
         return false;
@@ -374,6 +381,28 @@
             return true;
         });
         return planID;
+    }
+
+    function getFacilityData(facilityData){
+        let result = [];
+
+        let facilities = [];
+        if (facilityData.length && facilityData.length > 0) {
+            facilities = facilityData;
+        } else {
+            facilities.push(facilityData);
+        }
+        for (let index = 0; index < facilities.length; index++) {
+            const facility = facilities[index];
+            if(parseInt(facility.Quantity) > 0){
+                result.push({
+                    name: facility.Name,
+                    note: facility.Note,
+                    quantity: facility.Quantity
+                });
+            }
+        }
+        return result;
     }
 
     function updateItemVendorListPrice(poRates, vendor){
@@ -476,6 +505,7 @@
                     result.status = "Error";
                 }
             }
+            createResponseLog("ASN", poID, jsonObjResponse);
         }   
         return result;
     }
@@ -924,6 +954,7 @@
 
 
                 let recID = vendorBillRec.save();
+                createResponseLog("Invoice/Bill", recID, jsonObjResponse);
                 resultObj.vendorBillRecID = recID;
             }catch(error){
                 throw error.message;
@@ -961,10 +992,12 @@
     function getInvoiceCharges(jsonObjResponse){
         let charges = [];
         let invoiceCharges = getCharges(jsonObjResponse);
-        if(invoiceCharges.length > 0){
-            charges = invoiceCharges;
-        }else{
-            charges.push(invoiceCharges);
+        if(invoiceCharges){
+            if(invoiceCharges.length > 0){
+                charges = invoiceCharges;
+            }else{
+                charges.push(invoiceCharges);
+            }
         }
         return charges;
     }
@@ -1021,6 +1054,35 @@
             }
         }
         return null;
+    }
+
+
+    /**
+     * 
+     * Create Service Log
+     * 
+     */
+
+    function createResponseLog(responseType, transactionID, jsonObjResponse){
+        let as2ResponseLogRecord = record.create({
+            type: "customrecord_bsp_isg_as2_response_log",
+          });
+    
+          as2ResponseLogRecord.setValue({
+            fieldId: "custrecord_bsp_isg_parent_transaction",
+            value: transactionID,
+          });
+          as2ResponseLogRecord.setValue({
+            fieldId: "custrecord_bsp_isg_as2_response_type",
+            value: responseType,
+          });
+          as2ResponseLogRecord.setValue({
+            fieldId: "custrecord_bsp_isg_as2_response_obj",
+            value: JSON.stringify(jsonObjResponse),
+          });
+    
+          as2ResponseLogRecord.save();
+          log.debug("creatAS2ResponseLog", "AS2 Respone log Created");
     }
 
     return {
