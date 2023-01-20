@@ -37,7 +37,6 @@ define([
             }catch(e)
             {
                 log.error("processAS2Message", JSON.stringify(e));
-
                 let objNewRecord = scriptContext.newRecord;
                 let recId = objNewRecord.id;
                 let recType = objNewRecord.type;
