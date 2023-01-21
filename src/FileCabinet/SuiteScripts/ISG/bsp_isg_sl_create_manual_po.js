@@ -1194,8 +1194,14 @@ define(['N/http', 'N/runtime', 'N/record', 'N/redirect', 'N/ui/serverWidget', 'N
         const getParameters = () => {
             let environment = runtime.envType;
             let script = runtime.getCurrentScript();
+
+            let clientScriptFileId = search.create({
+                type: "file",
+                filters: [["name", "is", "bsp_isg_cs_create_manual_po_actions.js"]],
+            }).run().getRange({ start: 0, end: 1 })[0].id;
+
             let objParams = {
-                script_client: script.getParameter('custscript_bsp_isg_script_client'),
+                script_client: clientScriptFileId,
                 suitelet_title: script.getParameter('custscript_bsp_isg_suitelet_title'),
                 environment: environment
             }     

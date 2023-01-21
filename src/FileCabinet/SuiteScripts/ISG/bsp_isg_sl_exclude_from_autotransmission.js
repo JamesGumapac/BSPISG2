@@ -666,10 +666,20 @@ define(['N/runtime', 'N/record', 'N/url', 'N/ui/serverWidget', 'N/search', './Li
          const getParameters = () => {
             let objParams = {};
             let environment = runtime.envType;
-            let objScript = runtime.getCurrentScript();
+
+            let fileTemplateId = search.create({
+                type: "file",
+                filters: [["name", "is", "bsp_isg_linkToFormPage.xml"]],
+            }).run().getRange({ start: 0, end: 1 })[0].id;
+
+            let clientScriptFileId = search.create({
+                type: "file",
+                filters: [["name", "is", "bsp_isg_cs_exclude_from_autotransmission_actions.js"]],
+            }).run().getRange({ start: 0, end: 1 })[0].id;
+          
             objParams = {
-                fileTemplate : objScript.getParameter({name: "custscript_bsp_isg_carton_buy_template"}),
-                clientScript_id : objScript.getParameter({name: "custscript_bsp_isg_carton_buy_cs"}),
+                fileTemplate : fileTemplateId,
+                clientScript_id : clientScriptFileId,
                 environment: environment
             }   
             return objParams;

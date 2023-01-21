@@ -40,8 +40,13 @@ define(['N/runtime', 'N/search', './Lib/bsp_isg_trading_partners.js', './Lib/bsp
                             });
                             if(!transmissionQueueID){
                                 let currentForm = scriptContext.form;
-                                let clientScriptId = runtime.getCurrentScript().getParameter('custscript_bsp_isg_client_po_btn');
-                                currentForm.clientScriptFileId = clientScriptId;
+
+                                let clientScriptFileId = search.create({
+                                    type: "file",
+                                    filters: [["name", "is", "bsp_isg_cs_manual_transm_po_btn_action.js"]],
+                                }).run().getRange({ start: 0, end: 1 })[0].id;
+
+                                currentForm.clientScriptFileId = clientScriptFileId;
                                 currentForm.addButton({
                                     id: 'custpage_btn_isg_transmit_po',
                                     label: 'Transmit PO',
