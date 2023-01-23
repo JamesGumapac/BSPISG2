@@ -1,0 +1,115 @@
+/**
+ * @NApiVersion 2.1
+ * @NScriptType MapReduceScript
+ */
+define(["N/runtime", "./Lib/bsp_isg_consolidate_inv.js"], (runtime, util) => {
+  const getInputData = (inputContext) => {
+    try {
+      let customer = [];
+      let params = getParameters();
+      if (params.customer) {
+        customer.push(params.customer);
+      } else {
+        customer = util.getCustomer();
+      }
+      return customer; //return all customer with flag as summary invoice if customer params is empty.
+    } catch (e) {
+      log.error("getInputData", e.message);
+    }
+  };
+
+  const map = (mapContext) => {
+    try {
+      log.audit("mapContext");
+      let customer = JSON.parse(mapContext.value);
+      let params = getParameters();
+      const currentDate = new Date();
+      const monthNumber = currentDate.getMonth();
+      let monthId = +params.month ? +params.month : monthNumber;
+      let month = +params.month
+        ? util.createMonthlist()[+params.month - 1]
+        : util.getCurrentMonth();
+      const invoiceObj = util.getInvoice(customer.value, monthId); //get the list of invoice
+
+      if (invoiceObj.invoiceList.length > 0) {
+        let summaryRecId = util.createSummaryInvoiceRec(
+          invoiceObj,
+          customer.value,
+          month
+        ); //create summary invoice record
+        mapContext.write({ key: customer.value, value: summaryRecId });
+      }
+    } catch (e) {
+      log.error("mapContext", e.message);
+    }
+  };
+
+  const reduce = (reduceContext) => {
+    try {
+      log.audit("reduceContext");
+      let customer = reduceContext.key;
+      let summaryInvId = reduceContext.values;
+      let params = getParameters();
+      let summaryPDFfileId;
+      const currentDate = new Date();
+      const monthNumber = currentDate.getMonth();
+      let monthId = +params.month ? +params.month : monthNumber;
+      const pdfObj = util.printMainSummaryInvoice(
+        summaryInvId[0],
+        customer,
+        monthId,
+        util.getFileId(params.mainTemplateListXML),
+        +params.folderId
+      ); //render main body summary PDF
+      if (pdfObj) {
+        let renderPDFObj = util.renderRecordToPdfWithTemplate(
+          pdfObj,
+          util.getFileId(params.invoiceListTemplateXML),
+          +params.folderId
+        ); //render all of the invoice and store it in the file cabinet
+        log.debug("renderPDFObj", renderPDFObj);
+        summaryPDFfileId = util.xmltoPDF_pdfSet(renderPDFObj, +params.folderId); //append the rendered invoice to the main summary pdf and delete all of the invoices printed in the file cabinet
+      }
+      util.sendEmailWithFile(
+        customer,
+        summaryPDFfileId,
+        util.createMonthlist()[monthId - 1],
+        params.sender
+      );
+    } catch (e) {
+      log.error("reduceContext", e.message);
+    }
+  };
+
+  const summarize = (summaryContext) => {
+    const functionName = "summarize";
+    try {
+      log.audit(functionName, {
+        UsageConsumed: summaryContext.usage,
+        NumberOfQueues: summaryContext.concurrency,
+        NumberOfYields: summaryContext.yields,
+      });
+      log.audit(functionName, "************ EXECUTION COMPLETED ************");
+    } catch (e) {
+      log.error(functionName, e.message);
+    }
+  };
+
+  function getParameters() {
+    const scriptObj = runtime.getCurrentScript();
+    return {
+      mainTemplateListXML: scriptObj.getParameter(
+        "custscript_bsp_isg_summary_main_temp"
+      ),
+      invoiceListTemplateXML: scriptObj.getParameter(
+        "custscript_bsp_isg_summary_inv_list_temp"
+      ),
+      customer: scriptObj.getParameter("custscript_bsp_isg_inv_sum_customer"),
+      month: scriptObj.getParameter("custscript_bsp_isg_inv_sum_month"),
+      folderId: scriptObj.getParameter("custscript_bsp_sum_inv_foler"),
+      sender: scriptObj.getParameter("custscript_bsp_isg_sum_inv_author"),
+    };
+  }
+
+  return { getInputData, map, reduce, summarize };
+});
