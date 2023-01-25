@@ -595,28 +595,15 @@ define([
     recType
   ) {
     let functionName = "fetchTransaction";
-    let transactionRecordResult = {};
-    let transactionUpdated = false;
-    
+    let transactionRecordResult = {}; 
     try {
-      let deleteSuccess = true;
       let transactionRecID = BSPLBUtils.getRecordInternalID(order.Id);
       if (transactionRecID) {
-        transactionUpdated = true;
-        try {
-          BSPLBUtils.deleteMappedKey(order.Id);
-          BSPLBUtils.deleteTransaction(recType, transactionRecID);
-        } catch (error) {
-          deleteSuccess = false;
-          log.error(functionName, { error: error.message });
-          let errorDetail = JSON.stringify({ error: error.message });
-          let errorSource =
-            "BSP | LB | MR | Create NS Records - " + functionName;
-          BSPLBUtils.createErrorLog(errorSource, error.message, errorDetail);
-        }
-      }
-
-      if(!transactionUpdated || (transactionUpdated && deleteSuccess)) {
+        let errorSource = "BSP | LB | MR | Create NS Records - " + functionName;
+        let errorMessage = "Sales Order already exists in NetSuite";
+        let errorDetail = `SO ID: ${transactionRecID} Already mapped to LB Order ID: ${order.Id}`;
+        BSPLBUtils.createErrorLog(errorSource, errorMessage, errorDetail);
+      }else{
         let objFields = {
           order: order,
           ShippingAddress: order.ShippingAddress,
@@ -645,7 +632,7 @@ define([
             transactionUpdated: transactionUpdated,
           };
         }
-      }    
+      }   
     } catch (error) {
       log.error(functionName, error);
       log.error(functionName, JSON.stringify(error));
