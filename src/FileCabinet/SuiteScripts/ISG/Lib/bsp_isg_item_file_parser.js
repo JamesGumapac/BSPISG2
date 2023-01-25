@@ -201,11 +201,6 @@ define(["N/file", "N/record", "N/search", "N/runtime"], /**
         fieldId: "purchaseprice",
         value: vendorAssociations[0].cost,
       });
-      itemRec.setCurrentSublistValue({
-        sublistId: "itemvendor",
-        fieldId: "vendorcode",
-        value: vendorAssociations[0].uom,
-      });
       itemRec.commitLine("itemvendor");
       return itemRec.save({ ignoreMandatoryFields: true });
     } catch (e) {
