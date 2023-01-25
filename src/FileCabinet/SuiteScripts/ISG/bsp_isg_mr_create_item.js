@@ -12,8 +12,8 @@ define([
   const getInputData = (inputContext) => {
     const functionName = "getInputData";
     log.audit(
-      functionName,
-      "************* GET INPUT DATA STARTED *************"
+        functionName,
+        "************* GET INPUT DATA STARTED *************"
     );
     try {
       const lbIntegrationSettings = BSPItemParser.getLbSettingsForUploadItem();
@@ -39,19 +39,22 @@ define([
         BSPItemParser.updateUnitOfMeasure(itemId, itemObj.uom);
         //check if item has vendor associated with it
         if (itemObj.vendor_associations.length > 0) {
-          let itemUom = itemObj.uom;
-          let vendorUom = itemObj.vendor_associations[0].uom;
-          let vendor = BSPItemParser.checkIfVendorExists(
-            itemObj.vendor_associations[0].vendor_name,
-            itemObj.vendor_associations[0].vendor_id
-          );
-          // update the item vendor sublist if vendor uom  = item uom
-          if (itemUom === vendorUom) {
-            if (BSPItemParser.checkItemVendorSublist(itemId, vendor) === -1) {
-              BSPItemParser.createVendorSublist(
-                itemId,
-                itemObj.vendor_associations
-              );
+          for(let i in itemObj.vendor_associations) {
+            let itemUom = itemObj.uom;
+            let vendorUom = itemObj.vendor_associations[i].uom;
+            let vendor = BSPItemParser.checkIfVendorExists(
+                itemObj.vendor_associations[i].vendor_name,
+                itemObj.vendor_associations[i].vendor_id
+            );
+            // update the item vendor sublist if vendor uom  = item uom
+            if (itemUom === vendorUom) {
+              if (BSPItemParser.checkItemVendorSublist(itemId, vendor) === -1) {
+                log.debug("vendor associations",itemObj.vendor_associations[i])
+                BSPItemParser.createVendorSublist(
+                    itemId,
+                    itemObj.vendor_associations[i]
+                );
+              }
             }
           }
         }

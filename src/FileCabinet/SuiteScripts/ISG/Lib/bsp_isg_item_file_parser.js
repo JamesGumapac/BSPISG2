@@ -32,23 +32,23 @@ define(["N/file", "N/record", "N/search", "N/runtime"], /**
         ],
       });
       customrecord_bsp_isg_lb_integ_settingsSearchObj
-        .run()
-        .each(function (result) {
-          const url = result.getValue({
-            name: "custrecord_bsp_isg_lb_item_upload_url",
+          .run()
+          .each(function (result) {
+            const url = result.getValue({
+              name: "custrecord_bsp_isg_lb_item_upload_url",
+            });
+            const defaultAssetAccount = result.getValue({
+              name: "custrecord_bsp_isg_lb_default_asset_acc",
+            });
+            const defaultCogsAccount = result.getValue({
+              name: "custrecord_bsp_isg_lb_default_cogs_acc",
+            });
+            lbSettings = {
+              url: url,
+              defaultAssetAccount: defaultAssetAccount,
+              defaultCogsAccount: defaultCogsAccount,
+            };
           });
-          const defaultAssetAccount = result.getValue({
-            name: "custrecord_bsp_isg_lb_default_asset_acc",
-          });
-          const defaultCogsAccount = result.getValue({
-            name: "custrecord_bsp_isg_lb_default_cogs_acc",
-          });
-          lbSettings = {
-            url: url,
-            defaultAssetAccount: defaultAssetAccount,
-            defaultCogsAccount: defaultCogsAccount,
-          };
-        });
       return lbSettings;
     } catch (e) {
       log.error("functionName: getLbSettingsForUploadItem", e.message);
@@ -181,13 +181,13 @@ define(["N/file", "N/record", "N/search", "N/runtime"], /**
       });
 
       let vendorId = checkIfVendorExists(
-        vendorAssociations[0].vendor_name,
-        vendorAssociations[0].vendor_id
+          vendorAssociations.vendor_name,
+          vendorAssociations.vendor_id
       );
       if (!vendorId) {
         vendorId = createVendor(
-          vendorAssociations[0].vendor_name,
-          vendorAssociations[0].vendor_id
+            vendorAssociations.vendor_name,
+            vendorAssociations.vendor_id
         );
       }
       itemRec.selectNewLine("itemvendor");
@@ -199,7 +199,12 @@ define(["N/file", "N/record", "N/search", "N/runtime"], /**
       itemRec.setCurrentSublistValue({
         sublistId: "itemvendor",
         fieldId: "purchaseprice",
-        value: vendorAssociations[0].cost,
+        value: vendorAssociations.cost,
+      });
+      itemRec.setCurrentSublistValue({
+        sublistId: "itemvendor",
+        fieldId: "vendorcode",
+        value: vendorAssociations.uom,
       });
       itemRec.commitLine("itemvendor");
       return itemRec.save({ ignoreMandatoryFields: true });
@@ -390,15 +395,15 @@ define(["N/file", "N/record", "N/search", "N/runtime"], /**
    */
   function isEmpty(stValue) {
     return (
-      stValue === "" ||
-      stValue == null ||
-      false ||
-      (stValue.constructor === Array && stValue.length === 0) ||
-      (stValue.constructor === Object &&
-        (function (v) {
-          for (var k in v) return false;
-          return true;
-        })(stValue))
+        stValue === "" ||
+        stValue == null ||
+        false ||
+        (stValue.constructor === Array && stValue.length === 0) ||
+        (stValue.constructor === Object &&
+            (function (v) {
+              for (var k in v) return false;
+              return true;
+            })(stValue))
     );
   }
 
@@ -531,50 +536,50 @@ define(["N/file", "N/record", "N/search", "N/runtime"], /**
       }
 
       lbSettings.defaultAssetAccount &&
-        itemRec.setValue({
-          fieldId: "assetaccount",
-          value: lbSettings.defaultAssetAccount,
-        });
+      itemRec.setValue({
+        fieldId: "assetaccount",
+        value: lbSettings.defaultAssetAccount,
+      });
 
       lbSettings.defaultCogsAccount &&
-        itemRec.setValue({
-          fieldId: "cogsaccount",
-          value: lbSettings.defaultCogsAccount,
-        });
+      itemRec.setValue({
+        fieldId: "cogsaccount",
+        value: lbSettings.defaultCogsAccount,
+      });
 
       itemData.mpn &&
-        itemRec.setValue({
-          fieldId: "mpn",
-          value: itemData.mpn,
-        });
+      itemRec.setValue({
+        fieldId: "mpn",
+        value: itemData.mpn,
+      });
 
       itemData.description &&
-        itemRec.setValue({
-          fieldId: "salesdescription",
-          value: itemData.description,
-        });
+      itemRec.setValue({
+        fieldId: "salesdescription",
+        value: itemData.description,
+      });
 
       itemData.gtin &&
-        itemRec.setValue({
-          fieldId: "upccode",
-          value: itemData.gtin,
-        });
+      itemRec.setValue({
+        fieldId: "upccode",
+        value: itemData.gtin,
+      });
 
       itemData.title &&
-        itemRec.setValue({
-          fieldId: "displayname",
-          value: itemData.title,
-        });
+      itemRec.setValue({
+        fieldId: "displayname",
+        value: itemData.title,
+      });
 
       if (itemData.uom) {
         let oumId = getUnitOfmeasureId(itemData.uom);
 
         if (oumId) {
           itemData.uom &&
-            itemRec.setValue({
-              fieldId: "unitstype",
-              value: oumId,
-            });
+          itemRec.setValue({
+            fieldId: "unitstype",
+            value: oumId,
+          });
           let UOMPrimaryBasedUnit = addUnitOfMeasure(itemData.uom, oumId);
           if (UOMPrimaryBasedUnit) {
             itemRec.setValue({
@@ -593,10 +598,10 @@ define(["N/file", "N/record", "N/search", "N/runtime"], /**
         }
       }
       itemData.manufacturer_name &&
-        itemRec.setValue({
-          fieldId: "manufacturer",
-          value: itemData.manufacturer_name,
-        });
+      itemRec.setValue({
+        fieldId: "manufacturer",
+        value: itemData.manufacturer_name,
+      });
 
       itemRec.setValue({
         fieldId: "itemid",
@@ -610,9 +615,12 @@ define(["N/file", "N/record", "N/search", "N/runtime"], /**
 
       let itemId = itemRec.save({ ignoreMandatoryFields: true });
       if (itemData.vendor_associations.length > 0) {
-        if (itemData.uom === itemData.vendor_associations[0].uom) {
-          createVendorSublist(itemId, itemData.vendor_associations);
+        for(let i in itemData.vendor_associations){
+          if (itemData.uom === itemData.vendor_associations[i].uom) {
+            createVendorSublist(itemId, itemData.vendor_associations[i]);
+          }
         }
+
       }
       return itemId;
     } catch (e) {
