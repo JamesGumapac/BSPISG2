@@ -2,13 +2,13 @@
  * @NApiVersion 2.1
  * @NScriptType MapReduceScript
  */
-define(['N/record', 'N/runtime', 'N/search', '../Lib/bsp_isg_lb_utils.js', '../Lib/bsp_isg_lb_entities.js', '../Lib/bsp_isg_lb_items.js', '../Lib/bsp_isg_lb_transactions.js', '../Lib/bsp_isg_lb_login_api.js', '../Lib/bsp_isg_lb_settings.js'],
+define(['N/record', 'N/runtime', 'N/search', '../Lib/bsp_isg_lb_utils.js', '../Lib/bsp_isg_lb_entities.js', '../Lib/bsp_isg_lb_items.js', '../Lib/bsp_isg_lb_transactions.js', '../Lib/bsp_isg_lb_login_api.js', '../Lib/bsp_isg_lb_settings.js', '../Lib/bsp_isg_lb_ordersservice_api.js'],
     /**
  * @param{record} record
  * @param{runtime} runtime
  * @param{search} search
  */
-    (record, runtime, search, BSPLBUtils, BSPLBEntities, BSPLBItems, BSPLBTransactions, BSPLBLoginAPI, BSPLBSettings) => {
+    (record, runtime, search, BSPLBUtils, BSPLBEntities, BSPLBItems, BSPLBTransactions, BSPLBLoginAPI, BSPLBSettings, LBOrdersAPI) => {
         /**
          * Defines the function that is executed at the beginning of the map/reduce process and generates the input data.
          * @param {Object} inputContext
@@ -198,6 +198,11 @@ define(['N/record', 'N/runtime', 'N/search', '../Lib/bsp_isg_lb_utils.js', '../L
                             
                             if(BSPLBUtils.isEmpty(salesOrderRecordsResult)){
                                 updateRetryCount = true;
+                            }else{
+                                let result = LBOrdersAPI.updateBackendOrderId(settings, loginData, salesOrderRecordsResult);
+                                if(result && result == "false"){
+                                    updateRetryCount = true;
+                                }
                             }
                         }               
                     }else{

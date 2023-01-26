@@ -217,7 +217,7 @@
         "custrecord_bsp_lb_default_route_code",
         "custrecord_bsp_lb_avatax",
         "custrecord_bsp_isg_taxable",
-        "custrecord_bsp_lb_cancel_order_soap_act",
+        "custrecord_bsp_lb_update_order_soap_act",
         "custrecord_bsp_isg_lb_cancel_orderstatus",
         "custrecord_bsp_isg_exclude_cb_items",
         "custrecord_bsp_isg_min_qty_required",

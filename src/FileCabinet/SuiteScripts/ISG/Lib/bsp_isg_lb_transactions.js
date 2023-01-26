@@ -628,8 +628,7 @@ define([
           internalId = recordCreationResult.recordId;
           transactionRecordResult = {
             nsID: internalId,
-            logicBlockID: order.Id,
-            transactionUpdated: transactionUpdated,
+            logicBlockID: order.Id
           };
         }
       }   

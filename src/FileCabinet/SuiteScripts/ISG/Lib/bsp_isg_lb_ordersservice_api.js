@@ -210,7 +210,7 @@
         let settings = BSPLBUtils.getIntegrationSettings(integrationSettingsRecID);
         let loginData = BSPLBLoginAPI.login(settings);
         let serviceURL = settings.custrecord_bsp_lb_orders_service_url;
-        let soapGetOrdersAction = settings.custrecord_bsp_lb_cancel_order_soap_act;
+        let soapGetOrdersAction = settings.custrecord_bsp_lb_update_order_soap_act;
         let cancelOrderStatusID = settings.custrecord_bsp_isg_lb_cancel_orderstatus;
 
         requestParams = {
@@ -225,6 +225,31 @@
             cancelOrderResult = logicBlockServerResponse.PatchOrderResponse.PatchOrderResult;
         }
         return cancelOrderResult;
+    }
+
+    /**
+     * Update Backend Order ID in Logicblock
+     * @param {*} settings 
+     * @param {*} loginData 
+     * @param {*} paymentData 
+     * @returns 
+    */
+    function updateBackendOrderId(settings, loginData, salesOrderRecordsResult){
+        let updateBackendOrderIdResult = null;
+        let serviceURL = settings.custrecord_bsp_lb_orders_service_url;
+        let soapGetOrdersAction = settings.custrecord_bsp_lb_update_order_soap_act;
+
+        requestParams = {
+            salesOrderId: salesOrderRecordsResult.nsID,
+            logicblockId: salesOrderRecordsResult.logicBlockID,
+        }
+        let requestBodyXML = updateBackendOrderIdXMLStrRequest(loginData, requestParams);
+        let logicBlockServerResponse = BSPLBServiceAPI.runService(serviceURL, requestBodyXML, soapGetOrdersAction);
+        log.debug("cancelOrder", JSON.stringify(logicBlockServerResponse));
+        if(!BSPLBUtils.isEmpty(logicBlockServerResponse)){
+            updateBackendOrderIdResult = logicBlockServerResponse.PatchOrderResponse.PatchOrderResult;
+        }
+        return updateBackendOrderIdResult;
     }
 
     /**
@@ -594,6 +619,33 @@
     }
 
     /**
+     *  Body of update Order SOAP Action Request
+     * @param {*} loginData 
+     * @param {*} paymentData 
+     * @returns 
+     */
+    function updateBackendOrderIdXMLStrRequest(loginData, requestParams){
+        return `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/" xmlns:log="http://schemas.datacontract.org/2004/07/Logicblock.Commerce.Domain" xmlns:arr="http://schemas.microsoft.com/2003/10/Serialization/Arrays">
+        <soapenv:Header/>
+        <soapenv:Body>
+        <tem:PatchOrder>
+            <tem:token>
+                <log:ApiId>${loginData.ApiId}</log:ApiId>
+                <log:ExpirationDateUtc>${loginData.ExpirationDateUtc}</log:ExpirationDateUtc>
+                <log:Id>${loginData.Id}</log:Id>
+                <log:IsExpired>${loginData.IsExpired}</log:IsExpired>
+                <log:TokenRejected>${loginData.TokenRejected}</log:TokenRejected>
+            </tem:token>
+            <tem:order>
+                <log:BackendOrderId>${requestParams.salesOrderId}</log:BackendOrderId>
+                <log:Id>${requestParams.logicblockId}</log:Id>
+            </tem:order>
+        </tem:PatchOrder>
+        </soapenv:Body>
+    </soapenv:Envelope>`;
+    }
+
+    /**
      *  Body of add lineItem into Order SOAP Action Request
      * @param {*} loginData 
      * @param {*} paymentData 
@@ -691,6 +743,7 @@
         getOrderLineItems: getOrderLineItems,
         addLineItemsToOrder: addLineItemsToOrder,
         updateLineItemsInOrder: updateLineItemsInOrder,
-        removeLineItemsToOrder: removeLineItemsToOrder
+        removeLineItemsToOrder: removeLineItemsToOrder,
+        updateBackendOrderId: updateBackendOrderId
     };
 });

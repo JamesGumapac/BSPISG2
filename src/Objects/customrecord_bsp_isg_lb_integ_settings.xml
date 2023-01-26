@@ -1288,7 +1288,7 @@
       <storevalue>T</storevalue>
       <subtab></subtab>
     </customrecordcustomfield>
-    <customrecordcustomfield scriptid="custrecord_bsp_lb_cancel_order_soap_act">
+    <customrecordcustomfield scriptid="custrecord_bsp_lb_update_order_soap_act">
       <accesslevel>2</accesslevel>
       <allowquickadd>F</allowquickadd>
       <applyformatting>F</applyformatting>
@@ -1308,7 +1308,7 @@
       <isformula>F</isformula>
       <ismandatory>F</ismandatory>
       <isparent>F</isparent>
-      <label>Cancel Order SOAP Action</label>
+      <label>Update Order SOAP Action</label>
       <linktext></linktext>
       <maxlength></maxlength>
       <maxvalue></maxvalue>
