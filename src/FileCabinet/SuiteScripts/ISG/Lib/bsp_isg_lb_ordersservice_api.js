@@ -39,14 +39,14 @@
             }         
 
             let totalOrders =  logicBlockServerResponse.GetOrdersReadyForThirdPartyResponse.GetOrdersReadyForThirdPartyResult.TotalRows;
-            let pageSize = settings.custrecord_bsp_lb_orders_page_size;
+            let pageSize = parseInt(settings.custrecord_bsp_lb_orders_page_size);
 
             if(totalOrders > pageSize){
                 let totalRequests = parseInt(totalOrders / pageSize);
                 let reqIndex = 1;
-
+                let startIndex = pageSize;
                 while(reqIndex <= totalRequests){
-                    let requestBodyXML = getOrdersXMLStrRequest(loginData, requestParams, reqIndex, pageSize);
+                    let requestBodyXML = getOrdersXMLStrRequest(loginData, requestParams, startIndex, pageSize);
                     let logicBlockServerResponse = BSPLBServiceAPI.runService(serviceURL, requestBodyXML, soapGetOrdersAction);
         
                     if(logicBlockServerResponse){
@@ -63,6 +63,7 @@
                         break;
                     }
                     reqIndex++;
+                    startIndex = startIndex + pageSize;
                 }
             }
 
