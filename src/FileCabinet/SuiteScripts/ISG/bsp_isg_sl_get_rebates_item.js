@@ -203,61 +203,32 @@ define([
       type: serverWidget.SublistType.LIST,
       label: "Item List",
     });
-    sublist
-        .addField({
-          id: "custpage_entity",
-          type: serverWidget.FieldType.TEXT,
-          label: "Customer",
-        })
-        .updateDisplayType({
-          displayType: serverWidget.FieldDisplayType.DISABLED,
-        });
-    sublist
-        .addField({
-          id: "custpage_manufacturer",
-          type: serverWidget.FieldType.TEXT,
-          label: "Manufacturer",
-        })
-        .updateDisplayType({
-          displayType: serverWidget.FieldDisplayType.DISABLED,
-        });
-    sublist
-        .addField({
-          id: "custpage_description",
-          type: serverWidget.FieldType.TEXT,
-          label: "Description",
-        })
-        .updateDisplayType({
-          displayType: serverWidget.FieldDisplayType.DISABLED,
-        });
+
+
     sublist
         .addField({
           id: "custpage_document_number",
           type: serverWidget.FieldType.TEXT,
           label: "Document Number",
         })
-        .updateDisplayType({
-          displayType: serverWidget.FieldDisplayType.DISABLED,
-        });
+    sublist
+        .addField({
+          id: "custpage_entity",
+          type: serverWidget.FieldType.TEXT,
+          label: "Customer",
+        })
     sublist
         .addField({
           id: "custpage_item",
           type: serverWidget.FieldType.TEXT,
           label: "Product",
         })
-        .updateDisplayType({
-          displayType: serverWidget.FieldDisplayType.DISABLED,
-        });
     sublist
         .addField({
           id: "custpage_quantity",
           type: serverWidget.FieldType.TEXT,
           label: "Quantity",
         })
-        .updateDisplayType({
-          displayType: serverWidget.FieldDisplayType.DISABLED,
-        });
-
     sublist.addField({
       id: "custpage_rate",
       type: serverWidget.FieldType.CURRENCY,
@@ -269,19 +240,24 @@ define([
           type: serverWidget.FieldType.CURRENCY,
           label: "Bid Price",
         })
-        .updateDisplayType({
-          displayType: serverWidget.FieldDisplayType.DISABLED,
-        });
-
+    sublist
+        .addField({
+          id: "custpage_manufacturer",
+          type: serverWidget.FieldType.TEXT,
+          label: "Manufacturer",
+        })
+    // sublist
+    //     .addField({
+    //       id: "custpage_description",
+    //       type: serverWidget.FieldType.TEXT,
+    //       label: "Description",
+    //     })
     sublist
         .addField({
           id: "custpage_date",
           type: serverWidget.FieldType.TEXT,
           label: "Date",
         })
-        .updateDisplayType({
-          displayType: serverWidget.FieldDisplayType.DISABLED,
-        });
 
     pupulateItemSublist(sublist, items);
 
@@ -308,7 +284,7 @@ define([
         let entity = element.End_User;
         let rate = element.Invoice_Price;
         let manufacturer = element.Manufacturer;
-        let description = element.Description;
+        //  let description = element.Description;
         let quantity = element.Quantity;
         let bidPrice = element.Bid_Price;
 
@@ -322,11 +298,11 @@ define([
           line: lineCount,
           value: quantity ? quantity : 0,
         });
-        sublist.setSublistValue({
-          id: "custpage_description",
-          line: lineCount,
-          value: description ? description : " ",
-        });
+        // sublist.setSublistValue({
+        //   id: "custpage_description",
+        //   line: lineCount,
+        //   value: description ? description : " ",
+        // });
         sublist.setSublistValue({
           id: "custpage_item",
           line: lineCount,

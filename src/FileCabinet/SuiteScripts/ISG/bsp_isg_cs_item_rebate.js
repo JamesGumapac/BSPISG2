@@ -6,6 +6,7 @@
 define(["N/record", "N/search", "N/url"], /**
  * @param{record} record
  * @param{search} search
+ * @param url
  */
 function (record, search, url) {
   let suitelet = null;
@@ -45,8 +46,8 @@ function (record, search, url) {
   function fieldChanged(scriptContext) {
     try {
       if (
-        scriptContext.fieldId == "custpage_vendor" ||
-        scriptContext.fieldId == "custpage_rebate_contract" ||  scriptContext.fieldId == "custpage_date_filter"
+          scriptContext.fieldId == "custpage_vendor" ||
+          scriptContext.fieldId == "custpage_rebate_contract" ||  scriptContext.fieldId == "custpage_date_filter"
       ) {
         let vendorId = suitelet.getValue({
           fieldId: "custpage_vendor",
