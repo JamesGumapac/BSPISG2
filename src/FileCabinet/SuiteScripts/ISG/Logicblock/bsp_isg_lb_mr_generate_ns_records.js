@@ -199,7 +199,12 @@ define(['N/record', 'N/runtime', 'N/search', '../Lib/bsp_isg_lb_utils.js', '../L
                             if(BSPLBUtils.isEmpty(salesOrderRecordsResult)){
                                 updateRetryCount = true;
                             }else{
-                                let result = LBOrdersAPI.updateBackendOrderId(settings, loginData, salesOrderRecordsResult);
+                                let soNumber = BSPLBTransactions.getSalesOrderNumber(salesOrderRecordsResult.nsID);
+                                let params = {
+                                    nsID: soNumber,
+                                    logicBlockID: salesOrderRecordsResult.logicBlockID
+                                }
+                                let result = LBOrdersAPI.updateBackendOrderId(settings, loginData, params);
                                 if(result && result == "false"){
                                     updateRetryCount = true;
                                 }
