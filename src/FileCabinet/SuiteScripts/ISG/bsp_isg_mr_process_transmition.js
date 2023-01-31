@@ -240,7 +240,7 @@ define(['N/runtime', 'N/record', 'N/search', 'N/task', './Lib/bsp_isg_purchase_o
         const summarize = (summaryContext) => {
             let functionName = 'Summarize';
             try{
-                /*let paramsObj = getParameters();
+                let paramsObj = getParameters();
                 let transmitionRecID = paramsObj.transmitionRecID;
                 let transmitionQueueID = paramsObj.transmitionQueueID;
                 let objMRTask = task.create({
@@ -254,7 +254,7 @@ define(['N/runtime', 'N/record', 'N/search', 'N/task', './Lib/bsp_isg_purchase_o
                     }
                 });
                 let intTaskID = objMRTask.submit();
-                log.debug(functionName, `MR Task submitted with ID: ${intTaskID} for Transmition Queue: ${transmitionQueueID}`);*/
+                log.debug(functionName, `MR Task submitted with ID: ${intTaskID} for Transmition Queue: ${transmitionQueueID}`);
             }catch (error)
             {
                 log.error(functionName, {error: error.toString()});

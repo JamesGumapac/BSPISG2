@@ -574,6 +574,25 @@ define([
     log.debug("processTransactionLines", "Lines processed");
   }
 
+
+/**
+ * It takes a NetSuite Sales Order ID and returns the Sales Order Number.
+ * @param nsID - The internal ID of the sales order.
+ * @returns The Sales Order Number
+ */
+  function getSalesOrderNumber(nsID){
+    let orderNumber = null;
+    let soFieldsObj = search.lookupFields({
+      type: record.Type.SALES_ORDER,
+      id: nsID,
+      columns: 'tranid'
+    });
+    if(soFieldsObj && soFieldsObj.tranid){
+      orderNumber = soFieldsObj.tranid;
+    }
+    return orderNumber;
+  }
+
   /**
    * Create Transaction Record in NS or update it if it already exists
    * @param {*} order
@@ -1026,6 +1045,7 @@ define([
 
   return {
     fetchTransaction: fetchTransaction,
+    getSalesOrderNumber: getSalesOrderNumber,
     orderPaid: orderPaid,
   };
   
