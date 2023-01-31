@@ -9,8 +9,8 @@ define(["N/url", "N/ui/message", "N/record", "N/search"], /**
  * @param record
  * @param search
 
- */ function (url, message, record, search, ) {
-  var suitelet = null;
+ */ function (url, message, record, search,) {
+  let suitelet = null;
 
   function pageInit(scriptContext) {
     let logTitle = "pageInit";
@@ -18,23 +18,31 @@ define(["N/url", "N/ui/message", "N/record", "N/search"], /**
       suitelet = scriptContext.currentRecord;
 
       selectAllSublist(suitelet);
+      let arrTemp = window.location.href.split('?');
+      let urlParams = new URLSearchParams(arrTemp[1]);
+      suitelet.setValue({
+        fieldId: "custpage_date_filter",
+        value: urlParams.get('custparam_month'),
+        ignoreFieldChange: true
+      })
+
     } catch (error) {
       console.log(logTitle, error.message);
     }
   }
 
   function fieldChanged(scriptContext) {
-  
+
     try {
       if (
-        scriptContext.fieldId == "custpage_customer" ||
-        scriptContext.fieldId == "custpage_month"
+          scriptContext.fieldId == "custpage_customer" ||
+          scriptContext.fieldId == "custpage_date_filter"
       ) {
         let selectedCustomerId = suitelet.getValue({
           fieldId: "custpage_customer",
         });
         let month = suitelet.getValue({
-          fieldId: "custpage_month",
+          fieldId: "custpage_date_filter",
         });
         let customerText = suitelet.getText({
           fieldId: "custpage_customer",
@@ -71,10 +79,11 @@ define(["N/url", "N/ui/message", "N/record", "N/search"], /**
         }
       }
 
-    
-    } catch (error) {}
+
+    } catch (error) {
+    }
   }
-  
+
 
   function selectAllSublist(suitelet) {
     let itemCount = suitelet.getLineCount({
@@ -159,16 +168,43 @@ define(["N/url", "N/ui/message", "N/record", "N/search"], /**
   }
 
   function saveRecord(scriptContext) {
-    
     const email = suitelet.getText({
       fieldId: "custpage_email",
     });
-    
-    alert("Generating Summary Invoice. File will be sent to " + email + " once completed. ");
-  
-    return true
+    const deploymentId = suitelet.getValue({
+      fieldId: "custpage_deployment_id"
+    })
+
+    return instanceChecker(deploymentId,email)
   }
-  
+
+
+  /**
+   * check if there still an existing instance running on the backend.
+   * @param deploymentId
+   * @param email
+   * @returns {boolean}
+   */
+  function instanceChecker(deploymentId, email) {
+    const scheduledscriptinstanceSearchObj = search.create({
+      type: "scheduledscriptinstance",
+      filters:
+          [
+            ["scriptdeployment.scriptid", "is", deploymentId],
+            "AND",
+            ["status", "anyof", "PROCESSING"]],
+
+    })
+    const checkInstCount = scheduledscriptinstanceSearchObj.runPaged().count;
+
+    if (checkInstCount) {
+      alert('There is a current process runnning on the backend. Kindly wait for a few minutes before sending summary invoice');
+      return false;
+    } else {
+      alert("Generating Summary Invoice. File will be sent to " + email + " once completed. ");
+      return true
+    }
+  }
 
   function isEmpty(value) {
     let stLogTitle = "isEmpty";

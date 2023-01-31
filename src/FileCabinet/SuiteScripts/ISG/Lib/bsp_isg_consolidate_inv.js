@@ -24,6 +24,23 @@ define(["N/search", "N/record", "N/render", "N/file", "N/xml", "N/email"], (
     }
 
     /**
+     * Mimic Netsuite Quick Filter Settings
+     * @returns {[{text: string, value: string},{text: string, value: string},{text: string, value: string},{text: string, value: string},{text: string, value: string},null,null]}
+     */
+    function createQuickFilter() {
+        return [
+            {
+                value: "lastmonth",
+                text: "last month",
+            },
+            {
+                value: "thismonth",
+                text: "this month",
+            },
+        ];
+    }
+
+    /**
      * get customer with Summary Invoice = true
      */
     function getCustomer() {
@@ -38,16 +55,16 @@ define(["N/search", "N/record", "N/render", "N/file", "N/xml", "N/email"], (
                     sort: search.Sort.ASC,
                     label: "Name",
                 }),
-                search.createColumn({name: "companyname", label: "Company Name"})
+                search.createColumn({ name: "companyname", label: "Company Name" }),
             ],
         });
         customerSearchObj.run().each(function (result) {
             let companyName = result.getValue({
-                name: "companyname"
-            })
+                name: "companyname",
+            });
             customerIds.push({
                 value: result.id,
-                text: companyName
+                text: companyName,
             });
             return true;
         });
@@ -59,14 +76,21 @@ define(["N/search", "N/record", "N/render", "N/file", "N/xml", "N/email"], (
      * Render all invoice
      * @param PDFrenderObj
      * @param templateId
+     * @param creditMemoTemplate
      * @param folderId
      * @returns {{pdfUrls: *[], summaryInvoiceName: *, fileIdsToDelete: *[], summaryInvoiceId: *}}
      */
-    function renderRecordToPdfWithTemplate(PDFrenderObj, templateId, folderId) {
+    function renderRecordToPdfWithTemplate(
+        PDFrenderObj,
+        templateId,
+        creditMemoTemplate,
+        folderId
+    ) {
         try {
             log.debug("renderRecordToPdfWithTemplate", {
                 PDFrenderObj,
                 templateId,
+                creditMemoTemplate,
                 folderId,
             });
             let summaryInvoiceName = PDFrenderObj.summaryInvoiceName;
@@ -75,12 +99,14 @@ define(["N/search", "N/record", "N/render", "N/file", "N/xml", "N/email"], (
             pdfUrls.push(PDFrenderObj.urlFile);
             let fileIdsToDelete = [];
             fileIdsToDelete.push(PDFrenderObj.fileId);
-            const xmlTemplateFile = file.load({id: +templateId});
+            const xmlTemplateFile = file.load({ id: +templateId });
+            const cmxmlTemplateFile = file.load({ id: +creditMemoTemplate });
             const renderer = render.create();
-            renderer.templateContent = xmlTemplateFile.getContents();
+
             let invoiceList = PDFrenderObj.invoiceList;
             log.debug("renderRecordToPdfWithTemplate invoiceList", invoiceList);
             invoiceList.forEach(function (id) {
+                renderer.templateContent = xmlTemplateFile.getContents();
                 let updatedInvoiceId = updateSummaryInvoiceId(
                     id,
                     PDFrenderObj.summaryInvoiceName
@@ -93,17 +119,46 @@ define(["N/search", "N/record", "N/render", "N/file", "N/xml", "N/email"], (
                             id: updatedInvoiceId,
                         })
                     );
+                    let cmIds = getInvoiceCreditMemo(updatedInvoiceId);
+
                     let invoicePdf = renderer.renderAsPdf();
                     invoicePdf.isOnline = true;
                     invoicePdf.name = updatedInvoiceId + "_" + summaryInvoiceName;
                     invoicePdf.folder = folderId;
                     let fileId = invoicePdf.save();
+
                     if (fileId) {
                         fileIdsToDelete.push(fileId);
-                        let savedFile = file.load({id: fileId});
+                        let savedFile = file.load({ id: fileId });
                         let url = savedFile.url;
                         let separator = url.lastIndexOf("com");
                         pdfUrls.push(url.substring(separator));
+                    }
+                    if (cmIds.length > 0) {
+                        log.debug("Credit memo rendering")
+                        cmIds.forEach((id) =>{
+                            renderer.templateContent = cmxmlTemplateFile.getContents();
+                            renderer.addRecord(
+                                "record",
+                                record.load({
+                                    type: record.Type.CREDIT_MEMO,
+                                    id: +id,
+                                })
+                            );
+                            let cmPDF = renderer.renderAsPdf();
+                            cmPDF.isOnline = true;
+                            cmPDF.name = id + "_" + summaryInvoiceName;
+                            cmPDF.folder = folderId;
+                            let fileId = cmPDF.save();
+                            if (fileId) {
+                                fileIdsToDelete.push(fileId);
+                                let savedFile = file.load({ id: fileId });
+                                let url = savedFile.url;
+                                let separator = url.lastIndexOf("com");
+                                pdfUrls.push(url.substring(separator));
+                            }
+                        })
+
                     }
                 }
             });
@@ -182,10 +237,11 @@ define(["N/search", "N/record", "N/render", "N/file", "N/xml", "N/email"], (
      * @param invcoiceObj
      * @param customer
      * @param month
+     * @param year
      */
-    function createSummaryInvoiceRec(invcoiceObj, customer, month) {
+    function createSummaryInvoiceRec(invcoiceObj, customer, month, year) {
         try {
-            log.debug("createSummaryInvoiceRec", {invcoiceObj, customer, month});
+            log.debug("createSummaryInvoiceRec", { invcoiceObj, customer, month });
             const summaryRec = record.create({
                 type: "customrecord_bsp_isg_summary_invoice",
             });
@@ -195,14 +251,19 @@ define(["N/search", "N/record", "N/render", "N/file", "N/xml", "N/email"], (
             let invoiceIds = [];
             log.debug("sortInvoiceList", sortInvoiceList);
             sortInvoiceList.forEach(function (e) {
-                invoiceIds = summaryRec.getValue({
-                    fieldId: "custrecord_bsp_isg_invoice_list",
-                });
+                // invoiceIds = summaryRec.getValue({
+                //   fieldId: "custrecord_bsp_isg_invoice_list",
+                // });
                 invoiceIds.push(e.invoiceId);
-                summaryRec.setValue({
-                    fieldId: "custrecord_bsp_isg_invoice_list",
-                    value: invoiceIds,
-                });
+                // summaryRec.setValue({
+                //   fieldId: "custrecord_bsp_isg_invoice_list",
+                //   value: invoiceIds,
+                // });
+            });
+            log.debug("invoiceIds", invoiceIds)
+            summaryRec.setValue({
+                fieldId: "custrecord_bsp_isg_invoice_list",
+                value: invoiceIds,
             });
             summaryRec.setValue({
                 fieldId: "custrecord_bsp_isg_sum_inv_sort_list",
@@ -236,8 +297,7 @@ define(["N/search", "N/record", "N/render", "N/file", "N/xml", "N/email"], (
                 fieldId: "custrecord_bsp_isg_sum_inv_cust",
                 value: customer,
             });
-            let date = new Date()
-            let year = date.getFullYear()
+
             summaryRec.setValue({
                 fieldId: "custrecord_bsp_isg_month",
                 value: month + " " + year,
@@ -296,26 +356,19 @@ define(["N/search", "N/record", "N/render", "N/file", "N/xml", "N/email"], (
             folderId,
         });
         try {
-            let mainSumdateFilter = [];
-            if (month) {
-                const date = new Date();
-                let startDate = month + "/" + 1 + "/" + date.getFullYear();
-                let endDate = month + "/" + getEndDay(month) + "/" + date.getFullYear();
-
-                mainSumdateFilter.push(startDate, endDate);
-            } else {
-                mainSumdateFilter = "thismonth";
-            }
-
             const summaryInvRec = getSummaryRecObject(summaryInvoiceId);
-            var transactionSearchObj = search.create({
+            const transactionSearchObj = search.create({
                 type: "transaction",
                 filters: [
                     ["amountremainingisabovezero", "is", "T"],
                     "AND",
-                    ["trandate", "within", mainSumdateFilter],
+                    ["trandate", "within", month],
                     "AND",
-                    [["name", "anyof", customerId], "OR", ["customer.parent", "anyof", customerId]],
+                    [
+                        ["name", "anyof", customerId],
+                        "OR",
+                        ["customer.parent", "anyof", customerId],
+                    ],
                 ],
                 columns: [
                     search.createColumn({
@@ -447,7 +500,9 @@ define(["N/search", "N/record", "N/render", "N/file", "N/xml", "N/email"], (
                     ? taxTotal.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, "$&,")
                     : 0,
                 customerName: summaryInvRec.getText("custrecord_bsp_isg_sum_inv_cust"),
-                customerId: summaryInvRec.getValue("custrecord_bsp_isg_sum_inv_entity_id"),
+                customerId: summaryInvRec.getValue(
+                    "custrecord_bsp_isg_sum_inv_entity_id"
+                ),
                 invoiceNumber: summaryInvRec.getValue("name"),
                 billTo: summaryInvRec
                     .getValue("custrecord_bsp_isg_bill_to")
@@ -499,7 +554,6 @@ define(["N/search", "N/record", "N/render", "N/file", "N/xml", "N/email"], (
             log.error("printMainSummaryInvoice", e.message);
         }
     }
-
 
     /**
      * Create Hard Coded Month String Name
@@ -621,27 +675,21 @@ define(["N/search", "N/record", "N/render", "N/file", "N/xml", "N/email"], (
      */
     function getInvoice(customer, month) {
         try {
-            log.debug("Get Invoice", {customer, month});
+            log.debug("Get Invoice", { customer, month });
             let invoiceList = [];
-            let dateFilter = [];
-            if (month) {
-                const date = new Date();
-                let startDate = month + "/" + 1 + "/" + date.getFullYear();
-                let endDate = month + "/" + getEndDay(month) + "/" + date.getFullYear();
-                dateFilter.push(startDate);
-                dateFilter.push(endDate);
-            } else {
-                dateFilter = "thismonth";
-            }
 
             const transactionSearchObj = search.create({
-                type: "transaction",
+                type: "invoice",
                 filters: [
-                    [["name", "anyof", customer], "OR", ["customer.parent", "anyof", customer]],
+                    [
+                        ["name", "anyof", customer],
+                        "OR",
+                        ["customer.parent", "anyof", customer],
+                    ],
                     "AND",
                     ["amountremainingisabovezero", "is", "T"],
                     "AND",
-                    ["trandate", "within", dateFilter],
+                    ["trandate", "within", month],
                 ],
                 columns: [
                     search.createColumn({
@@ -683,6 +731,7 @@ define(["N/search", "N/record", "N/render", "N/file", "N/xml", "N/email"], (
                     }),
                 ],
             });
+
             let amountRemainingTotal = 0.0;
             let amountTotal = 0.0;
             let taxAmountTotal = 0.0;
@@ -739,8 +788,34 @@ define(["N/search", "N/record", "N/render", "N/file", "N/xml", "N/email"], (
                 filters: [["name", "is", fileName]],
             })
             .run()
-            .getRange({start: 0, end: 1});
+            .getRange({ start: 0, end: 1 });
         return fileSearch[0].id;
+    }
+
+    /**
+     * Get all credit memo created from a certain invoice
+     * @param invoiceId
+     * @returns {*[]}
+     */
+    function getInvoiceCreditMemo(invoiceId) {
+        try {
+            let cmIds = [];
+            var transactionSearchObj = search.create({
+                type: "transaction",
+                filters: [
+                    ["createdfrom", "anyof", invoiceId],
+                    "AND",
+                    ["mainline", "is", "T"],
+                ],
+            });
+            transactionSearchObj.run().each(function (result) {
+                cmIds.push(result.id);
+                return true;
+            });
+            return cmIds;
+        } catch (e) {
+            log.debug("invoiceCreditMemo", e.message);
+        }
     }
 
     /**
@@ -755,22 +830,20 @@ define(["N/search", "N/record", "N/render", "N/file", "N/xml", "N/email"], (
         return [mnth, day, date.getFullYear()].join("/");
     }
 
-
-
     /**
      * Send email to the customer
      * @param customerId
      * @param fileId
      * @param month
+     * @param year
      * @param sender
      */
-    function sendEmailWithFile(customerId, fileId, month, sender) {
+    function sendEmailWithFile(customerId, fileId, month, year,sender) {
         try {
-            log.debug("sendEmailWithFile", {customerId, fileId, month, sender});
-            const fileID = file.load({id: fileId});
-            let date = new Date()
-            let year = date.getFullYear()
-            month = month + " " + year
+            log.debug("sendEmailWithFile", { customerId, fileId, month,year, sender });
+            const fileID = file.load({ id: fileId });
+
+            month = month + " " + year;
             //static Author
             let customer = customerId;
             email.send({
@@ -790,24 +863,23 @@ define(["N/search", "N/record", "N/render", "N/file", "N/xml", "N/email"], (
      * Check if the summary invoice was already sent to the customer in the month selected
      * @param customerId
      * @param month
+     * @param year
      * @returns {boolean}
      */
-    function checkIfSummaryInvoiceSentToCustomer(customerId, month) {
-        let date = new Date()
-        let year = date.getFullYear()
-        month = month + " " + year
+    function checkIfSummaryInvoiceSentToCustomer(customerId, month, year) {
+
+        month = month + " " + year;
         const customrecord_bsp_isg_summary_invoiceSearchObj = search.create({
             type: "customrecord_bsp_isg_summary_invoice",
-            filters:
-                [
-                    ["custrecord_bsp_isg_sum_inv_cust", "anyof", customerId],
-                    "AND",
-                    ["custrecord_bsp_isg_month", "is", month]
-                ],
-
+            filters: [
+                ["custrecord_bsp_isg_sum_inv_cust", "anyof", customerId],
+                "AND",
+                ["custrecord_bsp_isg_month", "is", month],
+            ],
         });
-        let searchResultCount = customrecord_bsp_isg_summary_invoiceSearchObj.runPaged().count;
-        return searchResultCount > 0
+        let searchResultCount =
+            customrecord_bsp_isg_summary_invoiceSearchObj.runPaged().count;
+        return searchResultCount > 0;
     }
 
     /**
@@ -837,6 +909,7 @@ define(["N/search", "N/record", "N/render", "N/file", "N/xml", "N/email"], (
         getDateNow: getDateNow,
         createMonthlist: createMonthlist,
         getCurrentMonth: getCurrentMonth,
-        checkIfSummaryInvoiceSentToCustomer: checkIfSummaryInvoiceSentToCustomer
+        checkIfSummaryInvoiceSentToCustomer: checkIfSummaryInvoiceSentToCustomer,
+        createQuickFilter: createQuickFilter,
     };
 });
