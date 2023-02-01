@@ -707,32 +707,7 @@
         }  
     }
 
-    /**
-     * It takes a PO number as an argument and returns the internal ID of the PO.
-     * @param poNumber - The PO number you want to find the ID for
-     * @returns The ID of the PO.
-    */
-    function findPObyNumber(poNumber){
-        let poID = null;
-        const purchaseorderSearchObj = search.create({
-            type: "purchaseorder",
-            filters:
-            [
-               ["type","anyof","PurchOrd"], 
-               "AND", 
-               ["number","equalto",poNumber], 
-               "AND", 
-               ["mainline","is","T"]
-            ],
-            columns:[]
-         });
-
-        purchaseorderSearchObj.run().each(function(result){
-            poID = result.id;
-            return true;
-        });
-        return poID; 
-    }
+    
 
     /**
      * It takes a PO ID and returns the ID of the queue that the PO is assigned to.
@@ -1085,7 +1060,6 @@
         updatePOtransmissionStatus: updatePOtransmissionStatus,
         setPOMessageID: setPOMessageID,
         deletePO: deletePO,
-        findPObyNumber: findPObyNumber,
         getQueueOfPO: getQueueOfPO,
         getVendor: getVendor,
         getTransmissionFields: getTransmissionFields,
