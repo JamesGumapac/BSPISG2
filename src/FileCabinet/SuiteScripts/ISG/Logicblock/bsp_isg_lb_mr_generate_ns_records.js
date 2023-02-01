@@ -151,51 +151,28 @@ define(['N/record', 'N/runtime', 'N/search', '../Lib/bsp_isg_lb_utils.js', '../L
 
                     if(!BSPLBUtils.isEmpty(itemRecordsResult)){
 
-                        let isOrderPaid = BSPLBTransactions.orderPaid(logicBlockOrder);
 
-                        if(isOrderPaid){
-
-                            /***************************
-                            * 
-                            * Create Cash Sale Record
-                            * 
-                            ***************************/
-
-                            let cashSaleObjMappingFields = logicBlockTransactionData.value.cashSaleObjMappingFields;
-                            cashSaleRecordsResult = BSPLBTransactions.fetchTransaction(
-                                logicBlockOrder, 
-                                cashSaleObjMappingFields, 
-                                customerRecordResult, 
-                                itemRecordsResult, 
-                                settings,
-                                loginData,
-                                record.Type.CASH_SALE
-                            );
-                            log.debug(functionName, {cashSaleRecordsResult});
-                             
-                            if(BSPLBUtils.isEmpty(cashSaleRecordsResult)){
-                                updateRetryCount = true;
-                            }
-                        }else{
-
-                            /***************************
+                             /***************************
                             * 
                             * Create Sales Order Record
                             * 
                             ***************************/
                         
-                            let salesOrderObjMappingFields = logicBlockTransactionData.value.salesOrderObjMappingFields;
-                            salesOrderRecordsResult = BSPLBTransactions.fetchTransaction(
-                                logicBlockOrder, 
-                                salesOrderObjMappingFields, 
-                                customerRecordResult, 
-                                itemRecordsResult, 
-                                settings,
-                                loginData,
-                                record.Type.SALES_ORDER
-                            );
-                            log.debug(functionName, {salesOrderRecordsResult});
-                            
+                             let salesOrderObjMappingFields = logicBlockTransactionData.value.salesOrderObjMappingFields;
+                             salesOrderRecordsResult = BSPLBTransactions.fetchTransaction(
+                                 logicBlockOrder, 
+                                 salesOrderObjMappingFields, 
+                                 customerRecordResult, 
+                                 itemRecordsResult, 
+                                 settings,
+                                 loginData,
+                                 record.Type.SALES_ORDER
+                             );
+                             log.debug(functionName, {salesOrderRecordsResult});                            
+                             
+                        
+
+                           
                             if(BSPLBUtils.isEmpty(salesOrderRecordsResult)){
                                 updateRetryCount = true;
                             }else{
@@ -209,7 +186,7 @@ define(['N/record', 'N/runtime', 'N/search', '../Lib/bsp_isg_lb_utils.js', '../L
                                     updateRetryCount = true;
                                 }
                             }
-                        }               
+                                    
                     }else{
                         updateRetryCount = true;
                     }
