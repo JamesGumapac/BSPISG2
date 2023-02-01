@@ -269,8 +269,7 @@
     function getPoID(jsonObjResponse, tradingPartner){
         let poID = null;
         if(tradingPartner == BSPTradingParnters.constants().spr){
-            let poNumber = jsonObjResponse.Order.CustomerPONo;
-            poID = BSP_POutil.findPObyNumber(poNumber);
+            poID = jsonObjResponse.Order.CustomerPONo;
         }else{
             poID = jsonObjResponse.DataArea.PurchaseOrder.PurchaseOrderHeader.DocumentID["ID"];
         }

@@ -46,8 +46,7 @@
 
         let result = {};
 
-        let poNumber = getAcknowledgmentPOHeaderData(jsonObjResponse,"poNumber");
-        let poID = BSP_POutil.findPObyNumber(poNumber);
+        let poID = getAcknowledgmentPOHeaderData(jsonObjResponse,"poNumber");
         if(poID){
             let queueID = BSP_POutil.getQueueOfPO(poID);
             result.queueID = queueID;
