@@ -27,17 +27,21 @@ define(['N/runtime', 'N/record', 'N/redirect', 'N/task', 'N/url'],
                     let accountID = runtime.accountId;
                     let redirectURL = buildRedirectURL(accountID, recTypeID);
 
-                    let objMRTask = task.create({
-                        taskType: task.TaskType.MAP_REDUCE,
-                        scriptId: "customscript_bsp_isg_mr_excl_from_auto",
-                        deploymentId: "customdeploy_bsp_isg_mr_excl_from_auto",
-                        params: {
-                            custscript_bsp_mr_cartonbuy_rec_id: cartonBuyRecID
-                        }
-                    });
-                    let intTaskID = objMRTask.submit();
-                    log.debug(functionName, `MR Task submitted with ID: ${intTaskID}`);
-
+                    try{
+                        let objMRTask = task.create({
+                            taskType: task.TaskType.MAP_REDUCE,
+                            scriptId: "customscript_bsp_isg_mr_excl_from_auto",
+                            deploymentId: "customdeploy_bsp_isg_mr_excl_from_auto",
+                            params: {
+                                custscript_bsp_mr_cartonbuy_rec_id: cartonBuyRecID
+                            }
+                        });
+                        let intTaskID = objMRTask.submit();
+                        log.debug(functionName, `MR Task submitted with ID: ${intTaskID}`);
+                    }catch(error) {
+                        log.error(functionName, {error: error.toString()});
+                    }
+                    
                     redirect.redirect({
                         url: redirectURL,
                         parameters: {}
@@ -45,7 +49,7 @@ define(['N/runtime', 'N/record', 'N/redirect', 'N/task', 'N/url'],
                 }       
             }catch(error) {
                 log.error(functionName, {error: error.toString()});
-            };
+            }
         }
 
         const processParam = (requestParam) =>{

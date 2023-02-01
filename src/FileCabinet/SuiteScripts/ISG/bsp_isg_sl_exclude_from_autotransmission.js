@@ -198,7 +198,11 @@ define(['N/runtime', 'N/record', 'N/url', 'N/ui/serverWidget', 'N/search', './Li
                 "AND", 
                 ["custcol_bsp_isg_exclude_auto_transm","anyof","1"],
                 "AND", 
-                ["formulanumeric: {quantity} - NVL({quantitycommitted}, 0)","greaterthan","0"]
+                ["formulanumeric: {quantity} - NVL({quantitycommitted}, 0)","greaterthan","0"],
+                "AND", 
+                ["status","anyof","SalesOrd:D","SalesOrd:E","SalesOrd:B"], 
+                "AND", 
+                ["rate","greaterthan","0.00"]
             ];
 
             if(isChecked(checkboxes, "chkItemsCartonBuy")){

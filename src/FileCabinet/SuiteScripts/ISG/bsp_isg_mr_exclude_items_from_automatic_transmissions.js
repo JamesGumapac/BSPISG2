@@ -35,6 +35,10 @@ define(['N/record', 'N/search', 'N/runtime'],
                 let paramsObj = getParameters();
                 let cartonBuyItemsRecID = paramsObj.cartonBuyItemsRecID;
 
+                if(!cartonBuyItemsRecID){
+                    cartonBuyItemsRecID = findNextRecordToProcess("1");
+                }
+
                 record.submitFields({
                     type: "customrecord_bsp_isg_cartonbuy_items_req",
                     id: parseInt(cartonBuyItemsRecID),
@@ -172,6 +176,9 @@ define(['N/record', 'N/search', 'N/runtime'],
             try{
                 let paramsObj = getParameters();
                 let cartonBuyItemsRecID = paramsObj.cartonBuyItemsRecID;
+                if(!cartonBuyItemsRecID){
+                    cartonBuyItemsRecID = findNextRecordToProcess("2");
+                }
                 record.submitFields({
                     type: "customrecord_bsp_isg_cartonbuy_items_req",
                     id: parseInt(cartonBuyItemsRecID),
@@ -202,6 +209,21 @@ define(['N/record', 'N/search', 'N/runtime'],
                 cartonBuyItemsRecID : objScript.getParameter({name: "custscript_bsp_mr_cartonbuy_rec_id"})
             }
             return objParams;
+        }
+
+
+        /**
+         * It searches for the first record with a status of 1 and returns the record ID.
+         * @returns The ID of the first record that matches the search criteria.
+         */
+        const findNextRecordToProcess = (status) => {
+            let nextRecordID = null;
+            nextRecordID = search.create({
+                type: "customrecord_bsp_isg_cartonbuy_items_req",
+                filters: [["custrecord_bsp_isg_carton_buy_status", "anyof",status]],
+            }).run().getRange({ start: 0, end: 1 })[0].id;
+
+            return nextRecordID;
         }
 
         return {getInputData, map, reduce, summarize}
