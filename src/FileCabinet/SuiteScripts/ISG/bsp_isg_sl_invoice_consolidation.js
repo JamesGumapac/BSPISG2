@@ -73,8 +73,7 @@ define([
                     const req = scriptContext.request;
                     const customer = req.parameters.custpage_customer;
 
-                    let month = req.parameters.custpage_month;
-                    month = parseInt(month) + 1;
+                    let month = req.parameters.custpage_date_filter;
                     const myTask = task.create({
                         taskType: task.TaskType.MAP_REDUCE,
                         scriptId: objSuiteletScriptParams.scriptId,
@@ -84,15 +83,15 @@ define([
                                 value: customer,
                                 text: objSuiteletScriptParams.text,
                             },
-                            custscript_bsp_isg_inv_sum_month: +month,
+                            custscript_bsp_isg_inv_sum_month: month,
                         },
                     });
                     let objTaskId = myTask.submit();
                     log.debug("objTaskId", objTaskId);
-                        redirect.toRecord({
-                            id: customer,
-                            type: record.Type.CUSTOMER,
-                        });
+                    redirect.toRecord({
+                        id: customer,
+                        type: record.Type.CUSTOMER,
+                    });
 
 
                 } catch (error) {
@@ -122,11 +121,11 @@ define([
                 "bsp_isg_cs_invoice_consolidation.js"
             );
             form = createHeaderFields(form, params);
-            if (!util.isEmpty(params.customerSelected)) {
+            if (!util.isEmpty(params.customerSelected) && !util.isEmpty(params.month)) {
                 log.debug("displayform params", params);
                 let invoice = util.getInvoice(
                     params.customerSelected,
-                    +params.month + 1
+                    params.month
                 );
                 log.debug("invoice", invoice.total);
                 form = createItemSublist(form, invoice.invoiceList, params,);
@@ -186,29 +185,25 @@ define([
                     displayType: serverWidget.FieldDisplayType.INLINE,
                 });
             email.defaultValue = params.email;
-            let months = form.addField({
-                id: "custpage_month",
+            let dateFilter = form.addField({
+                id: "custpage_date_filter",
                 type: serverWidget.FieldType.SELECT,
-                label: "Month",
+                label: "Date Filter",
                 container: "fieldgroup_customer_info",
             });
-            let monthList = util.createMonthlist();
-            log.debug("Monthlist", monthList.length)
-            months.addSelectOption({
+            dateFilter.addSelectOption({
                 value: "",
                 text: "",
-            });
+            })
+            let dateQuickFilter = util.createQuickFilter();
+            dateQuickFilter.forEach((filter) =>
+                dateFilter.addSelectOption({
+                    value: filter.value,
+                    text: filter.text,
+                })
+            );
 
-            for (let i = 0; i < monthList.length; i++) {
-                months.addSelectOption({
-                    value: i,
-                    text: monthList[i],
-                });
-            }
-            if (params.month) {
-                months.defaultValue = params.month;
-            }
-            months.isMandatory = true;
+            dateFilter.isMandatory = true;
 
             let itemsInQueueField = form.addField({
                 id: "custpage_item_queue",
@@ -218,17 +213,17 @@ define([
             itemsInQueueField.updateDisplayType({
                 displayType: serverWidget.FieldDisplayType.HIDDEN,
             });
-          let deploymentId = form.addField({
-            id: "custpage_deployment_id",
-            type: serverWidget.FieldType.TEXT,
-            label: "Deployment ID",
-          })
-          if(params.deploymentId){
-            deploymentId.defaultValue = params.deploymentId
-          }
-          deploymentId.updateDisplayType({
-            displayType: serverWidget.FieldDisplayType.HIDDEN,
-          });
+            let deploymentId = form.addField({
+                id: "custpage_deployment_id",
+                type: serverWidget.FieldType.TEXT,
+                label: "Deployment ID",
+            })
+            if(params.deploymentId){
+                deploymentId.defaultValue = params.deploymentId
+            }
+            deploymentId.updateDisplayType({
+                displayType: serverWidget.FieldDisplayType.HIDDEN,
+            });
             /**
              * Field Group Invoice Information
              */
