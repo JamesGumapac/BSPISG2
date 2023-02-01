@@ -643,8 +643,26 @@ define([
           settings,
           loginData
         );
+
+        let isOrderPaid = orderPaid(order);
+        log.debug('isOrderPaid', isOrderPaid);
+
         if (recordCreationResult && recordCreationResult.recordId) {
           internalId = recordCreationResult.recordId;
+          
+          if(isOrderPaid){
+            var objcustDeposit = record.create({
+              type: record.Type.CUSTOMER_DEPOSIT,
+              isDynamic: true,
+              defaultValues: {
+              'entity': customerRecordResult.nsID,
+              'salesorder': recordCreationResult.recordId,           
+              }  
+          });
+          
+        objcustDeposit.setValue({fieldId:'payment', value: objFields.order.GrandTotal});
+        objcustDepositId = objcustDeposit.save();
+        }    
           transactionRecordResult = {
             nsID: internalId,
             logicBlockID: order.Id
