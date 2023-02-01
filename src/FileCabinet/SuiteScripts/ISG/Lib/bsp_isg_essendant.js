@@ -596,15 +596,18 @@
                         value: parseInt(shipmentItem.ShippedQuantity)
                     });
                 }
-            }else {
-                log.debug("processItemFulfillment", `Item not shipped`);
-                itemFulfillmentRec.removeLine({
-                    sublistId: 'item',
-                    line: i,
-                });
-                itemsNotShipped.push({
-                    itemID: itemID
-                })
+            }else {      
+                // If not Dropship order => create fulfillment for shiped and stock items
+                if(status == "C"){
+                    log.debug("processItemFulfillment", `Item not shipped`);
+                    itemFulfillmentRec.removeLine({
+                        sublistId: 'item',
+                        line: i,
+                    });
+                    itemsNotShipped.push({
+                        itemID: itemID
+                    })
+                }           
             }
         }
 
