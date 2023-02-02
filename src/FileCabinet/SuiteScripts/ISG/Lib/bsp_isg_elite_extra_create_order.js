@@ -37,7 +37,7 @@ define([
 				id: soId,
 				isDynamic: true,
 			});
-			
+
 			const salesRepId = soRec.getValue("salesrep");
 			let salesRepInfo = "";
 			if (!isEmpty(salesRepId)) {
@@ -47,15 +47,15 @@ define([
 					columns: ["firstname", "lastname"],
 				});
 			}
-			
+
 			const billSubRecord = soRec.getSubrecord({
 				fieldId: "billingaddress",
 			});
-			
+
 			const shipSubRecord = soRec.getSubrecord({
 				fieldId: "shippingaddress",
 			});
-			
+
 			const orderHeaderFields = [];
 			orderHeaderFields.push({
 				orderId: ifRec.getValue("tranid"),
@@ -91,7 +91,7 @@ define([
 				shipState: shipSubRecord.getValue("state") || "",
 				shipZip: shipSubRecord.getValue("zip") || "",
 			});
-			
+
 			const itemLineInfo = [];
 			for (let i = 0; i < ifRec.getLineCount("item"); i++) {
 				const itemReceive = ifRec.getSublistValue({
@@ -105,7 +105,7 @@ define([
 						fieldId: "itemname",
 						line: i,
 					});
-					
+
 					const rate = soRec.getSublistValue({
 						sublistId: "item",
 						fieldId: "rate",
@@ -118,7 +118,7 @@ define([
 					});
 					let lineAmount = 0;
 					lineAmount = parseFloat(rate) * parseFloat(order_quantity);
-					
+
 					itemLineInfo.push({
 						order_quantity: order_quantity,
 						number: itemId,
@@ -148,7 +148,7 @@ define([
 			log.error(e.message);
 		}
 	}
-	
+
 	/**
 	 * Create XML body from IF and SO and send the request using Elite Extra settings
 	 * @param {*} ifId
@@ -159,7 +159,7 @@ define([
 			const orderObj = getIfDetails(ifId);
 			const headerFieldsInfo = [orderObj.orderHeaderFields];
 			const lineItemInfo = orderObj.itemLineInfo;
-			
+
 			let lineItemXml = "";
 			//Create line XML from Order Object Line info
 			lineItemInfo.forEach(function (lineItem) {
@@ -297,13 +297,13 @@ define([
 				orderXML,
 				eliteExtraSettings
 			);
-			
+
 		} catch (e) {
 			log.error(e.message);
 		}
 	}
-	
-	
+
+
 	/**
 	 * Load elite extra settings
 	 * @param {*} eliteExtraId
@@ -327,7 +327,7 @@ define([
 			eliteExtraSettingsSearch["custrecord_bsp_isg_order_tracking_link"];
 		return eliteExtraSettingResults;
 	}
-	
+
 	/**
 	 * Check if empty string is passed
 	 * @param {*} stValue
@@ -345,7 +345,7 @@ define([
 				})(stValue))
 		);
 	}
-	
+
 	/**
 	 * format the date time into ISO 8601 format and set the timezone to newyork
 	 * @param {*} date
@@ -359,7 +359,7 @@ define([
 		let dateobj = new Date(dateTime);
 		return dateobj.toISOString();
 	}
-	
+
 	return {
 		isEmpty: isEmpty,
 		sendOrderDetails: sendOrderDetails,
