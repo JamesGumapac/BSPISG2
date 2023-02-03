@@ -26,7 +26,7 @@ define([
       const type = context.newRecord.type;
       context.form.clientScriptFileId = clientScriptFileId[0].id;
 
-      if (context.type == "view" && type === "itemfulfillment") {
+      if (context.type === "view" && type === "itemfulfillment") {
         //only show the send order to elite extra button in IF record
         const scriptObj = runtime.getCurrentScript();
         const eliteExtraSettings = scriptObj.getParameter({
@@ -64,7 +64,7 @@ define([
             rec.getText("shipstatus") !== selectedStatus &&
             util.isEmpty(rec.getValue("custbody_bsp_isg_tracking_number")) == true
         )
-            //if shipstatus === to preferred or default status and tracking number is empty send order to elite extra
+            //if ship status === to preferred or default status and tracking number is empty send order to elite extra
           return;
         const response = util.sendOrderDetails(rec.id, params.eliteExtraId);
 
@@ -80,7 +80,7 @@ define([
         if (
             rec.getValue("status") === "B" &&
             util.isEmpty(rec.getValue("custbody_bsp_isg_tracking_number")) == true
-        ) { //if RMA status is equals to "B" or approve send order details to elite extra.
+        ) { //if RMA status is equals to "B" or approve, send order details to elite extra.
           const response = util.sendOrderDetails(rec.id, params.eliteExtraId);
           if (response) {
             let status = util.updateRecordTrackingInfo(
@@ -97,6 +97,10 @@ define([
     }
   };
 
+  /**
+   * Get the elite extra settings
+   * @returns {{eliteExtraId: (number|Date|string|boolean)}}
+   */
   function getParameters() {
     const scriptObj = runtime.getCurrentScript();
     return {

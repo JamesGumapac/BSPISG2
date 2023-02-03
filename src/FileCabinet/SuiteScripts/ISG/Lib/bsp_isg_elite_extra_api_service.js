@@ -29,7 +29,6 @@ function (search, https, BSPEliteServiceLogs) {
       headers["Authorization"] = "Basic " + eliteExtraSettings.authorization;
       let orderXML = xml.replace(/[\r\n]/g, "");
 
-
       const eliteExtraResponse = https.request({
         method: https.Method.POST,
         url: serviceURL,
