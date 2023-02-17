@@ -1,33 +1,26 @@
 /**
  * @NApiVersion 2.1
  */
-define(["N/search", "N/https", "./bsp_isg_elite_extra_service_logs.js"], /**
+define(["N/https", "./bsp_isg_elite_extra_service_logs.js"], /**
  *
- */
-function (search, https, BSPEliteServiceLogs) {
+ */ function (https, BSPEliteServiceLogs) {
   /**
    *
-   * @param recId
-   * @param eliteExtraId
-   * @param xml
-   * @param eliteExtraSettings
-   * @returns {ClientResponse}
+   * @param options
+   * @returns {eliteExtraResponse}
    */
-  function uploadOrder(recId, eliteExtraId, xml, eliteExtraSettings,recType) {
+  function uploadOrder(options) {
     try {
-      let recTitle
-      if(recType ==="I"){
-        recTitle = "IF"
-      }else{
-        recTitle = "RMA"
-      }
+      let recTitle = options.recType === "I" ? "IF" : "RMA";
+
       const soapAction = "POST";
-      let serviceURL = eliteExtraSettings.endpointURL + "/upload_order";
+      let serviceURL = options.eliteExtraSettings.endpointURL + "/upload_order";
       const headers = {};
       headers["Content-Type"] = "text/xml";
-      headers["X-Name"] = `${recTitle}${recId}.xml`;
-      headers["Authorization"] = "Basic " + eliteExtraSettings.authorization;
-      let orderXML = xml.replace(/[\r\n]/g, "");
+      headers["X-Name"] = `${recTitle}${options.recId}.xml`;
+      headers["Authorization"] =
+          "Basic " + options.eliteExtraSettings.authorization;
+      let orderXML = options.orderXML.replace(/[\r\n]/g, "");
 
       const eliteExtraResponse = https.request({
         method: https.Method.POST,
@@ -36,7 +29,7 @@ function (search, https, BSPEliteServiceLogs) {
         headers: headers,
       });
 
-      log.debug("eliteExtraResponse", eliteExtraResponse)
+      log.debug("eliteExtraResponse", eliteExtraResponse);
       BSPEliteServiceLogs.eliteExtracreateServiceLog(
           serviceURL,
           soapAction,
@@ -45,12 +38,11 @@ function (search, https, BSPEliteServiceLogs) {
           JSON.stringify(eliteExtraResponse.headers),
           eliteExtraResponse.body.substring(0, 100000)
       );
-      return eliteExtraResponse
+      return eliteExtraResponse;
     } catch (e) {
-      log.debug("uploadOrder", e.message)
+      log.debug("uploadOrder", e.message);
     }
   }
-
 
   return {
     uploadOrder: uploadOrder,

@@ -66,7 +66,7 @@ define([
         )
             //if ship status === to preferred or default status and tracking number is empty send order to elite extra
           return;
-        const response = util.sendOrderDetails(rec.id, params.eliteExtraId);
+        const response = util.sendOrderDetails(rec.id, params.eliteExtraId,rec.type);
 
         if (response) {
           let status = util.updateRecordTrackingInfo(
@@ -81,7 +81,7 @@ define([
             rec.getValue("status") === "B" &&
             util.isEmpty(rec.getValue("custbody_bsp_isg_tracking_number")) == true
         ) { //if RMA status is equals to "B" or approve, send order details to elite extra.
-          const response = util.sendOrderDetails(rec.id, params.eliteExtraId);
+          const response = util.sendOrderDetails( rec.id, params.eliteExtraId,rec.type);
           if (response) {
             let status = util.updateRecordTrackingInfo(
                 response,

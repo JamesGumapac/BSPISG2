@@ -3,43 +3,30 @@
  */
 define([
 	"N/record",
-	"N/runtime",
 	"N/search",
 	"N/format",
 	"./bsp_isg_elite_extra_api_service.js",
 ], /**
  * @param{record} record
- * @param{runtime} runtime
  * @param{search} search
  * @param{format} format,
  * @param{*} BSPEliteExtraAPIService
- */ function (record, runtime, search, format, BSPEliteExtraAPIService) {
+ */ function (record, search, format, BSPEliteExtraAPIService) {
 	/**
 	 * Get the record information and SO details and create an object with it that will be used in the XML request
 	 * @param {*} id Can be IF or RMA ID
+	 * @param recType
 	 */
-	function getOrderDetails(id) {
+	function getOrderDetails(id,recType) {
 		try {
-			// if loading the item fulfillment record failed the script will still load RMA rec using catch block instead
+
 			let rec;
-			let TYPE;
-			try {
+			let TYPE =	recType ===  "itemfulfillment" ?  "I" : "P"
 				rec = record.load({
-					type: record.Type.ITEM_FULFILLMENT,
+					type: recType,
 					id: id,
 					isDynamic: true,
 				});
-				TYPE = "I";
-				log.debug("Item Fulfillment");
-			} catch (e) {
-				rec = record.load({
-					type: record.Type.RETURN_AUTHORIZATION,
-					id: id,
-					isDynamic: true,
-				});
-				TYPE = "P";
-				log.debug("Return Authorization");
-			}
 
 			const soId = rec.getValue("createdfrom");
 			const soRec = record.load({
@@ -152,7 +139,8 @@ define([
 							line: i,
 						}),
 					});
-				} else { //get the RMA sublist information
+				} else {
+					//get the RMA sublist information
 					const itemId = rec.getSublistText({
 						sublistId: "item",
 						fieldId: "item",
@@ -206,10 +194,12 @@ define([
 	 * Create XML body from IF or RMA and SO and send the request using Elite Extra integration settings
 	 * @param recId
 	 * @param {*} eliteExtraId
+	 * @param type
 	 */
-	function sendOrderDetails(recId, eliteExtraId) {
+	function sendOrderDetails(recId, eliteExtraId,type) {
 		try {
-			const orderObj = getOrderDetails(recId);
+			log.debug("type", type)
+			const orderObj = getOrderDetails(recId,type);
 			const headerFieldsInfo = [orderObj.orderHeaderFields];
 			const lineItemInfo = orderObj.itemLineInfo;
 
@@ -352,13 +342,12 @@ define([
 </order>`;
 			log.debug("orderXML", orderXML);
 			const eliteExtraSettings = getEliteExtraSettings(eliteExtraId);
-			return BSPEliteExtraAPIService.uploadOrder(
+			return BSPEliteExtraAPIService.uploadOrder({
 				recId,
-				eliteExtraId,
 				orderXML,
 				eliteExtraSettings,
-				headerFieldsInfo[0][0].type
-			);
+				recType: headerFieldsInfo[0][0].type,
+			});
 		} catch (e) {
 			log.error("sendOrderDetails", e.message);
 		}
