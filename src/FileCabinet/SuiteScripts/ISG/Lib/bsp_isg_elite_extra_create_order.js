@@ -2,217 +2,216 @@
  * @NApiVersion 2.x
  */
 define([
-	"N/record",
-	"N/search",
-	"N/format",
-	"./bsp_isg_elite_extra_api_service.js",
+    "N/record",
+    "N/search",
+    "N/format",
+    "./bsp_isg_elite_extra_api_service.js",
 ], /**
  * @param{record} record
  * @param{search} search
  * @param{format} format,
  * @param{*} BSPEliteExtraAPIService
  */ function (record, search, format, BSPEliteExtraAPIService) {
-	/**
-	 * Get the record information and SO details and create an object with it that will be used in the XML request
-	 * @param {*} id Can be IF or RMA ID
-	 * @param recType
-	 */
-	function getOrderDetails(id,recType) {
-		try {
+    /**
+     * Get the record information and SO details and create an object with it that will be used in the XML request
+     * @param {*} id Can be IF or RMA ID
+     * @param recType
+     */
+    function getOrderDetails(id, recType) {
+        try {
 
-			let rec;
-			let TYPE =	recType ===  "itemfulfillment" ?  "I" : "P"
-				rec = record.load({
-					type: recType,
-					id: id,
-					isDynamic: true,
-				});
+            let TYPE = recType === "itemfulfillment" ? "I" : "P"
+            const rec = record.load({
+                type: recType,
+                id: id,
+                isDynamic: true,
+            });
 
-			const soId = rec.getValue("createdfrom");
-			const soRec = record.load({
-				type: record.Type.SALES_ORDER,
-				id: soId,
-				isDynamic: true,
-			});
+            const soId = rec.getValue("createdfrom");
+            const soRec = record.load({
+                type: record.Type.SALES_ORDER,
+                id: soId,
+                isDynamic: true,
+            });
 
-			const salesRepId = soRec.getValue("salesrep");
-			let salesRepInfo = "";
-			if (!isEmpty(salesRepId)) {
-				salesRepInfo = search.lookupFields({
-					type: search.Type.EMPLOYEE,
-					id: salesRepId,
-					columns: ["firstname", "lastname"],
-				});
-			}
+            const salesRepId = soRec.getValue("salesrep");
+            let salesRepInfo = "";
+            if (!isEmpty(salesRepId)) {
+                salesRepInfo = search.lookupFields({
+                    type: search.Type.EMPLOYEE,
+                    id: salesRepId,
+                    columns: ["firstname", "lastname"],
+                });
+            }
 
-			const billSubRecord = soRec.getSubrecord({
-				fieldId: "billingaddress",
-			});
+            const billSubRecord = soRec.getSubrecord({
+                fieldId: "billingaddress",
+            });
 
-			const shipSubRecord = soRec.getSubrecord({
-				fieldId: "shippingaddress",
-			});
+            const shipSubRecord = soRec.getSubrecord({
+                fieldId: "shippingaddress",
+            });
 
-			const orderHeaderFields = [];
-			orderHeaderFields.push({
-				orderId: rec.getValue("tranid"),
-				warehouse: "1", //soRec.getValue("location"),
-				po: soRec.getValue("otherrefnum") || "",
-				status: "",
-				price: "",
-				type: TYPE, //if type is I item fulfillment if type is P returns
-				tax: soRec.getValue("tax") || 0,
-				deposit: soRec.getValue("custbody_bsp_aab_so_deposit") || 0,
-				dateTime: formatDateTime(soRec.getValue("trandate")) || "",
-				shipTime: formatDateTime(rec.getValue("trandate")) || "",
-				comment: soRec.getValue("memo") || "",
-				shipViaName: soRec.getText("shipmethod"),
-				salesPersonId: soRec.getValue("salesrep"),
-				salesPersonName: isEmpty(salesRepInfo) ? "" : salesRepInfo.firstname,
-				salesPersonLastname: isEmpty(salesRepInfo) ? "" : salesRepInfo.lastname,
-				billToId: soRec.getValue("entity") || "",
-				billToName: billSubRecord.getValue("addressee") || "",
-				billToPhone: billSubRecord.getValue("phone") || "",
-				billAddressLine1: billSubRecord.getValue("addr1") || "",
-				billAddressLine2: billSubRecord.getValue("addr2") || "",
-				billAddressLine3: billSubRecord.getValue("addr3") || "",
-				billCity: billSubRecord.getValue("city") || "",
-				billState: billSubRecord.getValue("state") || "",
-				billZip: billSubRecord.getValue("zip") || "",
-				shipToId: soRec.getValue("entity") || "",
-				shipToName: shipSubRecord.getValue("addressee") || "",
-				shipToPhone: shipSubRecord.getValue("phone") || "",
-				shipAddressLine1: shipSubRecord.getValue("addr1") || "",
-				shipAddressLine2: shipSubRecord.getValue("addr2") || "",
-				shipAddressLine3: shipSubRecord.getValue("addr3") || "",
-				shipCity: shipSubRecord.getValue("city") || "",
-				shipState: shipSubRecord.getValue("state") || "",
-				shipZip: shipSubRecord.getValue("zip") || "",
-			});
+            const orderHeaderFields = [];
+            orderHeaderFields.push({
+                orderId: rec.getValue("tranid"),
+                warehouse: "1", //soRec.getValue("location"),
+                po: soRec.getValue("otherrefnum") || "",
+                status: "",
+                price: "",
+                type: TYPE, //if type is I item fulfillment if type is P returns
+                tax: soRec.getValue("tax") || 0,
+                deposit: soRec.getValue("custbody_bsp_aab_so_deposit") || 0,
+                dateTime: formatDateTime(soRec.getValue("trandate")) || "",
+                shipTime: formatDateTime(rec.getValue("trandate")) || "",
+                comment: soRec.getValue("memo") || "",
+                shipViaName: soRec.getText("shipmethod"),
+                salesPersonId: soRec.getValue("salesrep"),
+                salesPersonName: isEmpty(salesRepInfo) ? "" : salesRepInfo.firstname,
+                salesPersonLastname: isEmpty(salesRepInfo) ? "" : salesRepInfo.lastname,
+                billToId: soRec.getValue("entity") || "",
+                billToName: billSubRecord.getValue("addressee") || "",
+                billToPhone: billSubRecord.getValue("phone") || "",
+                billAddressLine1: billSubRecord.getValue("addr1") || "",
+                billAddressLine2: billSubRecord.getValue("addr2") || "",
+                billAddressLine3: billSubRecord.getValue("addr3") || "",
+                billCity: billSubRecord.getValue("city") || "",
+                billState: billSubRecord.getValue("state") || "",
+                billZip: billSubRecord.getValue("zip") || "",
+                shipToId: soRec.getValue("entity") || "",
+                shipToName: shipSubRecord.getValue("addressee") || "",
+                shipToPhone: shipSubRecord.getValue("phone") || "",
+                shipAddressLine1: shipSubRecord.getValue("addr1") || "",
+                shipAddressLine2: shipSubRecord.getValue("addr2") || "",
+                shipAddressLine3: shipSubRecord.getValue("addr3") || "",
+                shipCity: shipSubRecord.getValue("city") || "",
+                shipState: shipSubRecord.getValue("state") || "",
+                shipZip: shipSubRecord.getValue("zip") || "",
+            });
 
-			const itemLineInfo = [];
-			for (let i = 0; i < rec.getLineCount("item"); i++) {
-				const itemReceive = rec.getSublistValue({
-					sublistId: "item",
-					fieldId: "itemreceive",
-					line: i,
-				});
+            const itemLineInfo = [];
+            for (let i = 0; i < rec.getLineCount("item"); i++) {
+                const itemReceive = rec.getSublistValue({
+                    sublistId: "item",
+                    fieldId: "itemreceive",
+                    line: i,
+                });
 
-				if (itemReceive === "T" || (itemReceive === true && TYPE === "I")) {
-					const itemId = rec.getSublistValue({
-						sublistId: "item",
-						fieldId: "itemname",
-						line: i,
-					});
+                if (itemReceive === "T" || (itemReceive === true && TYPE === "I")) {
+                    const itemId = rec.getSublistValue({
+                        sublistId: "item",
+                        fieldId: "itemname",
+                        line: i,
+                    });
 
-					const rate = soRec.getSublistValue({
-						sublistId: "item",
-						fieldId: "rate",
-						line: i,
-					});
-					const order_quantity = rec.getSublistValue({
-						sublistId: "item",
-						fieldId: "quantity",
-						line: i,
-					});
-					let lineAmount = 0;
-					lineAmount = parseFloat(rate) * parseFloat(order_quantity);
+                    const rate = soRec.getSublistValue({
+                        sublistId: "item",
+                        fieldId: "rate",
+                        line: i,
+                    });
+                    const order_quantity = rec.getSublistValue({
+                        sublistId: "item",
+                        fieldId: "quantity",
+                        line: i,
+                    });
+                    let lineAmount = 0;
+                    lineAmount = parseFloat(rate) * parseFloat(order_quantity);
 
-					itemLineInfo.push({
-						order_quantity: order_quantity,
-						number: itemId,
-						rate: rate,
-						amount: lineAmount,
-						description: rec.getSublistValue({
-							sublistId: "item",
-							fieldId: "description",
-							line: i,
-						}),
-						location: rec.getSublistValue({
-							sublistId: "item",
-							fieldId: "location",
-							line: i,
-						}),
-						poVendor: rec.getSublistValue({
-							sublistId: "item",
-							fieldId: "custcol_bsp_isg_po_vendor_display",
-							line: i,
-						}),
-					});
-				} else {
-					//get the RMA sublist information
-					const itemId = rec.getSublistText({
-						sublistId: "item",
-						fieldId: "item",
-						line: i,
-					});
+                    itemLineInfo.push({
+                        order_quantity: order_quantity,
+                        number: itemId,
+                        rate: rate,
+                        amount: lineAmount,
+                        description: rec.getSublistValue({
+                            sublistId: "item",
+                            fieldId: "description",
+                            line: i,
+                        }),
+                        location: rec.getSublistValue({
+                            sublistId: "item",
+                            fieldId: "location",
+                            line: i,
+                        }),
+                        poVendor: rec.getSublistValue({
+                            sublistId: "item",
+                            fieldId: "custcol_bsp_isg_po_vendor_display",
+                            line: i,
+                        }),
+                    });
+                } else {
+                    //get the RMA sublist information
+                    const itemId = rec.getSublistText({
+                        sublistId: "item",
+                        fieldId: "item",
+                        line: i,
+                    });
 
-					const rate = soRec.getSublistValue({
-						sublistId: "item",
-						fieldId: "rate",
-						line: i,
-					});
-					const order_quantity = rec.getSublistValue({
-						sublistId: "item",
-						fieldId: "quantity",
-						line: i,
-					});
-					let lineAmount = 0;
-					lineAmount = parseFloat(rate) * parseFloat(order_quantity);
+                    const rate = soRec.getSublistValue({
+                        sublistId: "item",
+                        fieldId: "rate",
+                        line: i,
+                    });
+                    const order_quantity = rec.getSublistValue({
+                        sublistId: "item",
+                        fieldId: "quantity",
+                        line: i,
+                    });
+                    let lineAmount = 0;
+                    lineAmount = parseFloat(rate) * parseFloat(order_quantity);
 
-					itemLineInfo.push({
-						order_quantity: order_quantity,
-						number: itemId,
-						rate: rate,
-						amount: lineAmount,
-						description: rec.getSublistValue({
-							sublistId: "item",
-							fieldId: "description",
-							line: i,
-						}),
-						location: rec.getSublistValue({
-							sublistId: "item",
-							fieldId: "location",
-							line: i,
-						}),
-						poVendor: soRec.getSublistValue({
-							sublistId: "item",
-							fieldId: "custcol_bsp_isg_po_vendor_display",
-							line: i,
-						}),
-					});
-				}
-			}
-			log.debug("order obj", { orderHeaderFields, itemLineInfo });
-			return { orderHeaderFields, itemLineInfo };
-		} catch (e) {
-			log.error("getOrderDetails", e.message);
-		}
-	}
+                    itemLineInfo.push({
+                        order_quantity: order_quantity,
+                        number: itemId,
+                        rate: rate,
+                        amount: lineAmount,
+                        description: rec.getSublistValue({
+                            sublistId: "item",
+                            fieldId: "description",
+                            line: i,
+                        }),
+                        location: rec.getSublistValue({
+                            sublistId: "item",
+                            fieldId: "location",
+                            line: i,
+                        }),
+                        poVendor: soRec.getSublistValue({
+                            sublistId: "item",
+                            fieldId: "custcol_bsp_isg_po_vendor_display",
+                            line: i,
+                        }),
+                    });
+                }
+            }
+            log.debug("order obj", {orderHeaderFields, itemLineInfo});
+            return {orderHeaderFields, itemLineInfo};
+        } catch (e) {
+            log.error("getOrderDetails", e.message);
+        }
+    }
 
-	/**
-	 * Create XML body from IF or RMA and SO and send the request using Elite Extra integration settings
-	 * @param recId
-	 * @param {*} eliteExtraId
-	 * @param type
-	 */
-	function sendOrderDetails(recId, eliteExtraId,type) {
-		try {
-			log.debug("type", type)
-			const orderObj = getOrderDetails(recId,type);
-			const headerFieldsInfo = [orderObj.orderHeaderFields];
-			const lineItemInfo = orderObj.itemLineInfo;
+    /**
+     * Create XML body from IF or RMA and SO and send the request using Elite Extra integration settings
+     * @param recId
+     * @param {*} eliteExtraId
+     * @param type
+     */
+    function sendOrderDetails(recId, eliteExtraId, type) {
+        try {
+            log.debug("type", type)
+            const orderObj = getOrderDetails(recId, type);
+            const headerFieldsInfo = [orderObj.orderHeaderFields];
+            const lineItemInfo = orderObj.itemLineInfo;
 
-			let lineItemXml = "";
-			/******************************
-			 Create line XML from Order Object Line info
-			 *******************************/
-			lineItemInfo.forEach(function (lineItem) {
-				let poVendor;
-				if (isEmpty(lineItem.poVendor)) {
-					poVendor = "";
-				}
-				lineItemXml += `
+            let lineItemXml = "";
+            /******************************
+             Create line XML from Order Object Line info
+             *******************************/
+            lineItemInfo.forEach(function (lineItem) {
+                let poVendor;
+                if (isEmpty(lineItem.poVendor)) {
+                    poVendor = "";
+                }
+                lineItemXml += `
                     <line>
                   <order_quantity>${lineItem.order_quantity}</order_quantity>
                   <ship_quantity>${lineItem.order_quantity}</ship_quantity>
@@ -229,11 +228,11 @@ define([
                   <integration_type></integration_type>
                   <uom></uom>
               </line>`;
-			});
-			/***********************************
-			 Map the Order Details into the XML body
-			 ************************************/
-			let orderXML = `<?xml version="1.0"?>
+            });
+            /***********************************
+             Map the Order Details into the XML body
+             ************************************/
+            let orderXML = `<?xml version="1.0"?>
 <order id="${headerFieldsInfo[0][0].orderId}">
     <warehouse id="1">
     </warehouse>
@@ -340,149 +339,149 @@ define([
     <phone_number></phone_number>
     <duration></duration>
 </order>`;
-			log.debug("orderXML", orderXML);
-			const eliteExtraSettings = getEliteExtraSettings(eliteExtraId);
-			return BSPEliteExtraAPIService.uploadOrder({
-				recId,
-				orderXML,
-				eliteExtraSettings,
-				recType: headerFieldsInfo[0][0].type,
-			});
-		} catch (e) {
-			log.error("sendOrderDetails", e.message);
-		}
-	}
+            log.debug("orderXML", orderXML);
+            const eliteExtraSettings = getEliteExtraSettings(eliteExtraId);
+            return BSPEliteExtraAPIService.uploadOrder({
+                recId,
+                orderXML,
+                eliteExtraSettings,
+                recType: headerFieldsInfo[0][0].type,
+            });
+        } catch (e) {
+            log.error("sendOrderDetails", e.message);
+        }
+    }
 
-	/**
-	 * Load elite extra settings
-	 * @param {*} eliteExtraId
-	 */
-	function getEliteExtraSettings(eliteExtraId) {
-		try {
-			const eliteExtraSettingResults = {};
-			const eliteExtraSettingsSearch = search.lookupFields({
-				type: "customrecord_bsp_isg_elite_extra_setting",
-				id: eliteExtraId,
-				columns: [
-					"custrecord_bsp_isg_based64encoding",
-					"custrecord_bsp_isg_create_order_ep_url",
-					"custrecord_bsp_isg_order_tracking_link",
-					"custrecord_bsp_isg_if_status_for_upload",
-				],
-			});
-			eliteExtraSettingResults["endpointURL"] =
-				eliteExtraSettingsSearch["custrecord_bsp_isg_create_order_ep_url"];
-			eliteExtraSettingResults["authorization"] =
-				eliteExtraSettingsSearch["custrecord_bsp_isg_based64encoding"];
-			eliteExtraSettingResults["trackingLink"] =
-				eliteExtraSettingsSearch["custrecord_bsp_isg_order_tracking_link"];
-			eliteExtraSettingResults["uploadStatus"] =
-				eliteExtraSettingsSearch["custrecord_bsp_isg_if_status_for_upload"];
-			return eliteExtraSettingResults;
-		} catch (e) {
-			log.debug("getEliteExtraSettings", e.message);
-		}
-	}
+    /**
+     * Load elite extra settings
+     * @param {*} eliteExtraId
+     */
+    function getEliteExtraSettings(eliteExtraId) {
+        try {
+            const eliteExtraSettingResults = {};
+            const eliteExtraSettingsSearch = search.lookupFields({
+                type: "customrecord_bsp_isg_elite_extra_setting",
+                id: eliteExtraId,
+                columns: [
+                    "custrecord_bsp_isg_based64encoding",
+                    "custrecord_bsp_isg_create_order_ep_url",
+                    "custrecord_bsp_isg_order_tracking_link",
+                    "custrecord_bsp_isg_if_status_for_upload",
+                ],
+            });
+            eliteExtraSettingResults["endpointURL"] =
+                eliteExtraSettingsSearch["custrecord_bsp_isg_create_order_ep_url"];
+            eliteExtraSettingResults["authorization"] =
+                eliteExtraSettingsSearch["custrecord_bsp_isg_based64encoding"];
+            eliteExtraSettingResults["trackingLink"] =
+                eliteExtraSettingsSearch["custrecord_bsp_isg_order_tracking_link"];
+            eliteExtraSettingResults["uploadStatus"] =
+                eliteExtraSettingsSearch["custrecord_bsp_isg_if_status_for_upload"];
+            return eliteExtraSettingResults;
+        } catch (e) {
+            log.debug("getEliteExtraSettings", e.message);
+        }
+    }
 
-	/**
-	 * Check if empty string is passed
-	 * @param {*} stValue
-	 */
-	function isEmpty(stValue) {
-		return (
-			stValue === "" ||
-			stValue == null ||
-			stValue == undefined ||
-			(stValue.constructor === Array && stValue.length == 0) ||
-			(stValue.constructor === Object &&
-				(function (v) {
-					for (var k in v) return false;
-					return true;
-				})(stValue))
-		);
-	}
+    /**
+     * Check if empty string is passed
+     * @param {*} stValue
+     */
+    function isEmpty(stValue) {
+        return (
+            stValue === "" ||
+            stValue == null ||
+            stValue == undefined ||
+            (stValue.constructor === Array && stValue.length == 0) ||
+            (stValue.constructor === Object &&
+                (function (v) {
+                    for (var k in v) return false;
+                    return true;
+                })(stValue))
+        );
+    }
 
-	/**
-	 * format the date time into ISO 8601 format and set the timezone to newyork
-	 * @param {*} date
-	 */
-	function formatDateTime(date) {
-		const dateTime = format.format({
-			value: new Date(date),
-			type: format.Type.DATETIMETZ,
-			timezone: format.Timezone.AMERICA_NEW_YORK,
-		});
-		let dateobj = new Date(dateTime);
-		return dateobj.toISOString();
-	}
+    /**
+     * format the date time into ISO 8601 format and set the timezone to newyork
+     * @param {*} date
+     */
+    function formatDateTime(date) {
+        const dateTime = format.format({
+            value: new Date(date),
+            type: format.Type.DATETIMETZ,
+            timezone: format.Timezone.AMERICA_NEW_YORK,
+        });
+        let dateobj = new Date(dateTime);
+        return dateobj.toISOString();
+    }
 
-	/**
-	 * Update Item Fulfillment or Return Authorization tracking number and tracking link
-	 * @param res
-	 * @param id
-	 * @param trackingLink
-	 * @param type
-	 * @returns {*[]}
-	 */
-	function updateRecordTrackingInfo(res, id, trackingLink, type) {
-		try {
-			const response = res.body;
-			const resString = [response];
-			const resBody = JSON.parse(resString[0]);
-			let message = [];
-			if (res.code === 200 && !isEmpty(resBody.tracking)) {
-				if (type == "itemfulfillment") {
-					const ifUpdateId = record.submitFields({
-						type: record.Type.ITEM_FULFILLMENT,
-						id: id,
-						values: {
-							custbody_bsp_isg_tracking_number: resBody.tracking,
-							custbody_bsp_isg_tracking_link: trackingLink + resBody.tracking,
-						},
-					});
-					log.debug("IF ID: " + ifUpdateId + " Updated", [
-						resBody.tracking,
-						resBody.filename,
-					]);
-					message.push({
-						message: "Order has been uploaded successfully.",
-						failed: false,
-					});
-				} else {
-					const rmaIdUpdated = record.submitFields({
-						type: record.Type.RETURN_AUTHORIZATION,
-						id: id,
-						values: {
-							custbody_bsp_isg_tracking_number: resBody.tracking,
-							custbody_bsp_isg_tracking_link: trackingLink + resBody.tracking,
-						},
-					});
-					log.debug("RMA: " + rmaIdUpdated + " Updated", [
-						resBody.tracking,
-						resBody.filename,
-					]);
-					message.push({
-						message: "Order has been uploaded successfully.",
-						failed: false,
-					});
-				}
-			} else {
-				message.push({
-					message: "Failed to create order",
-					failed: true,
-				});
-			}
-			log.debug("message", message);
-			return message;
-		} catch (e) {
-			log.debug("updateRecordTrackingInfo", e.message);
-		}
-	}
+    /**
+     * Update Item Fulfillment or Return Authorization tracking number and tracking link
+     * @param res
+     * @param id
+     * @param trackingLink
+     * @param type
+     * @returns {*[]}
+     */
+    function updateRecordTrackingInfo(res, id, trackingLink, type) {
+        try {
+            const response = res.body;
+            const resString = [response];
+            const resBody = JSON.parse(resString[0]);
+            let message = [];
+            if (res.code === 200 && !isEmpty(resBody.tracking)) {
+                if (type == "itemfulfillment") {
+                    const ifUpdateId = record.submitFields({
+                        type: record.Type.ITEM_FULFILLMENT,
+                        id: id,
+                        values: {
+                            custbody_bsp_isg_tracking_number: resBody.tracking,
+                            custbody_bsp_isg_tracking_link: trackingLink + resBody.tracking,
+                        },
+                    });
+                    log.debug("IF ID: " + ifUpdateId + " Updated", [
+                        resBody.tracking,
+                        resBody.filename,
+                    ]);
+                    message.push({
+                        message: "Order has been uploaded successfully.",
+                        failed: false,
+                    });
+                } else {
+                    const rmaIdUpdated = record.submitFields({
+                        type: record.Type.RETURN_AUTHORIZATION,
+                        id: id,
+                        values: {
+                            custbody_bsp_isg_tracking_number: resBody.tracking,
+                            custbody_bsp_isg_tracking_link: trackingLink + resBody.tracking,
+                        },
+                    });
+                    log.debug("RMA: " + rmaIdUpdated + " Updated", [
+                        resBody.tracking,
+                        resBody.filename,
+                    ]);
+                    message.push({
+                        message: "Order has been uploaded successfully.",
+                        failed: false,
+                    });
+                }
+            } else {
+                message.push({
+                    message: "Failed to create order",
+                    failed: true,
+                });
+            }
+            log.debug("message", message);
+            return message;
+        } catch (e) {
+            log.debug("updateRecordTrackingInfo", e.message);
+        }
+    }
 
-	return {
-		isEmpty: isEmpty,
-		sendOrderDetails: sendOrderDetails,
-		getEliteExtraSettings: getEliteExtraSettings,
-		updateRecordTrackingInfo: updateRecordTrackingInfo,
-	};
+    return {
+        isEmpty: isEmpty,
+        sendOrderDetails: sendOrderDetails,
+        getEliteExtraSettings: getEliteExtraSettings,
+        updateRecordTrackingInfo: updateRecordTrackingInfo,
+    };
 });
