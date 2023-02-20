@@ -51,35 +51,8 @@ define(["N/record"],
         }
 
 
-        /**
-         * Create Error Log Record
-         * @param {*} errorSource
-         * @param {*} errorMessage
-         * @param {*} errorDetail
-         */
-        function createErrorLog(errorSource, errorMessage, errorDetail) {
-            let errorLogRec = record.create({
-                type: "customrecord_bsp_isg_lb_error_logs",
-            });
-
-            errorLogRec.setValue({
-                fieldId: "custrecord_bsp_lb_error_source",
-                value: errorSource,
-            });
-            errorLogRec.setValue({
-                fieldId: "custrecord_bsp_lb_error_message",
-                value: errorMessage,
-            });
-            errorLogRec.setValue({
-                fieldId: "custrecord_bsp_lb_error_detail",
-                value: errorDetail,
-            });
-
-            errorLogRec.save();
-        }
 
         return {
             eliteExtracreateServiceLog: eliteExtracreateServiceLog,
-            createErrorLog: createErrorLog
         }
     });
