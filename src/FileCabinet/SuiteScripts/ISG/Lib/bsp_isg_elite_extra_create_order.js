@@ -3,30 +3,33 @@
  */
 define([
     "N/record",
+    "N/runtime",
     "N/search",
     "N/format",
     "./bsp_isg_elite_extra_api_service.js",
 ], /**
  * @param{record} record
+ * @param{runtime} runtime
  * @param{search} search
  * @param{format} format,
  * @param{*} BSPEliteExtraAPIService
- */ function (record, search, format, BSPEliteExtraAPIService) {
+ */ function (record, runtime, search, format, BSPEliteExtraAPIService) {
+
     /**
      * Get the record information and SO details and create an object with it that will be used in the XML request
-     * @param {*} id Can be IF or RMA ID
-     * @param recType
+     * @param {string} options.recType Record Type
+     * @param {string} options.recId Record Id
+     * @returns {object} return record object information
      */
-    function getOrderDetails(id, recType) {
-        try {
 
-            let TYPE = recType === "itemfulfillment" ? "I" : "P"
-            const rec = record.load({
-                type: recType,
-                id: id,
+    function getOrderDetails(options) {
+        try {
+            let TYPE = options.recType === "itemfulfillment" ? "I" : "P"
+            let rec = record.load({
+                type: options.recType,
+                id: options.recId,
                 isDynamic: true,
             });
-
             const soId = rec.getValue("createdfrom");
             const soRec = record.load({
                 type: record.Type.SALES_ORDER,
@@ -191,14 +194,16 @@ define([
 
     /**
      * Create XML body from IF or RMA and SO and send the request using Elite Extra integration settings
-     * @param recId
-     * @param {*} eliteExtraId
-     * @param type
+     * @param {string} options.recId record internal id
+     * @param {string} options.eliteExtraId Elite Extra settings internal id
+     * @param {string} options.recType Record Type
+     * @returns {object} response from Elite Extra
      */
-    function sendOrderDetails(recId, eliteExtraId, type) {
+    function sendOrderDetails(options) {
+        let recId = options.recId
         try {
-            log.debug("type", type)
-            const orderObj = getOrderDetails(recId, type);
+            const orderObj = getOrderDetails({recId:recId,recType: options.recType});
+
             const headerFieldsInfo = [orderObj.orderHeaderFields];
             const lineItemInfo = orderObj.itemLineInfo;
 
@@ -211,6 +216,7 @@ define([
                 if (isEmpty(lineItem.poVendor)) {
                     poVendor = "";
                 }
+
                 lineItemXml += `
                     <line>
                   <order_quantity>${lineItem.order_quantity}</order_quantity>
@@ -340,7 +346,7 @@ define([
     <duration></duration>
 </order>`;
             log.debug("orderXML", orderXML);
-            const eliteExtraSettings = getEliteExtraSettings(eliteExtraId);
+            const eliteExtraSettings = getEliteExtraSettings(options.eliteExtraId);
             return BSPEliteExtraAPIService.uploadOrder({
                 recId,
                 orderXML,
@@ -388,21 +394,16 @@ define([
      * @param {*} stValue
      */
     function isEmpty(stValue) {
-        return (
-            stValue === "" ||
-            stValue == null ||
-            stValue == undefined ||
-            (stValue.constructor === Array && stValue.length == 0) ||
-            (stValue.constructor === Object &&
+        return (stValue === "" ||
+            stValue == null || false || (stValue.constructor === Array && stValue.length === 0) || (stValue.constructor === Object &&
                 (function (v) {
                     for (var k in v) return false;
                     return true;
-                })(stValue))
-        );
+                })(stValue)));
     }
 
     /**
-     * format the date time into ISO 8601 format and set the timezone to newyork
+     * format the date time into ISO 8601 format and set the timezone to new york
      * @param {*} date
      */
     function formatDateTime(date) {
@@ -417,26 +418,26 @@ define([
 
     /**
      * Update Item Fulfillment or Return Authorization tracking number and tracking link
-     * @param res
-     * @param id
-     * @param trackingLink
-     * @param type
+     * @param {string} options.response response from elite extra
+     * @param {string} options.id record Id
+     * @param {string} options.trackingLink returned tracking link from Elite Extra
+     * @param {string} options.recType record Type
      * @returns {*[]}
      */
-    function updateRecordTrackingInfo(res, id, trackingLink, type) {
+    function updateRecordTrackingInfo(options) {
+        const response = options.response.body;
+        const resString = [response];
+        const resBody = JSON.parse(resString[0]);
+        let message = [];
         try {
-            const response = res.body;
-            const resString = [response];
-            const resBody = JSON.parse(resString[0]);
-            let message = [];
-            if (res.code === 200 && !isEmpty(resBody.tracking)) {
-                if (type == "itemfulfillment") {
+            if (options.response.code === 200 && !isEmpty(resBody.tracking)) {
+                if (options.recType === "itemfulfillment") {
                     const ifUpdateId = record.submitFields({
                         type: record.Type.ITEM_FULFILLMENT,
-                        id: id,
+                        id: options.id,
                         values: {
                             custbody_bsp_isg_tracking_number: resBody.tracking,
-                            custbody_bsp_isg_tracking_link: trackingLink + resBody.tracking,
+                            custbody_bsp_isg_tracking_link: options.trackingLink + resBody.tracking,
                         },
                     });
                     log.debug("IF ID: " + ifUpdateId + " Updated", [
@@ -450,10 +451,10 @@ define([
                 } else {
                     const rmaIdUpdated = record.submitFields({
                         type: record.Type.RETURN_AUTHORIZATION,
-                        id: id,
+                        id: options.id,
                         values: {
                             custbody_bsp_isg_tracking_number: resBody.tracking,
-                            custbody_bsp_isg_tracking_link: trackingLink + resBody.tracking,
+                            custbody_bsp_isg_tracking_link: options.trackingLink + resBody.tracking,
                         },
                     });
                     log.debug("RMA: " + rmaIdUpdated + " Updated", [

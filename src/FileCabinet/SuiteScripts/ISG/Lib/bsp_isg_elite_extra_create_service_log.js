@@ -6,9 +6,14 @@ define(["N/record"],
     function (record) {
         /**
          * Create API service logs.
-         * @param responseOptions
+         * @param {string} options.serviceURL Where the request is sent
+         * @param {string} options.soapAction SOAP Action used
+         * @param {string} options.orderXML Body request
+         * @param {int} options.responseCode Returned Response Code
+         * @param {string} options.responseHeader Returned header
+         * @param {string} options.responseBody Returned body
          */
-        function eliteExtracreateServiceLog(responseOptions) {
+        function eliteExtracreateServiceLog(options) {
             try {
 
                 let functionName = "createServiceLog";
@@ -18,38 +23,37 @@ define(["N/record"],
 
                 serviceLogRec.setValue({
                     fieldId: "custrecord_bsp_lb_url",
-                    value: responseOptions.serviceURL,
+                    value: options.serviceURL,
                 });
                 serviceLogRec.setValue({
                     fieldId: "custrecord_bsp_lb_soap_action",
-                    value: responseOptions.soapAction,
+                    value: options.soapAction,
                 });
                 serviceLogRec.setValue({
                     fieldId: "custrecord_bsp_lb_request",
-                    value: responseOptions.orderXML,
+                    value: options.orderXML,
                 });
                 serviceLogRec.setValue({
                     fieldId: "custrecord_bsp_lb_response_code",
-                    value: responseOptions.responseCode,
+                    value: options.responseCode,
                 });
                 serviceLogRec.setValue({
                     fieldId: "custrecord_bsp_lb_response_header",
-                    value: responseOptions.responseHeader,
+                    value: options.responseHeader,
                 });
                 serviceLogRec.setValue({
                     fieldId: "custrecord_bsp_lb_response_body",
-                    value: responseOptions.responseBody,
+                    value: options.responseBody,
                 });
 
                 let servicelogRecID = serviceLogRec.save();
-                log.audit(functionName, "Service Log Created: " + servicelogRecID + " - soapAction: " + responseOptions.soapAction);
+                log.audit(functionName, "Service Log Created: " + servicelogRecID + " - soapAction: " + options.soapAction);
             } catch (e) {
                 log.error("eliteExtracreateServiceLog", e.message)
 
 
             }
         }
-
 
 
         return {

@@ -6,8 +6,11 @@ define(["N/https", "./bsp_isg_elite_extra_create_service_log.js"], /**
  */ function (https, BSPEliteServiceLogs) {
   /**
    *
-   * @param options
-   * @returns {ClientResponse}
+   * @param {string} options.recId Record Id
+   * @param {string} options.orderXML Created XML string to send to Elite Extra
+   * @param {object} options.eliteExtraSettings Record settings of Elite Extra
+   * @param {string} options.recType Record Type
+   * @returns {object} response from Elite Extra
    */
   function uploadOrder(options) {
     try {
@@ -30,16 +33,16 @@ define(["N/https", "./bsp_isg_elite_extra_create_service_log.js"], /**
       });
 
       log.debug("eliteExtraResponse", eliteExtraResponse)
-      let responseOptions = {
-        serviceURL: serviceURL,
-        soapAction: soapAction,
-        orderXML: orderXML,
-        responseCode: eliteExtraResponse.code,
-        responseHeader: JSON.stringify(eliteExtraResponse.headers),
-        responseBody: eliteExtraResponse.body.substring(0, 100000)
-      }
+
       BSPEliteServiceLogs.eliteExtracreateServiceLog(
-          responseOptions
+          {
+            serviceURL: serviceURL,
+            soapAction: soapAction,
+            orderXML: orderXML,
+            responseCode: eliteExtraResponse.code,
+            responseHeader: JSON.stringify(eliteExtraResponse.headers),
+            responseBody: eliteExtraResponse.body.substring(0, 100000)
+          }
       );
 
       return eliteExtraResponse;
