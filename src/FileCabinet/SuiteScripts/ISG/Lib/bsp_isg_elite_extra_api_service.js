@@ -1,13 +1,13 @@
 /**
  * @NApiVersion 2.1
  */
-define(["N/https", "./bsp_isg_elite_extra_service_logs.js"], /**
+define(["N/https", "./bsp_isg_elite_extra_create_service_log.js"], /**
  *
  */ function (https, BSPEliteServiceLogs) {
   /**
    *
    * @param options
-   * @returns {eliteExtraResponse}
+   * @returns {ClientResponse}
    */
   function uploadOrder(options) {
     try {
@@ -22,25 +22,29 @@ define(["N/https", "./bsp_isg_elite_extra_service_logs.js"], /**
           "Basic " + options.eliteExtraSettings.authorization;
       let orderXML = options.orderXML.replace(/[\r\n]/g, "");
 
-      const eliteExtraResponse = https.request({
+      const eliteExtraResponse = https.post({
         method: https.Method.POST,
         url: serviceURL,
         body: orderXML,
         headers: headers,
       });
 
-      log.debug("eliteExtraResponse", eliteExtraResponse);
+      log.debug("eliteExtraResponse", eliteExtraResponse)
+      let responseOptions = {
+        serviceURL: serviceURL,
+        soapAction: soapAction,
+        orderXML: orderXML,
+        responseCode: eliteExtraResponse.code,
+        responseHeader: JSON.stringify(eliteExtraResponse.headers),
+        responseBody: eliteExtraResponse.body.substring(0, 100000)
+      }
       BSPEliteServiceLogs.eliteExtracreateServiceLog(
-          serviceURL,
-          soapAction,
-          orderXML,
-          eliteExtraResponse.code,
-          JSON.stringify(eliteExtraResponse.headers),
-          eliteExtraResponse.body.substring(0, 100000)
+          responseOptions
       );
+
       return eliteExtraResponse;
     } catch (e) {
-      log.debug("uploadOrder", e.message);
+      log.error("uploadOrder", e.message);
     }
   }
 
